@@ -1,6 +1,5 @@
 package dukku.semicolon.boundedContext.settlement.in.batch.processor;
 
-import dukku.semicolon.boundedContext.settlement.app.SettlementFacade;
 import dukku.semicolon.boundedContext.settlement.entity.Settlement;
 import dukku.semicolon.shared.settlement.exception.SettlementProcessingException;
 import dukku.semicolon.shared.settlement.exception.SettlementValidationException;
@@ -11,69 +10,89 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 /**
- * 예치금 충전 Processor
- * - Settlement를 PROCESSING 상태로 변경하고 예치금 충전 요청 이벤트 발행
- * - 예외 분류를 통해 Batch의 Skip/Retry 정책 적용
+ * Step 3: 예치금 충전 Processor
+ * - Deposit BC API Client를 통한 예치금 충전 (동기 방식)
+ * - 성공 시 Settlement 상태를 SUCCESS로 변경
  *
- * Skip 대상 예외:
- * - SettlementValidationException: 데이터 유효성 오류 (재시도 불가)
- * - SettlementProcessingException: 비즈니스 처리 오류 (재시도 불가)
+ * [TODO] Deposit BC API Client 구현 필요
+ * - DepositFacade를 직접 참조하지 않고 API Client를 통해 호출해야 함
+ * - Bounded Context 간 직접 참조 금지 원칙 준수
  *
- * Retry 대상 예외:
- * - DataAccessException: DB 연결 오류 (재시도 가능)
+ * [Idempotency]
+ * - 이미 SUCCESS/FAILED 상태인 Settlement는 Skip
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class DepositChargeProcessor implements ItemProcessor<Settlement, Settlement> {
 
-    private final SettlementFacade settlementFacade;
+    // TODO: DepositApiClient 구현 후 주입
+    // private final DepositApiClient depositApiClient;
 
     @Override
     public Settlement process(Settlement settlement) throws Exception {
-        log.debug("[Processor] 정산 처리 시작. settlementUuid={}, status={}",
+        log.debug("[Step 3 Processor] 예치금 충전 시작. settlementUuid={}, status={}",
                 settlement.getUuid(), settlement.getSettlementStatus());
 
+        // Idempotency: 이미 완료된 건은 Skip
+        if (settlement.isCompleted()) {
+            log.warn("[Step 3 Processor-Skip] 이미 정산 완료된 건. settlementUuid={}", settlement.getUuid());
+            return null; // Writer로 전달하지 않음
+        }
+
+        if (settlement.isFailed()) {
+            log.warn("[Step 3 Processor-Skip] 이미 실패 처리된 건. settlementUuid={}", settlement.getUuid());
+            return null;
+        }
+
         try {
-            // Settlement → PROCESSING 상태 변경 + 이벤트 발행
-            Settlement processed = settlementFacade.requestDepositCharge(settlement);
+            // TODO: Deposit BC API Client 구현 필요
+            // DepositFacade 직접 참조 대신 API Client를 통해 호출
+            //
+            // depositApiClient.chargeDepositForSettlement(
+            //     settlement.getSellerUuid(),
+            //     settlement.getSettlementAmount(),
+            //     settlement.getUuid()
+            // );
+            //
+            // API 예시:
+            // POST /api/v1/internal/deposits/{sellerUuid}/charge
+            // Request Body: { "amount": 10000, "settlementUuid": "uuid" }
+            // Response: { "success": true, "depositUuid": "uuid" }
 
-            log.debug("[Processor] 정산 처리 성공. settlementUuid={}, newStatus={}",
-                    processed.getUuid(), processed.getSettlementStatus());
+            log.warn("[TODO] Deposit BC API Client 미구현. 예치금 충전 스킵됨. settlementUuid={}",
+                    settlement.getUuid());
 
-            return processed;
+            // TODO: API 호출 성공 후 SUCCESS 상태로 변경
+            // settlement.complete();
+
+            // TODO: API 구현 전까지 임시로 null 반환 (Skip)
+            return null;
 
         } catch (SettlementValidationException e) {
             // 데이터 유효성 오류 → Skip 처리
-            // - 상태 전이 불가, 금액 오류, 필수 필드 누락 등
-            // - 재시도해도 성공하지 않으므로 Skip
-            log.error("[Processor-Skip] 데이터 유효성 오류로 Skip 처리. settlementUuid={}, error={}",
+            log.error("[Step 3 Processor-Skip] 데이터 유효성 오류. settlementUuid={}, error={}",
                     settlement.getUuid(), e.getMessage());
-            throw e;  // SkipListener에서 처리 (FAILED 상태로 변경)
+            throw e;
 
         } catch (SettlementProcessingException e) {
             // 비즈니스 처리 오류 → Skip 처리
-            // - 예치금 계좌 없음, 외부 서비스 호출 실패 등
-            // - 재시도해도 성공하지 않으므로 Skip
-            log.error("[Processor-Skip] 비즈니스 처리 오류로 Skip 처리. settlementUuid={}, error={}",
+            log.error("[Step 3 Processor-Skip] 비즈니스 처리 오류. settlementUuid={}, error={}",
                     settlement.getUuid(), e.getMessage());
-            throw e;  // SkipListener에서 처리 (FAILED 상태로 변경)
+            throw e;
 
         } catch (DataAccessException e) {
             // DB 접근 오류 → Retry 처리
-            // - DB 커넥션 끊김, 데드락, 타임아웃 등
-            // - 일시적 오류일 수 있으므로 Retry
-            log.warn("[Processor-Retry] DB 접근 오류로 Retry 시도. settlementUuid={}, error={}",
+            log.warn("[Step 3 Processor-Retry] DB 접근 오류. settlementUuid={}, error={}",
                     settlement.getUuid(), e.getMessage());
-            throw e;  // Batch의 RetryPolicy에 의해 재시도
+            throw e;
 
         } catch (Exception e) {
             // 예상치 못한 오류 → Skip 처리
-            // - 분류되지 않은 오류는 Skip으로 처리하여 Job 전체 실패 방지
-            log.error("[Processor-Skip] 예상치 못한 오류로 Skip 처리. settlementUuid={}, error={}",
+            log.error("[Step 3 Processor-Skip] 예상치 못한 오류. settlementUuid={}, error={}",
                     settlement.getUuid(), e.getMessage(), e);
             throw new SettlementProcessingException(
-                    "정산 처리 중 예상치 못한 오류 발생: " + e.getMessage());
+                    "예치금 충전 중 오류 발생: " + e.getMessage());
         }
     }
 }

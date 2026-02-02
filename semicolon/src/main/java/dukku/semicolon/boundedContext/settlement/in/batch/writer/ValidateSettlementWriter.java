@@ -9,27 +9,27 @@ import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.stereotype.Component;
 
 /**
- * Step 3: 예치금 충전 완료된 Settlement 저장 Writer
- * - SUCCESS 상태로 변경된 Settlement 저장
+ * Step 2: 금액 검증 완료된 Settlement 저장 Writer
+ * - PROCESSING 상태로 변경된 Settlement 저장
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DepositChargeWriter implements ItemWriter<Settlement> {
+public class ValidateSettlementWriter implements ItemWriter<Settlement> {
 
     private final SettlementRepository settlementRepository;
 
     @Override
     public void write(Chunk<? extends Settlement> chunk) throws Exception {
-        log.info("[Step 3 Writer] SUCCESS 상태 Settlement 저장 시작 - 건수: {}", chunk.size());
+        log.info("[Step 2 Writer] PROCESSING 상태 Settlement 저장 시작 - 건수: {}", chunk.size());
 
         for (Settlement settlement : chunk) {
             settlementRepository.save(settlement);
-            log.debug("[Step 3 Writer] Settlement 상태 업데이트 완료 - UUID: {}, 상태: {}",
+            log.debug("[Step 2 Writer] Settlement 상태 업데이트 완료 - UUID: {}, 상태: {}",
                     settlement.getUuid(),
                     settlement.getSettlementStatus());
         }
 
-        log.info("[Step 3 Writer] SUCCESS 상태 Settlement 저장 완료 - 총 {}건 처리됨", chunk.size());
+        log.info("[Step 2 Writer] PROCESSING 상태 Settlement 저장 완료 - 총 {}건 처리됨", chunk.size());
     }
 }
