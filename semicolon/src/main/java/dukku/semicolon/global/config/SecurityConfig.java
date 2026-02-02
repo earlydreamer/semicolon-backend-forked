@@ -72,7 +72,7 @@ public class SecurityConfig {
                             Arrays.asList(allowedOrigins)
                     );
                     corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type"));
+                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
