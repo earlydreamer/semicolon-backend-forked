@@ -64,7 +64,6 @@ public class SettlementJobScheduler {
             log.error("정산 배치 실행 중 예기치 않은 에러 발생", e);
         }
     }
-
     /**
      * 수동 실행용 메서드 (관리자 API에서 호출 가능)
      */
