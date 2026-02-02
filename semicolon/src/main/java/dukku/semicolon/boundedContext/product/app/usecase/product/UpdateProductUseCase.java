@@ -28,13 +28,22 @@ public class UpdateProductUseCase {
     public ProductDetailResponse execute(UUID productUuid, UUID sellerUuid, ProductUpdateRequest request) {
         Product product = productSupport.getProduct(productUuid, sellerUuid);
 
-        if (!categoryRepository.existsById(request.categoryId())) {
-            throw new ProductCategoryNotFoundException();
-        }
-        Category category = categoryRepository.getReferenceById(request.categoryId());
+        // 1. 카테고리 변경 감지 로직
+        boolean isCategoryChanged = false;
+        Category category = null;
 
+        // 요청한 카테고리가 현재와 다를 때만 DB 조회
+        if (!product.getCategory().getId().equals(request.categoryId())) {
+            if (!categoryRepository.existsById(request.categoryId())) {
+                throw new ProductCategoryNotFoundException();
+            }
+            category = categoryRepository.getReferenceById(request.categoryId());
+            isCategoryChanged = true;
+        }
+
+        // 2. 엔티티 업데이트 (category가 null이면 기존 유지되도록 Product.update 내부 로직 활용)
         product.update(
-                category,
+                category, // 변경 없으면 null 넘어감
                 request.title(),
                 request.description(),
                 request.price(),
@@ -48,7 +57,8 @@ public class UpdateProductUseCase {
             product.replaceImages(request.imageUrls());
         }
 
-        eventPublisher.publishEvent(new ProductUpdatedEvent(product));
+        // 3. 이벤트 발행 (변경 플래그 포함)
+        eventPublisher.publishEvent(new ProductUpdatedEvent(product, isCategoryChanged));
 
         return ProductMapper.toDetail(product);
     }

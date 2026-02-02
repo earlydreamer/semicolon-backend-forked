@@ -28,6 +28,6 @@ public class DeleteProductUseCase {
 
         product.delete();
 
-        eventPublisher.publish(new ProductDeletedEvent(product));
+        eventPublisher.publish(new ProductDeletedEvent(product.getId()));
     }
 }

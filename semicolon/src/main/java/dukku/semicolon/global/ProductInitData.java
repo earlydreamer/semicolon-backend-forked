@@ -56,32 +56,138 @@ public class ProductInitData {
             @Override
             @Transactional
             public void run(String... args) throws Exception {
-                // 이미 데이터가 있다면 초기화 스킵
-                if (productRepository.count() > 0) {
-                    return;
+                log.info("🚀 [InitData] Data Initialization Started (JPA: create mode)");
+
+                // 1. ES 데이터 초기화
+                try {
+                    productSearchRepository.deleteAll();
+                    log.info("🗑️ Elasticsearch index cleared.");
+                } catch (Exception e) {
+                    log.warn("⚠️ Failed to clear Elasticsearch index: {}", e.getMessage());
                 }
 
-                log.info("🚀 [InitData] Product & ES Data Initialization Started...");
+                // 2. 메모리 맵 초기화
+                userMap.clear();
+                sellerMap.clear();
+                productMap.clear();
 
-                // 0. ES 인덱스 초기화 (개발 환경이므로 꼬임 방지용)
-                productSearchRepository.deleteAll();
+                // 3. 카테고리 데이터 생성
+                initCategoryHierarchy();
 
-                // 1. 유저 및 판매자 생성
+                // 4. 유저 및 판매자 생성
                 initUsersAndSellers();
 
-                // 2. 카테고리 매핑 테이블 준비
+                // 5. 상품 생성 및 ES 인덱싱
                 Map<String, String> catNameMap = getCategoryNameMap();
-
-                // 3. 상품 생성 및 ES 인덱싱
                 createProducts(catNameMap);
 
-                log.info("✅ [InitData] Initialization Completed (MySQL + Elasticsearch).");
+                log.info("✅ [InitData] Initialization Completed.");
             }
         };
     }
 
+    private void initCategoryHierarchy() {
+        if (categoryRepository.count() > 0) return;
+
+        // 1. 전자기기
+        Category electronics = categoryRepository.save(Category.createRoot("전자기기"));
+        Category smartphone = categoryRepository.save(Category.createChild("스마트폰", electronics));
+        categoryRepository.save(Category.createChild("아이폰", smartphone));
+        categoryRepository.save(Category.createChild("삼성", smartphone));
+        categoryRepository.save(Category.createChild("기타", smartphone));
+
+        Category tablet = categoryRepository.save(Category.createChild("태블릿", electronics));
+        categoryRepository.save(Category.createChild("아이패드", tablet));
+        categoryRepository.save(Category.createChild("갤럭시탭", tablet));
+
+        Category computer = categoryRepository.save(Category.createChild("PC/노트북", electronics));
+        categoryRepository.save(Category.createChild("맥북", computer));
+        categoryRepository.save(Category.createChild("일반 노트북", computer));
+        categoryRepository.save(Category.createChild("PC부품", computer));
+
+        Category etcElec = categoryRepository.save(Category.createChild("기타 가전", electronics));
+        categoryRepository.save(Category.createChild("웨어러블", etcElec));
+        categoryRepository.save(Category.createChild("액션캠", etcElec));
+
+        // 2. 캠핑/레저
+        Category camping = categoryRepository.save(Category.createRoot("캠핑/레저"));
+        Category tentGroup = categoryRepository.save(Category.createChild("텐트/타프", camping));
+        categoryRepository.save(Category.createChild("돔/거실형", tentGroup));
+        categoryRepository.save(Category.createChild("기타 텐트", tentGroup));
+        categoryRepository.save(Category.createChild("타프", tentGroup));
+
+        Category campingFurniture = categoryRepository.save(Category.createChild("캠핑가구", camping));
+        categoryRepository.save(Category.createChild("테이블", campingFurniture));
+        categoryRepository.save(Category.createChild("의자", campingFurniture));
+
+        Category campingGear = categoryRepository.save(Category.createChild("캠핑소품", camping));
+        categoryRepository.save(Category.createChild("랜턴/조명", campingGear));
+        categoryRepository.save(Category.createChild("취사용품", campingGear));
+        categoryRepository.save(Category.createChild("침낭/매트", campingGear));
+
+        // 3. 악기/음향
+        Category instruments = categoryRepository.save(Category.createRoot("악기/음향"));
+        Category strings = categoryRepository.save(Category.createChild("현악기", instruments));
+        categoryRepository.save(Category.createChild("일렉기타", strings));
+        categoryRepository.save(Category.createChild("통기타", strings));
+        categoryRepository.save(Category.createChild("베이스", strings));
+
+        Category audioGear = categoryRepository.save(Category.createChild("음향기기", instruments));
+        categoryRepository.save(Category.createChild("헤드폰/이어폰", audioGear));
+        categoryRepository.save(Category.createChild("스피커", audioGear));
+        categoryRepository.save(Category.createChild("앰프/DAC", audioGear));
+
+        Category keyboards = categoryRepository.save(Category.createChild("건반악기", instruments));
+        categoryRepository.save(Category.createChild("피아노/신디", keyboards));
+
+        // 4. 카메라/렌즈
+        Category camera = categoryRepository.save(Category.createRoot("카메라/렌즈"));
+        Category digitalCam = categoryRepository.save(Category.createChild("디지털 카메라", camera));
+        categoryRepository.save(Category.createChild("DSLR/미러리스", digitalCam));
+        categoryRepository.save(Category.createChild("하이엔드/컴팩트", digitalCam));
+
+        Category cameraParts = categoryRepository.save(Category.createChild("렌즈/주변기기", camera));
+        categoryRepository.save(Category.createChild("교환렌즈", cameraParts));
+        categoryRepository.save(Category.createChild("삼각대/액세서리", cameraParts));
+
+        Category filmGroup = categoryRepository.save(Category.createChild("필름카메라", camera));
+        categoryRepository.save(Category.createChild("필름 바디", filmGroup));
+
+        // 5. 골프
+        Category golf = categoryRepository.save(Category.createRoot("골프"));
+        Category golfClub = categoryRepository.save(Category.createChild("골프채", golf));
+        categoryRepository.save(Category.createChild("드라이버", golfClub));
+        categoryRepository.save(Category.createChild("우드/유틸", golfClub));
+        categoryRepository.save(Category.createChild("아이언", golfClub));
+        categoryRepository.save(Category.createChild("웨지", golfClub));
+        categoryRepository.save(Category.createChild("퍼터", golfClub));
+
+        Category golfAccGroup = categoryRepository.save(Category.createChild("용품/의류", golf));
+        categoryRepository.save(Category.createChild("골프백", golfAccGroup));
+        categoryRepository.save(Category.createChild("골프웨어", golfAccGroup));
+        categoryRepository.save(Category.createChild("기타용품", golfAccGroup));
+
+        // 6. 스타굿즈
+        Category goods = categoryRepository.save(Category.createRoot("스타굿즈"));
+        Category idolBoy = categoryRepository.save(Category.createChild("보이그룹", goods));
+        categoryRepository.save(Category.createChild("BTS", idolBoy));
+        categoryRepository.save(Category.createChild("세븐틴", idolBoy));
+        categoryRepository.save(Category.createChild("스트레이키즈", idolBoy));
+
+        Category idolGirl = categoryRepository.save(Category.createChild("걸그룹", goods));
+        categoryRepository.save(Category.createChild("뉴진스", idolGirl));
+        categoryRepository.save(Category.createChild("IVE", idolGirl));
+        categoryRepository.save(Category.createChild("aespa", idolGirl));
+
+        Category goodsCommon = categoryRepository.save(Category.createChild("교통수단/일반", goods));
+        categoryRepository.save(Category.createChild("앨범", goodsCommon));
+        categoryRepository.save(Category.createChild("포토카드", goodsCommon));
+        categoryRepository.save(Category.createChild("콘서트티켓", goodsCommon));
+
+        log.info("📂 [InitData] Category Hierarchy Created.");
+    }
+
     private void initUsersAndSellers() {
-        // 주요 판매자만 상세 생성 (나머지는 생략 가능)
         createSeller("s1", "u1", "세미콜론", 4.5, "깔끔한 거래 원해요", 3, 2);
         createSeller("s2", "u2", "테크마스터", 4.9, "전자기기 전문", 154, 12);
         createSeller("s3", "u3", "소리사랑", 4.8, "음향기기 수집가", 89, 8);
@@ -194,31 +300,51 @@ public class ProductInitData {
         Product savedProduct = productRepository.save(product);
         productMap.put(pId, savedProduct);
 
-        // 3. Elasticsearch 저장 (Document)
-        // Document의 구조에 맞춰 필드 값을 매핑 및 계산합니다.
+        // 3. [핵심] 카테고리 족보(Path) 생성
+        List<Integer> categoryPath = getCategoryPath(savedProduct.getCategory());
+
+        // 4. Elasticsearch 저장 (Document)
         ProductDocument document = ProductDocument.builder()
-                .id(String.valueOf(savedProduct.getId())) // ES ID = MySQL PK (String)
-                .productUuid(savedProduct.getUuid().toString()) // 외부 노출용 UUID
-                .saleSortPriority(calculateSaleSortPriority(savedProduct.getSaleStatus())) // 정렬 우선순위 계산
+                .id(String.valueOf(savedProduct.getId()))
+                .productUuid(savedProduct.getUuid().toString())
+                .saleSortPriority(calculateSaleSortPriority(savedProduct.getSaleStatus()))
                 .title(savedProduct.getTitle())
                 .description(savedProduct.getDescription())
                 .sellerUuid(savedProduct.getSellerUuid().toString())
-                .categoryId(savedProduct.getCategory().getId().intValue()) // Document는 Integer, Entity는 Long
+
+                // [변경] 카테고리 족보 리스트 주입
+                .categoryIds(categoryPath)
+
                 .saleStatus(savedProduct.getSaleStatus())
                 .visibilityStatus(savedProduct.getVisibilityStatus())
+                .conditionStatus(savedProduct.getConditionStatus()) // [추가] 상태
                 .price(savedProduct.getPrice())
                 .shippingFee(savedProduct.getShippingFee())
                 .viewCount(savedProduct.getViewCount())
                 .likeCount(savedProduct.getLikeCount())
                 .commentCount(savedProduct.getCommentCount())
                 .createdAt(savedProduct.getCreatedAt())
-                .thumbnailImageUrl(imageUrl) // 방금 추가한 이미지가 썸네일
+                .deletedAt(savedProduct.getDeletedAt()) // [추가] 삭제 시간
+                .thumbnailImageUrl(imageUrl)
                 .build();
 
         productSearchRepository.save(document);
     }
 
-    // 정렬 우선순위 계산 로직 (0: 판매중/예약중, 1: 품절/그외)
+    /**
+     * 카테고리 족보(Path) 리스트 생성 헬퍼
+     * 예: 아이폰(100) -> [1, 10, 100]
+     */
+    private List<Integer> getCategoryPath(Category category) {
+        List<Integer> path = new ArrayList<>();
+        Category current = category;
+        while (current != null) {
+            path.add(current.getId().intValue());
+            current = current.getParent();
+        }
+        return path;
+    }
+
     private Integer calculateSaleSortPriority(SaleStatus status) {
         if (status == SaleStatus.ON_SALE || status == SaleStatus.RESERVED) {
             return 0;

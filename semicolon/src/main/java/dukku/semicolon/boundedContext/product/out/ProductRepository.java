@@ -46,15 +46,16 @@ where p.uuid = :uuid
             UUID sellerUuid, SaleStatus saleStatus, Pageable pageable
     );
 
-    // 목록: visibility=VISIBLE, deletedAt=null 기본
-    Page<Product> findByVisibilityStatusAndDeletedAtIsNull(
+    // 1. 카테고리별 조회 (Fallback용) - 인덱스 필수! (category_id)
+    Page<Product> findByCategory_IdInAndVisibilityStatusAndDeletedAtIsNull(
+            List<Integer> categoryIds,
             VisibilityStatus visibilityStatus,
             Pageable pageable
     );
 
-    // 카테고리 필터 목록
-    Page<Product> findByCategory_IdAndVisibilityStatusAndDeletedAtIsNull(
-            Integer categoryId,
+    // 2. 전체 최신순 조회 (Fallback용)
+    // 검색어가 들어와도 그냥 이걸로 돌려버립니다.
+    Page<Product> findByVisibilityStatusAndDeletedAtIsNull(
             VisibilityStatus visibilityStatus,
             Pageable pageable
     );
