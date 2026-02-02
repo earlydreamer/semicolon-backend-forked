@@ -1,7 +1,9 @@
 package dukku.semicolon.boundedContext.product.entity.query;
 
+import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
+import dukku.semicolon.boundedContext.product.entity.Category;
 import dukku.semicolon.boundedContext.product.entity.Product;
 import dukku.semicolon.boundedContext.product.entity.ProductImage;
 import lombok.AllArgsConstructor;
@@ -12,6 +14,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Builder
@@ -47,7 +51,7 @@ public class ProductDocument {
     private String sellerUuid;
 
     @Field(type = FieldType.Integer)
-    private Integer categoryId;
+    private List<Integer> categoryIds;
 
     @Field(type = FieldType.Keyword)
     private SaleStatus saleStatus;
@@ -78,11 +82,27 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword, index = false)
     private String thumbnailImageUrl;
 
+    // 삭제 시간 (Soft Delete 여부 판단용)
+    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_millis)
+    private LocalDateTime deletedAt;
+
+    @Field(type = FieldType.Keyword)
+    private ConditionStatus conditionStatus;
+
     public static ProductDocument from(Product product) {
+        // 카테고리 경로 생성 로직 (현재 카테고리부터 루트까지 순회)
+        List<Integer> categoryPath = new ArrayList<>();
+        Category current = product.getCategory();
+
+        while (current != null) {
+            categoryPath.add(current.getId());
+            current = current.getParent();
+        }
+
         return ProductDocument.builder()
                 .id(String.valueOf(product.getId()))
                 .sellerUuid(product.getSellerUuid().toString())
-                .categoryId(product.getCategory().getId())
+                .categoryIds(categoryPath)
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .price(product.getPrice())
@@ -97,6 +117,8 @@ public class ProductDocument {
                         .map(ProductImage::getImageUrl)
                         .findFirst()
                         .orElse(null))
+                .deletedAt(product.getDeletedAt())
+                .conditionStatus(product.getConditionStatus())
                 .build();
     }
 }

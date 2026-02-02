@@ -3,11 +3,11 @@ package dukku.semicolon.boundedContext.product.in;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.order.event.OrderProductSaleConfirmedEvent;
 import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
+import dukku.semicolon.boundedContext.product.app.cqrs.ProductSyncFacade;
 import dukku.semicolon.boundedContext.product.app.cqrs.SaveToElasticSearchUseCase;
 import dukku.semicolon.boundedContext.product.app.cqrs.SyncProductSearchStatsUseCase;
 import dukku.semicolon.boundedContext.product.entity.Product;
 import dukku.semicolon.boundedContext.product.out.ProductRepository;
-import dukku.semicolon.boundedContext.product.out.ProductSearchRepository;
 import dukku.semicolon.shared.product.event.ProductCreatedEvent;
 import dukku.semicolon.shared.product.event.ProductDeletedEvent;
 import dukku.semicolon.shared.product.event.ProductStatsBulkUpdatedEvent;
@@ -28,7 +28,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ProductEventListener {
-    private final ProductSearchRepository productSearchRepository;
+    private final ProductSyncFacade productSyncFacade;
     private final SaveToElasticSearchUseCase saveToElasticSearchUseCase;
     private final SyncProductSearchStatsUseCase  syncProductSearchStatsUseCase;
     private final ProductRepository productRepository;
@@ -38,7 +38,7 @@ public class ProductEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void syncCreate(ProductCreatedEvent event) {
-        saveToElasticSearchUseCase.execute(event.product());
+        saveToElasticSearchUseCase.execute(event.product(), true);
     }
 
     // 2. 수정 동기화
@@ -47,17 +47,14 @@ public class ProductEventListener {
     public void syncUpdate(ProductUpdatedEvent event) {
         log.info("Sync Update Product: {}", event.product().getId());
 
-        saveToElasticSearchUseCase.execute(event.product());
+        saveToElasticSearchUseCase.execute(event.product(), event.isCategoryChanged());
     }
 
     // 3. 삭제 동기화
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void syncDelete(ProductDeletedEvent event) {
-        String docId = String.valueOf(event.product().getId());
-        log.info("Sync Delete Product: {}", docId);
-
-        productSearchRepository.deleteById(docId);
+        productSyncFacade.syncProductToElasticsearch(event.productId());
     }
 
     // 4. 통계 동기화 (배치 작업 후 실행)
@@ -85,7 +82,7 @@ public class ProductEventListener {
 
             // 2. 변경된 상태를 ES에 동기화하기 위해 ProductUpdatedEvent 발행
             // (이전에 만든 ProductEventListener가 이걸 잡아서 ES 업데이트 수행)
-            eventPublisher.publish(new ProductUpdatedEvent(product));
+            eventPublisher.publish(new ProductUpdatedEvent(product, false));
         }
     }
 
@@ -105,7 +102,7 @@ public class ProductEventListener {
             product.releaseReservation(event.orderUuid());
 
             // 2. ES 동기화 이벤트 발행
-            eventPublisher.publish(new ProductUpdatedEvent(product));
+            eventPublisher.publish(new ProductUpdatedEvent(product, false));
         }
     }
 }
