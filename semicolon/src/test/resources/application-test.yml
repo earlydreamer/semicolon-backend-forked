@@ -1,3 +1,4 @@
+# 해당 파일은 실제 환경과 유사한 환경을 구성하기 위해 임의의 키값을 넣었습니다. 해당 키들은 전부 더미데이터로 사용됩니다.
 spring:
   application:
     name: semicolon-test
@@ -71,3 +72,6 @@ server:
 custom:
   global:
     internalBackUrl: http://localhost:${server.port:8080}
+  security:
+    cors:
+      allowed-origins: http://localhost:3000
