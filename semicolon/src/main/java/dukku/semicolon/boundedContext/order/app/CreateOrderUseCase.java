@@ -34,7 +34,7 @@ public class CreateOrderUseCase {
 
         // 상품 서비스로 해당 상품들이 실제로 존재하는지와 예약 중으로 변경하게 이벤트 전달 (SYNC)
         List<UUID> productUuids = savedOrder.getOrderItems()
-                .stream().map(BaseIdAndUUIDAndTime::getUuid).toList();
+                .stream().map(OrderItem::getProductUuid).toList();
         productApiClient.reserveProducts(order.getUuid(), productUuids);
 
         return savedOrder;
