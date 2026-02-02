@@ -102,7 +102,7 @@ jobs:
       # 6. 빌드 및 ApplicationTests(컨텍스트 로드)만 수행
       - name: Build and Test Application Startup Only
         # --tests 옵션을 사용하여 특정 테스트 클래스만 지정
-        run: ./gradlew clean test --tests "dukku.semicolon.ApplicationTests" --no-daemon --info
+        run: ./gradlew clean :semicolon:test --tests "dukku.semicolon.ApplicationTests" --no-daemon --info
         
       # 7. 실패 시 로그 확인
       - name: Print Container Logs on Failure
