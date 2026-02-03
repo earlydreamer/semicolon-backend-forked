@@ -69,6 +69,10 @@ server:
   port: 0
   forward-headers-strategy: none
 
+slack:
+  webhook:
+    url: https://hooks.slack.com/services/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
+
 custom:
   global:
     internalBackUrl: http://localhost:${server.port:8080}
