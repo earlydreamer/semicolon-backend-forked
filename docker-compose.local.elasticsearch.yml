@@ -25,3 +25,13 @@ services:
     container_name: semicolon-redis
     ports:
       - "6379:6379"
+
+  postgresql:
+    image: postgres:18.1
+    container_name: semicolon-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=P@ssw0rd
+      - POSTGRES_DB=semicolon
+    ports:
+      - "5433:5432"
