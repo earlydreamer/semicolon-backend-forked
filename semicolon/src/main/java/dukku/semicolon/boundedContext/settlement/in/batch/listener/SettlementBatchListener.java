@@ -1,5 +1,7 @@
 package dukku.semicolon.boundedContext.settlement.in.batch.listener;
 
+import dukku.semicolon.boundedContext.settlement.in.batch.notification.SlackNotificationService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.job.JobExecution;
@@ -12,10 +14,14 @@ import org.springframework.stereotype.Component;
  * 정산 배치 작업 리스너
  * - Job/Step 시작/종료 로깅
  * - Skip 발생 시 로깅
+ * - Job 완료 시 Slack 알림 전송
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SettlementBatchListener implements JobExecutionListener, StepExecutionListener {
+
+    private final SlackNotificationService slackNotificationService;
 
 
     @Override
@@ -34,7 +40,7 @@ public class SettlementBatchListener implements JobExecutionListener, StepExecut
         log.info("End Time: {}", jobExecution.getEndTime());
 
         // 실패한 경우 예외 정보 출력
-        if (jobExecution.getAllFailureExceptions().size() > 0) {
+        if (!jobExecution.getAllFailureExceptions().isEmpty()) {
             log.error("실패한 예외 목록:");
             for (Throwable exception : jobExecution.getAllFailureExceptions()) {
                 log.error("  - {}: {}", exception.getClass().getSimpleName(), exception.getMessage());
@@ -50,6 +56,9 @@ public class SettlementBatchListener implements JobExecutionListener, StepExecut
             log.info("  - Commit Count: {}", stepExecution.getCommitCount());
             log.info("  - Rollback Count: {}", stepExecution.getRollbackCount());
         }
+
+        // Slack 알림 전송
+        slackNotificationService.sendJobCompletionNotification(jobExecution);
     }
 
     @Override

@@ -197,4 +197,136 @@ public final class SettlementApiDocs {
     })
     public @interface GetSettlementStatistics {
     }
+
+    // =============== 4) 실패한 정산 재처리 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "실패한 정산 재처리", description = """
+            관리자가 실패한 정산을 재처리 대기 상태로 변경합니다.
+
+            - 정산 상태가 FAILED인 경우에만 사용 가능합니다.
+            - 상태가 PENDING으로 변경되어 다음 배치 처리 시 재시도됩니다.
+            """, parameters = {
+            @Parameter(name = "settlementUuid", description = "정산 UUID", example = "f1e2d3c4-b5a6-7890-cdef-1234567890ab", required = true)
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "재처리 요청 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Retry Settlement Response", value = """
+                    {
+                      "settlementUuid": "f1e2d3c4-b5a6-7890-cdef-1234567890ab",
+                      "status": "PENDING",
+                      "sellerUuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      "totalAmount": 50000,
+                      "fee": 0.03,
+                      "feeAmount": 1500,
+                      "settlementAmount": 48500,
+                      "settlementReservationDate": "2026-01-25T00:00:00+09:00",
+                      "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
+                    }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "상태 전이 불가", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"INVALID_STATUS_TRANSITION\", \"message\": \"정산 상태를 PENDING에서 PENDING으로 변경할 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "404", description = "정산을 찾을 수 없음", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"SETTLEMENT_NOT_FOUND\", \"message\": \"정산을 찾을 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface RetrySettlement {
+    }
+
+    // =============== 5) 정산 수동 완료 처리 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "정산 수동 완료 처리", description = """
+            관리자가 정산을 수동으로 완료 처리합니다.
+
+            - 정산 상태가 PROCESSING인 경우에만 사용 가능합니다.
+            - 예치금 충전이 외부에서 확인되었으나 시스템에 반영되지 않은 경우 사용합니다.
+            - 상태가 SUCCESS로 변경되고 completedAt이 현재 시간으로 설정됩니다.
+            """, parameters = {
+            @Parameter(name = "settlementUuid", description = "정산 UUID", example = "f1e2d3c4-b5a6-7890-cdef-1234567890ab", required = true)
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "완료 처리 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Complete Settlement Response", value = """
+                    {
+                      "settlementUuid": "f1e2d3c4-b5a6-7890-cdef-1234567890ab",
+                      "status": "SUCCESS",
+                      "sellerUuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      "totalAmount": 50000,
+                      "fee": 0.03,
+                      "feeAmount": 1500,
+                      "settlementAmount": 48500,
+                      "settlementReservationDate": "2026-01-25T00:00:00+09:00",
+                      "completedAt": "2026-01-25T10:30:00+09:00",
+                      "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
+                    }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "상태 전이 불가", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"INVALID_STATUS_TRANSITION\", \"message\": \"정산 상태를 PENDING에서 SUCCESS로 변경할 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "404", description = "정산을 찾을 수 없음", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"SETTLEMENT_NOT_FOUND\", \"message\": \"정산을 찾을 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface CompleteSettlement {
+    }
+
+    // =============== 6) 정산 수동 실패 처리 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "정산 수동 실패 처리", description = """
+            관리자가 정산을 수동으로 실패 처리합니다.
+
+            - 정산 상태가 PROCESSING인 경우에만 사용 가능합니다.
+            - 예치금 충전이 실패했으나 시스템에 반영되지 않은 경우 사용합니다.
+            - 상태가 FAILED로 변경됩니다.
+            """, parameters = {
+            @Parameter(name = "settlementUuid", description = "정산 UUID", example = "f1e2d3c4-b5a6-7890-cdef-1234567890ab", required = true)
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "실패 처리 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Fail Settlement Response", value = """
+                    {
+                      "settlementUuid": "f1e2d3c4-b5a6-7890-cdef-1234567890ab",
+                      "status": "FAILED",
+                      "sellerUuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      "totalAmount": 50000,
+                      "fee": 0.03,
+                      "feeAmount": 1500,
+                      "settlementAmount": 48500,
+                      "settlementReservationDate": "2026-01-25T00:00:00+09:00",
+                      "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
+                    }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "상태 전이 불가", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"INVALID_STATUS_TRANSITION\", \"message\": \"정산 상태를 PENDING에서 FAILED로 변경할 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "404", description = "정산을 찾을 수 없음", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"SETTLEMENT_NOT_FOUND\", \"message\": \"정산을 찾을 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface FailSettlement {
+    }
+
+    // =============== 7) 정산 수동 예치금 충전 요청 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "정산 수동 예치금 충전 요청", description = """
+            관리자가 정산을 수동으로 예치금 충전 요청합니다.
+
+            - 정산 상태가 PENDING인 경우에만 사용 가능합니다.
+            - 배치 처리를 기다리지 않고 즉시 예치금 충전을 요청합니다.
+            - 상태가 PROCESSING으로 변경되고 예치금 충전 이벤트가 발행됩니다.
+            """, parameters = {
+            @Parameter(name = "settlementUuid", description = "정산 UUID", example = "f1e2d3c4-b5a6-7890-cdef-1234567890ab", required = true)
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "처리 요청 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Process Settlement Response", value = """
+                    {
+                      "settlementUuid": "f1e2d3c4-b5a6-7890-cdef-1234567890ab",
+                      "status": "PROCESSING",
+                      "sellerUuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      "totalAmount": 50000,
+                      "fee": 0.03,
+                      "feeAmount": 1500,
+                      "settlementAmount": 48500,
+                      "settlementReservationDate": "2026-01-25T00:00:00+09:00",
+                      "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
+                    }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "상태 전이 불가 또는 유효성 검증 실패", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"INVALID_STATUS_TRANSITION\", \"message\": \"정산 상태를 PROCESSING에서 PROCESSING으로 변경할 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "404", description = "정산을 찾을 수 없음", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"SETTLEMENT_NOT_FOUND\", \"message\": \"정산을 찾을 수 없습니다.\"}"))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface ProcessSettlement {
+    }
 }
