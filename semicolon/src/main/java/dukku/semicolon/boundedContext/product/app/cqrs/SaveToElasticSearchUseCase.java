@@ -20,11 +20,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SaveToElasticSearchUseCase {
-
-    private final ProductSearchRepository productSearchRepository; // save용
+    private final ProductSearchRepository productSearchRepository;
     private final CategoryRepository categoryRepository;
 
-    // [핵심 추가] 부분 업데이트(update)는 Repository가 아니라 Operations가 담당합니다.
+    // 부분 업데이트(update)는 Repository가 아니라 Operations가 담당
     private final ElasticsearchOperations elasticsearchOperations;
 
     // 생성 시 편의 메서드 (Create)
