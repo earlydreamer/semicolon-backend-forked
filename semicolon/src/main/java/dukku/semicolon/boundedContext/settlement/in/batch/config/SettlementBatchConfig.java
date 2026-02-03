@@ -9,6 +9,8 @@ import dukku.semicolon.boundedContext.settlement.in.batch.writer.DepositChargeWr
 import dukku.semicolon.boundedContext.settlement.in.batch.writer.ValidateSettlementWriter;
 import dukku.semicolon.shared.settlement.exception.SettlementProcessingException;
 import dukku.semicolon.shared.settlement.exception.SettlementValidationException;
+import dukku.semicolon.boundedContext.settlement.in.batch.processor.RetrySettlementProcessor;
+import dukku.semicolon.boundedContext.settlement.in.batch.writer.RetrySettlementWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.job.Job;
@@ -81,8 +83,8 @@ public class SettlementBatchConfig {
 
     // Retry: 재처리
     private final JpaPagingItemReader<Settlement> failedSettlementReader;
-    private final dukku.semicolon.boundedContext.settlement.in.batch.processor.RetrySettlementProcessor retrySettlementProcessor;
-    private final dukku.semicolon.boundedContext.settlement.in.batch.writer.RetrySettlementWriter retrySettlementWriter;
+    private final RetrySettlementProcessor retrySettlementProcessor;
+    private final RetrySettlementWriter retrySettlementWriter;
 
 
     /**
