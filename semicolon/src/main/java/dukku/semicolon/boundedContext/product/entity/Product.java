@@ -137,7 +137,7 @@ public class Product extends BaseIdAndUUIDAndTime {
         images.add(ProductImage.create(this, imageUrl, nextSortOrder));
     }
 
-    // 무작정 바꾸는게 아닌 null이아닌것만 바꾼다.
+    // null이 아닌 것만 변경
     public void update(
             Category category,
             String title,
