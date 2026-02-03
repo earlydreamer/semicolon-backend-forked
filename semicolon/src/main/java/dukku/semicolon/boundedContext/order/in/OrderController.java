@@ -19,7 +19,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @OrderApiDocs.OrderTag
 public class OrderController {
-
     private final OrderFacade orderFacade;
 
     @PostMapping
