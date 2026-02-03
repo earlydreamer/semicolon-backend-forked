@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     Optional<OrderItem> findByUuid(UUID orderItemUuid);
 
+    List<OrderItem> findAllByStatusAndDeliveryDateBefore(OrderItemStatus status, LocalDateTime dateTime);
+  
     List<OrderItem> findAllByStatusAndConfirmedAtBetween(
             OrderItemStatus status,
             LocalDateTime start,

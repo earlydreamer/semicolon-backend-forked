@@ -89,6 +89,9 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword)
     private ConditionStatus conditionStatus;
 
+    @Field(type = FieldType.Keyword)
+    private List<String> tags;
+
     public static ProductDocument from(Product product) {
         // 카테고리 경로 생성 로직 (현재 카테고리부터 루트까지 순회)
         List<Integer> categoryPath = new ArrayList<>();

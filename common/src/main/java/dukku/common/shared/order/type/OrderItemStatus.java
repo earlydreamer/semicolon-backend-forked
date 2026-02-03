@@ -7,6 +7,8 @@ public enum OrderItemStatus {
     // 배송
     PREPARING_SHIPMENT,     // 배송 준비 중
     SHIPPED,                // 배송 중
+    IN_TRANSIT,         // 이동 중 (허브/터미널)
+    OUT_FOR_DELIVERY,   // 배송 출발 (기사님 이동)
     DELIVERED,              // 배송 완료
 
     // 구매 확정
