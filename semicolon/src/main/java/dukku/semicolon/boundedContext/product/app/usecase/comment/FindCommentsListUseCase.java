@@ -25,17 +25,17 @@ public class FindCommentsListUseCase {
     private final ProductCommentRepository commentRepository;
 
     @Transactional(readOnly = true)
-    public CommentListResponse execute(UUID productUuid, int page, int size) {
+    public CommentListResponse execute(UUID productUuid,  Pageable pageable) {
 
-        Pageable pageable = PageRequest.of(
-                Math.max(page, 0),
-                Math.min(size, 50),
+        Pageable p = PageRequest.of(
+                pageable.getPageNumber(),
+                Math.min(pageable.getPageSize(), 50),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
         // 1) 부모댓글 페이징 조회 (parent is null)
         Page<ProductComment> parentPage = commentRepository
-                .findByProduct_UuidAndParentIsNull(productUuid, pageable);
+                .findByProduct_UuidAndParentIsNull(productUuid, p);
 
         List<ProductComment> parents = parentPage.getContent();
 

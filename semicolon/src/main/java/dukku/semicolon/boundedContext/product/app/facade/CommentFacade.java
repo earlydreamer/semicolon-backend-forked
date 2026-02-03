@@ -6,9 +6,8 @@ import dukku.semicolon.shared.product.dto.comment.CommentListResponse;
 import dukku.semicolon.shared.product.dto.comment.CommentResponse;
 import dukku.semicolon.shared.product.dto.comment.CommentUpdateRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -31,8 +30,8 @@ public class CommentFacade
         return createCommentReplyUseCase.execute(userUuid, productUuid, parentCommentUuid, request);
     }
 
-    public CommentListResponse findCommentsList(UUID productUuid, @Min(0) int page, @Min(1) @Max(50) int size) {
-        return findCommentsListUseCase.execute(productUuid, page, size);
+    public CommentListResponse findCommentsList(UUID productUuid, Pageable pageable) {
+        return findCommentsListUseCase.execute(productUuid, pageable);
     }
 
     public CommentResponse updateComment(UUID userUuid, UUID productUuid, UUID commentUuid, @Valid CommentUpdateRequest request) {
