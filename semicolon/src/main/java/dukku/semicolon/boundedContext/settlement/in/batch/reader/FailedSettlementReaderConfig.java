@@ -24,7 +24,7 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class FailedSettlementReader {
+public class FailedSettlementReaderConfig {
 
     private final EntityManagerFactory entityManagerFactory;
     private final SettlementBatchProperties batchProperties;
