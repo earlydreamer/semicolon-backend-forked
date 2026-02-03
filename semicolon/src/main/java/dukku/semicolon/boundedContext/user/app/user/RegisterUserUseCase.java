@@ -1,6 +1,7 @@
 package dukku.semicolon.boundedContext.user.app.user;
 
 import dukku.semicolon.shared.user.dto.UserRegisterRequest;
+import dukku.semicolon.boundedContext.user.app.email.EmailVerificationService;
 import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.entity.type.Role;
 import dukku.semicolon.boundedContext.user.entity.type.UserStatus;
@@ -17,9 +18,11 @@ public class RegisterUserUseCase {
 
     private final UserSupport support;
     private final ApplicationEventPublisher springEventPublisher;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public User execute(UserRegisterRequest req, Role role) {
+        emailVerificationService.assertVerifiedForRegister(req.getEmail());
         User userCandidate = support.findByEmail(req.getEmail())
                 .map(existing -> restoreOrFail(existing, req))
                 .orElseGet(() -> createNew(req, role));
