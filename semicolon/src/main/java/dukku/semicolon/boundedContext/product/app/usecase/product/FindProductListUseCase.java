@@ -2,27 +2,32 @@ package dukku.semicolon.boundedContext.product.app.usecase.product;
 
 import dukku.common.shared.product.type.VisibilityStatus;
 import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.semicolon.boundedContext.product.out.CategoryRepository;
 import dukku.semicolon.boundedContext.product.out.ProductRepository;
 import dukku.semicolon.shared.product.dto.product.ProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FindProductListUseCase {
-
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     public ProductListResponse execute(Integer categoryId, Pageable pageable) {
-        Page<Product> result = (categoryId == null)
-                ? productRepository.findByVisibilityStatusAndDeletedAtIsNull(VisibilityStatus.VISIBLE, pageable)
-                : productRepository.findByCategory_IdAndVisibilityStatusAndDeletedAtIsNull(categoryId, VisibilityStatus.VISIBLE, pageable);
+        Page<Product> result;
+        if(categoryId == null) {
+            result = productRepository.findByVisibilityStatusAndDeletedAtIsNull(VisibilityStatus.VISIBLE, pageable);
+        } else {
+            List<Integer> categoryIds = categoryRepository.findCategoryPathIds(categoryId);
+            result = productRepository.findByCategory_IdInAndVisibilityStatusAndDeletedAtIsNull(categoryIds, VisibilityStatus.VISIBLE, pageable);
+        }
 
         return ProductListResponse.from(result);
     }

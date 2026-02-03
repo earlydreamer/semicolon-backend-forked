@@ -9,6 +9,7 @@ import dukku.semicolon.shared.settlement.dto.SettlementSearchCondition;
 import dukku.semicolon.shared.settlement.dto.SettlementStatisticsCondition;
 import dukku.semicolon.shared.settlement.dto.SettlementStatisticsResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -45,23 +47,5 @@ public class SettlementFacade {
         return getSettlementStatisticsUseCase.execute(condition);
     }
 
-    public void createSettlement(OrderItemConfirmedEvent event) {
-        createSettlementUseCase.execute(event);
-    }
 
-    public Settlement requestDepositCharge(Settlement settlement) {
-        return requestDepositChargeUseCase.execute(settlement);
-    }
-
-    public void completeSettlement(DepositChargeSucceededEvent event) {
-        Settlement settlement = settlementSupport.findByUuid(event.settlementUuid());
-        settlement.complete();
-        settlementSupport.save(settlement);
-    }
-
-    public void failSettlement(DepositChargeFailedEvent event) {
-        Settlement settlement = settlementSupport.findByUuid(event.settlementUuid());
-        settlement.fail();
-        settlementSupport.save(settlement);
-    }
 }

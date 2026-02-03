@@ -4,23 +4,53 @@ import dukku.semicolon.boundedContext.settlement.entity.Settlement;
 import dukku.semicolon.boundedContext.settlement.in.batch.listener.DepositChargeSkipListener;
 import dukku.semicolon.boundedContext.settlement.in.batch.listener.SettlementBatchListener;
 import dukku.semicolon.boundedContext.settlement.in.batch.processor.DepositChargeProcessor;
+import dukku.semicolon.boundedContext.settlement.in.batch.processor.ValidateSettlementProcessor;
 import dukku.semicolon.boundedContext.settlement.in.batch.writer.DepositChargeWriter;
+import dukku.semicolon.boundedContext.settlement.in.batch.writer.ValidateSettlementWriter;
+import dukku.semicolon.shared.settlement.exception.SettlementProcessingException;
+import dukku.semicolon.shared.settlement.exception.SettlementValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.job.Job;
-import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.infrastructure.item.database.JpaPagingItemReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import dukku.semicolon.shared.settlement.exception.SettlementProcessingException;
-import dukku.semicolon.shared.settlement.exception.SettlementValidationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.PlatformTransactionManager;
 
+/**
+ * 정산 배치 설정 (2-Step 구조, Step 1은 TODO)
+ *
+ * <pre>
+ * Job: settlementJob
+ *  ├─ [TODO] Step 1: createSettlementStep (정산 대상 생성)
+ *  │   - Order BC API 호출 → 당일 확정된 OrderItem 조회 → Settlement 생성
+ *  │   - Order BC API 구현 후 활성화
+ *  │
+ *  ├─ Step 1: validateSettlementStep (금액 검증)
+ *  │   - PENDING Settlement 조회 → 금액 검증 → PROCESSING 상태
+ *  │   - Settlement는 이벤트 리스너에서 생성됨 (OrderItemConfirmedEvent)
+ *  │
+ *  └─ Step 2: depositChargeStep (예치금 충전)
+ *      - PROCESSING Settlement 조회 → Deposit API 동기 호출 → SUCCESS 상태
+ *      - [TODO] Deposit BC API Client 구현 필요
+ * </pre>
+ *
+ * [Step 분리 이유]
+ * 1. 정산 대상 명확화 (Step 1에서 Settlement 생성 = 스냅샷 역할)
+ * 2. 금액 검증과 실제 충전 분리 (책임 분리)
+ * 3. 재시작 시 실패한 Step부터 재실행 가능
+ * 4. 중복 정산 방지 (Idempotency)
+ *
+ * [TODO]
+ * - Step 1 (CreateSettlement): Order BC API 구현 후 활성화
+ * - Step 3 (DepositCharge): Deposit BC API Client 구현 필요
+ */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -34,45 +64,139 @@ public class SettlementBatchConfig {
     private final SettlementBatchListener batchListener;
     private final DepositChargeSkipListener depositChargeSkipListener;
 
-    // Step Components (예치금 충전)
-    private final JpaPagingItemReader<Settlement> pendingSettlementReader;
+    // TODO: Step 1 정산 대상 생성 (Order BC API 구현 후 활성화)
+    // private final CreateSettlementReader createSettlementReader;
+    // private final CreateSettlementProcessor createSettlementProcessor;
+    // private final CreateSettlementWriter createSettlementWriter;
+
+    // Step 1: 금액 검증
+    private final JpaPagingItemReader<Settlement> pendingSettlementForValidationReader;
+    private final ValidateSettlementProcessor validateSettlementProcessor;
+    private final ValidateSettlementWriter validateSettlementWriter;
+
+    // Step 2: 예치금 충전
+    private final JpaPagingItemReader<Settlement> processingSettlementReader;
     private final DepositChargeProcessor depositChargeProcessor;
     private final DepositChargeWriter depositChargeWriter;
 
 
+    /**
+     * 정산 배치 Job
+     * - [TODO] Step 1 (정산 대상 생성) → Step 2 (금액 검증) → Step 3 (예치금 충전)
+     * - 현재: Step 1 (금액 검증) → Step 2 (예치금 충전)
+     */
     @Bean
     public Job settlementJob() {
-        log.info("정산 배치 Job 생성");
+        log.info("정산 배치 Job 생성 (2-Step 구조, Step 1은 TODO)");
         return new JobBuilder("settlementJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .listener(batchListener)
-                .start(depositChargeStep())
+                // TODO: Order BC API 구현 후 활성화
+                // .start(createSettlementStep())  // Step 1: 정산 대상 생성
+                // .next(validateSettlementStep()) // Step 2: 금액 검증
+                // .next(depositChargeStep())      // Step 3: 예치금 충전
+                .start(validateSettlementStep()) // 현재 Step 1: 금액 검증
+                .next(depositChargeStep())       // 현재 Step 2: 예치금 충전
                 .build();
     }
 
+
+    /*
+    ============================================================================
+    TODO: Order BC API 구현 후 활성화
+    ============================================================================
+
+    Step 1: 정산 대상 생성
+    - Order BC API 호출 → 당일(어제) 확정된 OrderItem 조회
+    - Settlement 생성 (PENDING 상태)
+
+    [TODO] Order BC에 다음 API 구현 필요:
+    - GET /api/v1/internal/orders/items/confirmed?date={date}
+    - Response: List<ConfirmedOrderItemDto>
+
+    @Bean
+    public Step createSettlementStep() {
+        log.info("[Step 1] 정산 대상 생성 Step 생성 - chunkSize: {}", batchProperties.getChunkSize());
+
+        return new StepBuilder("createSettlementStep", jobRepository)
+                .<ConfirmedOrderItemDto, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .reader(createSettlementReader.createReader())
+                .processor(createSettlementProcessor)
+                .writer(createSettlementWriter)
+                // Skip 정책
+                .faultTolerant()
+                .skip(SettlementProcessingException.class)
+                .skipLimit(batchProperties.getSkipLimit())
+                // Retry 정책
+                .retry(DataAccessException.class)
+                .retryLimit(batchProperties.getRetryLimit())
+                // Listener
+                .listener(batchListener)
+                .build();
+    }
+
+    ============================================================================
+    */
+
+
     /**
-     * 예치금 충전 Step
-     * - PENDING 상태의 Settlement 조회 (정산 예약일이 지난 건)
-     * - 판매자 예치금에 정산금액 충전
-     * - Settlement 상태를 SUCCESS로 변경
-     * 
-     * Skip 정책:
-     * - SettlementValidationException: 정산 데이터 유효성 검증 실패 (금액 오류, 상태 전이 불가 등)
-     * - SettlementProcessingException: 정산 처리 실패 (예치금 계좌 없음, 충전 실패 등)
-     * 
-     * Retry 정책:
-     * - DataAccessException: DB 연결 끊김, 데드락
+     * Step 1: 금액 검증 (현재)
+     * - PENDING 상태의 Settlement 조회 (정산 예약일 <= 현재 시간)
+     * - 금액 유효성 검증
+     * - PENDING → PROCESSING 상태 전이
+     *
+     * [TODO] Order BC API 구현 후 Step 2로 변경됨
+     */
+    @Bean
+    public Step validateSettlementStep() {
+        log.info("[Step 1] 금액 검증 Step 생성 - chunkSize: {}, skipLimit: {}",
+                batchProperties.getChunkSize(),
+                batchProperties.getSkipLimit());
+
+        return new StepBuilder("validateSettlementStep", jobRepository)
+                .<Settlement, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .reader(pendingSettlementForValidationReader)
+                .processor(validateSettlementProcessor)
+                .writer(validateSettlementWriter)
+                // Skip 정책
+                .faultTolerant()
+                .skip(SettlementValidationException.class)
+                .skipLimit(batchProperties.getSkipLimit())
+                // Retry 정책
+                .retry(DataAccessException.class)
+                .retryLimit(batchProperties.getRetryLimit())
+                // Listener
+                .listener(batchListener)
+                .listener(depositChargeSkipListener)
+                .build();
+    }
+
+
+    /**
+     * Step 2: 예치금 충전 (현재)
+     * - PROCESSING 상태의 Settlement 조회
+     * - Deposit BC API Client를 통한 예치금 충전 (동기 방식)
+     * - PROCESSING → SUCCESS 상태 전이
+     *
+     * [TODO] Deposit BC API Client 구현 필요
+     * - DepositFacade 직접 참조 대신 API Client를 통해 호출
+     * - Bounded Context 간 직접 참조 금지 원칙 준수
+     *
+     * [TODO] Order BC API 구현 후 Step 3으로 변경됨
+     *
+     * [Idempotency]
+     * - 이미 SUCCESS/FAILED 상태인 건은 Processor에서 Skip (null 반환)
      */
     @Bean
     public Step depositChargeStep() {
-        log.info("예치금 충전 Step 생성 - chunkSize: {}, skipLimit: {}, retryLimit: {}",
+        log.info("[Step 2] 예치금 충전 Step 생성 - chunkSize: {}, skipLimit: {}, retryLimit: {}",
                 batchProperties.getChunkSize(),
                 batchProperties.getSkipLimit(),
                 batchProperties.getRetryLimit());
 
         return new StepBuilder("depositChargeStep", jobRepository)
                 .<Settlement, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
-                .reader(pendingSettlementReader)
+                .reader(processingSettlementReader)
                 .processor(depositChargeProcessor)
                 .writer(depositChargeWriter)
                 // Skip 정책

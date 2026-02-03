@@ -58,6 +58,7 @@ public class SecurityConfig {
                                 "/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/api/v1/users/email/**",
                                 "/api/v1/users/register",
                                 "/api/v1/auth/login"
                         )
@@ -72,7 +73,7 @@ public class SecurityConfig {
                             Arrays.asList(allowedOrigins)
                     );
                     corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type"));
+                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
