@@ -4,7 +4,7 @@ import dukku.semicolon.boundedContext.product.app.support.ProductMapper;
 import dukku.semicolon.boundedContext.product.entity.Product;
 import dukku.semicolon.boundedContext.product.out.ProductLikeRepository;
 import dukku.semicolon.boundedContext.product.out.ProductRepository;
-import dukku.semicolon.shared.product.dto.product.MyLikedProductListResponse;
+import dukku.semicolon.shared.product.dto.like.MyLikedProductListResponse;
 import dukku.semicolon.shared.product.dto.product.ProductListItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
