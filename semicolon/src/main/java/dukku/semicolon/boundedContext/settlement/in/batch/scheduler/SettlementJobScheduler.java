@@ -33,6 +33,7 @@ public class SettlementJobScheduler {
 
     private final JobOperator jobOperator;
     private final Job settlementJob;
+    private final Job settlementRetryJob;
     private final SettlementBatchProperties batchProperties;
 
     /**
@@ -65,11 +66,50 @@ public class SettlementJobScheduler {
         }
     }
     /**
+     * 매일 새벽 1시에 정산 재처리 배치 실행
+     * - 1시간 전(00:00) 실행된 settlementJob에서 실패한 건들을 재처리
+     * cron 표현식은 application.yml에서 설정 가능
+     * 기본값: "0 0 1 * * *" (매일 새벽 1시)
+     */
+    @Scheduled(cron = "${batch.settlement.retry-scheduler.cron:0 0 1 * * *}")
+    public void runSettlementRetryJob() {
+        log.info("========== 정산 재처리 배치 스케줄러 시작 ==========");
+
+        try {
+            JobParameters jobParameters = createJobParameters();
+
+            log.info("정산 재처리 배치 Job 실행 - Parameters: {}", jobParameters);
+
+            jobOperator.start(settlementRetryJob, jobParameters);
+
+            log.info("정산 재처리 배치 Job 실행 완료");
+        } catch (JobExecutionAlreadyRunningException e) {
+            log.error("정산 재처리 배치가 이미 실행 중입니다.", e);
+        } catch (JobRestartException e) {
+            log.error("정산 재처리 배치 재시작 실패", e);
+        } catch (JobInstanceAlreadyCompleteException e) {
+            log.error("정산 재처리 배치가 이미 완료된 인스턴스입니다.", e);
+        } catch (InvalidJobParametersException e) {
+            log.error("정산 재처리 배치 파라미터가 잘못되었습니다.", e);
+        } catch (Exception e) {
+            log.error("정산 재처리 배치 실행 중 예기치 않은 에러 발생", e);
+        }
+    }
+
+    /**
      * 수동 실행용 메서드 (관리자 API에서 호출 가능)
      */
     public void runManually() {
         log.info("========== 정산 배치 수동 실행 ==========");
         runSettlementJob();
+    }
+
+    /**
+     * 재처리 배치 수동 실행용 메서드 (관리자 API에서 호출 가능)
+     */
+    public void runRetryManually() {
+        log.info("========== 정산 재처리 배치 수동 실행 ==========");
+        runSettlementRetryJob();
     }
 
     /**

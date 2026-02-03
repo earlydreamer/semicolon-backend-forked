@@ -79,6 +79,11 @@ public class SettlementBatchConfig {
     private final DepositChargeProcessor depositChargeProcessor;
     private final DepositChargeWriter depositChargeWriter;
 
+    // Retry: 재처리
+    private final JpaPagingItemReader<Settlement> failedSettlementReader;
+    private final dukku.semicolon.boundedContext.settlement.in.batch.processor.RetrySettlementProcessor retrySettlementProcessor;
+    private final dukku.semicolon.boundedContext.settlement.in.batch.writer.RetrySettlementWriter retrySettlementWriter;
+
 
     /**
      * 정산 배치 Job
@@ -97,6 +102,24 @@ public class SettlementBatchConfig {
                 // .next(depositChargeStep())      // Step 3: 예치금 충전
                 .start(validateSettlementStep()) // 현재 Step 1: 금액 검증
                 .next(depositChargeStep())       // 현재 Step 2: 예치금 충전
+                .build();
+    }
+
+
+    /**
+     * 정산 재처리 배치 Job
+     * - 1시간 전 실패한 정산 건들을 재처리
+     * - Step 1 (재처리: FAILED → PENDING) → Step 2 (금액 검증) → Step 3 (예치금 충전)
+     */
+    @Bean
+    public Job settlementRetryJob() {
+        log.info("정산 재처리 배치 Job 생성 (3-Step 구조)");
+        return new JobBuilder("settlementRetryJob", jobRepository)
+                .incrementer(new RunIdIncrementer())
+                .listener(batchListener)
+                .start(retrySettlementStep())    // Step 1: FAILED → PENDING
+                .next(validateSettlementStep())  // Step 2: 금액 검증 (재사용)
+                .next(depositChargeStep())       // Step 3: 예치금 충전 (재사용)
                 .build();
     }
 
@@ -210,6 +233,36 @@ public class SettlementBatchConfig {
                 // Listener
                 .listener(batchListener)
                 .listener(depositChargeSkipListener)
+                .build();
+    }
+
+
+    /**
+     * Retry Step: 재처리
+     * - FAILED 상태의 Settlement 조회
+     * - FAILED → PENDING 상태 전이
+     * - 이후 validateSettlementStep, depositChargeStep에서 정상 플로우 진행
+     */
+    @Bean
+    public Step retrySettlementStep() {
+        log.info("[Retry Step] 재처리 Step 생성 - chunkSize: {}, skipLimit: {}",
+                batchProperties.getChunkSize(),
+                batchProperties.getSkipLimit());
+
+        return new StepBuilder("retrySettlementStep", jobRepository)
+                .<Settlement, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .reader(failedSettlementReader)
+                .processor(retrySettlementProcessor)
+                .writer(retrySettlementWriter)
+                // Skip 정책
+                .faultTolerant()
+                .skip(SettlementValidationException.class)
+                .skipLimit(batchProperties.getSkipLimit())
+                // Retry 정책
+                .retry(DataAccessException.class)
+                .retryLimit(batchProperties.getRetryLimit())
+                // Listener
+                .listener(batchListener)
                 .build();
     }
 }
