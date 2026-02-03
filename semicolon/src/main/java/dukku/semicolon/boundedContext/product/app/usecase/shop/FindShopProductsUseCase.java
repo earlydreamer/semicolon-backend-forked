@@ -6,7 +6,7 @@ import dukku.semicolon.boundedContext.product.entity.Product;
 import dukku.semicolon.boundedContext.product.entity.ProductSeller;
 import dukku.semicolon.boundedContext.product.out.ProductRepository;
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
-import dukku.semicolon.shared.product.dto.ShopProductListResponse;
+import dukku.semicolon.shared.product.dto.shop.ShopProductListResponse;
 import dukku.semicolon.shared.product.dto.product.ProductListItemResponse;
 import dukku.semicolon.shared.product.exception.ProductSellerNotFoundException;
 import lombok.RequiredArgsConstructor;
