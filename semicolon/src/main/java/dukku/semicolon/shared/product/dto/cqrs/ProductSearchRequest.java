@@ -3,6 +3,8 @@ package dukku.semicolon.shared.product.dto.cqrs;
 import dukku.common.shared.product.type.ConditionStatus;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,6 +17,7 @@ public class ProductSearchRequest {
     private Long minPrice;
     private Long maxPrice;
     private ConditionStatus conditionStatus;
+    private List<String> tags;
 
     @Builder.Default // Builder 사용 시 기본값 적용
     private ProductSortType sortType = ProductSortType.LATEST;

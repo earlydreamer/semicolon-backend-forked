@@ -14,27 +14,29 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductCreateRequest {
+    @NotNull
+    @Min(1)
+    private Integer categoryId;
 
-        @NotNull
-        @Min(1)
-        private Integer categoryId;
+    @NotBlank
+    @Size(max = 200)
+    private String title;
 
-        @NotBlank
-        @Size(max = 200)
-        private String title;
+    private String description;
 
-        private String description;
+    @NotNull
+    @PositiveOrZero
+    private Long price;
 
-        @NotNull
-        @PositiveOrZero
-        private Long price;
+    @PositiveOrZero
+    private Long shippingFee;
 
-        @PositiveOrZero
-        private Long shippingFee;
+    @Size(max = 10)
+    private List<@NotBlank String> imageUrls;
 
-        @Size(max = 10)
-        private List<@NotBlank String> imageUrls;
+    @NotNull
+    private ConditionStatus conditionStatus;
 
-        @NotNull
-        private ConditionStatus conditionStatus;
+    @Size(max = 10)
+    private List<@NotBlank String> tags;
 }
