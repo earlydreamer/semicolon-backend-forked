@@ -2,7 +2,7 @@ package dukku.semicolon.boundedContext.product.in;
 
 import dukku.semicolon.boundedContext.product.app.facade.ProductLikeFacade;
 import dukku.semicolon.shared.product.docs.ProductLikeApiDocs;
-import dukku.semicolon.shared.product.dto.product.MyLikedProductListResponse;
+import dukku.semicolon.shared.product.dto.like.MyLikedProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

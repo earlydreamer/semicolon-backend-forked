@@ -2,8 +2,10 @@ package dukku.semicolon.boundedContext.product.app.usecase.product;
 
 import dukku.semicolon.boundedContext.product.app.support.ProductMapper;
 import dukku.semicolon.boundedContext.product.app.support.ProductSupport;
+import dukku.semicolon.boundedContext.product.app.support.ProductTagSupport;
 import dukku.semicolon.boundedContext.product.entity.Category;
 import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.semicolon.boundedContext.product.entity.tag.Tag;
 import dukku.semicolon.boundedContext.product.out.CategoryRepository;
 import dukku.semicolon.boundedContext.product.out.ProductRepository;
 import dukku.semicolon.shared.product.dto.product.ProductCreateRequest;
@@ -21,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CreateProductUseCase {
     private final ProductSupport productSupport;
+    private final ProductTagSupport productTagSupport;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -46,6 +49,9 @@ public class CreateProductUseCase {
             productSupport.validateImageCount(imageUrls.size());
             imageUrls.forEach(product::addImage);
         }
+
+        List<Tag> tags = productTagSupport.getOrCreateTags(request.getTags());
+        product.replaceTags(tags);
 
         Product savedProduct = productRepository.save(product);
         eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct));
