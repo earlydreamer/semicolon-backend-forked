@@ -25,7 +25,7 @@ import java.util.Map;
 @Service
 public class SlackNotificationService {
 
-    @Value("${slack.webhook.url}")
+    @Value("${slack.webhook.url:}")
     private String webhookUrl;
 
     private final RestTemplate restTemplate;
@@ -91,6 +91,11 @@ public class SlackNotificationService {
     }
 
     private void sendSlackMessage(String message) {
+        if (webhookUrl == null || webhookUrl.isBlank()) {
+            log.warn("[Slack 알림 스킵] webhook URL이 설정되지 않았습니다.");
+            return;
+        }
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
