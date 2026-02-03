@@ -33,6 +33,7 @@ jobs:
       CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
       TOSS_API_SECRET_KEY: ${{ secrets.TOSS_API_SECRET_KEY }}
       CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+      WEB_HOOK_URL: ${{secrets.WEB_HOOK_URL}}
 
     steps:
       - uses: actions/checkout@v2
