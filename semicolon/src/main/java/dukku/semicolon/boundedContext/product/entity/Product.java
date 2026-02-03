@@ -4,6 +4,8 @@ import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
+import dukku.semicolon.boundedContext.product.entity.tag.ProductTag;
+import dukku.semicolon.boundedContext.product.entity.tag.Tag;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -36,7 +38,7 @@ import java.util.UUID;
 public class Product extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
-    @Column( nullable = false, columnDefinition = "uuid", comment = "판매자 UUID")
+    @Column(nullable = false, columnDefinition = "uuid", comment = "판매자 UUID")
     private UUID sellerUuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -135,6 +137,27 @@ public class Product extends BaseIdAndUUIDAndTime {
                 .orElse(0) + 1;
 
         images.add(ProductImage.create(this, imageUrl, nextSortOrder));
+    }
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProductTag> productTags = new ArrayList<>();
+
+    // 태그 교체 (기존 싹 지우고 갈아끼우기)
+    public void replaceTags(List<Tag> tags) {
+        this.productTags.clear(); // orphanRemoval=true로 인해 DB에서도 삭제됨
+        if (tags != null && !tags.isEmpty()) {
+            for (Tag tag : tags) {
+                this.productTags.add(ProductTag.create(this, tag));
+            }
+        }
+    }
+
+    // 읽기 전용으로 태그 이름 목록 반환 (ES 동기화용)
+    public List<String> getTagNames() {
+        return this.productTags.stream()
+                .map(pt -> pt.getTag().getName())
+                .toList();
     }
 
     // 무작정 바꾸는게 아닌 null이아닌것만 바꾼다.

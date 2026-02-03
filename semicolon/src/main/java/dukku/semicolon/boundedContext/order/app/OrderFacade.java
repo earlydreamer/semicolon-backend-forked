@@ -1,5 +1,6 @@
 package dukku.semicolon.boundedContext.order.app;
 
+import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.semicolon.boundedContext.order.entity.Order;
 import dukku.semicolon.shared.order.dto.*;
@@ -8,7 +9,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,6 +26,7 @@ public class OrderFacade {
     private final FindMyOrderListUseCase findMyOrderList;
     private final UpdateOrderItemDeliveryInfoUseCase updateOrderItemDeliveryInfo;
     private final UpdateOrderItemStatusUseCase  updateOrderItemStatus;
+    private final FindConfirmedItemsUseCase findConfirmedItems;
 
     public OrderResponse createOrder(OrderCreateRequest req) {
         return Order.toOrderResponse(createOrder.execute(req));
@@ -58,5 +63,10 @@ public class OrderFacade {
     // 사용자가 요청하는 경우 또는 관리자가 요청하는 경우. 구매 확정 완료, 취소 요청, 환불 요청
     public void updateDeliveryInfo(UUID orderItemUuid, OrderItemStatus status) {
         updateOrderItemStatus.execute(orderItemUuid, status);
+    }
+
+    // 주문 확정 조회
+    public List<ConfirmedOrderItemResponse> findConfirmedItems(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return  findConfirmedItems.execute(startDateTime, endDateTime);
     }
 }

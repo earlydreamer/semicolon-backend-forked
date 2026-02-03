@@ -10,7 +10,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class FindCategoryListUseCase {
-
     private final CategoryRepository categoryRepository;
 
     public List<CategoryCreateResponse> execute() {

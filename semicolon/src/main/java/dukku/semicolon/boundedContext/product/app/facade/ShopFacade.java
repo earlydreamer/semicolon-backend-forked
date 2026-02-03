@@ -3,9 +3,9 @@ package dukku.semicolon.boundedContext.product.app.facade;
 import dukku.common.global.UserUtil;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.semicolon.boundedContext.product.app.usecase.shop.*;
-import dukku.semicolon.shared.product.dto.ShopProductListResponse;
-import dukku.semicolon.shared.product.dto.ShopResponse;
-import dukku.semicolon.shared.product.dto.UpdateShopRequest;
+import dukku.semicolon.shared.product.dto.shop.ShopProductListResponse;
+import dukku.semicolon.shared.product.dto.shop.ShopResponse;
+import dukku.semicolon.shared.product.dto.shop.UpdateShopRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
