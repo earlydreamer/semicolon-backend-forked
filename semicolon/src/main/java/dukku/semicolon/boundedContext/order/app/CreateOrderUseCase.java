@@ -1,13 +1,9 @@
 package dukku.semicolon.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
-import dukku.common.shared.order.event.OrderProductSaleBlockedEvent;
 import dukku.semicolon.boundedContext.order.entity.Order;
 import dukku.semicolon.boundedContext.order.entity.OrderItem;
 import dukku.semicolon.shared.order.dto.OrderCreateRequest;
-import dukku.semicolon.shared.product.dto.product.ProductDetailResponse;
 import dukku.semicolon.shared.product.out.ProductApiClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

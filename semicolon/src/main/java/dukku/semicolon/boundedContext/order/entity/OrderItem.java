@@ -55,6 +55,8 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
     @Enumerated(EnumType.STRING)
     private OrderItemStatus status;
 
+    private LocalDateTime deliveryDate;
+  
     @Column(comment = "구매 확정 일시")
     private LocalDateTime confirmedAt;
 
@@ -73,6 +75,7 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
         this.carrierCode = request.getCarrierCode();
         this.trackingNumber = request.getTrackingNumber();
         this.status = OrderItemStatus.SHIPPED;
+        this.deliveryDate = LocalDateTime.now();
     }
 
     public void updateOrderStatus(OrderItemStatus newStatus) {
@@ -122,6 +125,19 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
                 this.status == OrderItemStatus.DELIVERED;
     }
 
+    // 가상 배송 스케줄러용 상태 변경 메서드
+    public void updateMockDeliveryStatus(OrderItemStatus nextStatus) {
+        // 최종 상태 도달 시 변경 불가
+        if (this.status == OrderItemStatus.CONFIRMED ||
+                this.status == OrderItemStatus.DELIVERED ||
+                this.status == OrderItemStatus.CANCELED) {
+            return;
+        }
+
+        this.status = nextStatus;
+        this.deliveryDate = LocalDateTime.now(); // 상태 변경 시점 갱신 (다음 단계 카운트다운 시작)
+    }
+  
     public static ConfirmedOrderItemResponse toConfirmedOrderItemResponse(OrderItem orderItem) {
         return new ConfirmedOrderItemResponse(
                 orderItem.getUuid(),
