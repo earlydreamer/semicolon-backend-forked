@@ -21,7 +21,8 @@ public enum OrderItemStatus {
     // 환불
     REFUND_REQUESTED,       // 환불 요청
     REFUND_IN_PROGRESS,     // 환불 진행 중
-    REFUND_COMPLETED;        // 환불 완료
+    REFUND_COMPLETED,        // 환불 완료
+    SETTLEMENT_COMPLETED; // 정산 완료
 
     public boolean canChangeShippingInfo() {
         return this == PAYMENT_COMPLETED || this == PREPARING_SHIPMENT;

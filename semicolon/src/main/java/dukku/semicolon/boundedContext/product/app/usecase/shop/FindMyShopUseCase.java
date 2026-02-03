@@ -2,7 +2,7 @@ package dukku.semicolon.boundedContext.product.app.usecase.shop;
 
 import dukku.semicolon.boundedContext.product.entity.ProductSeller;
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
-import dukku.semicolon.shared.product.dto.ShopResponse;
+import dukku.semicolon.shared.product.dto.shop.ShopResponse;
 import dukku.semicolon.shared.product.exception.ProductSellerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
