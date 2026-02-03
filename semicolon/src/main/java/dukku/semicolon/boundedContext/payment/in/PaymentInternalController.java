@@ -55,4 +55,30 @@ public class PaymentInternalController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 주문 UUID로 결제 정보 조회 (Internal API)
+     *
+     * @param orderUuid 주문 UUID
+     * @return 결제 정보
+     */
+    @GetMapping("/orders/{orderUuid}")
+    public ResponseEntity<PaymentInternalResponse> getPaymentByOrderUuid(
+            @PathVariable UUID orderUuid) {
+
+        log.info("[Internal API] 주문 결제 정보 조회 요청. orderUuid={}", orderUuid);
+
+        Payment payment = findPayment.findByOrderUuid(orderUuid);
+
+        PaymentInternalResponse response = PaymentInternalResponse.builder()
+                .paymentUuid(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .status(payment.getPaymentStatus())
+                .totalAmount(payment.getAmount())
+                .pgPayAmount(payment.getAmountPg())
+                .depositUseAmount(payment.getPaymentDeposit())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
 }
