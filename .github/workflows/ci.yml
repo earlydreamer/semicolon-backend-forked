@@ -10,7 +10,7 @@ jobs:
     
     # ✅ 환경 변수 주입 (Secrets 및 Localhost 설정)
     env:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: release
       
       # 1. Database & Cache (CI 환경이므로 무조건 localhost)
       # 실제 운영/개발 서버의 Host(Secrets)를 쓰면 안 되고, 밑에서 띄울 컨테이너에 붙어야 합니다.
@@ -34,7 +34,6 @@ jobs:
       TOSS_API_SECRET_KEY: ${{ secrets.TOSS_API_SECRET_KEY }}
       CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
       WEB_HOOK_URL: ${{secrets.WEB_HOOK_URL}}
-
 
     steps:
       - uses: actions/checkout@v2
