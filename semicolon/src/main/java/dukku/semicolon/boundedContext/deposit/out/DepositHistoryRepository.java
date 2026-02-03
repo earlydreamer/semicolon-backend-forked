@@ -17,4 +17,9 @@ public interface DepositHistoryRepository
     List<DepositHistory> findAllByOrderByCreatedAtDesc();
 
     List<DepositHistory> findByOrderItemUuid(UUID orderItemUuid);
+
+    /**
+     * 특정 orderItemUuid(또는 settlementUuid)로 이미 처리된 이력이 있는지 확인 (멱등성 체크)
+     */
+    boolean existsByOrderItemUuid(UUID orderItemUuid);
 }

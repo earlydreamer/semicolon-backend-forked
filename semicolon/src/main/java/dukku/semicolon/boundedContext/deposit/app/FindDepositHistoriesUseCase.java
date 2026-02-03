@@ -54,4 +54,11 @@ public class FindDepositHistoriesUseCase {
     public List<DepositHistory> findAllHistories() {
         return depositSupport.findAllHistories();
     }
+
+    /**
+     * 특정 settlementUuid로 이미 처리된 충전 내역이 있는지 확인 (멱등성 체크)
+     */
+    public boolean existsBySettlementUuid(UUID settlementUuid) {
+        return depositSupport.existsByOrderItemUuid(settlementUuid);
+    }
 }
