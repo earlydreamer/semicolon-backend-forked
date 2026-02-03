@@ -72,4 +72,5 @@ jobs:
               -e WEB_HOOK_URL=${{secrets.SLACK_WEBHOOK_URL}}\
               ${{ env.DOCKER_IMAGE }}:latest
             
+            
             docker image prune -f

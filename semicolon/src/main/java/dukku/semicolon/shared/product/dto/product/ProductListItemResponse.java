@@ -10,6 +10,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -25,6 +26,7 @@ public class ProductListItemResponse {
     private int likeCount;
     private int viewCount;
     private int commentCount;
+    private List<String> tagNames;
 
     public static ProductListItemResponse from(Product product) {
         String thumbnail = product.getImages() == null
@@ -44,6 +46,7 @@ public class ProductListItemResponse {
                 .commentCount(product.getCommentCount())
                 .viewCount(product.getViewCount())
                 .createdAt(product.getCreatedAt())
+                .tagNames(product.getTagNames())
                 .build();
     }
 
@@ -58,6 +61,7 @@ public class ProductListItemResponse {
                 .commentCount(doc.getCommentCount())
                 .viewCount(doc.getViewCount())
                 .createdAt(doc.getCreatedAt())
+                .tagNames(doc.getTags())
                 .build();
     }
 }

@@ -2,8 +2,8 @@ package dukku.semicolon.boundedContext.order.in;
 
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.semicolon.boundedContext.order.app.OrderFacade;
-import dukku.semicolon.shared.order.dto.*;
 import dukku.semicolon.shared.order.docs.OrderApiDocs;
+import dukku.semicolon.shared.order.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,13 +19,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @OrderApiDocs.OrderTag
 public class OrderController {
-
     private final OrderFacade orderFacade;
 
     @PostMapping
     @OrderApiDocs.CreateOrder
     public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderCreateRequest req) {
         OrderResponse response = orderFacade.createOrder(req);
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -33,6 +33,7 @@ public class OrderController {
     @OrderApiDocs.FindOrderByUuid
     public ResponseEntity<OrderResponse> findOrderByUuid(@PathVariable UUID orderUuid) {
         OrderResponse response = orderFacade.findOrderByUuid(orderUuid);
+
         return ResponseEntity.ok(response);
     }
 
@@ -43,6 +44,7 @@ public class OrderController {
             @RequestBody @Validated OrderUpdateRequest.ShippingInfo req
     ) {
         orderFacade.updateShippingInfo(orderUuid, req);
+
         return ResponseEntity.noContent().build();
     }
 
@@ -57,6 +59,7 @@ public class OrderController {
     @OrderApiDocs.FindMyOrderList
     public ResponseEntity<Page<OrderListResponse>> findMyOrderList(Pageable pageable) {
         Page<OrderListResponse> response = orderFacade.findMyOrderList(pageable);
+
         return ResponseEntity.ok(response);
     }
 
@@ -67,6 +70,7 @@ public class OrderController {
             @RequestBody @Validated DeliveryInfoRequest request
     ) {
         orderFacade.updateDeliveryInfo(orderItemUuid, request);
+
         return ResponseEntity.noContent().build();
     }
 
@@ -74,6 +78,7 @@ public class OrderController {
     @OrderApiDocs.UpdateOrderItemStatus
     public ResponseEntity<Void> updateOrderItemStatus(@PathVariable UUID orderItemUuid, @RequestParam OrderItemStatus status) {
         orderFacade.updateDeliveryInfo(orderItemUuid, status);
+
         return ResponseEntity.noContent().build();
     }
 }

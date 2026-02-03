@@ -2,6 +2,7 @@ package dukku.semicolon.boundedContext.order.entity;
 
 import dukku.common.global.exception.ConflictException;
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
+import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.semicolon.shared.order.dto.DeliveryInfoRequest;
 import dukku.semicolon.shared.order.dto.OrderCreateRequest;
@@ -11,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -53,6 +55,11 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
     @Enumerated(EnumType.STRING)
     private OrderItemStatus status;
 
+    private LocalDateTime deliveryDate;
+  
+    @Column(comment = "구매 확정 일시")
+    private LocalDateTime confirmedAt;
+
     public static OrderItem createOrderItem(OrderCreateRequest.OrderItemCreateRequest request) {
         return OrderItem.builder()
                 .productUuid(request.getProductUuid())
@@ -68,6 +75,7 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
         this.carrierCode = request.getCarrierCode();
         this.trackingNumber = request.getTrackingNumber();
         this.status = OrderItemStatus.SHIPPED;
+        this.deliveryDate = LocalDateTime.now();
     }
 
     public void updateOrderStatus(OrderItemStatus newStatus) {
@@ -94,6 +102,8 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
                 if (this.status != OrderItemStatus.DELIVERED) {
                     throw new ConflictException("배송이 완료된 상품만 구매 확정할 수 있습니다.");
                 }
+
+                this.confirmedAt = LocalDateTime.now();
             }
             // TODO: 환불 정책
             /*case REFUND_REQUESTED -> {
@@ -113,5 +123,31 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
     private boolean isShippingOrCompleted() {
         return this.status == OrderItemStatus.SHIPPED ||
                 this.status == OrderItemStatus.DELIVERED;
+    }
+
+    // 가상 배송 스케줄러용 상태 변경 메서드
+    public void updateMockDeliveryStatus(OrderItemStatus nextStatus) {
+        // 최종 상태 도달 시 변경 불가
+        if (this.status == OrderItemStatus.CONFIRMED ||
+                this.status == OrderItemStatus.DELIVERED ||
+                this.status == OrderItemStatus.CANCELED) {
+            return;
+        }
+
+        this.status = nextStatus;
+        this.deliveryDate = LocalDateTime.now(); // 상태 변경 시점 갱신 (다음 단계 카운트다운 시작)
+    }
+  
+    public static ConfirmedOrderItemResponse toConfirmedOrderItemResponse(OrderItem orderItem) {
+        return new ConfirmedOrderItemResponse(
+                orderItem.getUuid(),
+                orderItem.getOrder().getUuid(),
+                orderItem.getOrder().getUserUuid(),
+                orderItem.getSellerUuid(),
+                orderItem.getProductUuid(),
+                orderItem.getProductName(),
+                orderItem.getProductPrice(),
+                orderItem.getConfirmedAt()
+                );
     }
 }

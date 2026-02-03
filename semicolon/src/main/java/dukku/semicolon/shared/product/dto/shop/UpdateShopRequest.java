@@ -1,4 +1,4 @@
-package dukku.semicolon.shared.product.dto;
+package dukku.semicolon.shared.product.dto.shop;
 
 import jakarta.validation.constraints.Size;
 import lombok.Getter;

@@ -50,3 +50,6 @@ out/
 .DS_Store
 *.log
 logs/
+
+## Assistant
+codex_preset_dukku

@@ -36,7 +36,7 @@ public class ProductComment extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false, columnDefinition = "uuid", comment = "작성자 UUID")
-    private UUID userUuid;
+    private UUID authorUuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", comment = "부모 댓글 ID(대댓글)")
@@ -47,4 +47,34 @@ public class ProductComment extends BaseIdAndUUIDAndTime {
 
     @Column(comment = "삭제일(소프트 삭제)")
     private LocalDateTime deletedAt;
+
+    public static ProductComment createRoot(Product product, UUID authorUuid, String content) {
+        return ProductComment.builder()
+                .product(product)
+                .authorUuid(authorUuid)
+                .parent(null)
+                .content(content)
+                .build();
+    }
+
+    public static ProductComment createReply(Product product, UUID authorUuid, ProductComment parent, String content) {
+        return ProductComment.builder()
+                .product(product)
+                .authorUuid(authorUuid)
+                .parent(parent)
+                .content(content)
+                .build();
+    }
+
+    public void changeContent(String content) {
+        this.content = content;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
 }
