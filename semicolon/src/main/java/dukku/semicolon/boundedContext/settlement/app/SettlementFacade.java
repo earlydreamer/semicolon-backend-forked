@@ -29,6 +29,10 @@ public class SettlementFacade {
     private final CreateSettlementUseCase createSettlementUseCase;
     private final SettlementSupport settlementSupport;
     private final RequestDepositChargeUseCase requestDepositChargeUseCase;
+    private final RetrySettlementUseCase retrySettlementUseCase;
+    private final ManualCompleteSettlementUseCase manualCompleteSettlementUseCase;
+    private final ManualFailSettlementUseCase manualFailSettlementUseCase;
+    private final ManualProcessSettlementUseCase manualProcessSettlementUseCase;
 
     @Transactional(readOnly = true)
     public SettlementDetailResponse getSettlement(UUID settlementUuid) {
@@ -47,5 +51,35 @@ public class SettlementFacade {
         return getSettlementStatisticsUseCase.execute(condition);
     }
 
+    /**
+     * 실패한 정산 재처리 (FAILED → PENDING)
+     */
+    public SettlementDetailResponse retrySettlement(UUID settlementUuid) {
+        Settlement settlement = retrySettlementUseCase.execute(settlementUuid);
+        return SettlementDetailResponse.from(settlement);
+    }
 
+    /**
+     * 정산 수동 완료 처리 (PROCESSING → SUCCESS)
+     */
+    public SettlementDetailResponse completeSettlement(UUID settlementUuid) {
+        Settlement settlement = manualCompleteSettlementUseCase.execute(settlementUuid);
+        return SettlementDetailResponse.from(settlement);
+    }
+
+    /**
+     * 정산 수동 실패 처리 (PROCESSING → FAILED)
+     */
+    public SettlementDetailResponse failSettlement(UUID settlementUuid) {
+        Settlement settlement = manualFailSettlementUseCase.execute(settlementUuid);
+        return SettlementDetailResponse.from(settlement);
+    }
+
+    /**
+     * 정산 수동 예치금 충전 요청 (PENDING → PROCESSING)
+     */
+//    public SettlementDetailResponse processSettlement(UUID settlementUuid) {
+//        //TODO: deposit apl client 구현되면 생성
+//
+//    }
 }
