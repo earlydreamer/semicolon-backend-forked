@@ -37,13 +37,6 @@ public final class CommentApiDocs {
             description = "특정 상품에 부모 댓글을 작성합니다.",
             parameters = {
                     @Parameter(
-                            name = "X-USER-UUID",
-                            in = ParameterIn.HEADER,
-                            description = "임시 사용자 UUID 헤더",
-                            required = true,
-                            example = "7fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    ),
-                    @Parameter(
                             name = "productUuid",
                             in = ParameterIn.PATH,
                             description = "상품 UUID",
@@ -99,13 +92,6 @@ public final class CommentApiDocs {
             description = "특정 상품의 부모 댓글에 대댓글을 작성합니다.",
             parameters = {
                     @Parameter(
-                            name = "X-USER-UUID",
-                            in = ParameterIn.HEADER,
-                            description = "임시 사용자 UUID 헤더",
-                            required = true,
-                            example = "7fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    ),
-                    @Parameter(
                             name = "productUuid",
                             in = ParameterIn.PATH,
                             description = "상품 UUID",
@@ -152,13 +138,6 @@ public final class CommentApiDocs {
             summary = "상품 댓글 목록 조회",
             description = "특정 상품의 댓글(부모+대댓글)을 페이징으로 조회합니다.",
             parameters = {
-                    @Parameter(
-                            name = "productUuid",
-                            in = ParameterIn.PATH,
-                            description = "상품 UUID",
-                            required = true,
-                            example = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    ),
                     @Parameter(
                             name = "page",
                             in = ParameterIn.QUERY,
@@ -225,13 +204,6 @@ public final class CommentApiDocs {
             description = "댓글 UUID로 댓글 내용을 수정합니다. (작성자만 가능)",
             parameters = {
                     @Parameter(
-                            name = "X-USER-UUID",
-                            in = ParameterIn.HEADER,
-                            description = "임시 사용자 UUID 헤더",
-                            required = true,
-                            example = "7fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    ),
-                    @Parameter(
                             name = "productUuid",
                             in = ParameterIn.PATH,
                             description = "상품 UUID",
@@ -288,13 +260,6 @@ public final class CommentApiDocs {
             summary = "댓글 삭제",
             description = "댓글 UUID로 댓글을 삭제합니다. (소프트 삭제 권장: deletedAt 설정) 작성자만 가능",
             parameters = {
-                    @Parameter(
-                            name = "X-USER-UUID",
-                            in = ParameterIn.HEADER,
-                            description = "임시 사용자 UUID 헤더",
-                            required = true,
-                            example = "7fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    ),
                     @Parameter(
                             name = "productUuid",
                             in = ParameterIn.PATH,
