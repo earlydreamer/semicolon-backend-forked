@@ -1,5 +1,6 @@
 package dukku.semicolon.shared.deposit.dto;
 
+import dukku.semicolon.shared.deposit.type.DepositChargeResultCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 /**
- * 정산에 의한 예치금 충전 응답 DTO (Internal API용)
+ * 정산을 위한 예치금 충전 응답 DTO (Internal API용)
  */
 @Getter
 @Builder
@@ -32,10 +33,11 @@ public class DepositChargeForSettlementResponse {
     }
 
     public static DepositChargeForSettlementResponse success(UUID depositUuid, Long chargedAmount, Long balanceAfter) {
+        DepositChargeResultCode resultCode = DepositChargeResultCode.DEPOSIT_CHARGED;
         return DepositChargeForSettlementResponse.builder()
                 .success(true)
-                .code("DEPOSIT_CHARGED")
-                .message("예치금이 충전되었습니다.")
+                .code(resultCode.getCode())
+                .message(resultCode.getMessage())
                 .data(DepositChargeData.builder()
                         .depositUuid(depositUuid)
                         .chargedAmount(chargedAmount)
@@ -44,10 +46,10 @@ public class DepositChargeForSettlementResponse {
                 .build();
     }
 
-    public static DepositChargeForSettlementResponse failure(String code, String message) {
+    public static DepositChargeForSettlementResponse failure(DepositChargeResultCode resultCode, String message) {
         return DepositChargeForSettlementResponse.builder()
                 .success(false)
-                .code(code)
+                .code(resultCode.getCode())
                 .message(message)
                 .build();
     }
