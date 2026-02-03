@@ -18,27 +18,28 @@ import static org.mockito.Mockito.*;
  */
 class DepositFacadeTest {
 
-    private DecreaseDepositUseCase decreaseDepositUseCase;
-    private EventPublisher eventPublisher;
+    private DeductDepositForPaymentUseCase deductDepositForPaymentUseCase;
     private DepositFacade depositFacade;
 
     @BeforeEach
     void setUp() {
-        decreaseDepositUseCase = mock(DecreaseDepositUseCase.class);
-        eventPublisher = mock(EventPublisher.class);
-        // 테스트와 직접적 연관이 없는 의존성은 mock으로 주입
+        deductDepositForPaymentUseCase = mock(DeductDepositForPaymentUseCase.class);
+
         depositFacade = new DepositFacade(
                 mock(FindDepositUseCase.class),
                 mock(IncreaseDepositUseCase.class),
-                decreaseDepositUseCase,
+                mock(DecreaseDepositUseCase.class),
                 mock(FindDepositHistoriesUseCase.class),
-                eventPublisher);
+                deductDepositForPaymentUseCase,
+                mock(RefundDepositUseCase.class),
+                mock(ChargeDepositUseCase.class),
+                mock(ChargeDepositForSettlementUseCase.class));
     }
 
     @Test
-    @DisplayName("예치금 차감 테스트: 아이템별 사용 내역에 따라 각각 차감 로직이 호출되어야 한다")
+    @DisplayName("예치금 차감 테스트: UseCase로 위임되어야 한다")
     void deductDepositForPaymentTest() {
-        // Given: 유저 정보 및 상품별 예치금 사용 상세 내역 준비
+        // Given
         UUID userUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
         UUID itemUuid1 = UUID.randomUUID();
@@ -48,14 +49,10 @@ class DepositFacadeTest {
                 new PaymentSuccessEvent.ItemDepositUsage(itemUuid1, 5000L),
                 new PaymentSuccessEvent.ItemDepositUsage(itemUuid2, 3000L));
 
-        // When: 예치금 차감 프로세스 실행
+        // When
         depositFacade.deductDepositForPayment(userUuid, 8000L, orderUuid, usages);
 
-        // Then: DecreaseDepositUseCase가 각 상품별 금액에 대해 올바른 타입(USE)과 아이템 UUID로 호출되었는지 검증
-        verify(decreaseDepositUseCase).decrease(userUuid, 5000L, DepositHistoryType.USE, itemUuid1);
-        verify(decreaseDepositUseCase).decrease(userUuid, 3000L, DepositHistoryType.USE, itemUuid2);
-
-        // 최종적으로 차감 완료 이벤트가 발행되었는지 확인
-        verify(eventPublisher).publish(any());
+        // Then: UseCase가 호출되었는지 검증
+        verify(deductDepositForPaymentUseCase).execute(userUuid, 8000L, orderUuid, usages);
     }
 }
