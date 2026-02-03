@@ -6,8 +6,10 @@ import dukku.semicolon.boundedContext.settlement.in.batch.config.SettlementBatch
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.infrastructure.item.database.JpaPagingItemReader;
 import org.springframework.batch.infrastructure.item.database.builder.JpaPagingItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,7 +30,10 @@ public class ValidateSettlementReader {
     private final SettlementBatchProperties batchProperties;
 
     @Bean
-    public JpaPagingItemReader<Settlement> pendingSettlementForValidationReader() {
+    @StepScope
+    public JpaPagingItemReader<Settlement> pendingSettlementForValidationReader(
+            @Value("#{jobParameters['now']}") LocalDateTime now
+    ) {
         String jpql = """
                 SELECT s FROM Settlement s
                 WHERE s.settlementStatus = :status
@@ -36,7 +41,8 @@ public class ValidateSettlementReader {
                 ORDER BY s.settlementReservationDate ASC
                 """;
 
-        log.info("[Step 2] 금액 검증 대상 Settlement Reader 생성 - pageSize: {}", batchProperties.getPageSize());
+        log.info("[Step 2] 금액 검증 대상 Settlement Reader 생성 - pageSize: {}, now: {}",
+                batchProperties.getPageSize(), now);
 
         return new JpaPagingItemReaderBuilder<Settlement>()
                 .name("pendingSettlementForValidationReader")
@@ -44,7 +50,7 @@ public class ValidateSettlementReader {
                 .queryString(jpql)
                 .parameterValues(Map.of(
                         "status", SettlementStatus.PENDING,
-                        "now", LocalDateTime.now()
+                        "now", now
                 ))
                 .pageSize(batchProperties.getPageSize())
                 .saveState(true)

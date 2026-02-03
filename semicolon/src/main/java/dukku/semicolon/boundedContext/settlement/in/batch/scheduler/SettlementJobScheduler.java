@@ -76,16 +76,17 @@ public class SettlementJobScheduler {
      * Job 파라미터 생성
      * - timestamp: 실행 시점 (중복 실행 방지)
      * - executionDate: 실행 날짜 (로깅용)
+     * - now: 배치 실행 기준 시각 (정산 대상 조회용)
      */
     private JobParameters createJobParameters() {
-        String timestamp = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String executionDate = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        LocalDateTime now = LocalDateTime.now();
+        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String executionDate = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
         return new JobParametersBuilder()
                 .addString("timestamp", timestamp)
                 .addString("executionDate", executionDate)
+                .addLocalDateTime("now", now)
                 .toJobParameters();
     }
 }
