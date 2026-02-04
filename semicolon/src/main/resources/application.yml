@@ -34,7 +34,7 @@ spring:
   batch:
     initialize-schema: always
     job:
-      enabled: false  # 애플리케이션 시작 시 자동 실행 방지
+      enabled: false # 애플리케이션 시작 시 자동 실행 방지
 
   elasticsearch:
     uris: http://localhost:9200
@@ -69,8 +69,8 @@ batch:
     retry-limit: 3
     page-size: 100
     scheduler:
-        enabled: true
-        cron: "0 0 0 * * *"  # 매일 자정 실행
+      enabled: true
+      cron: "0 0 0 * * *" # 매일 자정 실행
 
 springdoc:
   api-docs:
@@ -96,3 +96,8 @@ custom:
       base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
+
+# 시스템 예치금 계정 설정
+system:
+  admin-deposit:
+    password: ${SYSTEM_DEPOSIT_PASSWORD}
