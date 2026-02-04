@@ -7,7 +7,7 @@ import dukku.semicolon.boundedContext.settlement.in.batch.listener.SettlementBat
 import dukku.semicolon.boundedContext.settlement.in.batch.processor.CreateSettlementProcessor;
 import dukku.semicolon.boundedContext.settlement.in.batch.processor.DepositChargeProcessor;
 import dukku.semicolon.boundedContext.settlement.in.batch.processor.ValidateSettlementProcessor;
-import dukku.semicolon.boundedContext.settlement.in.batch.reader.CreateSettlementReader;
+import org.springframework.batch.infrastructure.item.support.ListItemReader;
 import dukku.semicolon.boundedContext.settlement.in.batch.writer.CreateSettlementWriter;
 import dukku.semicolon.boundedContext.settlement.in.batch.writer.DepositChargeWriter;
 import dukku.semicolon.boundedContext.settlement.in.batch.writer.ValidateSettlementWriter;
@@ -64,7 +64,7 @@ public class SettlementBatchConfig {
     private final DepositChargeSkipListener depositChargeSkipListener;
 
     // Step 1: 정산 대상 생성
-    private final CreateSettlementReader createSettlementReader;
+    private final ListItemReader<ConfirmedOrderItemResponse> confirmedOrderItemReader;
     private final CreateSettlementProcessor createSettlementProcessor;
     private final CreateSettlementWriter createSettlementWriter;
 
@@ -130,7 +130,7 @@ public class SettlementBatchConfig {
 
         return new StepBuilder("createSettlementStep", jobRepository)
                 .<ConfirmedOrderItemResponse, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
-                .reader(createSettlementReader.createReader())
+                .reader(confirmedOrderItemReader)
                 .processor(createSettlementProcessor)
                 .writer(createSettlementWriter)
                 // Skip 정책
