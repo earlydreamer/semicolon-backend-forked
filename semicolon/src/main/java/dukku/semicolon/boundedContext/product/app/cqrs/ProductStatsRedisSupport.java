@@ -21,23 +21,27 @@ public class ProductStatsRedisSupport {
     private static final String COMMENT_KEY_PREFIX = "product:stats:comment:";
 
     /** [Write] 숫자 증가/감소 및 Dirty Marking */
-    public void incrementLike(Integer productId) {
+    public void incrementLike(int productId) {
         redisTemplate.opsForValue().increment(LIKE_KEY_PREFIX + productId);
         markDirty(String.valueOf(productId));
     }
 
-    public void decrementLike(Integer productId) {
+    public void decrementLike(int productId) {
         redisTemplate.opsForValue().decrement(LIKE_KEY_PREFIX + productId);
         markDirty(String.valueOf(productId));
     }
 
-    // TODO: 최종프로젝트에서 댓글 적용
-    public void incrementComment(Integer productId) {
+    public void incrementComment(int productId) {
         redisTemplate.opsForValue().increment(COMMENT_KEY_PREFIX + productId);
         markDirty(String.valueOf(productId));
     }
 
-    public void incrementView(Integer productId) {
+    public void decrementComment(int productId) {
+        redisTemplate.opsForValue().decrement(COMMENT_KEY_PREFIX + productId);
+        markDirty(String.valueOf(productId));
+    }
+
+    public void incrementView(int productId) {
         redisTemplate.opsForValue().increment(VIEW_KEY_PREFIX + productId);
         markDirty(String.valueOf(productId));
     }

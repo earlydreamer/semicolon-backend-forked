@@ -31,6 +31,7 @@ public class ProductDetailResponse {
     private CategorySummary category;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+    private List<String> tagNames;
 
     @Getter
     @Builder

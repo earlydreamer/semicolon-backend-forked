@@ -1,13 +1,12 @@
 package dukku.semicolon.boundedContext.payment.app;
 
 import dukku.semicolon.boundedContext.payment.entity.Payment;
-import dukku.semicolon.shared.payment.dto.PaymentResultResponse;
+import dukku.semicolon.shared.payment.exception.PaymentNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,5 +24,14 @@ public class FindPaymentUseCase {
     @Transactional(readOnly = true)
     public Payment execute(UUID paymentUuid) {
         return support.findPaymentByUuid(paymentUuid);
+    }
+
+    @Transactional(readOnly = true)
+    public Payment findByOrderUuid(UUID orderUuid) {
+        List<Payment> payments = support.findPaymentsByOrderUuid(orderUuid);
+        if (payments.isEmpty()) {
+            throw new PaymentNotFoundException();
+        }
+        return payments.get(0);
     }
 }

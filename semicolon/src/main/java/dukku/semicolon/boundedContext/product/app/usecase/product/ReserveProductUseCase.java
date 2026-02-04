@@ -14,7 +14,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ReserveProductUseCase {
-
     private final ProductRepository productRepository;
 
     @Transactional

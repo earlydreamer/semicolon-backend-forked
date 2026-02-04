@@ -8,7 +8,7 @@ import dukku.semicolon.boundedContext.product.out.CategoryRepository;
 import dukku.semicolon.boundedContext.product.out.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations; // [추가]
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.stereotype.Service;
@@ -20,11 +20,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SaveToElasticSearchUseCase {
-
-    private final ProductSearchRepository productSearchRepository; // save용
+    private final ProductSearchRepository productSearchRepository;
     private final CategoryRepository categoryRepository;
 
-    // [핵심 추가] 부분 업데이트(update)는 Repository가 아니라 Operations가 담당합니다.
+    // 부분 업데이트(update)는 Repository가 아니라 Operations가 담당
     private final ElasticsearchOperations elasticsearchOperations;
 
     // 생성 시 편의 메서드 (Create)
@@ -68,6 +67,7 @@ public class SaveToElasticSearchUseCase {
                 .createdAt(product.getCreatedAt())
                 .deletedAt(product.getDeletedAt())
                 .thumbnailImageUrl(thumbnail)
+                .tags(product.getTagNames())
                 .build();
 
         // 전체 저장은 Repository가 편합니다.
@@ -91,6 +91,7 @@ public class SaveToElasticSearchUseCase {
         document.put("visibilityStatus", product.getVisibilityStatus());
         document.put("saleSortPriority", sortPriority);
         document.put("thumbnailImageUrl", thumbnail);
+        document.put("tags", product.getTagNames());
 
         // deletedAt 등 변경 가능성 있는 다른 필드도 필요하면 추가
         UpdateQuery updateQuery = UpdateQuery.builder(docId)

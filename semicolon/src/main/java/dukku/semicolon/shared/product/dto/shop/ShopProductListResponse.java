@@ -1,4 +1,4 @@
-package dukku.semicolon.shared.product.dto;
+package dukku.semicolon.shared.product.dto.shop;
 
 import dukku.semicolon.shared.product.dto.product.ProductListItemResponse;
 import lombok.Builder;

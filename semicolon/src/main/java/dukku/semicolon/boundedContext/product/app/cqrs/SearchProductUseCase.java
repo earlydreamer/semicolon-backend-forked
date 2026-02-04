@@ -1,13 +1,14 @@
 package dukku.semicolon.boundedContext.product.app.cqrs;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
-import dukku.semicolon.shared.product.dto.product.ProductListItemResponse;
-import dukku.semicolon.shared.product.dto.product.ProductListResponse;
 import dukku.semicolon.shared.product.dto.cqrs.ProductSearchRequest;
 import dukku.semicolon.shared.product.dto.cqrs.ProductSortType;
+import dukku.semicolon.shared.product.dto.product.ProductListItemResponse;
+import dukku.semicolon.shared.product.dto.product.ProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,6 @@ public class SearchProductUseCase {
 
         // 1. 쿼리 빌딩 (필터링 로직)
         Query boolQuery = Query.of(q -> q.bool(b -> {
-
             // (1) 키워드 검색 (제목, 설명)
             if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
                 b.must(m -> m.multiMatch(mm -> mm
@@ -59,7 +59,21 @@ public class SearchProductUseCase {
                 b.filter(f -> f.term(t -> t.field("conditionStatus").value(request.getConditionStatus().name())));
             }
 
-            // (5) [핵심 로직] 판매 완료 상품 필터링 처리
+            // (5) 태그 검색
+            if (request.getTags() != null && !request.getTags().isEmpty()) {
+                List<FieldValue> tagValues = request.getTags().stream()
+                        .map(FieldValue::of)
+                        .toList();
+
+                b.filter(f -> f
+                        .terms(t -> t
+                                .field("tags") // ProductDocument의 tags 필드
+                                .terms(v -> v.value(tagValues))
+                        )
+                );
+            }
+
+            // (6) [핵심 로직] 판매 완료 상품 필터링 처리
             if (Boolean.TRUE.equals(request.getOnlySoldOut())) {
                 // Case A: "판매 완료만 보기" 설정 ON
                 // 무조건 SOLD_OUT 상태인 것만 필터링해서 가져옴
@@ -69,7 +83,7 @@ public class SearchProductUseCase {
             // -> 별도의 필터를 걸지 않음. (모든 상태 조회)
             // -> 대신 아래 '정렬 로직'에 의해 '판매중(0)'이 먼저 나오고, '품절(1)'은 뒤페이지에 나옴.
 
-            // (6) 필수: 노출 가능한 상품만 (삭제된 상품 제외)
+            // (7) 필수: 노출 가능한 상품만 (삭제된 상품 제외)
             b.filter(f -> f.term(t -> t.field("visibilityStatus").value("VISIBLE")));
 
             return b;

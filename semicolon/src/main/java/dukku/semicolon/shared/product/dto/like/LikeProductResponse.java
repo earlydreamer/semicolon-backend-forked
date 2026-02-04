@@ -1,4 +1,4 @@
-package dukku.semicolon.shared.product.dto.product;
+package dukku.semicolon.shared.product.dto.like;
 
 import lombok.Builder;
 import lombok.Getter;
