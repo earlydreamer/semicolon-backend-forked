@@ -8,9 +8,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ProductBatchScheduler {
     private final ProductSyncFacade productSyncFacade;
+    private final ReviewStatsSyncFacade reviewStatsSyncFacade;
 
     @Scheduled(fixedRate = 60000) // 1분
     public void scheduleSync() {
         productSyncFacade.syncAllStats();
+        reviewStatsSyncFacade.syncAllStats();
     }
 }
