@@ -134,4 +134,12 @@ public class DepositFacade {
             UUID userUuid, Long amount, UUID settlementUuid) {
         return chargeDepositForSettlementUseCase.execute(userUuid, amount, settlementUuid);
     }
+
+    /**
+     * 시스템 초기 자본금 주입 (ADJUST 타입 사용)
+     */
+    public void injectSystemCapital(UUID userUuid, Long amount) {
+        // orderItemUuid는 시스템 자본금 주입이므로 null 처리 (상품이 존재하지 않음)
+        increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.ADJUST, null);
+    }
 }
