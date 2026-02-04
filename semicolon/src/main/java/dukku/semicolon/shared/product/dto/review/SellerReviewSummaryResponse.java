@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Getter
 @Builder
-public class SellerRatingResponse {
+public class SellerReviewSummaryResponse {
     private UUID sellerUuid;
     private double avgRating;
     private long reviewCount;

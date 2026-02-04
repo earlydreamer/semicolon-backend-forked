@@ -24,7 +24,7 @@ public class ReviewController {
     private final ReviewFacade reviewFacade;
 
     @PostMapping("/seller-reviews")
-    @ReviewApiDocs.CreateProductReview
+    @ReviewApiDocs.CreateSellerReview
     public SellerReviewResponse createProductReview(
             @RequestBody @Valid SellerReviewCreateRequest request
     ) {
@@ -32,7 +32,7 @@ public class ReviewController {
     }
 
     @PatchMapping("/seller-reviews/{reviewUuid}")
-    @ReviewApiDocs.UpdateProductReview
+    @ReviewApiDocs.UpdateSellerReview
     public SellerReviewResponse updateProductReview(
             @PathVariable UUID reviewUuid,
             @RequestBody @Valid SellerReviewUpdateRequest request
@@ -41,19 +41,19 @@ public class ReviewController {
     }
 
     @DeleteMapping("/seller-reviews/{reviewUuid}")
-    @ReviewApiDocs.DeleteProductReview
+    @ReviewApiDocs.DeleteSellerReview
     public void deleteProductReview(
             @PathVariable UUID reviewUuid
     ) {
         reviewFacade.deleteProductReview(UserUtil.getUserId(), reviewUuid);
     }
 
-    @GetMapping("/sellers/{sellerUuid}/rating")
-    @ReviewApiDocs.FindSellerRating
-    public SellerRatingResponse findSellerRating(
+    @GetMapping("/sellers/{sellerUuid}/reviews-summary")
+    @ReviewApiDocs.FindSellerReviewSummary
+    public SellerReviewSummaryResponse findSellerReviewSummary(
             @PathVariable UUID sellerUuid
     ) {
-        return reviewFacade.findSellerRating(sellerUuid);
+        return reviewFacade.findSellerReviewSummary(sellerUuid);
     }
 
     // 최신 리뷰가 먼저 오도록 정렬

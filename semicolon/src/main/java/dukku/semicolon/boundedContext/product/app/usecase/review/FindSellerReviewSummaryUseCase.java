@@ -1,7 +1,7 @@
 package dukku.semicolon.boundedContext.product.app.usecase.review;
 
 import dukku.semicolon.boundedContext.product.out.SellerReviewRepository;
-import dukku.semicolon.shared.product.dto.review.SellerRatingResponse;
+import dukku.semicolon.shared.product.dto.review.SellerReviewSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,16 +10,16 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class FindSellerRatingUseCase {
+public class FindSellerReviewSummaryUseCase {
 
     private final SellerReviewRepository sellerReviewRepository;
 
     @Transactional(readOnly = true)
-    public SellerRatingResponse execute(UUID sellerUuid) {
+    public SellerReviewSummaryResponse execute(UUID sellerUuid) {
         double avg = sellerReviewRepository.avgRating(sellerUuid);
         long count = sellerReviewRepository.countBySellerUuidAndDeletedAtIsNull(sellerUuid);
 
-        return SellerRatingResponse.builder()
+        return SellerReviewSummaryResponse.builder()
                 .sellerUuid(sellerUuid)
                 .avgRating(avg)
                 .reviewCount(count)

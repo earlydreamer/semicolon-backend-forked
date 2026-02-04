@@ -17,7 +17,7 @@ public class ReviewFacade {
     private final UpdateSellerReviewUseCase updateSellerReviewUseCase;
     private final DeleteSellerReviewUseCase deleteSellerReviewUseCase;
     private final FindSellerReviewListUseCase findSellerReviewListUseCase;
-    private final FindSellerRatingUseCase findSellerRatingUseCase;
+    private final FindSellerReviewSummaryUseCase findSellerReviewSummaryUseCase;
 
     public SellerReviewResponse createProductReview(UUID userUuid, @Valid SellerReviewCreateRequest request) {
         return createSellerReviewUseCase.execute(userUuid, request);
@@ -31,8 +31,8 @@ public class ReviewFacade {
         deleteSellerReviewUseCase.execute(userUuid, reviewUuid);
     }
 
-    public SellerRatingResponse findSellerRating(UUID sellerUuid) {
-        return findSellerRatingUseCase.execute(sellerUuid);
+    public SellerReviewSummaryResponse findSellerReviewSummary(UUID sellerUuid) {
+        return findSellerReviewSummaryUseCase.execute(sellerUuid);
     }
 
     public SellerReviewListResponse findSellerAllReviews(UUID sellerUuid, Pageable pageable) {
