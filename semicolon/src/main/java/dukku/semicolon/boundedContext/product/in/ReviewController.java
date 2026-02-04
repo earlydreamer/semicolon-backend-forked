@@ -1,0 +1,69 @@
+package dukku.semicolon.boundedContext.product.in;
+
+import dukku.common.global.UserUtil;
+import dukku.semicolon.boundedContext.product.app.facade.ReviewFacade;
+import dukku.semicolon.shared.product.docs.ReviewApiDocs;
+import dukku.semicolon.shared.product.dto.review.*;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@Validated
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1")
+@ReviewApiDocs.ReviewTag
+public class ReviewController {
+
+    private final ReviewFacade reviewFacade;
+
+    @PostMapping("/seller-reviews")
+    @ReviewApiDocs.CreateProductReview
+    public SellerReviewResponse createProductReview(
+            @RequestBody @Valid SellerReviewCreateRequest request
+    ) {
+        return reviewFacade.createProductReview(UserUtil.getUserId(), request);
+    }
+
+    @PatchMapping("/seller-reviews/{reviewUuid}")
+    @ReviewApiDocs.UpdateProductReview
+    public SellerReviewResponse updateProductReview(
+            @PathVariable UUID reviewUuid,
+            @RequestBody @Valid SellerReviewUpdateRequest request
+    ) {
+        return reviewFacade.updateProductReview(UserUtil.getUserId(), reviewUuid, request);
+    }
+
+    @DeleteMapping("/seller-reviews/{reviewUuid}")
+    @ReviewApiDocs.DeleteProductReview
+    public void deleteProductReview(
+            @PathVariable UUID reviewUuid
+    ) {
+        reviewFacade.deleteProductReview(UserUtil.getUserId(), reviewUuid);
+    }
+
+    @GetMapping("/sellers/{sellerUuid}/rating")
+    @ReviewApiDocs.FindSellerRating
+    public SellerRatingResponse findSellerRating(
+            @PathVariable UUID sellerUuid
+    ) {
+        return reviewFacade.findSellerRating(sellerUuid);
+    }
+
+    // 최신 리뷰가 먼저 오도록 정렬
+    @GetMapping("/sellers/{sellerUuid}/reviews")
+    @ReviewApiDocs.FindAllSellerReviews
+    public SellerReviewListResponse findSellerAllReviews(
+            @PathVariable UUID sellerUuid,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return reviewFacade.findSellerAllReviews(sellerUuid, pageable);
+    }
+}
