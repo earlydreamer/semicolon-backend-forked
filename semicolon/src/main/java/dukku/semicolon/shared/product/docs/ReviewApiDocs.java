@@ -248,5 +248,5 @@ public final class ReviewApiDocs {
                     )
             }
     )
-    public @interface FindAllSellerReviews {}
+    public @interface findSellerReviewList {}
 }
