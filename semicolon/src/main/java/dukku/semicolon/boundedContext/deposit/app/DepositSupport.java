@@ -42,4 +42,11 @@ public class DepositSupport {
     public Slice<DepositHistory> findHistoriesByCursor(UUID userUuid, Integer cursor, int size) {
         return depositHistoryRepository.findHistoriesByCursor(userUuid, cursor, size);
     }
+
+    /**
+     * 특정 orderItemUuid(또는 settlementUuid)로 이미 처리된 이력이 있는지 확인 (멱등성 체크)
+     */
+    public boolean existsByOrderItemUuid(UUID orderItemUuid) {
+        return depositHistoryRepository.existsByOrderItemUuid(orderItemUuid);
+    }
 }

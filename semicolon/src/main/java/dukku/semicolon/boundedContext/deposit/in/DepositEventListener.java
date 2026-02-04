@@ -58,10 +58,17 @@ public class DepositEventListener {
      * SettlementPayoutRequestedEvent 수신 시 예치금을 충전한다.
      * 충전 성공 시 DepositChargeSucceededEvent 발행.
      * 충전 실패 시 DepositChargeFailedEvent 발행.
+     *
+     * @deprecated 정산 예치금 충전은 이제 Internal API 호출을 통한
+     *             {@link ChargeDepositForSettlementUseCase} 사용을 권장합니다.
+     *             이벤트 기반 방식은 하위 호환성을 위해 유지되나, 향후 제거될 예정입니다.
      */
+    @Deprecated
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(SettlementDepositChargeRequestedEvent command) {
+        log.warn("[DEPRECATED] 이벤트 기반 정산 충전 요청이 수신되었습니다. API 방식으로의 전환이 필요합니다. settlementUuid={}",
+                command.settlementUuid());
         depositFacade.chargeDepositForSettlement(
                 command.userUuid(),
                 command.amount(),

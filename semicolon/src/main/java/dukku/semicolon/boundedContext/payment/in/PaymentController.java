@@ -92,4 +92,16 @@ public class PaymentController {
                 PaymentRefundResponse response = paymentFacade.refundPayment(request, idempotencyKey);
                 return ResponseEntity.ok(response);
         }
+
+        /**
+         * UUID로 결제 정보 조회
+         */
+        @GetMapping("/result/{paymentUuid}")
+        public ResponseEntity<PaymentResultResponse> getPaymentByUuid(
+                        @PathVariable UUID paymentUuid) {
+
+                PaymentResultResponse response = paymentFacade.findPaymentResult(paymentUuid);
+                return ResponseEntity.ok(response);
+        }
+
 }
