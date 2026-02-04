@@ -61,7 +61,7 @@ public class ReviewController {
     @ReviewApiDocs.FindAllSellerReviews
     public SellerReviewListResponse findSellerAllReviews(
             @PathVariable UUID sellerUuid,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
         return reviewFacade.findSellerAllReviews(sellerUuid, pageable);
