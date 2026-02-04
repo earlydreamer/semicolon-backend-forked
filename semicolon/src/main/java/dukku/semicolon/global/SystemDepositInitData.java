@@ -3,11 +3,12 @@ package dukku.semicolon.global;
 import dukku.semicolon.boundedContext.deposit.app.DepositFacade;
 import dukku.semicolon.boundedContext.user.app.user.UserFacade;
 import dukku.semicolon.boundedContext.user.app.user.UserSupport;
+import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.entity.type.Role;
-import dukku.semicolon.shared.user.dto.UserRegisterRequest;
-import dukku.semicolon.shared.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.UUID;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,9 @@ public class SystemDepositInitData {
 
     private static final String SYSTEM_DEPOSIT_EMAIL = "admin-deposit@dukku.shop";
     private static final String SYSTEM_DEPOSIT_NICKNAME = "시스템-예치금";
+    // 임시 하드코딩 UUID (추후 API Client 등으로 대체 예정)
+    private static final UUID SYSTEM_USER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final Long INITIAL_CAPITAL = 1_000_000_000L; // 10억
 
     @Bean
     public CommandLineRunner initSystemDeposit(
@@ -41,33 +45,44 @@ public class SystemDepositInitData {
             @Override
             @Transactional
             public void run(String... args) throws Exception {
-                // 이미 시스템 계정이 존재하면 스킵
+                // 1. 시스템 계정 존재 여부 확인 (없으면 복구or생성)
                 if (userSupport.findByEmail(SYSTEM_DEPOSIT_EMAIL).isPresent()) {
                     log.info("[SystemDepositInitData] 시스템 예치금 계정이 이미 존재합니다.");
-                    return;
+                    // 이미 존재하더라도 UUID가 다르면 문제될 수 있으나, 일단은 스킵
+                } else {
+                    // 비밀번호 주입
+                    String password = env.getProperty("system.admin-deposit.password");
+
+                    // Redis에 미리 인증 완료 상태로 세팅
+                    redisTemplate.opsForValue().set("email:verify:ok:" + SYSTEM_DEPOSIT_EMAIL, "true",
+                            java.time.Duration.ofMinutes(5));
+
+                    // 시스템 계정 생성
+                    String encodedPassword = userSupport.encode(password);
+
+                    // User 객체 생성 시 UUID를 직접 주입
+                    // API 도입되면 이 부분은 삭제하고 API로 처리
+                    User systemUser = User.builder()
+                            .email(SYSTEM_DEPOSIT_EMAIL)
+                            .password(encodedPassword)
+                            .role(Role.SYSTEM)
+                            .nickname(SYSTEM_DEPOSIT_NICKNAME)
+                            .uuid(SYSTEM_USER_UUID) // SourceUser의 필드
+                            .build();
+
+                    User savedUser = userSupport.save(systemUser);
+                    log.info("[SystemDepositInitData] 시스템 예치금 계정 생성 완료: {} (UUID={})", SYSTEM_DEPOSIT_EMAIL,
+                            savedUser.getUuid());
                 }
 
-                // 비밀번호 주입
-                // 시스템 지갑이라 이 계정으로 직접 로그인할 일은 사실상 없긴 함
-                // DTO에 @Builder annotation 안 붙어있어서 생성자 주입으로 생성
-                String password = env.getProperty("system.admin-deposit.password");
-                UserRegisterRequest request = new UserRegisterRequest(
-                        SYSTEM_DEPOSIT_EMAIL,
-                        password,
-                        SYSTEM_DEPOSIT_NICKNAME);
-
-                // Redis에 미리 인증 완료 상태로 세팅
-                redisTemplate.opsForValue().set("email:verify:ok:" + SYSTEM_DEPOSIT_EMAIL, "true",
-                        java.time.Duration.ofMinutes(5));
-
-                // 시스템 계정 생성
-                UserResponse user = userFacade.registerUser(request, Role.SYSTEM);
-                log.info("[SystemDepositInitData] 시스템 예치금 계정 생성 완료: {}", SYSTEM_DEPOSIT_EMAIL);
-
-                // 시스템 예치금 계좌 명시적 생성
-                // findDeposit 호출 시 Deposit이 없으면 생성 (Lazy 생성 유도)
-                depositFacade.findDeposit(user.getUserUuid());
-                log.info("[SystemDepositInitData] 시스템 예치금 계좌 생성 완료: userUuid={}", user.getUserUuid());
+                // 2. 시스템 예치금 계좌 확인 및 초기 자본금 주입
+                // findDeposit 호출 시 Deposit이 없으면 생성됨 (Lazy)
+                if (depositFacade.findDeposit(SYSTEM_USER_UUID).getBalance() == 0L) {
+                    depositFacade.injectSystemCapital(SYSTEM_USER_UUID, INITIAL_CAPITAL);
+                    log.info("[SystemDepositInitData] 시스템 예치금 초기 자본금 납입 완료: {} KRW", INITIAL_CAPITAL);
+                } else {
+                    log.info("[SystemDepositInitData] 시스템 예치금 잔액이 이미 존재하여 자본금 납입을 건너뜁니다.");
+                }
             }
         };
     }
