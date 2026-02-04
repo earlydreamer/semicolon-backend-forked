@@ -2,10 +2,7 @@ package dukku.semicolon.boundedContext.settlement.in;
 
 import dukku.semicolon.boundedContext.settlement.app.SettlementFacade;
 import dukku.semicolon.shared.settlement.docs.SettlementApiDocs;
-import dukku.semicolon.shared.settlement.dto.SettlementDetailResponse;
-import dukku.semicolon.shared.settlement.dto.SettlementSearchRequest;
-import dukku.semicolon.shared.settlement.dto.SettlementStatisticsRequest;
-import dukku.semicolon.shared.settlement.dto.SettlementStatisticsResponse;
+import dukku.semicolon.shared.settlement.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,10 +21,8 @@ public class SettlementController {
 
     private final SettlementFacade settlementFacade;
 
-
     /**
      * 정산 목록 조회
-     * GET /admin/settlements
      */
     @GetMapping
     @SettlementApiDocs.GetSettlements
@@ -40,7 +35,6 @@ public class SettlementController {
 
     /**
      * 정산 단건 조회
-     * GET /admin/settlements/{settlementUuid}
      */
     @GetMapping("/{settlementUuid}")
     @SettlementApiDocs.GetSettlement
@@ -49,8 +43,7 @@ public class SettlementController {
     }
 
     /**
-     * 정산 통계 조회
-     * GET /admin/settlements/statistics
+     * 정산 통계 조회 (기존)
      */
     @GetMapping("/statistics")
     @SettlementApiDocs.GetSettlementStatistics
@@ -60,9 +53,65 @@ public class SettlementController {
         return settlementFacade.getStatistics(request.toCondition());
     }
 
+    // ===== 리포트용 통계 API =====
+
+    /**
+     * 배치 Job 통계 조회
+     */
+    @GetMapping("/statistics/batch/jobs")
+    @SettlementApiDocs.GetBatchJobStatistics
+    public BatchJobStatisticsResponse getBatchJobStatistics(
+            @Valid @ModelAttribute SettlementReportRequest request
+    ) {
+        return settlementFacade.getBatchJobStatistics(request.getStartDate(), request.getEndDate());
+    }
+
+    /**
+     * 배치 Step 통계 조회
+     */
+    @GetMapping("/statistics/batch/steps")
+    @SettlementApiDocs.GetBatchStepStatistics
+    public BatchStepStatisticsResponse getBatchStepStatistics(
+            @Valid @ModelAttribute SettlementReportRequest request
+    ) {
+        return settlementFacade.getBatchStepStatistics(request.getStartDate(), request.getEndDate());
+    }
+
+    /**
+     * 재무 통계 조회
+     */
+    @GetMapping("/statistics/financial")
+    @SettlementApiDocs.GetFinancialStatistics
+    public FinancialStatisticsResponse getFinancialStatistics() {
+        return settlementFacade.getFinancialStatistics();
+    }
+
+    /**
+     * 트렌드 통계 조회
+     */
+    @GetMapping("/statistics/trend")
+    @SettlementApiDocs.GetTrendStatistics
+    public TrendStatisticsResponse getTrendStatistics(
+            @Valid @ModelAttribute SettlementReportRequest request
+    ) {
+        return settlementFacade.getTrendStatistics(request.getStartDate(), request.getEndDate());
+    }
+
+    /**
+     * 판매자별 정산 통계 조회
+     */
+    @GetMapping("/statistics/sellers")
+    @SettlementApiDocs.GetSellerStatistics
+    public SellerStatisticsResponse getSellerStatistics(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return settlementFacade.getSellerStatistics(pageable);
+    }
+
+    // ===== 정산 처리 API =====
+
     /**
      * 실패한 정산 재처리
-     * POST /admin/settlements/{settlementUuid}/retry
      */
     @PostMapping("/{settlementUuid}/retry")
     @SettlementApiDocs.RetrySettlement
@@ -72,7 +121,6 @@ public class SettlementController {
 
     /**
      * 정산 수동 완료 처리
-     * POST /admin/settlements/{settlementUuid}/complete
      */
     @PostMapping("/{settlementUuid}/complete")
     @SettlementApiDocs.CompleteSettlement
@@ -82,21 +130,10 @@ public class SettlementController {
 
     /**
      * 정산 수동 실패 처리
-     * POST /admin/settlements/{settlementUuid}/fail
      */
     @PostMapping("/{settlementUuid}/fail")
     @SettlementApiDocs.FailSettlement
     public SettlementDetailResponse failSettlement(@PathVariable UUID settlementUuid) {
         return settlementFacade.failSettlement(settlementUuid);
     }
-
-    /**
-     * 정산 수동 예치금 충전 요청
-     * POST /admin/settlements/{settlementUuid}/process
-     */
-//    @PostMapping("/{settlementUuid}/process")
-//    @SettlementApiDocs.ProcessSettlement
-//    public SettlementDetailResponse processSettlement(@PathVariable UUID settlementUuid) {
-//        return settlementFacade.processSettlement(settlementUuid);
-//    }
 }

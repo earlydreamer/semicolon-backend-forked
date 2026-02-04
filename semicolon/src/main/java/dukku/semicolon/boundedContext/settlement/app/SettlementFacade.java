@@ -1,13 +1,7 @@
 package dukku.semicolon.boundedContext.settlement.app;
 
-import dukku.common.shared.deposit.event.DepositChargeFailedEvent;
-import dukku.common.shared.deposit.event.DepositChargeSucceededEvent;
-import dukku.common.shared.order.event.OrderItemConfirmedEvent;
 import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.shared.settlement.dto.SettlementDetailResponse;
-import dukku.semicolon.shared.settlement.dto.SettlementSearchCondition;
-import dukku.semicolon.shared.settlement.dto.SettlementStatisticsCondition;
-import dukku.semicolon.shared.settlement.dto.SettlementStatisticsResponse;
+import dukku.semicolon.shared.settlement.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Slf4j
@@ -26,6 +21,10 @@ public class SettlementFacade {
     private final GetSettlementUseCase getSettlementUseCase;
     private final GetSettlementListUseCase getSettlementListUseCase;
     private final GetSettlementStatisticsUseCase getSettlementStatisticsUseCase;
+    private final GetBatchStatisticsUseCase getBatchStatisticsUseCase;
+    private final GetFinancialStatisticsUseCase getFinancialStatisticsUseCase;
+    private final GetTrendStatisticsUseCase getTrendStatisticsUseCase;
+    private final GetSellerStatisticsUseCase getSellerStatisticsUseCase;
     private final CreateSettlementUseCase createSettlementUseCase;
     private final SettlementSupport settlementSupport;
     private final RequestDepositChargeUseCase requestDepositChargeUseCase;
@@ -51,6 +50,50 @@ public class SettlementFacade {
         return getSettlementStatisticsUseCase.execute(condition);
     }
 
+    // ===== 리포트용 통계 API =====
+
+    /**
+     * 배치 Job 통계 조회
+     */
+    @Transactional(readOnly = true)
+    public BatchJobStatisticsResponse getBatchJobStatistics(LocalDate startDate, LocalDate endDate) {
+        return getBatchStatisticsUseCase.getJobStatistics(startDate, endDate);
+    }
+
+    /**
+     * 배치 Step 통계 조회
+     */
+    @Transactional(readOnly = true)
+    public BatchStepStatisticsResponse getBatchStepStatistics(LocalDate startDate, LocalDate endDate) {
+        return getBatchStatisticsUseCase.getStepStatistics(startDate, endDate);
+    }
+
+    /**
+     * 재무 통계 조회
+     */
+    @Transactional(readOnly = true)
+    public FinancialStatisticsResponse getFinancialStatistics() {
+        return getFinancialStatisticsUseCase.execute();
+    }
+
+    /**
+     * 트렌드 통계 조회
+     */
+    @Transactional(readOnly = true)
+    public TrendStatisticsResponse getTrendStatistics(LocalDate startDate, LocalDate endDate) {
+        return getTrendStatisticsUseCase.execute(startDate, endDate);
+    }
+
+    /**
+     * 판매자별 정산 통계 조회
+     */
+    @Transactional(readOnly = true)
+    public SellerStatisticsResponse getSellerStatistics(Pageable pageable) {
+        return getSellerStatisticsUseCase.execute(pageable);
+    }
+
+    // ===== 정산 처리 API =====
+
     /**
      * 실패한 정산 재처리 (FAILED → PENDING)
      */
@@ -74,12 +117,4 @@ public class SettlementFacade {
         Settlement settlement = manualFailSettlementUseCase.execute(settlementUuid);
         return SettlementDetailResponse.from(settlement);
     }
-
-    /**
-     * 정산 수동 예치금 충전 요청 (PENDING → PROCESSING)
-     */
-//    public SettlementDetailResponse processSettlement(UUID settlementUuid) {
-//        //TODO: deposit apl client 구현되면 생성
-//
-//    }
 }
