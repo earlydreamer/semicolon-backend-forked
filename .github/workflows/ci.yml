@@ -11,6 +11,7 @@ jobs:
     # ✅ 환경 변수 주입 (Secrets 및 Localhost 설정)
     env:
       SPRING_PROFILES_ACTIVE: release
+      SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
       
       # 1. Database & Cache (CI 환경이므로 무조건 localhost)
       # 실제 운영/개발 서버의 Host(Secrets)를 쓰면 안 되고, 밑에서 띄울 컨테이너에 붙어야 합니다.
