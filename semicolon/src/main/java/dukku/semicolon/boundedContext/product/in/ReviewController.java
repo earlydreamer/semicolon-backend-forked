@@ -25,27 +25,27 @@ public class ReviewController {
 
     @PostMapping("/seller-reviews")
     @ReviewApiDocs.CreateSellerReview
-    public SellerReviewResponse createProductReview(
+    public SellerReviewResponse createSellerReview(
             @RequestBody @Valid SellerReviewCreateRequest request
     ) {
-        return reviewFacade.createProductReview(UserUtil.getUserId(), request);
+        return reviewFacade.createSellerReview(UserUtil.getUserId(), request);
     }
 
     @PatchMapping("/seller-reviews/{reviewUuid}")
     @ReviewApiDocs.UpdateSellerReview
-    public SellerReviewResponse updateProductReview(
+    public SellerReviewResponse updateSellerReview(
             @PathVariable UUID reviewUuid,
             @RequestBody @Valid SellerReviewUpdateRequest request
     ) {
-        return reviewFacade.updateProductReview(UserUtil.getUserId(), reviewUuid, request);
+        return reviewFacade.updateSellerReview(UserUtil.getUserId(), reviewUuid, request);
     }
 
     @DeleteMapping("/seller-reviews/{reviewUuid}")
     @ReviewApiDocs.DeleteSellerReview
-    public void deleteProductReview(
+    public void deleteSellerReview(
             @PathVariable UUID reviewUuid
     ) {
-        reviewFacade.deleteProductReview(UserUtil.getUserId(), reviewUuid);
+        reviewFacade.deleteSellerReview(UserUtil.getUserId(), reviewUuid);
     }
 
     @GetMapping("/sellers/{sellerUuid}/reviews-summary")
@@ -58,12 +58,12 @@ public class ReviewController {
 
     // 최신 리뷰가 먼저 오도록 정렬
     @GetMapping("/sellers/{sellerUuid}/reviews")
-    @ReviewApiDocs.FindAllSellerReviews
-    public SellerReviewListResponse findSellerAllReviews(
+    @ReviewApiDocs.findSellerReviewList
+    public SellerReviewListResponse findSellerReviewList(
             @PathVariable UUID sellerUuid,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        return reviewFacade.findSellerAllReviews(sellerUuid, pageable);
+        return reviewFacade.findSellerReviewList(sellerUuid, pageable);
     }
 }
