@@ -55,7 +55,7 @@ public class SystemDepositInitData {
                         SYSTEM_DEPOSIT_NICKNAME);
 
                 // 시스템 계정 생성
-                UserResponse user = userFacade.registerUser(request, Role.ADMIN);
+                UserResponse user = userFacade.registerUser(request, Role.SYSTEM);
                 log.info("[SystemDepositInitData] 시스템 예치금 계정 생성 완료: {}", SYSTEM_DEPOSIT_EMAIL);
 
                 // 시스템 예치금 계좌 명시적 생성
