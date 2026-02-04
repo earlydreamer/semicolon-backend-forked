@@ -22,7 +22,7 @@ public class CreateSellerReviewUseCase {
     @Transactional
     public SellerReviewResponse execute(UUID buyerUuid, SellerReviewCreateRequest request) {
 
-        // 1) (Feign 붙이기 전이라 가정) orderItemUuid 중복 리뷰 방지
+        // 1) (Feign 붙이기 전이라 가정) orderItemUuid 중복 리뷰 방지 + 삭제 시 재작성은 허용
         if (sellerReviewRepository.existsByOrderItemUuidAndDeletedAtIsNull(request.getOrderItemUuid())) {
             throw new ReviewAlreadyExistsException();
         }
