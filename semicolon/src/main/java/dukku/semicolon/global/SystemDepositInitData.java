@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -34,7 +35,8 @@ public class SystemDepositInitData {
             UserFacade userFacade,
             UserSupport userSupport,
             DepositFacade depositFacade,
-            Environment env) {
+            Environment env,
+            RedisTemplate<String, Object> redisTemplate) {
         return new CommandLineRunner() {
             @Override
             @Transactional
@@ -53,6 +55,10 @@ public class SystemDepositInitData {
                         SYSTEM_DEPOSIT_EMAIL,
                         password,
                         SYSTEM_DEPOSIT_NICKNAME);
+
+                // Redis에 미리 인증 완료 상태로 세팅
+                redisTemplate.opsForValue().set("email:verify:ok:" + SYSTEM_DEPOSIT_EMAIL, "true",
+                        java.time.Duration.ofMinutes(5));
 
                 // 시스템 계정 생성
                 UserResponse user = userFacade.registerUser(request, Role.SYSTEM);
