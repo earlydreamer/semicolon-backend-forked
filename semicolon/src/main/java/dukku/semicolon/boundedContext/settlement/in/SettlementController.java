@@ -63,7 +63,7 @@ public class SettlementController {
     public BatchJobStatisticsResponse getBatchJobStatistics(
             @Valid @ModelAttribute SettlementReportRequest request
     ) {
-        return settlementFacade.getBatchJobStatistics(request.getStartDate(), request.getEndDate());
+        return settlementFacade.getBatchJobStatistics(request.startDate(), request.endDate());
     }
 
     /**
@@ -74,7 +74,7 @@ public class SettlementController {
     public BatchStepStatisticsResponse getBatchStepStatistics(
             @Valid @ModelAttribute SettlementReportRequest request
     ) {
-        return settlementFacade.getBatchStepStatistics(request.getStartDate(), request.getEndDate());
+        return settlementFacade.getBatchStepStatistics(request.startDate(), request.endDate());
     }
 
     /**
@@ -94,7 +94,7 @@ public class SettlementController {
     public TrendStatisticsResponse getTrendStatistics(
             @Valid @ModelAttribute SettlementReportRequest request
     ) {
-        return settlementFacade.getTrendStatistics(request.getStartDate(), request.getEndDate());
+        return settlementFacade.getTrendStatistics(request.startDate(), request.endDate());
     }
 
     /**
