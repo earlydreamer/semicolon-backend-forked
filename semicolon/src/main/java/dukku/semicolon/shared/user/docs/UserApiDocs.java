@@ -32,6 +32,15 @@ public final class UserApiDocs {
     )
     public @interface UserTag {}
 
+    @Documented
+    @Target(TYPE)
+    @Retention(RUNTIME)
+    @Tag(
+            name = "User Admin API",
+            description = "Admin-only user management endpoints."
+    )
+    public @interface UserAdminTag {}
+
     // =============== 1) 회원가입 ===============
     @Documented
     @Target(METHOD)
@@ -269,4 +278,42 @@ public final class UserApiDocs {
             }
     )
     public @interface deleteUser {}
+
+    // =============== Admin: Withdraw Restore ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(
+            summary = "Restore withdrawn user (admin)",
+            description = "Restores a withdrawn user within the restore window. (POST /api/v1/admin/users/{userUuid}/withdrawal/restore)",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "Restore Request",
+                                    value = """
+                                            {
+                                              "newPassword": "TempPass123!"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Restore succeeded (No Content)"
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "Restore not allowed",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(value = "{\"message\": \"Restore not allowed.\"}")
+                            )
+                    )
+            }
+    )
+    public @interface RestoreWithdrawnUser {}
 }

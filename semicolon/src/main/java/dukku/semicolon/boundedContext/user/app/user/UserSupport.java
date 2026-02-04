@@ -1,5 +1,6 @@
 package dukku.semicolon.boundedContext.user.app.user;
 
+import dukku.common.global.exception.NotFoundException;
 import dukku.common.global.exception.UnauthorizedException;
 import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.out.UserRepository;
@@ -28,8 +29,17 @@ public class UserSupport {
         return passwordEncoder.encode(raw);
     }
 
+    public User getUserByUuid(UUID userUuid) {
+        return repository.findByUuid(userUuid)
+                .orElseThrow(() -> new NotFoundException("User not found."));
+    }
+
     public User getActiveUserByUuid(UUID userUuid) {
         return repository.findByUuidAndDeletedAtIsNull(userUuid)
-                .orElseThrow(() -> new UnauthorizedException("존재하지 않거나 탈퇴한 사용자입니다."));
+                .orElseThrow(() -> new UnauthorizedException("議댁옱?섏? ?딄굅???덊눜???ъ슜?먯엯?덈떎."));
+    }
+
+    public boolean isActiveEmailInUse(String email, Integer excludeUserId) {
+        return repository.existsByEmailAndDeletedAtIsNullAndIdNot(email, excludeUserId);
     }
 }

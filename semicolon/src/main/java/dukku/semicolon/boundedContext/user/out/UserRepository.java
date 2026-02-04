@@ -11,5 +11,14 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmailAndDeletedAtIsNull(String email);
 
+    Optional<User> findByUuid(UUID userUuid);
+
     Optional<User> findByUuidAndDeletedAtIsNull(UUID userUuid);
+
+    boolean existsByEmailAndDeletedAtIsNullAndIdNot(String email, Integer id);
+
+    java.util.List<User> findByStatusInAndDeletedAtBefore(
+            java.util.List<dukku.semicolon.boundedContext.user.entity.type.UserStatus> statuses,
+            java.time.LocalDateTime deletedAt
+    );
 }
