@@ -53,16 +53,20 @@ public class ProductSeller extends BaseIdAndUUIDAndTime {
     @Column(name = "review_count", nullable = false, comment = "리뷰 수")
     private int reviewCount;
 
-    public static ProductSeller create(UUID sellerUuid, UUID userUuid, String intro) {
+    public static ProductSeller create(UUID userUuid, String intro, int salesCount, int activeListingCount) {
         return ProductSeller.builder()
-                .sellerUuid(sellerUuid)
+                .sellerUuid(userUuid)
                 .userUuid(userUuid)
                 .intro(intro)
-                .salesCount(0)
-                .activeListingCount(0)
+                .salesCount(salesCount)
+                .activeListingCount(activeListingCount)
                 .averageRating(BigDecimal.ZERO) // 0.00
                 .reviewCount(0)
                 .build();
+    }
+
+    public static ProductSeller create(UUID userUuid, String intro) {
+        return create(userUuid, intro, 0, 0);
     }
 
     public void changeIntro(String intro) {
