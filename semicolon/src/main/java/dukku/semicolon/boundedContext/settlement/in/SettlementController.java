@@ -59,4 +59,44 @@ public class SettlementController {
     ) {
         return settlementFacade.getStatistics(request.toCondition());
     }
+
+    /**
+     * 실패한 정산 재처리
+     * POST /admin/settlements/{settlementUuid}/retry
+     */
+    @PostMapping("/{settlementUuid}/retry")
+    @SettlementApiDocs.RetrySettlement
+    public SettlementDetailResponse retrySettlement(@PathVariable UUID settlementUuid) {
+        return settlementFacade.retrySettlement(settlementUuid);
+    }
+
+    /**
+     * 정산 수동 완료 처리
+     * POST /admin/settlements/{settlementUuid}/complete
+     */
+    @PostMapping("/{settlementUuid}/complete")
+    @SettlementApiDocs.CompleteSettlement
+    public SettlementDetailResponse completeSettlement(@PathVariable UUID settlementUuid) {
+        return settlementFacade.completeSettlement(settlementUuid);
+    }
+
+    /**
+     * 정산 수동 실패 처리
+     * POST /admin/settlements/{settlementUuid}/fail
+     */
+    @PostMapping("/{settlementUuid}/fail")
+    @SettlementApiDocs.FailSettlement
+    public SettlementDetailResponse failSettlement(@PathVariable UUID settlementUuid) {
+        return settlementFacade.failSettlement(settlementUuid);
+    }
+
+    /**
+     * 정산 수동 예치금 충전 요청
+     * POST /admin/settlements/{settlementUuid}/process
+     */
+//    @PostMapping("/{settlementUuid}/process")
+//    @SettlementApiDocs.ProcessSettlement
+//    public SettlementDetailResponse processSettlement(@PathVariable UUID settlementUuid) {
+//        return settlementFacade.processSettlement(settlementUuid);
+//    }
 }
