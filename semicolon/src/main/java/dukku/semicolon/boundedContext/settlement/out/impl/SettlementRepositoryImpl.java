@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.settlement.out;
+package dukku.semicolon.boundedContext.settlement.out.impl;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -19,6 +19,10 @@ import java.util.UUID;
 
 import static dukku.semicolon.boundedContext.settlement.entity.QSettlement.settlement;
 
+/**
+ * 정산 검색/동적 쿼리 구현체
+ * QueryDSL 사용 (동적 조건 처리에 최적)
+ */
 @RequiredArgsConstructor
 public class SettlementRepositoryImpl implements SettlementRepositoryCustom {
 
@@ -52,10 +56,6 @@ public class SettlementRepositoryImpl implements SettlementRepositoryCustom {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
-    /**
-     * 전체 통계 조회
-     * @return Tuple: [count, totalAmount합계, settlementAmount합계, feeAmount합계]
-     */
     @Override
     public Tuple getTotalStatistics() {
         return queryFactory
@@ -69,10 +69,6 @@ public class SettlementRepositoryImpl implements SettlementRepositoryCustom {
                 .fetchOne();
     }
 
-    /**
-     * 상태별 통계 조회 (groupBy)
-     * @return List<Tuple>: 각 Tuple은 [status, count, settlementAmount합계]
-     */
     @Override
     public List<Tuple> getStatisticsByStatus() {
         return queryFactory
@@ -117,6 +113,8 @@ public class SettlementRepositoryImpl implements SettlementRepositoryCustom {
 
         return sum != null ? sum : 0L;
     }
+
+    // ===== 동적 조건 헬퍼 =====
 
     private BooleanExpression statusEq(SettlementStatus status) {
         return status != null ? settlement.settlementStatus.eq(status) : null;
