@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -29,6 +29,6 @@ public class DepositBalanceResponse {
         private UUID userUuid;
         private UUID depositUuid;
         private Long balance;
-        private OffsetDateTime updatedAt;
+        private LocalDateTime updatedAt;
     }
 }

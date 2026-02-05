@@ -12,7 +12,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,9 +49,8 @@ public class AdminDepositController {
                                                 .depositUuid(deposit.getDepositUuid())
                                                 .balance(deposit.getBalance())
                                                 .updatedAt(deposit.getUpdatedAt() != null
-                                                                ? deposit.getUpdatedAt().atOffset(ZoneOffset.ofHours(9))
-                                                                : deposit.getCreatedAt()
-                                                                                .atOffset(ZoneOffset.ofHours(9)))
+                                                                ? deposit.getUpdatedAt()
+                                                                : deposit.getCreatedAt())
                                                 .build())
                                 .build();
 
@@ -164,7 +162,7 @@ public class AdminDepositController {
                                 .amount(dto.getAmount())
                                 .balanceAfter(dto.getBalanceSnapshot())
                                 .ref(mapReference(dto))
-                                .createdAt(dto.getCreatedAt().atOffset(ZoneOffset.ofHours(9)))
+                                .createdAt(dto.getCreatedAt())
                                 .build();
         }
 
