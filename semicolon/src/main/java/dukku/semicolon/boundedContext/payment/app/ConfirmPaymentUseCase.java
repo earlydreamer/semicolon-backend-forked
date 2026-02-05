@@ -101,6 +101,7 @@ public class ConfirmPaymentUseCase {
                 payment.getUuid(), // paymentUuid (2026-01-24 추가된 필드 대응)
                 payment.getOrderUuid(),
                 payment.getAmount(),
+                payment.getAmountPg(),
                 payment.getPaymentDeposit(),
                 payment.getUserUuid(),
                 payment.getApprovedAt(),
