@@ -21,8 +21,8 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@Profile("prod")
-public class SecurityProdConfig {
+@Profile("release")
+public class SecurityReleaseConfig {
     @Value("${custom.security.cors.allowed-origins}")
     private String[] allowedOrigins;
 
