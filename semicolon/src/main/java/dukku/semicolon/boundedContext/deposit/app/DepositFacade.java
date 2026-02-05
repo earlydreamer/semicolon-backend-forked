@@ -31,6 +31,7 @@ public class DepositFacade {
     private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final FindDepositHistoriesUseCase findDepositHistoriesUseCase;
     private final DeductDepositForPaymentUseCase deductDepositForPaymentUseCase;
+    private final IncreaseSystemDepositForPgUseCase increaseSystemDepositForPgUseCase;
     private final RefundDepositUseCase refundDepositUseCase;
     private final ChargeDepositUseCase chargeDepositUseCase;
     private final ChargeDepositForSettlementUseCase chargeDepositForSettlementUseCase;
@@ -104,6 +105,13 @@ public class DepositFacade {
     public void deductDepositForPayment(UUID userUuid, Long totalAmount, UUID orderUuid,
             List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
         deductDepositForPaymentUseCase.execute(userUuid, totalAmount, orderUuid, itemDepositUsages);
+    }
+
+    /**
+     * PG 결제 승인분을 시스템 지갑에 반영
+     */
+    public void increaseSystemDepositForPg(UUID orderUuid, Long pgAmount) {
+        increaseSystemDepositForPgUseCase.execute(orderUuid, pgAmount);
     }
 
     /**
