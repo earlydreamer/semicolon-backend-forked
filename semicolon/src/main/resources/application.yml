@@ -96,6 +96,12 @@ custom:
       base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
+  user:
+    withdrawal:
+      restore-days: 30
+      purge-days: 90
+      purge-cron: "0 0 3 * * *"
+      mask-domain: "withdrawn.invalid"
 
 # 시스템 예치금 계정 설정
 system:

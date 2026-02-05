@@ -22,6 +22,7 @@ public class UserFacade {
     private final UpdateUserUseCase updateUser;
     private final ChangePasswordUseCase changePassword;
     private final WithdrawUserUseCase withdrawUserUseCase;
+    private final RestoreWithdrawnUserUseCase restoreWithdrawnUserUseCase;
 
     public UserResponse registerUser(UserRegisterRequest req, Role role) {
         return User.toUserResponse(registerUser.execute(req, role));
@@ -42,5 +43,9 @@ public class UserFacade {
 
     public void withdraw(UUID userUuid) {
         withdrawUserUseCase.withdraw(userUuid);
+    }
+
+    public void restoreWithdrawnUser(UUID userUuid, String newPassword) {
+        restoreWithdrawnUserUseCase.restore(userUuid, newPassword);
     }
 }

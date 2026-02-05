@@ -1,6 +1,8 @@
 package dukku.semicolon.boundedContext.user.entity;
 
+import dukku.common.global.auth.crypto.converter.AesGcmConverter;
 import dukku.semicolon.boundedContext.user.exception.AlreadyWithdrawUserException;
+import dukku.semicolon.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
 import dukku.semicolon.shared.user.dto.UserRegisterRequest;
 import dukku.semicolon.shared.user.dto.UserResponse;
 import dukku.semicolon.shared.user.dto.UserUpdateRequest;
@@ -24,6 +26,14 @@ public class User extends SourceUser {
     @Column(length = 100, nullable = false, comment = "암호화된 비밀번호")
     private String password;
 
+    @Convert(converter = AesGcmConverter.class)
+    @Column(name = "withdrawal_email_backup", length = 255)
+    private String withdrawalEmailBackup;
+
+    @Convert(converter = AesGcmConverter.class)
+    @Column(name = "withdrawal_nickname_backup", length = 100)
+    private String withdrawalNicknameBackup;
+
 
     public static User createUser(UserRegisterRequest req, Role role, String encodedPassword) {
         return User.builder()
@@ -46,12 +56,46 @@ public class User extends SourceUser {
         this.setStatus(status);
     }
 
-    public void withdraw() {
-        if (this.getStatus() == UserStatus.DELETED) {
+    public void withdraw(String maskedEmail, String maskedNickname, String encodedPassword) {
+        if (isWithdrawnStatus()) {
             throw new AlreadyWithdrawUserException();
         }
-        this.setStatus(UserStatus.DELETED);
+        this.withdrawalEmailBackup = this.getEmail();
+        this.withdrawalNicknameBackup = this.getNickname();
+        this.setEmail(maskedEmail);
+        this.setNickname(maskedNickname);
+        this.password = encodedPassword;
+        this.setStatus(UserStatus.WITHDRAWN_PENDING);
         this.setDeletedAt(LocalDateTime.now());
+    }
+
+    public void restoreFromWithdrawal(String encodedPassword) {
+        if (this.getStatus() != UserStatus.WITHDRAWN_PENDING && this.getStatus() != UserStatus.DELETED) {
+            throw new WithdrawRestoreNotAllowedException("User is not restorable.");
+        }
+        if (this.withdrawalEmailBackup == null) {
+            throw new WithdrawRestoreNotAllowedException("Missing withdrawal backup.");
+        }
+        this.setEmail(this.withdrawalEmailBackup);
+        this.setNickname(this.withdrawalNicknameBackup);
+        this.password = encodedPassword;
+        this.withdrawalEmailBackup = null;
+        this.withdrawalNicknameBackup = null;
+        this.setStatus(UserStatus.ACTIVE);
+        this.setDeletedAt(null);
+    }
+
+    public void finalizeWithdrawal(String encodedPassword) {
+        if (!isWithdrawnStatus()) {
+            return;
+        }
+        this.password = encodedPassword;
+        this.withdrawalEmailBackup = null;
+        this.withdrawalNicknameBackup = null;
+        this.setStatus(UserStatus.WITHDRAWN_FINAL);
+        if (this.getDeletedAt() == null) {
+            this.setDeletedAt(LocalDateTime.now());
+        }
     }
 
     public void updatePassword(String password) {
@@ -77,5 +121,11 @@ public class User extends SourceUser {
                 user.getRole(),
                 user.getStatus()
         );
+    }
+
+    private boolean isWithdrawnStatus() {
+        return this.getStatus() == UserStatus.WITHDRAWN_PENDING
+                || this.getStatus() == UserStatus.WITHDRAWN_FINAL
+                || this.getStatus() == UserStatus.DELETED;
     }
 }
