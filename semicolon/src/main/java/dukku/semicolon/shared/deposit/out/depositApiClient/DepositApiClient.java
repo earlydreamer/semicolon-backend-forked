@@ -20,7 +20,7 @@ public class DepositApiClient {
     private final RestClient adminClient;
     private final RestClient internalClient;
 
-    public DepositApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public DepositApiClient(@Value("${custom.global.internalBackUrl:http://localhost:8080}") String internalBackUrl) {
         this.adminClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/admin/deposits")
                 .build();
