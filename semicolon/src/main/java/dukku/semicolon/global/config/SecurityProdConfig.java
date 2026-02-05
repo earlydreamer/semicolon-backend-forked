@@ -4,6 +4,7 @@ import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,16 +15,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+@Profile("prod")
+public class SecurityProdConfig {
     @Value("${custom.security.cors.allowed-origins}")
     private String[] allowedOrigins;
 
@@ -64,6 +63,12 @@ public class SecurityConfig {
                         )
                         .permitAll() // 인증 필요없음 -> filter 미실행
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
+//                        .requestMatchers("/actuator/**")
+//                        .access((auth, ctx) ->
+//                                new AuthorizationDecision(
+//                                        "0.0.0.0".equals(ctx.getRequest().getRemoteAddr()) //로그 서버 컨테이너 IP
+//                                )
+//                        )
 
                         .anyRequest().authenticated() // 그 외는 인증 필요
                 )
