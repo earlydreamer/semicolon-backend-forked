@@ -29,7 +29,7 @@ public class FailedSettlementReaderConfig {
     private final EntityManagerFactory entityManagerFactory;
     private final SettlementBatchProperties batchProperties;
 
-    @Bean
+    @Bean(destroyMethod = "")
     @StepScope
     public JpaPagingItemReader<Settlement> failedSettlementReader(
             @Value("#{jobParameters['now']}") LocalDateTime now

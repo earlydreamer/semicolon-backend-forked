@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +42,7 @@ public class DepositHistoryResponse {
         private Long amount; // 변동 금액
         private Long balanceAfter; // 변동 후 잔액
         private ReferenceInfo ref; // 참조 정보
-        private OffsetDateTime createdAt; // 생성 일시
+        private LocalDateTime createdAt; // 생성 일시
     }
 
     @Data

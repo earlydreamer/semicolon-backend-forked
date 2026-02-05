@@ -33,8 +33,15 @@ public class EmailVerificationService {
     @Value("${custom.email.verification.verified-ttl-seconds:1800}")
     private long verifiedTtlSeconds;
 
+    @Value("${custom.email.verification.required:true}")
+    private boolean verificationRequired;
+
     public void sendVerificationLink(String email) {
         String normalizedEmail = normalizeEmail(email);
+        if (!verificationRequired) {
+            markVerified(normalizedEmail);
+            return;
+        }
         String token = generateToken();
         saveToken(normalizedEmail, token);
         sendMail(normalizedEmail, token);
@@ -52,6 +59,9 @@ public class EmailVerificationService {
     }
 
     public void assertVerifiedForRegister(String email) {
+        if (!verificationRequired) {
+            return;
+        }
         String normalizedEmail = normalizeEmail(email);
         Object verified = redisTemplate.opsForValue().get(verifiedKey(normalizedEmail));
         if (verified == null) {
