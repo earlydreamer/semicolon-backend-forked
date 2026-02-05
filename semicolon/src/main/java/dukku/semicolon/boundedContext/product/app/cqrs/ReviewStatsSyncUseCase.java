@@ -2,7 +2,9 @@ package dukku.semicolon.boundedContext.product.app.cqrs;
 
 import dukku.semicolon.boundedContext.product.entity.ProductSeller;
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
+import dukku.semicolon.shared.product.event.ReviewStatsSyncedEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,23 +13,25 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class ReviewStatsSyncUseCase {
 
-    private final SellerReviewStatsRedisSupport sellerReviewStatsRedisSupport;
+    private final SellerReviewStatsRedisSupport redisSupport;
     private final ProductSellerRepository productSellerRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void execute() {
 
-        Set<Object> dirty = sellerReviewStatsRedisSupport.getDirtySellerUuids();
+        Set<String> dirty = redisSupport.getDirtySellerUuids();
         if (dirty == null || dirty.isEmpty()) return;
 
         // UUID 리스트 변환
         List<UUID> sellerUuids = dirty.stream()
-                .map(o -> UUID.fromString(o.toString()))
+                .map(UUID::fromString)
                 .toList();
 
         // sellers 한 번에 조회
@@ -39,8 +43,8 @@ public class ReviewStatsSyncUseCase {
 
             UUID sellerUuid = seller.getSellerUuid();
 
-            long countLong = sellerReviewStatsRedisSupport.getReviewCount(sellerUuid);
-            long ratingSum = sellerReviewStatsRedisSupport.getRatingSum(sellerUuid);
+            long countLong = redisSupport.getReviewCount(sellerUuid);
+            long ratingSum = redisSupport.getRatingSum(sellerUuid);
 
             int count = (int) Math.max(0, Math.min(countLong, Integer.MAX_VALUE));
 
@@ -53,7 +57,13 @@ public class ReviewStatsSyncUseCase {
             seller.updateReviewSummary(count, avg);
         }
 
-        // dirty cleanup
-        sellerReviewStatsRedisSupport.cleanupDirty(dirty);
+        productSellerRepository.saveAll(sellers);
+
+        // 실제로 처리된 seller만 cleanup 대상으로 보냄
+        Set<String> processed = sellers.stream()
+                .map(s -> s.getSellerUuid().toString())
+                .collect(Collectors.toSet());
+
+        eventPublisher.publishEvent(new ReviewStatsSyncedEvent(processed));
     }
 }

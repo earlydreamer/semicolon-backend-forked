@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -45,8 +46,10 @@ public class SellerReviewStatsRedisSupport {
 
     // ===== read =====
 
-    public Set<Object> getDirtySellerUuids() {
-        return redisTemplate.opsForSet().members(DIRTY_KEY);
+    public Set<String> getDirtySellerUuids() {
+        Set<Object> raw = redisTemplate.opsForSet().members(DIRTY_KEY);
+        if (raw == null) return Set.of();
+        return raw.stream().map(String::valueOf).collect(Collectors.toSet());
     }
 
     public long getReviewCount(UUID sellerUuid) {
@@ -61,7 +64,7 @@ public class SellerReviewStatsRedisSupport {
 
     // ===== cleanup =====
 
-    public void cleanupDirty(Set<Object> ids) {
+    public void cleanupDirty(Set<String> ids) {
         redisTemplate.opsForSet().remove(DIRTY_KEY, ids.toArray());
     }
 

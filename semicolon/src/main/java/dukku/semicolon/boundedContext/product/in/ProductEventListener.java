@@ -13,7 +13,6 @@ import dukku.semicolon.shared.product.event.ProductStatsBulkUpdatedEvent;
 import dukku.semicolon.shared.product.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
@@ -54,7 +53,7 @@ public class ProductEventListener {
 
     // 4. 통계 동기화 (배치 작업 후 실행)
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void syncStats(ProductStatsBulkUpdatedEvent event) {
         syncProductSearchStatsUseCase.execute(event.getStats());
     }
