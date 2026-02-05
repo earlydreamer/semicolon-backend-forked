@@ -13,7 +13,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
-@UserApiDocs.UserAdminTag
+@UserApiDocs.AdminUserTag
 public class AdminUserController {
 
     private final UserFacade userFacade;

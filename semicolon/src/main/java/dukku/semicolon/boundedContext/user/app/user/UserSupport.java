@@ -36,7 +36,7 @@ public class UserSupport {
 
     public User getActiveUserByUuid(UUID userUuid) {
         return repository.findByUuidAndDeletedAtIsNull(userUuid)
-                .orElseThrow(() -> new UnauthorizedException("議댁옱?섏? ?딄굅???덊눜???ъ슜?먯엯?덈떎."));
+                .orElseThrow(() -> new UnauthorizedException("이미 탈퇴한 사용자입니다."));
     }
 
     public boolean isActiveEmailInUse(String email, Integer excludeUserId) {

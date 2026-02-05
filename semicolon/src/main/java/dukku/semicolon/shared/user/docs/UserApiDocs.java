@@ -39,7 +39,7 @@ public final class UserApiDocs {
             name = "User Admin API",
             description = "Admin-only user management endpoints."
     )
-    public @interface UserAdminTag {}
+    public @interface AdminUserTag {}
 
     // =============== 1) 회원가입 ===============
     @Documented
@@ -279,13 +279,14 @@ public final class UserApiDocs {
     )
     public @interface deleteUser {}
 
-    // =============== Admin: Withdraw Restore ===============
+
+    // =============== 6) 탈퇴 철회 (관리자) ===============
     @Documented
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "Restore withdrawn user (admin)",
-            description = "Restores a withdrawn user within the restore window. (POST /api/v1/admin/users/{userUuid}/withdrawal/restore)",
+            summary = "탈퇴 철회 (관리자)",
+            description = "유예 기간 내 탈퇴 회원을 복구합니다. (POST /api/v1/admin/users/{userUuid}/withdrawal/restore)",
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(
@@ -294,7 +295,7 @@ public final class UserApiDocs {
                                     name = "Restore Request",
                                     value = """
                                             {
-                                              "newPassword": "TempPass123!"
+                                              \"newPassword\": \"TempPass123!\"
                                             }
                                             """
                             )
@@ -303,14 +304,14 @@ public final class UserApiDocs {
             responses = {
                     @ApiResponse(
                             responseCode = "204",
-                            description = "Restore succeeded (No Content)"
+                            description = "탈퇴 철회 성공 (No Content)"
                     ),
                     @ApiResponse(
                             responseCode = "409",
-                            description = "Restore not allowed",
+                            description = "탈퇴 철회 불가",
                             content = @Content(
                                     mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\": \"Restore not allowed.\"}")
+                                    examples = @ExampleObject(value = "{\"message\": \"탈퇴 철회가 불가능합니다.\"}")
                             )
                     )
             }
