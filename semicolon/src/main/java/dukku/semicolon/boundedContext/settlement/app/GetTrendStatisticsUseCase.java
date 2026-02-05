@@ -1,8 +1,10 @@
 package dukku.semicolon.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.out.SettlementRepository;
-import dukku.semicolon.shared.settlement.dto.TrendStatisticsResponse;
-import dukku.semicolon.shared.settlement.dto.TrendStatisticsResponse.*;
+import dukku.semicolon.boundedContext.settlement.out.SettlementReportRepository;
+import dukku.semicolon.shared.settlement.dto.SettlementTrendStatisticsResponse;
+import dukku.semicolon.shared.settlement.dto.SettlementTrendStatisticsResponse.DailyTrend;
+import dukku.semicolon.shared.settlement.dto.SettlementTrendStatisticsResponse.MonthlyTrend;
+import dukku.semicolon.shared.settlement.dto.SettlementTrendStatisticsResponse.ProcessingTimeStats;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,20 +14,21 @@ import java.util.List;
 
 /**
  * 트렌드 통계 조회 UseCase
- * 일별/월별 정산 추이, 처리 시간 분석
  */
 @Component
 @RequiredArgsConstructor
 public class GetTrendStatisticsUseCase {
 
-    private final SettlementRepository settlementRepository;
+    private final SettlementReportRepository reportRepository;
 
     @Transactional(readOnly = true)
-    public TrendStatisticsResponse execute(LocalDate startDate, LocalDate endDate) {
-        List<DailyTrend> dailyTrends = settlementRepository.getDailyTrend(startDate, endDate);
-        List<MonthlyTrend> monthlyTrends = settlementRepository.getMonthlyTrend(startDate, endDate);
-        ProcessingTimeStats processingTimeStats = settlementRepository.getProcessingTimeStats();
+    public SettlementTrendStatisticsResponse execute(LocalDate startDate, LocalDate endDate) {
+        LocalDate adjustedEndDate = endDate.plusDays(1);
 
-        return new TrendStatisticsResponse(dailyTrends, monthlyTrends, processingTimeStats);
+        List<DailyTrend> dailyTrends = reportRepository.getDailyTrend(startDate, adjustedEndDate);
+        List<MonthlyTrend> monthlyTrends = reportRepository.getMonthlyTrend(startDate, adjustedEndDate);
+        ProcessingTimeStats processingTimeStats = reportRepository.getProcessingTimeStats();
+
+        return new SettlementTrendStatisticsResponse(dailyTrends, monthlyTrends, processingTimeStats);
     }
 }

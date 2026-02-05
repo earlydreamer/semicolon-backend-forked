@@ -56,7 +56,7 @@ public class SettlementFacade {
      * 배치 Job 통계 조회
      */
     @Transactional(readOnly = true)
-    public BatchJobStatisticsResponse getBatchJobStatistics(LocalDate startDate, LocalDate endDate) {
+    public SettlementBatchJobStatisticsResponse getBatchJobStatistics(LocalDate startDate, LocalDate endDate) {
         return getBatchStatisticsUseCase.getJobStatistics(startDate, endDate);
     }
 
@@ -64,7 +64,7 @@ public class SettlementFacade {
      * 배치 Step 통계 조회
      */
     @Transactional(readOnly = true)
-    public BatchStepStatisticsResponse getBatchStepStatistics(LocalDate startDate, LocalDate endDate) {
+    public SettlementBatchStepStatisticsResponse getBatchStepStatistics(LocalDate startDate, LocalDate endDate) {
         return getBatchStatisticsUseCase.getStepStatistics(startDate, endDate);
     }
 
@@ -72,7 +72,7 @@ public class SettlementFacade {
      * 재무 통계 조회
      */
     @Transactional(readOnly = true)
-    public FinancialStatisticsResponse getFinancialStatistics() {
+    public SettlementFinancialStatisticsResponse getFinancialStatistics() {
         return getFinancialStatisticsUseCase.execute();
     }
 
@@ -80,7 +80,7 @@ public class SettlementFacade {
      * 트렌드 통계 조회
      */
     @Transactional(readOnly = true)
-    public TrendStatisticsResponse getTrendStatistics(LocalDate startDate, LocalDate endDate) {
+    public SettlementTrendStatisticsResponse getTrendStatistics(LocalDate startDate, LocalDate endDate) {
         return getTrendStatisticsUseCase.execute(startDate, endDate);
     }
 

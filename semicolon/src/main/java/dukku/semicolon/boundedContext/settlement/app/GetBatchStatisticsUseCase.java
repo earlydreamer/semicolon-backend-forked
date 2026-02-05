@@ -1,10 +1,10 @@
 package dukku.semicolon.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.out.BatchMetaRepository;
-import dukku.semicolon.shared.settlement.dto.BatchJobStatisticsResponse;
-import dukku.semicolon.shared.settlement.dto.BatchJobStatisticsResponse.*;
-import dukku.semicolon.shared.settlement.dto.BatchStepStatisticsResponse;
-import dukku.semicolon.shared.settlement.dto.BatchStepStatisticsResponse.StepPerformance;
+import dukku.semicolon.boundedContext.settlement.out.SettlementBatchMetaRepository;
+import dukku.semicolon.shared.settlement.dto.SettlementBatchJobStatisticsResponse;
+import dukku.semicolon.shared.settlement.dto.SettlementBatchJobStatisticsResponse.*;
+import dukku.semicolon.shared.settlement.dto.SettlementBatchStepStatisticsResponse;
+import dukku.semicolon.shared.settlement.dto.SettlementBatchStepStatisticsResponse.StepPerformance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,20 +20,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GetBatchStatisticsUseCase {
 
-    private final BatchMetaRepository batchMetaRepository;
+    private final SettlementBatchMetaRepository batchMetaRepository;
 
     /**
      * 배치 Job 통계 조회
      */
     @Transactional(readOnly = true)
-    public BatchJobStatisticsResponse getJobStatistics(LocalDate startDate, LocalDate endDate) {
+    public SettlementBatchJobStatisticsResponse getJobStatistics(LocalDate startDate, LocalDate endDate) {
         List<JobStatusCount> jobStatus = batchMetaRepository.findJobStatusByDateRange(startDate, endDate);
         List<FailedJobInfo> failedJobs = batchMetaRepository.findFailedJobs(startDate, endDate);
         List<RestartableJobInfo> restartableJobs = batchMetaRepository.findRestartableJobs(startDate, endDate);
         List<ErrorOccurrence> topErrors = batchMetaRepository.findTopErrors(startDate, endDate);
         List<DailySettlementCount> settlementCounts = batchMetaRepository.findSettlementCounts(startDate, endDate);
 
-        return new BatchJobStatisticsResponse(
+        return new SettlementBatchJobStatisticsResponse(
                 jobStatus,
                 failedJobs,
                 restartableJobs,
@@ -46,8 +46,8 @@ public class GetBatchStatisticsUseCase {
      * 배치 Step 통계 조회
      */
     @Transactional(readOnly = true)
-    public BatchStepStatisticsResponse getStepStatistics(LocalDate startDate, LocalDate endDate) {
+    public SettlementBatchStepStatisticsResponse getStepStatistics(LocalDate startDate, LocalDate endDate) {
         List<StepPerformance> stepPerformances = batchMetaRepository.findStepPerformances(startDate, endDate);
-        return new BatchStepStatisticsResponse(stepPerformances);
+        return new SettlementBatchStepStatisticsResponse(stepPerformances);
     }
 }

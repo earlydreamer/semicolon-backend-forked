@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 배치 Job 실행 통계 응답 DTO
  */
-public record BatchJobStatisticsResponse(
+public record SettlementBatchJobStatisticsResponse(
         // 오늘 실행된 배치 현황
         List<JobStatusCount> todayJobStatus,
 

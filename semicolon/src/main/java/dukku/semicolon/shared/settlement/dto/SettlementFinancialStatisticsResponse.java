@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 /**
  * 재무 통계 응답 DTO
  */
-public record FinancialStatisticsResponse(
+public record SettlementFinancialStatisticsResponse(
         // 플랫폼 수익 (성공한 정산의 수수료 총합)
         long platformRevenue,
 

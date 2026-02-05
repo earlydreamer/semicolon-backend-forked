@@ -1,6 +1,6 @@
 package dukku.semicolon.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.out.SettlementRepository;
+import dukku.semicolon.boundedContext.settlement.out.SettlementReportRepository;
 import dukku.semicolon.shared.settlement.dto.SellerStatisticsResponse;
 import dukku.semicolon.shared.settlement.dto.SellerStatisticsResponse.SellerSettlementSummary;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +17,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GetSellerStatisticsUseCase {
 
-    private final SettlementRepository settlementRepository;
+    private final SettlementReportRepository reportRepository;
 
     @Transactional(readOnly = true)
     public SellerStatisticsResponse execute(Pageable pageable) {
-        List<SellerSettlementSummary> summaries = settlementRepository.getSellerStatistics(pageable);
-        long totalSellers = settlementRepository.countDistinctSellers();
+        List<SellerSettlementSummary> summaries = reportRepository.getSellerStatistics(
+                pageable.getPageSize(),
+                (int) pageable.getOffset()
+        );
+        long totalSellers = reportRepository.countDistinctSellers();
         long totalPages = (totalSellers + pageable.getPageSize() - 1) / pageable.getPageSize();
 
         return new SellerStatisticsResponse(summaries, (int) totalSellers, totalPages);

@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * 트렌드 통계 응답 DTO
  */
-public record TrendStatisticsResponse(
+public record SettlementTrendStatisticsResponse(
         // 일별 정산 금액 추이
         List<DailyTrend> dailyTrends,
 

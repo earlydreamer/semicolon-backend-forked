@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * 배치 Step 실행 통계 응답 DTO
  */
-public record BatchStepStatisticsResponse(
+public record SettlementBatchStepStatisticsResponse(
         List<StepPerformance> stepPerformances
 ) {
     /**

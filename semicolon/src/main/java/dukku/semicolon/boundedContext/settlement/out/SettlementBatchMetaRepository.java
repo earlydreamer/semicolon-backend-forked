@@ -1,7 +1,7 @@
 package dukku.semicolon.boundedContext.settlement.out;
 
-import dukku.semicolon.shared.settlement.dto.BatchJobStatisticsResponse.*;
-import dukku.semicolon.shared.settlement.dto.BatchStepStatisticsResponse.StepPerformance;
+import dukku.semicolon.shared.settlement.dto.SettlementBatchJobStatisticsResponse.*;
+import dukku.semicolon.shared.settlement.dto.SettlementBatchStepStatisticsResponse.StepPerformance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Repository
 @RequiredArgsConstructor
-public class BatchMetaRepository {
+public class SettlementBatchMetaRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
