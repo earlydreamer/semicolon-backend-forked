@@ -4,7 +4,6 @@ import dukku.semicolon.shared.user.dto.UserRegisterRequest;
 import dukku.semicolon.boundedContext.user.app.email.EmailVerificationService;
 import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.entity.type.Role;
-import dukku.semicolon.boundedContext.user.entity.type.UserStatus;
 import dukku.semicolon.shared.user.exception.UserConflictException;
 import dukku.semicolon.shared.user.event.UserJoinedEvent;
 import jakarta.transaction.Transactional;
@@ -24,7 +23,7 @@ public class RegisterUserUseCase {
     public User execute(UserRegisterRequest req, Role role) {
         emailVerificationService.assertVerifiedForRegister(req.getEmail());
         User userCandidate = support.findByEmail(req.getEmail())
-                .map(existing -> restoreOrFail(existing, req))
+                .map(existing -> restoreOrFail(existing))
                 .orElseGet(() -> createNew(req, role));
 
         User saved = support.save(userCandidate);
@@ -33,12 +32,7 @@ public class RegisterUserUseCase {
         return saved;
     }
 
-    private User restoreOrFail(User user, UserRegisterRequest req) {
-        if (user.getDeletedAt() != null) {
-            user.updateStatus(UserStatus.ACTIVE);
-            user.updatePassword(support.encode(req.getPassword()));
-            return user;
-        }
+    private User restoreOrFail(User user) {
         throw new UserConflictException();
     }
 

@@ -32,6 +32,15 @@ public final class UserApiDocs {
     )
     public @interface UserTag {}
 
+    @Documented
+    @Target(TYPE)
+    @Retention(RUNTIME)
+    @Tag(
+            name = "User Admin API",
+            description = "Admin-only user management endpoints."
+    )
+    public @interface AdminUserTag {}
+
     // =============== 1) 회원가입 ===============
     @Documented
     @Target(METHOD)
@@ -269,4 +278,43 @@ public final class UserApiDocs {
             }
     )
     public @interface deleteUser {}
+
+
+    // =============== 6) 탈퇴 철회 (관리자) ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(
+            summary = "탈퇴 철회 (관리자)",
+            description = "유예 기간 내 탈퇴 회원을 복구합니다. (POST /api/v1/admin/users/{userUuid}/withdrawal/restore)",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "Restore Request",
+                                    value = """
+                                            {
+                                              \"newPassword\": \"TempPass123!\"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "탈퇴 철회 성공 (No Content)"
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "탈퇴 철회 불가",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(value = "{\"message\": \"탈퇴 철회가 불가능합니다.\"}")
+                            )
+                    )
+            }
+    )
+    public @interface RestoreWithdrawnUser {}
 }
