@@ -45,8 +45,6 @@ public class AdminDepositController {
                                 .code("DEPOSIT_BALANCE_RETRIEVED")
                                 .message("예치금 잔액을 조회했습니다.")
                                 .data(DepositBalanceResponse.DepositBalanceData.builder()
-                                                .userUuid(deposit.getUserUuid())
-                                                .depositUuid(deposit.getDepositUuid())
                                                 .balance(deposit.getBalance())
                                                 .updatedAt(deposit.getUpdatedAt() != null
                                                                 ? deposit.getUpdatedAt()

@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * 예치금 잔액 조회 응답 DTO
@@ -26,8 +25,6 @@ public class DepositBalanceResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class DepositBalanceData {
-        private UUID userUuid;
-        private UUID depositUuid;
         private Long balance;
         private LocalDateTime updatedAt;
     }

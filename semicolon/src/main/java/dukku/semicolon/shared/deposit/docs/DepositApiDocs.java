@@ -41,12 +41,11 @@ public final class DepositApiDocs {
             "success": true,
             "code": "DEPOSIT_BALANCE_RETRIEVED",
             "message": "예치금 잔액을 조회했습니다.",
-            "data": {
-              "userUuid": "0b6f5f1a-9c64-4ac1-9a51-2f8b2f1a9d12",
-              "balance": 12500,
-              "updatedAt": "2026-01-15T14:10:00+09:00"
+              "data": {
+                "balance": 12500,
+                "updatedAt": "2026-01-15T14:10:00+09:00"
+              }
             }
-          }
           """))),
       @ApiResponse(responseCode = "401", description = "인증 실패"),
       @ApiResponse(responseCode = "404", description = "예치금 정보 없음")
@@ -105,12 +104,11 @@ public final class DepositApiDocs {
             "success": true,
             "code": "DEPOSIT_BALANCE_RETRIEVED",
             "message": "예치금 잔액을 조회했습니다.",
-            "data": {
-              "userUuid": "0b6f5f1a-9c64-4ac1-9a51-2f8b2f1a9d12",
-              "balance": 12500,
-              "updatedAt": "2026-01-15T14:10:00+09:00"
+              "data": {
+                "balance": 12500,
+                "updatedAt": "2026-01-15T14:10:00+09:00"
+              }
             }
-          }
           """))),
       @ApiResponse(responseCode = "403", description = "권한 없음"),
       @ApiResponse(responseCode = "404", description = "사용자 또는 예치금 정보 없음")
