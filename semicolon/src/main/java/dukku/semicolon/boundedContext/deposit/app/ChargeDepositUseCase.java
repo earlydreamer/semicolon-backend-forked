@@ -4,6 +4,7 @@ import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.deposit.event.DepositChargeFailedEvent;
 import dukku.common.shared.deposit.event.DepositChargeSucceededEvent;
 import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
+import dukku.semicolon.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class ChargeDepositUseCase {
 
     private final IncreaseDepositUseCase increaseDepositUseCase;
+    private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final EventPublisher eventPublisher;
 
     /**
@@ -52,6 +54,11 @@ public class ChargeDepositUseCase {
         try {
             // 정산에 의한 충전은 SETTLEMENT 타입 사용
             increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.SETTLEMENT, settlementUuid);
+            decreaseDepositUseCase.decrease(
+                    SystemDepositInitData.SYSTEM_USER_UUID,
+                    amount,
+                    DepositHistoryType.SETTLEMENT,
+                    settlementUuid);
 
             // 성공 이벤트 발행
             eventPublisher.publish(new DepositChargeSucceededEvent(userUuid, amount, settlementUuid));
