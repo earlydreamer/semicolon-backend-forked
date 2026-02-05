@@ -3,6 +3,7 @@ package dukku.semicolon.boundedContext.payment.app;
 import dukku.common.global.UserUtil;
 import dukku.semicolon.boundedContext.payment.entity.Payment;
 import dukku.semicolon.boundedContext.payment.entity.PaymentOrderItem;
+import dukku.semicolon.shared.deposit.out.depositApiClient.DepositApiClient;
 import dukku.semicolon.shared.payment.dto.PaymentRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,12 +24,14 @@ class RequestPaymentUseCaseTest {
 
         private PaymentSupport paymentSupport;
         private RequestPaymentUseCase requestPaymentUseCase;
+        private DepositApiClient depositApiClient;
         private UUID userUuid;
 
         @BeforeEach
         void setUp() {
                 paymentSupport = mock(PaymentSupport.class);
-                requestPaymentUseCase = new RequestPaymentUseCase(paymentSupport);
+                depositApiClient = mock(DepositApiClient.class);
+                requestPaymentUseCase = new RequestPaymentUseCase(paymentSupport, depositApiClient);
                 userUuid = UUID.randomUUID();
 
                 // savePayment 호출 시 인자로 받은 Payment 객체를 그대로 반환하도록 설정
@@ -41,6 +44,7 @@ class RequestPaymentUseCaseTest {
         void depositDistributionTest() {
                 try (MockedStatic<UserUtil> userUtil = mockStatic(UserUtil.class)) {
                         userUtil.when(UserUtil::getUserId).thenReturn(userUuid);
+                        when(depositApiClient.getBalance(userUuid)).thenReturn(20000L);
 
                         // Given: 두 개의 주문 상품 준비 (아이템 2의 productId가 더 작음)
                         UUID orderUuid = UUID.randomUUID();
