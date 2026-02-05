@@ -21,7 +21,7 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@Profile("dev")
+@Profile({"dev", "test"})  // 개발 환경 + 테스트 환경
 public class SecurityDevConfig {
     @Value("${custom.security.cors.allowed-origins}")
     private String[] allowedOrigins;
