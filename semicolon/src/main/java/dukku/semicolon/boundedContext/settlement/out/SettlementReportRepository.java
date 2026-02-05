@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 @Repository
 @RequiredArgsConstructor
-public class SettlementReportJdbcRepository {
+public class SettlementReportRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
