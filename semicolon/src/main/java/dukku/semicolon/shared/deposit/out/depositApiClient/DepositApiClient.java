@@ -1,6 +1,7 @@
 package dukku.semicolon.shared.deposit.out.depositApiClient;
 
 import dukku.semicolon.shared.deposit.dto.DepositAccountResponse;
+import dukku.semicolon.shared.deposit.dto.DepositBalanceResponse;
 import dukku.semicolon.shared.deposit.dto.DepositChargeForSettlementRequest;
 import dukku.semicolon.shared.deposit.dto.DepositChargeForSettlementResponse;
 import dukku.semicolon.shared.deposit.exception.DepositNotFoundException;
@@ -39,6 +40,21 @@ public class DepositApiClient {
 
         if (response != null && response.getData() != null) {
             return response.getData().getDepositUuid();
+        }
+        throw new DepositNotFoundException("예치금 계좌 정보를 찾을 수 없습니다.");
+    }
+
+    /**
+     * 사용자 예치금 잔액 조회 (Internal API)
+     */
+    public Long getBalance(UUID userUuid) {
+        DepositBalanceResponse response = internalClient.get()
+                .uri("/{userUuid}/balance", userUuid)
+                .retrieve()
+                .body(DepositBalanceResponse.class);
+
+        if (response != null && response.getData() != null) {
+            return response.getData().getBalance();
         }
         throw new DepositNotFoundException("예치금 계좌 정보를 찾을 수 없습니다.");
     }
