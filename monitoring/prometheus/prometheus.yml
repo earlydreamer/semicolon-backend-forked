@@ -1,0 +1,39 @@
+# Prometheus 설정 파일
+global:
+  scrape_interval: 15s     # 15초마다 메트릭 수집
+  evaluation_interval: 15s # 15초마다 규칙 평가
+  external_labels:
+    monitor: 'semicolon-monitor'
+
+# Alertmanager 설정 (선택사항)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           # - alertmanager:9093
+
+# 규칙 파일 로드 (선택사항)
+# rule_files:
+#   - "alerts.yml"
+
+# 메트릭 수집 대상 설정
+scrape_configs:
+  # Spring Boot 애플리케이션 메트릭 수집
+  - job_name: 'semicolon-spring-app'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          # Windows/Mac에서 로컬 Spring Boot 앱에 접근
+          - 'host.docker.internal:8080'
+        labels:
+          application: 'semicolon'
+          environment: 'local'
+
+  # Prometheus 자체 모니터링
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+        labels:
+          application: 'prometheus'
