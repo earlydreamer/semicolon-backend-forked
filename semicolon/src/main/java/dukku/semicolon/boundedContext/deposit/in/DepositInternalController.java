@@ -1,8 +1,10 @@
 package dukku.semicolon.boundedContext.deposit.in;
 
 import dukku.semicolon.boundedContext.deposit.app.DepositFacade;
+import dukku.semicolon.shared.deposit.dto.DepositBalanceResponse;
 import dukku.semicolon.shared.deposit.dto.DepositChargeForSettlementRequest;
 import dukku.semicolon.shared.deposit.dto.DepositChargeForSettlementResponse;
+import dukku.semicolon.shared.deposit.dto.DepositDto;
 import dukku.semicolon.shared.deposit.type.DepositChargeResultCode;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
@@ -32,6 +34,27 @@ import java.util.UUID;
 public class DepositInternalController {
 
     private final DepositFacade depositFacade;
+
+    /**
+     * 사용자 예치금 잔액 조회 (Internal API)
+     */
+    @GetMapping("/{userUuid}/balance")
+    public ResponseEntity<DepositBalanceResponse> getUserBalanceInternal(@PathVariable UUID userUuid) {
+        DepositDto deposit = depositFacade.findDeposit(userUuid);
+
+        DepositBalanceResponse response = DepositBalanceResponse.builder()
+                .success(true)
+                .code("DEPOSIT_BALANCE_RETRIEVED")
+                .message("예치금 잔액을 조회했습니다.")
+                .data(DepositBalanceResponse.DepositBalanceData.builder()
+                        .balance(deposit.getBalance())
+                        .updatedAt(deposit.getUpdatedAt() != null ? deposit.getUpdatedAt() :
+                                deposit.getCreatedAt())
+                        .build())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * 정산을 위한 예치금 충전 (Internal API)

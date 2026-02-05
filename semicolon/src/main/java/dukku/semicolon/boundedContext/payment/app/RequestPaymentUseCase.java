@@ -5,9 +5,11 @@ import dukku.semicolon.boundedContext.payment.entity.Payment;
 import dukku.semicolon.boundedContext.payment.entity.PaymentOrderItem;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentType;
+import dukku.semicolon.shared.deposit.out.depositApiClient.DepositApiClient;
 import dukku.semicolon.shared.payment.dto.PaymentRequest;
 import dukku.semicolon.shared.payment.dto.PaymentResponse;
 import dukku.semicolon.shared.payment.exception.AmountMismatchException;
+import dukku.semicolon.shared.payment.exception.DepositShortageException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +31,7 @@ import java.util.UUID;
 public class RequestPaymentUseCase {
 
     private final PaymentSupport support;
+    private final DepositApiClient depositApiClient;
 
     /**
      * 결제 요청 처리
@@ -106,7 +109,17 @@ public class RequestPaymentUseCase {
         }
 
         // 4. 예치금 잔액 검증
-        // TODO: Deposit BC 연동 후 실제 잔액 조회 및 검증 로직 추가
+        // 요청에 실려온 예치금 사용액이 유효한지 검증
+        // 요청액이 null이 아니고 0보다 클 때만 검증
+        Long depositUseAmount = amounts.getDepositUseAmount();
+        if (depositUseAmount != null && depositUseAmount > 0) {
+            Long availableBalance = depositApiClient.getBalance(UserUtil.getUserId());
+            //현재 예치금을 API로 조회해서 예치금 사용 가능 상태인지 비교
+            if (availableBalance == null || availableBalance < depositUseAmount) {
+                throw new DepositShortageException(depositUseAmount,
+                        availableBalance != null ? availableBalance : 0L);
+            }
+        }
     }
 
     /**
