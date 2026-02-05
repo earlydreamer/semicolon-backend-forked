@@ -1,6 +1,7 @@
 package dukku.semicolon.boundedContext.user.out;
 
 import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.semicolon.boundedContext.user.entity.type.Role;
 import dukku.semicolon.boundedContext.user.entity.type.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -17,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByUuid(UUID userUuid);
 
     Optional<User> findByUuidAndDeletedAtIsNull(UUID userUuid);
+
+    Optional<User> findByRoleAndDeletedAtIsNull(Role role);
 
     boolean existsByEmailAndDeletedAtIsNullAndIdNot(String email, Integer id);
 
