@@ -1,7 +1,7 @@
 package dukku.semicolon.boundedContext.product.app.cqrs;
 
-import dukku.semicolon.boundedContext.product.entity.ProductSeller;
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
+import dukku.semicolon.shared.product.dto.cqrs.SellerReviewStatDto;
 import dukku.semicolon.shared.product.event.ReviewStatsSyncedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -9,11 +9,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -29,41 +27,31 @@ public class ReviewStatsSyncUseCase {
         Set<String> dirty = redisSupport.getDirtySellerUuids();
         if (dirty == null || dirty.isEmpty()) return;
 
-        // UUID 리스트 변환
-        List<UUID> sellerUuids = dirty.stream()
+        List<SellerReviewStatDto> items = dirty.stream()
                 .map(UUID::fromString)
+                .map(sellerUuid -> {
+                    long countLong = redisSupport.getReviewCount(sellerUuid);
+                    long ratingSum = redisSupport.getRatingSum(sellerUuid);
+
+                    int count = (int) Math.max(0, Math.min(countLong, Integer.MAX_VALUE));
+
+                    BigDecimal avg = BigDecimal.ZERO;
+                    if (count > 0) {
+                        avg = BigDecimal.valueOf(ratingSum)
+                                .divide(BigDecimal.valueOf(count), 2, java.math.RoundingMode.HALF_UP);
+                    }
+
+                    return new SellerReviewStatDto(sellerUuid, count, avg);
+                })
                 .toList();
 
-        // sellers 한 번에 조회
-        List<ProductSeller> sellers =
-                productSellerRepository.findBySellerUuidIn(sellerUuids);
+        // DB Bulk Update (즉시 UPDATE)
+        productSellerRepository.bulkUpdateReviewSummary(items);
 
-        // 메모리에서 값 계산 & 세팅
-        for (ProductSeller seller : sellers) {
-
-            UUID sellerUuid = seller.getSellerUuid();
-
-            long countLong = redisSupport.getReviewCount(sellerUuid);
-            long ratingSum = redisSupport.getRatingSum(sellerUuid);
-
-            int count = (int) Math.max(0, Math.min(countLong, Integer.MAX_VALUE));
-
-            BigDecimal avg = BigDecimal.ZERO;
-            if (count > 0) {
-                avg = BigDecimal.valueOf(ratingSum)
-                        .divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
-            }
-
-            seller.updateReviewSummary(count, avg);
-        }
-
-        productSellerRepository.saveAll(sellers);
-
-        // 실제로 처리된 seller만 cleanup 대상으로 보냄
-        Set<String> processed = sellers.stream()
-                .map(s -> s.getSellerUuid().toString())
-                .collect(Collectors.toSet());
-
+        // AFTER_COMMIT cleanup 이벤트는 기존처럼 processed만 발행
+        Set<String> processed = items.stream()
+                .map(i -> i.sellerUuid().toString())
+                .collect(java.util.stream.Collectors.toSet());
         eventPublisher.publishEvent(new ReviewStatsSyncedEvent(processed));
     }
 }

@@ -72,9 +72,4 @@ public class ProductSeller extends BaseIdAndUUIDAndTime {
     public void changeIntro(String intro) {
         this.intro = intro;
     }
-
-    public void updateReviewSummary(int reviewCount, BigDecimal averageRating) {
-        this.reviewCount = reviewCount;
-        this.averageRating = averageRating;
-    }
 }
