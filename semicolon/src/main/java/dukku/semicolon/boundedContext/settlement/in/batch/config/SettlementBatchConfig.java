@@ -56,7 +56,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class SettlementBatchConfig {
 
     private final JobRepository jobRepository;
-    private final PlatformTransactionManager transactionManager;
     private final SettlementBatchProperties batchProperties;
 
     // Listeners
@@ -129,7 +128,7 @@ public class SettlementBatchConfig {
         log.info("[Step 1] 정산 대상 생성 Step 생성 - chunkSize: {}", batchProperties.getChunkSize());
 
         return new StepBuilder("createSettlementStep", jobRepository)
-                .<ConfirmedOrderItemResponse, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .<ConfirmedOrderItemResponse, Settlement>chunk(batchProperties.getChunkSize())
                 .reader(confirmedOrderItemReader)
                 .processor(createSettlementProcessor)
                 .writer(createSettlementWriter)
@@ -159,7 +158,7 @@ public class SettlementBatchConfig {
                 batchProperties.getSkipLimit());
 
         return new StepBuilder("validateSettlementStep", jobRepository)
-                .<Settlement, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .<Settlement, Settlement>chunk(batchProperties.getChunkSize())
                 .reader(pendingSettlementForValidationReader)
                 .processor(validateSettlementProcessor)
                 .writer(validateSettlementWriter)
@@ -194,7 +193,7 @@ public class SettlementBatchConfig {
                 batchProperties.getRetryLimit());
 
         return new StepBuilder("depositChargeStep", jobRepository)
-                .<Settlement, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .<Settlement, Settlement>chunk(batchProperties.getChunkSize())
                 .reader(processingSettlementReader)
                 .processor(depositChargeProcessor)
                 .writer(depositChargeWriter)
@@ -226,7 +225,7 @@ public class SettlementBatchConfig {
                 batchProperties.getSkipLimit());
 
         return new StepBuilder("retrySettlementStep", jobRepository)
-                .<Settlement, Settlement>chunk(batchProperties.getChunkSize(), transactionManager)
+                .<Settlement, Settlement>chunk(batchProperties.getChunkSize())
                 .reader(failedSettlementReader)
                 .processor(retrySettlementProcessor)
                 .writer(retrySettlementWriter)
