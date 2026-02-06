@@ -3,7 +3,10 @@ package dukku.semicolon.global;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.*;
+import dukku.semicolon.boundedContext.product.entity.Category;
+import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.semicolon.boundedContext.product.entity.ProductSeller;
+import dukku.semicolon.boundedContext.product.entity.ProductUser;
 import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
 import dukku.semicolon.boundedContext.product.out.*;
 import dukku.semicolon.boundedContext.user.app.user.RegisterUserUseCase;
@@ -236,12 +239,7 @@ public class ProductInitData {
         userMap.put(uId, uuid);
 
         // 3. 판매자 생성
-        ProductSeller seller = ProductSeller.builder()
-                .userUuid(uuid)
-                .intro(intro)
-                .salesCount(sales)
-                .activeListingCount(active)
-                .build();
+        ProductSeller seller = ProductSeller.create(uuid, intro, sales, active);
         productSellerRepository.save(seller);
         sellerMap.put(sId, uuid);
     }

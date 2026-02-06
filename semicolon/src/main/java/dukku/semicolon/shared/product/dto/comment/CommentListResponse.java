@@ -3,10 +3,12 @@ package dukku.semicolon.shared.product.dto.comment;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class CommentListResponse {
-    private java.util.List<CommentThreadResponse> items;
+    private List<CommentThreadResponse> items;
     private int page;
     private int size;
     private long totalCount;

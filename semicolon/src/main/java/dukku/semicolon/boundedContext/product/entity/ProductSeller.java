@@ -13,13 +13,15 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
 @Table(
         name = "product_sellers",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_product_sellers_user_uuid", columnNames = {"user_uuid"})
+                @UniqueConstraint(name = "uk_product_sellers_user_uuid", columnNames = {"user_uuid"}),
+                @UniqueConstraint(name = "uk_product_sellers_seller_uuid", columnNames = {"seller_uuid"})
         }
 )
 @Getter
@@ -29,7 +31,11 @@ import java.util.UUID;
 public class ProductSeller extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
-    @Column(nullable = false, columnDefinition = "uuid", comment = "유저 UUID")
+    @Column(name = "seller_uuid", nullable = false, columnDefinition = "uuid", comment = "판매자 UUID")
+    private UUID sellerUuid;
+
+    @JdbcTypeCode(SqlTypes.UUID)
+    @Column(name = "user_uuid", nullable = false, columnDefinition = "uuid", comment = "유저 UUID")
     private UUID userUuid;
 
     @Column(columnDefinition = "TEXT", comment = "상점 소개")
@@ -41,13 +47,26 @@ public class ProductSeller extends BaseIdAndUUIDAndTime {
     @Column(nullable = false, comment = "현재 판매중 상품 수")
     private int activeListingCount;
 
-    public static ProductSeller create(UUID userUuid, String intro) {
+    @Column(name = "average_rating", nullable = false, precision = 3, scale = 2, comment = "평균 평점")
+    private BigDecimal averageRating;
+
+    @Column(name = "review_count", nullable = false, comment = "리뷰 수")
+    private int reviewCount;
+
+    public static ProductSeller create(UUID userUuid, String intro, int salesCount, int activeListingCount) {
         return ProductSeller.builder()
+                .sellerUuid(userUuid)
                 .userUuid(userUuid)
                 .intro(intro)
-                .salesCount(0)
-                .activeListingCount(0)
+                .salesCount(salesCount)
+                .activeListingCount(activeListingCount)
+                .averageRating(BigDecimal.ZERO) // 0.00
+                .reviewCount(0)
                 .build();
+    }
+
+    public static ProductSeller create(UUID userUuid, String intro) {
+        return create(userUuid, intro, 0, 0);
     }
 
     public void changeIntro(String intro) {

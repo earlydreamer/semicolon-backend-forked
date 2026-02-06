@@ -17,7 +17,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ProductStatsUseCase {
+public class SyncProductStatsUseCase {
     private final ProductRepository productRepository;
     private final ProductStatsRedisSupport redisSupport;
     private final ApplicationEventPublisher eventPublisher;

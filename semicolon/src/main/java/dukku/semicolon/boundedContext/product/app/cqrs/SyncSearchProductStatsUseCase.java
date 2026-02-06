@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SyncProductSearchStatsUseCase {
+public class SyncSearchProductStatsUseCase {
     private final ElasticsearchOperations elasticsearchOperations;
     private static final String INDEX_NAME = "products_v1";
 
