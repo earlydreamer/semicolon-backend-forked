@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.semicolon.boundedContext.product.app.cqrs.review;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class SellerReviewStatsRedisSupport {
+public class ReviewStatsRedisSupport {
 
     private final RedisTemplate<String, Object> redisTemplate;
 

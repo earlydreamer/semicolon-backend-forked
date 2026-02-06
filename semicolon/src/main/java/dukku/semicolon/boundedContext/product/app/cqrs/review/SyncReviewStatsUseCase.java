@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.semicolon.boundedContext.product.app.cqrs.review;
 
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
 import dukku.semicolon.shared.product.dto.cqrs.SellerReviewStatDto;
@@ -15,9 +15,9 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class ReviewStatsSyncUseCase {
+public class SyncReviewStatsUseCase {
 
-    private final SellerReviewStatsRedisSupport redisSupport;
+    private final ReviewStatsRedisSupport redisSupport;
     private final ProductSellerRepository productSellerRepository;
     private final ApplicationEventPublisher eventPublisher;
 

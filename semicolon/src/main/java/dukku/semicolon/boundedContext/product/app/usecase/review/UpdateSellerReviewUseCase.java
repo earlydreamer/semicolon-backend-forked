@@ -1,6 +1,6 @@
 package dukku.semicolon.boundedContext.product.app.usecase.review;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.SellerReviewStatsRedisSupport;
+import dukku.semicolon.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
 import dukku.semicolon.boundedContext.product.app.support.SellerReviewMapper;
 import dukku.semicolon.boundedContext.product.entity.SellerReview;
 import dukku.semicolon.boundedContext.product.out.SellerReviewRepository;
@@ -19,7 +19,7 @@ import java.util.UUID;
 public class UpdateSellerReviewUseCase {
 
     private final SellerReviewRepository sellerReviewRepository;
-    private final SellerReviewStatsRedisSupport sellerReviewStatsRedisSupport;
+    private final ReviewStatsRedisSupport reviewStatsRedisSupport;
 
     @Transactional
     public SellerReviewResponse execute(UUID buyerUuid, UUID reviewUuid, SellerReviewUpdateRequest request) {
@@ -45,8 +45,8 @@ public class UpdateSellerReviewUseCase {
             review.changeRating(newRating);
 
             // (2) Redis 통계 반영
-            sellerReviewStatsRedisSupport.subtractRating(sellerUuid, beforeRating);
-            sellerReviewStatsRedisSupport.addRating(sellerUuid, newRating);
+            reviewStatsRedisSupport.subtractRating(sellerUuid, beforeRating);
+            reviewStatsRedisSupport.addRating(sellerUuid, newRating);
         }
 
         return SellerReviewMapper.toResponse(review);

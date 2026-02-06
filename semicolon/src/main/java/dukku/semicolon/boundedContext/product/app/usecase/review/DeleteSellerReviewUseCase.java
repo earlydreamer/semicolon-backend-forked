@@ -1,6 +1,6 @@
 package dukku.semicolon.boundedContext.product.app.usecase.review;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.SellerReviewStatsRedisSupport;
+import dukku.semicolon.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
 import dukku.semicolon.boundedContext.product.entity.SellerReview;
 import dukku.semicolon.boundedContext.product.out.SellerReviewRepository;
 import dukku.semicolon.shared.product.exception.ReviewNotFoundException;
@@ -16,7 +16,7 @@ import java.util.UUID;
 public class DeleteSellerReviewUseCase {
 
     private final SellerReviewRepository sellerReviewRepository;
-    private final SellerReviewStatsRedisSupport sellerReviewStatsRedisSupport;
+    private final ReviewStatsRedisSupport reviewStatsRedisSupport;
 
     @Transactional
     public void execute(UUID buyerUuid, UUID reviewUuid) {
@@ -34,8 +34,8 @@ public class DeleteSellerReviewUseCase {
         }
 
         if (!review.isDeleted()) {
-            sellerReviewStatsRedisSupport.decrementReviewCount(review.getSellerUuid());
-            sellerReviewStatsRedisSupport.subtractRating(review.getSellerUuid(), review.getRating());
+            reviewStatsRedisSupport.decrementReviewCount(review.getSellerUuid());
+            reviewStatsRedisSupport.subtractRating(review.getSellerUuid(), review.getRating());
         }
 
         review.softDelete();

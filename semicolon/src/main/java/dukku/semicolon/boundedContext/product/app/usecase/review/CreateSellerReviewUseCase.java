@@ -1,6 +1,6 @@
 package dukku.semicolon.boundedContext.product.app.usecase.review;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.SellerReviewStatsRedisSupport;
+import dukku.semicolon.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
 import dukku.semicolon.boundedContext.product.app.support.SellerReviewMapper;
 import dukku.semicolon.boundedContext.product.entity.SellerReview;
 import dukku.semicolon.boundedContext.product.out.SellerReviewRepository;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class CreateSellerReviewUseCase {
 
     private final SellerReviewRepository sellerReviewRepository;
-    private final SellerReviewStatsRedisSupport sellerReviewStatsRedisSupport;
+    private final ReviewStatsRedisSupport reviewStatsRedisSupport;
 
     // TODO : FeignClient 작성 예정
     @Transactional
@@ -41,8 +41,8 @@ public class CreateSellerReviewUseCase {
                 )
         );
 
-        sellerReviewStatsRedisSupport.incrementReviewCount(saved.getSellerUuid());
-        sellerReviewStatsRedisSupport.addRating(saved.getSellerUuid(), saved.getRating());
+        reviewStatsRedisSupport.incrementReviewCount(saved.getSellerUuid());
+        reviewStatsRedisSupport.addRating(saved.getSellerUuid(), saved.getRating());
 
         return SellerReviewMapper.toResponse(saved);
     }

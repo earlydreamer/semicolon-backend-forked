@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.semicolon.boundedContext.product.app.cqrs.review;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -8,10 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReviewStatsSyncFacade {
 
-    private final ReviewStatsSyncUseCase reviewStatsSyncUseCase;
+    private final SyncReviewStatsUseCase syncReviewStatsUseCase;
 
     @Transactional
     public void syncAllStats() {
-        reviewStatsSyncUseCase.execute();
+        syncReviewStatsUseCase.execute();
     }
 }

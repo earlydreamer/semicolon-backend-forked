@@ -4,7 +4,7 @@ import dukku.common.shared.order.event.OrderProductSaleConfirmedEvent;
 import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
 import dukku.semicolon.boundedContext.product.app.cqrs.ProductSyncFacade;
 import dukku.semicolon.boundedContext.product.app.cqrs.SaveToElasticSearchUseCase;
-import dukku.semicolon.boundedContext.product.app.cqrs.SyncProductSearchStatsUseCase;
+import dukku.semicolon.boundedContext.product.app.cqrs.SyncSearchProductStatsUseCase;
 import dukku.semicolon.boundedContext.product.app.usecase.product.ConfirmProductSaleUseCase;
 import dukku.semicolon.boundedContext.product.app.usecase.product.ReleaseProductReservationUseCase;
 import dukku.semicolon.shared.product.event.ProductCreatedEvent;
@@ -24,7 +24,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class ProductEventListener {
     private final ProductSyncFacade productSyncFacade;
     private final SaveToElasticSearchUseCase saveToElasticSearchUseCase;
-    private final SyncProductSearchStatsUseCase  syncProductSearchStatsUseCase;
+    private final SyncSearchProductStatsUseCase syncSearchProductStatsUseCase;
     private final ConfirmProductSaleUseCase confirmProductSaleUseCase;
     private final ReleaseProductReservationUseCase  releaseProductReservationUseCase;
 
@@ -55,7 +55,7 @@ public class ProductEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void syncStats(ProductStatsBulkUpdatedEvent event) {
-        syncProductSearchStatsUseCase.execute(event.getStats());
+        syncSearchProductStatsUseCase.execute(event.getStats());
     }
 
     /**
