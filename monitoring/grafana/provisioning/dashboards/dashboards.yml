@@ -1,0 +1,81 @@
+# Grafana 대시보드 Provisioning 설정
+# MSA 도메인별 대시보드 자동 로드
+apiVersion: 1
+
+providers:
+  - name: 'Settlement'
+    orgId: 1
+    folder: 'Settlement'  # Grafana UI에서 "Settlement" 폴더로 표시
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/settlement
+      foldersFromFilesStructure: false
+
+  - name: 'Order'
+    orgId: 1
+    folder: 'Order'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/order
+      foldersFromFilesStructure: false
+
+  - name: 'Product'
+    orgId: 1
+    folder: 'Product'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/product
+      foldersFromFilesStructure: false
+
+  - name: 'Deposit'
+    orgId: 1
+    folder: 'Deposit'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/deposit
+      foldersFromFilesStructure: false
+
+  - name: 'User'
+    orgId: 1
+    folder: 'User'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/user
+      foldersFromFilesStructure: false
+
+  - name: 'Payment'
+    orgId: 1
+    folder: 'Payment'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/payment
+      foldersFromFilesStructure: false
+
+  - name: 'Infrastructure'
+    orgId: 1
+    folder: 'Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/infra
+      foldersFromFilesStructure: false

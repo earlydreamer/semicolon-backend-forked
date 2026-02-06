@@ -32,7 +32,8 @@ spring:
       fail-on-empty-beans: false
 
   batch:
-    initialize-schema: always
+    jdbc:
+      initialize-schema: always
     job:
       enabled: false # 애플리케이션 시작 시 자동 실행 방지
 
@@ -60,6 +61,18 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 batch:
   settlement:

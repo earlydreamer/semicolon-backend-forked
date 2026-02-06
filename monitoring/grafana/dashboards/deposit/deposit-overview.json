@@ -1,0 +1,106 @@
+{
+  "title": "Deposit Overview",
+  "timezone": "Asia/Seoul",
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "예치금 충전 성공률",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(business_deposit_charge_success_total{application=\"semicolon\"}[5m]) / (rate(business_deposit_charge_success_total{application=\"semicolon\"}[5m]) + rate(business_deposit_charge_failed_total{application=\"semicolon\"}[5m])) * 100",
+          "legendFormat": "Success Rate",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "예치금 충전/차감 건수",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(business_deposit_charge_success_total{application=\"semicolon\"}[1m]))",
+          "legendFormat": "Charge Success",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(business_deposit_charge_failed_total{application=\"semicolon\"}[1m]))",
+          "legendFormat": "Charge Failed",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "예치금 잔액 분포 (중앙값)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(business_deposit_balance_bucket{application=\"semicolon\"}) by (le))",
+          "legendFormat": "Median Balance",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyKRW"
+        }
+      }
+    }
+  ],
+  "uid": "deposit-overview",
+  "version": 1
+}
