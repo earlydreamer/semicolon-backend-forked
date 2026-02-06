@@ -15,6 +15,7 @@ public record PaymentSuccessEvent(
                 UUID paymentId, // 2026-01-24 추가
                 UUID orderUuid,
                 Long amount,
+                Long pgAmount, // pg 결제 금액
                 Long paymentDeposit, // 사용된 예치금
                 UUID userUuid,
                 LocalDateTime occurredAt,

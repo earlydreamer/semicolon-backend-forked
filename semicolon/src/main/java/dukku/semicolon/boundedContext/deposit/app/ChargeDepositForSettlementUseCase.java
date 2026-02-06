@@ -7,6 +7,7 @@ import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
 import dukku.semicolon.shared.deposit.dto.DepositChargeForSettlementResponse;
 import dukku.semicolon.shared.deposit.dto.DepositDto;
 import dukku.semicolon.shared.deposit.type.DepositChargeResultCode;
+import dukku.semicolon.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class ChargeDepositForSettlementUseCase {
 
     private final FindDepositUseCase findDepositUseCase;
     private final IncreaseDepositUseCase increaseDepositUseCase;
+    private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final FindDepositHistoriesUseCase findDepositHistoriesUseCase;
     private final EventPublisher eventPublisher;
 
@@ -59,6 +61,11 @@ public class ChargeDepositForSettlementUseCase {
             }
 
             increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.SETTLEMENT, settlementUuid);
+            decreaseDepositUseCase.decrease(
+                    SystemDepositInitData.SYSTEM_USER_UUID,
+                    amount,
+                    DepositHistoryType.SETTLEMENT,
+                    settlementUuid);
             eventPublisher.publish(new DepositChargeSucceededEvent(userUuid, amount, settlementUuid));
 
             DepositDto deposit = findDepositUseCase.findOrCreate(userUuid).toDto();
