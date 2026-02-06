@@ -1,20 +1,30 @@
 package dukku.semicolon.boundedContext.payment.app;
 
-import dukku.semicolon.shared.payment.dto.PaymentRefundRequest;
-import dukku.semicolon.boundedContext.payment.entity.Payment;
+import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.payment.event.PaymentCompensationFailedEvent;
+import dukku.common.shared.payment.event.PaymentFailEvent;
+import dukku.common.shared.payment.type.PaymentFailureCode;
+import dukku.common.shared.payment.type.PaymentFailureStage;
+import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
+import dukku.semicolon.boundedContext.payment.entity.Payment;
+import dukku.semicolon.boundedContext.payment.out.TossPaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
- * 결제 실패(보상 트랜잭션용) UseCase
- *
+ * 결제 보상(Compensating) 트랜잭션 UseCase.
  * <p>
- * 예치금 차감 실패 등 후속 프로세스 오류 시 이미 승인된 PG 결제를 취소 처리
+ * 예치금 차감 실패 등 후행 단계에서 결제 일관성이 깨질 때 PG 취소를 수행하고
+ * Payment 상태/이력을 실패로 정리한 뒤 실패 이벤트를 발행한다.
  */
 @Slf4j
 @Service
@@ -22,54 +32,115 @@ import java.util.UUID;
 public class CompensatePaymentUseCase {
 
     private final PaymentSupport support;
-    private final RefundPaymentUseCase refundPaymentUseCase;
+    private final TossPaymentClient tossPaymentClient;
+    private final EventPublisher eventPublisher;
 
     /**
-     * 보상 트랜잭션 실행 (결제 취소 및 예치금 복구)
+     * 보상 트랜잭션 실행 (PG 취소 + 상태 정리 + 실패 이벤트 발행)
      *
-     * <p>
-     * 예치금 차감 실패, 주문 재고 부족 등 후속 프로세스에서 예외 발생 시 호출
-     * 
-     * @param orderUuid 관련 주문 UUID
-     * @param reason    취소 사유
+     * @param orderUuid 주문 UUID
+     * @param reason    취소/보상 사유
      */
     @Transactional
     public void execute(UUID orderUuid, String reason) {
-        // 1. 주문 UUID로 결제 정보 조회 (최근 승인된 것 우선)
         Payment payment = support.findPaymentsByOrderUuid(orderUuid).stream()
                 .filter(p -> p.getPaymentStatus() == PaymentStatus.DONE)
                 .findFirst()
                 .orElse(null);
 
         if (payment == null) {
-            log.warn("[보상 트랜잭션 건너뜀] 취소할 완료된 결제가 없음: orderUuid={}", orderUuid);
+            log.warn("[보상 트랜잭션 없음] 완료된 결제가 없습니다: orderUuid={}, reason={}", orderUuid, reason);
             return;
         }
 
-        log.info("[보상 트랜잭션 시작] 결제 취소 시도: paymentUuid={}, orderUuid={}, 사유={}",
-                payment.getUuid(), orderUuid, reason);
+        log.info("[보상 트랜잭션 시작] paymentUuid={}, orderUuid={}, reason={}", payment.getUuid(), orderUuid, reason);
 
-        // 2. RefundPaymentUseCase를 활용하여 통합 환불 로직(PG 취소 + 예치금 복구) 실행
+        PaymentStatus originStatus = payment.getPaymentStatus();
+        Long originPg = payment.getAmountPg();
+        Long originDeposit = payment.getPaymentDeposit();
+        String failureReason = buildFailureReason(PaymentFailureCode.DEPOSIT_DEDUCTION_FAILED, reason);
+
         try {
-            PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                    .paymentId(payment.getUuid())
-                    .refundAmount(payment.getAmount()) // 보상 트랜잭션은 기본적으로 전액 취소
-                    .reason("COMPENSATION: " + reason)
-                    .build();
-
-            // 멱등성 키로 결제 UUID 활용 (동일 주문에 대한 중복 롤백 방지)
-            refundPaymentUseCase.execute(refundRequest, "COMP-" + payment.getUuid());
-
-            log.info("[보상 트랜잭션 완료] 취소 및 복구 성공: paymentUuid={}", payment.getUuid());
+            // PG 취소로 외부 결제 확정 되돌림
+            cancelPg(payment, reason);
+            // 보상 실패로 결제 상태/금액 정리
+            payment.compensateAfterDepositFailure();
+            // 상태/이력 저장
+            support.savePayment(payment);
+            support.createHistory(payment, PaymentHistoryType.PAYMENT_FAILED, originStatus, originPg, originDeposit);
+            log.info("[보상 트랜잭션 완료] PG 취소 및 상태 정리 성공: paymentUuid={}", payment.getUuid());
         } catch (Exception e) {
-            // 보상 트랜잭션은 최후의 복구 수단이므로, 예상치 못한 모든 예외(NPE 등)를 잡아서
-            // 관리자에게 CRITICAL 로그로 알리고 상위로 전파해야 함.
-            // 이때 발생한 exception은 콜스택을 타고 상위 호출자에게 전파됨.
-            // 예외의 세부 종류에 대해서는 일단 나누지 않음. (실패 사실이 더 중요함)
-            log.error("[CRITICAL][보상 트랜잭션 최종 실패] 환불 로직 실행 중 예외 발생: {}. 관리자 점검 필요! paymentUuid={}",
-                    e.getMessage(), payment.getUuid());
-            // RefundPaymentUseCase 내부에서 이미 ROLLBACK_FAILED 상태 전이 및 이력 생성을 수행하므로 여기서는 로그만 남김
+            PaymentFailureCode failureCode = resolveCompensationFailureCode(e); // 보상 실패 코드 매핑
+            // PG 취소/상태 정리 실패 별도 이벤트 발행 (운영 추적)
+            log.error("[CRITICAL][보상 트랜잭션 실패] PG 취소/상태 정리 중 예외: paymentUuid={}, error={}", payment.getUuid(),
+                    e.getMessage(), e);
+            payment.rollbackFailedStatus();
+            support.savePayment(payment);
+            support.createHistory(payment, PaymentHistoryType.PAYMENT_ROLLBACK_FAILED, originStatus, originPg,
+                    originDeposit);
+            eventPublisher.publish(new PaymentCompensationFailedEvent(
+                    orderUuid,
+                    payment.getUuid(),
+                    payment.getUserUuid(),
+                    failureCode,
+                    true,
+                    buildFailureReason(failureCode, e.getMessage()),
+                    LocalDateTime.now()));
             throw e;
+        } finally {
+            // 보상 경로 진입 시 주문 롤백 트리거로 실패 이벤트 발행
+            eventPublisher.publish(new PaymentFailEvent(
+                    orderUuid,
+                    payment.getUuid(),
+                    payment.getUserUuid(),
+                    PaymentFailureStage.DEPOSIT_DEDUCTION,
+                    PaymentFailureCode.DEPOSIT_DEDUCTION_FAILED,
+                    false,
+                    failureReason,
+                    LocalDateTime.now()));
         }
+    }
+
+    private void cancelPg(Payment payment, String reason) {
+        if (payment.getAmountPg() == null || payment.getAmountPg() <= 0) {
+            return;
+        }
+
+        Map<String, Object> cancelBody = new HashMap<>();
+        cancelBody.put("cancelReason", "COMPENSATION: " + reason);
+        cancelBody.put("cancelAmount", payment.getAmountPg());
+
+        Map<String, Object> response;
+        try {
+            response = tossPaymentClient.cancel(payment.getPgPaymentKey(), cancelBody);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("TOSS_CANCEL_EXCEPTION: " + e.getMessage(), e);
+        }
+        int statusCode = ((Number) response.getOrDefault("statusCode", 200)).intValue();
+
+        if (HttpStatus.valueOf(statusCode).isError()) {
+            log.error("[PG 취소 실패] status={}, body={}, paymentUuid={}", statusCode, response, payment.getUuid());
+            throw new RuntimeException("TOSS_CANCEL_FAILED: " + response.get("message"));
+        }
+    }
+
+    private PaymentFailureCode resolveCompensationFailureCode(Exception e) {
+        String message = e.getMessage();
+        if (message != null) {
+            if (message.startsWith("TOSS_CANCEL_FAILED")) {
+                return PaymentFailureCode.PG_CANCEL_FAILED;
+            }
+            if (message.startsWith("TOSS_CANCEL_EXCEPTION")) {
+                return PaymentFailureCode.PG_CANCEL_EXCEPTION;
+            }
+        }
+        return PaymentFailureCode.STATE_PERSIST_FAILED;
+    }
+
+    private String buildFailureReason(PaymentFailureCode code, String detail) {
+        if (detail == null || detail.isBlank()) {
+            return code.name();
+        }
+        return code.name() + ": " + detail;
     }
 }

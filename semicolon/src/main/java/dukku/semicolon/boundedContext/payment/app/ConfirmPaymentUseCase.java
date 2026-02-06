@@ -2,11 +2,14 @@ package dukku.semicolon.boundedContext.payment.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.semicolon.boundedContext.payment.entity.Payment;
+import dukku.common.shared.payment.event.PaymentFailEvent;
+import dukku.common.shared.payment.event.PaymentSuccessEvent;
+import dukku.common.shared.payment.type.PaymentFailureCode;
+import dukku.common.shared.payment.type.PaymentFailureStage;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.semicolon.shared.payment.dto.PaymentConfirmRequest;
 import dukku.semicolon.shared.payment.dto.PaymentConfirmResponse;
-import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.semicolon.shared.payment.exception.DuplicatePaymentKeyException;
 import dukku.semicolon.shared.payment.exception.PaymentNotPendingException;
 import dukku.semicolon.shared.payment.exception.TossAmountMismatchException;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,48 +51,85 @@ public class ConfirmPaymentUseCase {
         // 1. 결제 조회
         Payment payment = support.findPaymentByUuid(request.getPaymentUuid());
 
-        // 2. 상태 검증 (PENDING 상태인 경우에만 승인 가능)
-        validatePaymentStatus(payment);
-
-        // 3. 금액 유효성 검증 (토스 결제 요청 금액 vs 시스템 내 결제 대상 금액)
-        validateAmount(payment, request.getToss().getAmount());
-
-        // 4. 결제 키 중복 검증 (이미 처리된 결제인지 확인)
-        validateDuplicatePaymentKey(request.getToss().getPaymentKey());
-
-        // 5. 결제 승인 상태 변경 전 값 저장 (이력 기록용)
+        // 2. 실패 복구용 상태/금액 스냅샷 저장
         PaymentStatus originStatus = payment.getPaymentStatus();
         Long originAmountPg = payment.getAmountPg();
         Long originDeposit = payment.getPaymentDeposit();
+
+        try {
+            // 승인 가능 상태 검증 (PENDING만 허용)
+            validatePaymentStatus(payment);
+            // PG 승인 금액 일치 검증
+            validateAmount(payment, request.getToss().getAmount());
+            // 동일 paymentKey 중복 승인 방지
+            validateDuplicatePaymentKey(request.getToss().getPaymentKey());
+        } catch (RuntimeException e) {
+            PaymentFailureCode failureCode = resolveValidationFailureCode(e); // 검증 실패 코드 매핑
+            handlePaymentFailure(
+                    payment,
+                    originStatus,
+                    originAmountPg,
+                    originDeposit,
+                    PaymentFailureStage.VALIDATION,
+                    failureCode,
+                    false,
+                    buildFailureReason(failureCode, e.getMessage()));
+            throw e;
+        }
+
 
         // 6. 실제 토스페이먼츠 승인 요청 API 호출
         Map<String, Object> tossRequestBody = new HashMap<>();
         tossRequestBody.put("paymentKey", request.getToss().getPaymentKey());
         tossRequestBody.put("orderId", request.getToss().getOrderId());
         tossRequestBody.put("amount", request.getToss().getAmount());
-
-        Map<String, Object> tossResponse = tossClient.confirm(tossRequestBody);
-        int statusCode = ((Number) tossResponse.getOrDefault("statusCode", 200)).intValue();
-
-        if (HttpStatus.valueOf(statusCode).isError()) {
-            log.error("[Toss Confirm API Error] status={}, body={}", statusCode, tossResponse);
-            // 실패 이력 기록
-            support.createHistory(payment, PaymentHistoryType.PAYMENT_FAILED, originStatus, originAmountPg,
-                    originDeposit);
-            return payment.toPaymentConfirmResponse(false, "PG 승인 실패: " + tossResponse.get("message"));
+        Map<String, Object> tossResponse;
+        try {
+            tossResponse = tossClient.confirm(tossRequestBody);
+        } catch (RuntimeException e) {
+            handlePaymentFailure(
+                    payment,
+                    originStatus,
+                    originAmountPg,
+                    originDeposit,
+                    PaymentFailureStage.PG_CONFIRM,
+                    PaymentFailureCode.PG_CONFIRM_EXCEPTION,
+                    true,
+                    buildFailureReason(PaymentFailureCode.PG_CONFIRM_EXCEPTION, e.getMessage()));
+            throw e;
         }
 
+        int statusCode = ((Number) tossResponse.getOrDefault("statusCode", 200)).intValue();
+
+        
+        if (HttpStatus.valueOf(statusCode).isError()) {
+            log.error("[Toss Confirm API Error] status={}, body={}", statusCode, tossResponse);
+            boolean retryable = isRetryableStatus(statusCode);
+            handlePaymentFailure(
+                    payment,
+                    originStatus,
+                    originAmountPg,
+                    originDeposit,
+                    PaymentFailureStage.PG_CONFIRM,
+                    PaymentFailureCode.PG_CONFIRM_FAILED,
+                    retryable,
+                    buildFailureReason(PaymentFailureCode.PG_CONFIRM_FAILED,
+                            String.valueOf(tossResponse.get("message"))));
+            return payment.toPaymentConfirmResponse(false, "PG ?? ??: " + tossResponse.get("message"));
+        }
+
+
         // 7. 시스템 내 결제 승인 (상태 변경 및 결제키 저장)
+        // 승인 상태 반영 (PG paymentKey 저장)
         payment.approve(request.getToss().getPaymentKey());
+        // 승인 상태 저장
         support.savePayment(payment);
 
         // 8. 결제 성공 이력 생성
         support.createHistory(payment, PaymentHistoryType.PAYMENT_SUCCESS, originStatus, originAmountPg, originDeposit);
 
         // 9. 예치금 차감
-        // Deposit BC에서 상품별로 정확히 예치금을 차감하고 이력을 남길 수 있도록
-        // 각 상품 스냅샷에서 예치금 사용액이 있는 아이템만 필터링하여 정보를 가공
-        // 가공된 항목을 List에 추가
+        // 예치금 사용 항목 추출 (차감 목록 구성)
         List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages = payment.getItems().stream()
                 .filter(item -> item.getPaymentDeposit() != null && item.getPaymentDeposit() > 0)
                 .map(item -> new PaymentSuccessEvent.ItemDepositUsage(item.getOrderItemUuid(),
@@ -125,5 +166,50 @@ public class ConfirmPaymentUseCase {
         if (support.findPaymentByPgPaymentKey(paymentKey).isPresent()) {
             throw new DuplicatePaymentKeyException();
         }
+    }
+
+    private void handlePaymentFailure(Payment payment, PaymentStatus originStatus, Long originAmountPg,
+            Long originDeposit, PaymentFailureStage failureStage, PaymentFailureCode failureCode, boolean retryable,
+            String reason) {
+        // PENDING 상태만 실패 처리 (중복 이벤트 방지)
+        if (payment.getPaymentStatus() != PaymentStatus.PENDING) {
+            return;
+        }
+        payment.fail();
+        support.savePayment(payment);
+        support.createHistory(payment, PaymentHistoryType.PAYMENT_FAILED, originStatus, originAmountPg, originDeposit);
+        eventPublisher.publish(new PaymentFailEvent(
+                payment.getOrderUuid(),
+                payment.getUuid(),
+                payment.getUserUuid(),
+                failureStage,
+                failureCode,
+                retryable,
+                reason,
+                LocalDateTime.now()));
+    }
+
+    private PaymentFailureCode resolveValidationFailureCode(RuntimeException e) {
+        if (e instanceof PaymentNotPendingException) {
+            return PaymentFailureCode.PAYMENT_STATUS_INVALID;
+        }
+        if (e instanceof TossAmountMismatchException) {
+            return PaymentFailureCode.AMOUNT_MISMATCH;
+        }
+        if (e instanceof DuplicatePaymentKeyException) {
+            return PaymentFailureCode.DUPLICATE_PAYMENT_KEY;
+        }
+        return PaymentFailureCode.UNKNOWN;
+    }
+
+    private boolean isRetryableStatus(int statusCode) {
+        return statusCode >= 500;
+    }
+
+    private String buildFailureReason(PaymentFailureCode code, String detail) {
+        if (detail == null || detail.isBlank()) {
+            return code.name();
+        }
+        return code.name() + ": " + detail;
     }
 }

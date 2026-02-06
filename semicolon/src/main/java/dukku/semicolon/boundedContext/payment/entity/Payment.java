@@ -195,6 +195,17 @@ public class Payment extends BaseIdAndUUIDAndTime {
                 this.paymentStatus = PaymentStatus.ROLLBACK_FAILED;
         }
 
+        /**
+         * 예치금 차감 실패 등 보상 취소 시 상태/금액을 원복한다.
+         * PG 금액만 환급되고 예치금은 차감되지 않았음을 반영한다.
+         */
+        public void compensateAfterDepositFailure() {
+                this.paymentStatus = PaymentStatus.FAILED;
+                this.refundTotal = this.amount;
+                this.amountPg = 0L;
+                this.paymentDeposit = 0L;
+        }
+
         public void addRefund(Refund refund) {
                 this.refunds.add(refund);
         }
