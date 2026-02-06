@@ -3,6 +3,7 @@ package dukku.semicolon.boundedContext.deposit.app;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
 import dukku.common.shared.deposit.event.DepositUsedEvent;
+import dukku.common.shared.deposit.type.DepositFailureCode;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
 import dukku.semicolon.boundedContext.deposit.exception.NotEnoughDepositException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,10 +38,11 @@ public class DeductDepositForPaymentUseCase {
      * @param userUuid          예치금을 소유한 유저 식별자
      * @param totalAmount       차감될 총 예치금액
      * @param orderUuid         관련 주문 식별자
+     * @param paymentUuid       관련 결제 식별자(보상 트리거용)
      * @param itemDepositUsages 상품별 예치금 사용 상세 내역
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void execute(UUID userUuid, Long totalAmount, UUID orderUuid,
+    public void execute(UUID userUuid, Long totalAmount, UUID orderUuid, UUID paymentUuid,
             List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
         if (totalAmount == null || totalAmount <= 0) {
             return;
@@ -48,7 +51,7 @@ public class DeductDepositForPaymentUseCase {
         try {
             executeDeductions(userUuid, totalAmount, orderUuid, itemDepositUsages);
         } catch (Exception e) {
-            handleDeductionError(userUuid, totalAmount, orderUuid, e);
+            handleDeductionError(userUuid, totalAmount, orderUuid, paymentUuid, e);
         }
     }
 
@@ -64,18 +67,31 @@ public class DeductDepositForPaymentUseCase {
         eventPublisher.publish(new DepositUsedEvent(orderUuid, userUuid, totalAmount));
     }
 
-    private void handleDeductionError(UUID userUuid, Long amount, UUID orderUuid, Exception e) {
+    private void handleDeductionError(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid, Exception e) {
         String errorMessage = "시스템 오류가 발생했습니다.";
         String logMessage = "[예치금 차감 실패 - 시스템 오류] userUuid={}, amount={}, orderUuid={}";
+        DepositFailureCode failureCode = DepositFailureCode.SYSTEM_ERROR; // 예치금 차감 시스템 오류
+        boolean retryable = true; // 시스템 오류는 재시도 가능
 
         if (e instanceof NotEnoughDepositException) {
             errorMessage = e.getMessage();
             logMessage = "[예치금 차감 실패 - 잔액 부족] userUuid={}, amount={}, orderUuid={}";
+            failureCode = DepositFailureCode.BALANCE_SHORTAGE; // 잔액 부족으로 차감 실패
+            retryable = false; // 잔액 부족은 재시도 의미 없음
             log.warn(logMessage, userUuid, amount, orderUuid);
         } else {
             log.error(logMessage, userUuid, amount, orderUuid, e);
         }
 
-        eventPublisher.publish(new DepositDeductionFailedEvent(orderUuid, userUuid, amount, errorMessage));
+        // 결제 보상 트리거용 paymentUuid 전파
+        eventPublisher.publish(new DepositDeductionFailedEvent(
+                orderUuid,
+                paymentUuid,
+                userUuid,
+                amount,
+                failureCode,
+                retryable,
+                errorMessage,
+                LocalDateTime.now()));
     }
 }

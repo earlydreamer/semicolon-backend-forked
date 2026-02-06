@@ -28,10 +28,12 @@ public class DepositEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(PaymentSuccessEvent event) {
+        // paymentUuid 전달 (보상 트랜잭션 식별)
         depositFacade.deductDepositForPayment(
                 event.userUuid(),
                 event.paymentDeposit(),
                 event.orderUuid(),
+                event.paymentUuid(),
                 event.itemDepositUsages());
     }
 
@@ -45,10 +47,12 @@ public class DepositEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(RefundCompletedEvent event) {
+        // paymentId 전달 (예치금 롤백 실패 연계)
         depositFacade.refundDeposit(
                 event.userUuid(),
                 event.refundDepositAmount(),
-                event.orderUuid());
+                event.orderUuid(),
+                event.paymentId());
     }
 
     /**

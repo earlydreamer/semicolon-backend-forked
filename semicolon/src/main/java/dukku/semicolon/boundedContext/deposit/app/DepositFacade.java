@@ -101,16 +101,18 @@ public class DepositFacade {
     /**
      * 결제에 따른 예치금 차감 (Saga 참여)
      */
-    public void deductDepositForPayment(UUID userUuid, Long totalAmount, UUID orderUuid,
+    public void deductDepositForPayment(UUID userUuid, Long totalAmount, UUID orderUuid, UUID paymentUuid,
             List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
-        deductDepositForPaymentUseCase.execute(userUuid, totalAmount, orderUuid, itemDepositUsages);
+        // paymentUuid 전달 (보상 트랜잭션 연계)
+        deductDepositForPaymentUseCase.execute(userUuid, totalAmount, orderUuid, paymentUuid, itemDepositUsages);
     }
 
     /**
      * 환불 처리 (Saga 참여)
      */
-    public void refundDeposit(UUID userUuid, Long amount, UUID orderUuid) {
-        refundDepositUseCase.execute(userUuid, amount, orderUuid);
+    public void refundDeposit(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid) {
+        // paymentUuid 전달 (환불 실패 이벤트 연계)
+        refundDepositUseCase.execute(userUuid, amount, orderUuid, paymentUuid);
     }
 
     /**
