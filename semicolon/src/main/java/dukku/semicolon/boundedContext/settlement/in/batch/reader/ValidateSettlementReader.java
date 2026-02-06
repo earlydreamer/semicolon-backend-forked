@@ -29,7 +29,7 @@ public class ValidateSettlementReader {
     private final EntityManagerFactory entityManagerFactory;
     private final SettlementBatchProperties batchProperties;
 
-    @Bean
+    @Bean(destroyMethod = "")
     @StepScope
     public JpaPagingItemReader<Settlement> pendingSettlementForValidationReader(
             @Value("#{jobParameters['now']}") LocalDateTime now

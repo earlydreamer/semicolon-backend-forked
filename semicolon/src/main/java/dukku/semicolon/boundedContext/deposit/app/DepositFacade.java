@@ -31,6 +31,7 @@ public class DepositFacade {
     private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final FindDepositHistoriesUseCase findDepositHistoriesUseCase;
     private final DeductDepositForPaymentUseCase deductDepositForPaymentUseCase;
+    private final IncreaseSystemDepositForPgUseCase increaseSystemDepositForPgUseCase;
     private final RefundDepositUseCase refundDepositUseCase;
     private final ChargeDepositUseCase chargeDepositUseCase;
     private final ChargeDepositForSettlementUseCase chargeDepositForSettlementUseCase;
@@ -107,6 +108,13 @@ public class DepositFacade {
     }
 
     /**
+     * PG 결제 승인분을 시스템 지갑에 반영
+     */
+    public void increaseSystemDepositForPg(UUID orderUuid, Long pgAmount) {
+        increaseSystemDepositForPgUseCase.execute(orderUuid, pgAmount);
+    }
+
+    /**
      * 환불 처리 (Saga 참여)
      */
     public void refundDeposit(UUID userUuid, Long amount, UUID orderUuid) {
@@ -133,5 +141,13 @@ public class DepositFacade {
     public DepositChargeForSettlementResponse chargeDepositForSettlementApi(
             UUID userUuid, Long amount, UUID settlementUuid) {
         return chargeDepositForSettlementUseCase.execute(userUuid, amount, settlementUuid);
+    }
+
+    /**
+     * 시스템 초기 자본금 주입 (ADJUST 타입 사용)
+     */
+    public void injectSystemCapital(UUID userUuid, Long amount) {
+        // orderItemUuid는 시스템 자본금 주입이므로 null 처리 (상품이 존재하지 않음)
+        increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.ADJUST, null);
     }
 }

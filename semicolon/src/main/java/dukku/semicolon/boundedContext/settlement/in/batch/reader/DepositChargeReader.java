@@ -6,6 +6,7 @@ import dukku.semicolon.boundedContext.settlement.in.batch.config.SettlementBatch
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.infrastructure.item.database.JpaPagingItemReader;
 import org.springframework.batch.infrastructure.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,8 @@ public class DepositChargeReader {
     private final EntityManagerFactory entityManagerFactory;
     private final SettlementBatchProperties batchProperties;
 
-    @Bean
+    @Bean(destroyMethod = "")
+    @StepScope
     public JpaPagingItemReader<Settlement> processingSettlementReader() {
         String jpql = """
                 SELECT s FROM Settlement s

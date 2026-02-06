@@ -198,7 +198,136 @@ public final class SettlementApiDocs {
     public @interface GetSettlementStatistics {
     }
 
-    // =============== 4) 실패한 정산 재처리 ===============
+    // =============== 4) 배치 Job 통계 조회 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "배치 Job 통계 조회", description = """
+            기간 내 배치 Job 실행 통계를 조회합니다.
+
+            - 배치 실행 현황 (Job별, 상태별 건수)
+            - 실패한 배치 목록
+            - 재시작 가능한 Job 목록
+            - 가장 많이 발생하는 에러 TOP 10
+            - 일별 정산 처리 건수
+            """, parameters = {
+            @Parameter(name = "startDate", description = "조회 시작일 (yyyy-MM-dd, 기본값: 30일 전)", example = "2026-01-01"),
+            @Parameter(name = "endDate", description = "조회 종료일 (yyyy-MM-dd, 기본값: 오늘)", example = "2026-01-31")
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "권한 없음")
+    })
+    public @interface GetBatchJobStatistics {
+    }
+
+    // =============== 5) 배치 Step 통계 조회 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "배치 Step 통계 조회", description = """
+            기간 내 배치 Step 성능 통계를 조회합니다.
+
+            - Step별 평균 처리 시간
+            - Step별 평균 읽기/쓰기/스킵 건수
+            - Step별 총 실행 횟수
+            """, parameters = {
+            @Parameter(name = "startDate", description = "조회 시작일", example = "2026-01-01"),
+            @Parameter(name = "endDate", description = "조회 종료일", example = "2026-01-31")
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "권한 없음")
+    })
+    public @interface GetBatchStepStatistics {
+    }
+
+    // =============== 6) 재무 통계 조회 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "재무 통계 조회", description = """
+            정산 관련 재무 통계를 조회합니다.
+
+            - 플랫폼 수익 (수수료 총합)
+            - 정산 대기/처리 중/실패 금액
+            - 총 거래액, 총 정산 완료 금액
+            - 평균 수수료율
+            """, responses = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "권한 없음")
+    })
+    public @interface GetFinancialStatistics {
+    }
+
+    // =============== 7) 트렌드 통계 조회 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "트렌드 통계 조회", description = """
+            기간 내 정산 트렌드 통계를 조회합니다.
+
+            - 일별 정산 금액 추이
+            - 월별 정산 금액 추이
+            - 처리 시간 분석 (평균/최소/최대)
+            """, parameters = {
+            @Parameter(name = "startDate", description = "조회 시작일", example = "2026-01-01"),
+            @Parameter(name = "endDate", description = "조회 종료일", example = "2026-01-31")
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "권한 없음")
+    })
+    public @interface GetTrendStatistics {
+    }
+
+    // =============== 8) 판매자별 정산 통계 조회 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "판매자별 정산 통계 조회", description = """
+            관리자가 판매자별 정산 통계를 조회합니다.
+
+            - 판매자별 총 정산 건수, 성공/실패/대기 건수
+            - 판매자별 정산 성공률 (SUCCESS / 전체)
+            - 판매자별 총 정산 금액, 수수료 금액
+            - 정산 건수 기준 내림차순 정렬
+            - 페이징을 지원합니다.
+            """, parameters = {
+            @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
+            @Parameter(name = "size", description = "페이지 크기", example = "20")
+    }, responses = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Seller Statistics Response", value = """
+                    {
+                      "sellerSummaries": [
+                        {
+                          "sellerUuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                          "totalSettlementCount": 50,
+                          "successCount": 45,
+                          "failedCount": 3,
+                          "pendingCount": 2,
+                          "successRate": 90.00,
+                          "totalSettledAmount": 2250000,
+                          "totalFeeAmount": 112500
+                        },
+                        {
+                          "sellerUuid": "b2c3d4e5-f6a7-8901-bcde-f2345678901a",
+                          "totalSettlementCount": 30,
+                          "successCount": 28,
+                          "failedCount": 1,
+                          "pendingCount": 1,
+                          "successRate": 93.33,
+                          "totalSettledAmount": 1400000,
+                          "totalFeeAmount": 70000
+                        }
+                      ],
+                      "totalSellerCount": 25,
+                      "totalPages": 2
+                    }
+                    """))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface GetSellerStatistics {
+    }
+
+    // =============== 6) 실패한 정산 재처리 ===============
     @Documented
     @Target(METHOD)
     @Retention(RUNTIME)

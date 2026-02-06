@@ -12,8 +12,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,14 +46,10 @@ public class DepositController {
                                 .code("DEPOSIT_BALANCE_RETRIEVED")
                                 .message("예치금 잔액을 조회했습니다.")
                                 .data(DepositBalanceResponse.DepositBalanceData.builder()
-                                                .userUuid(depositDto.getUserUuid())
-                                                .depositUuid(depositDto.getDepositUuid())
                                                 .balance(depositDto.getBalance())
                                                 .updatedAt(depositDto.getUpdatedAt() != null
                                                                 ? depositDto.getUpdatedAt()
-                                                                                .atOffset(ZoneOffset.ofHours(9))
-                                                                : depositDto.getCreatedAt()
-                                                                                .atOffset(ZoneOffset.ofHours(9)))
+                                                                : depositDto.getCreatedAt())
                                                 .build())
                                 .build();
 
@@ -110,7 +104,7 @@ public class DepositController {
                                 .ref(DepositHistoryResponse.ReferenceInfo.builder()
                                                 .orderUuid(dto.getOrderItemUuid())
                                                 .build())
-                                .createdAt(dto.getCreatedAt().atOffset(ZoneOffset.ofHours(9)))
+                                .createdAt(dto.getCreatedAt())
                                 .build();
         }
 }
