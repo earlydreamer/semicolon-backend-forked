@@ -57,6 +57,25 @@ spring:
             enable: true
             required: true
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: 1
+      retries: 3
+      properties:
+        linger.ms: 100
+        batch.size: 16384
+        interceptor.classes: dukku.common.global.logging.KafkaTracingProducerInterceptor
+    consumer:
+      group-id: ${spring.application.name}-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        interceptor.classes: dukku.common.global.logging.KafkaTracingConsumerInterceptor
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
