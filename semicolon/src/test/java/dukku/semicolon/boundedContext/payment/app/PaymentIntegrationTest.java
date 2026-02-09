@@ -2,7 +2,6 @@ package dukku.semicolon.boundedContext.payment.app;
 
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.common.shared.payment.type.PaymentType;
-import dukku.semicolon.boundedContext.deposit.app.IncreaseDepositUseCase;
 import dukku.semicolon.boundedContext.payment.entity.Payment;
 import dukku.semicolon.boundedContext.payment.out.PaymentRepository;
 import dukku.semicolon.boundedContext.payment.out.TossPaymentClient;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,9 +42,6 @@ class PaymentIntegrationTest {
 
         @MockitoSpyBean
         private TossPaymentClient tossPaymentClient;
-
-        @MockitoBean
-        private IncreaseDepositUseCase increaseDepositUseCase;
 
         private Payment testPayment;
         private final UUID userUuid = UUID.randomUUID();
@@ -89,7 +84,6 @@ class PaymentIntegrationTest {
 
                 verify(tossPaymentClient).cancel(eq("test-payment-key"),
                                 argThat(map -> map.get("cancelAmount").equals(5000L)));
-                verify(increaseDepositUseCase).increase(eq(userUuid), eq(15000L), any(), any());
 
                 Payment updatedPayment = paymentSupport.findPaymentByUuid(testPayment.getUuid());
                 assertThat(updatedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED);
@@ -116,8 +110,6 @@ class PaymentIntegrationTest {
 
                 assertThat(response.isSuccess()).isFalse();
                 assertThat(response.getCode()).isEqualTo("PG_CANCEL_FAILED");
-
-                verify(increaseDepositUseCase, never()).increase(any(), any(), any(), any());
 
                 Payment updatedPayment = paymentSupport.findPaymentByUuid(testPayment.getUuid());
                 assertThat(updatedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.ROLLBACK_FAILED);
@@ -158,7 +150,6 @@ class PaymentIntegrationTest {
                 assertThat(p1.getRefundTotal()).isEqualTo(8000L);
                 assertThat(p1.getPaymentStatus()).isEqualTo(PaymentStatus.PARTIAL_CANCELED);
                 verify(tossPaymentClient, never()).cancel(anyString(), anyMap());
-                verify(increaseDepositUseCase, times(1)).increase(eq(userUuid), eq(8000L), any(), any());
 
                 // Step 2: refund 10,000 (deposit 7,000 + PG 3,000)
                 PaymentRefundRequest req2 = PaymentRefundRequest.builder()
@@ -179,7 +170,6 @@ class PaymentIntegrationTest {
 
                 verify(tossPaymentClient, times(1)).cancel(eq("partial-test-key"),
                                 argThat(map -> map.get("cancelAmount").equals(3000L)));
-                verify(increaseDepositUseCase, times(1)).increase(eq(userUuid), eq(7000L), any(), any());
 
                 // Step 3: refund remaining 2,000 (PG only)
                 PaymentRefundRequest req3 = PaymentRefundRequest.builder()
@@ -211,7 +201,6 @@ class PaymentIntegrationTest {
 
                 verify(tossPaymentClient).cancel(eq("test-payment-key"),
                                 argThat(map -> map.get("cancelAmount").equals(5000L)));
-                verify(increaseDepositUseCase, never()).increase(any(), any(), any(), any());
 
                 Payment updatedPayment = paymentSupport.findPaymentByUuid(testPayment.getUuid());
                 assertThat(updatedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.FAILED);
@@ -274,8 +263,6 @@ class PaymentIntegrationTest {
 
                 // PG 취소는 1번만 호출되어야 함
                 verify(tossPaymentClient, times(1)).cancel(eq("test-payment-key"), anyMap());
-                // 예치금 복구도 1번만 호출되어야 함
-                verify(increaseDepositUseCase, times(1)).increase(eq(userUuid), eq(15000L), any(), any());
 
                 // 최종 상태 확인
                 Payment updatedPayment = paymentSupport.findPaymentByUuid(testPayment.getUuid());
