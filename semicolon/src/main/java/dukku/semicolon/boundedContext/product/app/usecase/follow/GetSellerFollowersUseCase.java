@@ -2,7 +2,7 @@ package dukku.semicolon.boundedContext.product.app.usecase.follow;
 
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
 import dukku.semicolon.boundedContext.product.out.SellerFollowRepository;
-import dukku.semicolon.shared.product.dto.follow.FollowSellerResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowerUserCardResponse;
 import dukku.semicolon.shared.product.exception.ProductSellerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,13 +19,11 @@ public class GetSellerFollowersUseCase {
     private final ProductSellerRepository productSellerRepository;
 
     @Transactional(readOnly = true)
-    public List<FollowSellerResponse> execute(UUID sellerUuid) {
+    public List<FollowerUserCardResponse> execute(UUID sellerUuid) {
         // 판매자 존재 검증(없으면 404)
         productSellerRepository.findByUserUuid(sellerUuid)
                 .orElseThrow(ProductSellerNotFoundException::new);
 
-        return sellerFollowRepository.findBySellerUuid(sellerUuid).stream()
-                .map(f -> FollowSellerResponse.follower(f.getUserUuid()))
-                .toList();
+        return sellerFollowRepository.findFollowerUserCards(sellerUuid);
     }
 }

@@ -3,7 +3,7 @@ package dukku.semicolon.boundedContext.product.app.usecase.follow;
 import dukku.semicolon.boundedContext.product.entity.SellerFollow;
 import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
 import dukku.semicolon.boundedContext.product.out.SellerFollowRepository;
-import dukku.semicolon.shared.product.dto.follow.FollowSellerResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowActionResponse;
 import dukku.semicolon.shared.product.exception.ProductSellerNotFoundException;
 import dukku.semicolon.shared.product.exception.SelfFollowNotAllowedException;
 import dukku.semicolon.shared.product.exception.SellerAlreadyFollowedException;
@@ -21,7 +21,7 @@ public class FollowSellerUseCase {
     private final ProductSellerRepository productSellerRepository;
 
     @Transactional
-    public FollowSellerResponse execute(UUID userUuid, UUID sellerUuid) {
+    public FollowActionResponse execute(UUID userUuid, UUID sellerUuid) {
 
         if (userUuid.equals(sellerUuid)) {
                 throw new SelfFollowNotAllowedException();
@@ -37,6 +37,6 @@ public class FollowSellerUseCase {
 
         sellerFollowRepository.save(SellerFollow.create(userUuid, sellerUuid));
 
-        return FollowSellerResponse.followed(sellerUuid, true);
+        return FollowActionResponse.followed(sellerUuid);
     }
 }

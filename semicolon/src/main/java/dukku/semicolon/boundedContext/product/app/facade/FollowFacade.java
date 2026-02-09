@@ -4,7 +4,9 @@ import dukku.semicolon.boundedContext.product.app.usecase.follow.FollowSellerUse
 import dukku.semicolon.boundedContext.product.app.usecase.follow.GetFollowedSellersUseCase;
 import dukku.semicolon.boundedContext.product.app.usecase.follow.GetSellerFollowersUseCase;
 import dukku.semicolon.boundedContext.product.app.usecase.follow.UnfollowSellerUseCase;
-import dukku.semicolon.shared.product.dto.follow.FollowSellerResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowActionResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowedSellerCardResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowerUserCardResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,19 +22,19 @@ public class FollowFacade {
     private final GetFollowedSellersUseCase getFollowedSellersUseCase;
     private final GetSellerFollowersUseCase getSellerFollowersUseCase;
 
-    public FollowSellerResponse followSeller(UUID userUuid, UUID sellerUuid) {
+    public FollowActionResponse followSeller(UUID userUuid, UUID sellerUuid) {
         return followSellerUseCase.execute(userUuid, sellerUuid);
     }
 
-    public void unfollowSeller(UUID userUuid, UUID sellerUuid) {
-        unfollowSellerUseCase.execute(userUuid, sellerUuid);
+    public FollowActionResponse unfollowSeller(UUID userUuid, UUID sellerUuid) {
+        return unfollowSellerUseCase.execute(userUuid, sellerUuid);
     }
 
-    public List<FollowSellerResponse> getFollowedSellers(UUID userUuid) {
+    public List<FollowedSellerCardResponse> getFollowedSellers(UUID userUuid) {
         return getFollowedSellersUseCase.execute(userUuid);
     }
 
-    public List<FollowSellerResponse> getSellerFollowers(UUID sellerUuid) {
+    public List<FollowerUserCardResponse> getSellerFollowers(UUID sellerUuid) {
         return getSellerFollowersUseCase.execute(sellerUuid);
     }
 }

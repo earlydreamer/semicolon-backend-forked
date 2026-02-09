@@ -4,7 +4,9 @@ package dukku.semicolon.boundedContext.product.in;
 import dukku.common.global.UserUtil;
 import dukku.semicolon.boundedContext.product.app.facade.FollowFacade;
 import dukku.semicolon.shared.product.docs.FollowApiDocs;
-import dukku.semicolon.shared.product.dto.follow.FollowSellerResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowActionResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowedSellerCardResponse;
+import dukku.semicolon.shared.product.dto.follow.FollowerUserCardResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,7 @@ public class FollowController {
 
     @PostMapping("/sellers/{sellerUuid}/follow")
     @FollowApiDocs.FollowSeller
-    public FollowSellerResponse followSeller(
+    public FollowActionResponse followSeller(
             @PathVariable UUID sellerUuid
     ) {
         return followFacade.followSeller(UserUtil.getUserId(), sellerUuid);
@@ -31,21 +33,21 @@ public class FollowController {
 
     @DeleteMapping("/sellers/{sellerUuid}/follow")
     @FollowApiDocs.UnfollowSeller
-    public void unfollowSeller(
+    public FollowActionResponse unfollowSeller(
             @PathVariable UUID sellerUuid
     ) {
-        followFacade.unfollowSeller(UserUtil.getUserId(), sellerUuid);
+        return followFacade.unfollowSeller(UserUtil.getUserId(), sellerUuid);
     }
 
     @GetMapping("/me/following/sellers")
     @FollowApiDocs.GetFollowedSellers
-    public List<FollowSellerResponse> getFollowedSellers() {
+    public List<FollowedSellerCardResponse> getFollowedSellers() {
         return followFacade.getFollowedSellers(UserUtil.getUserId());
     }
 
     @GetMapping("/sellers/{sellerUuid}/followers")
     @FollowApiDocs.GetSellerFollowers
-    public List<FollowSellerResponse> getSellerFollowers(
+    public List<FollowerUserCardResponse> getSellerFollowers(
             @PathVariable UUID sellerUuid
     ) {
         return followFacade.getSellerFollowers(sellerUuid);
