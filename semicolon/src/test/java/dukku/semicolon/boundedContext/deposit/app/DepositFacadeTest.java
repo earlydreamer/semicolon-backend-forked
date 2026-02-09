@@ -1,8 +1,6 @@
 package dukku.semicolon.boundedContext.deposit.app;
 
-import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
-import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +29,7 @@ class DepositFacadeTest {
                 mock(DecreaseDepositUseCase.class),
                 mock(FindDepositHistoriesUseCase.class),
                 deductDepositForPaymentUseCase,
+                mock(IncreaseSystemDepositForPgUseCase.class),
                 mock(RefundDepositUseCase.class),
                 mock(ChargeDepositUseCase.class),
                 mock(ChargeDepositForSettlementUseCase.class));

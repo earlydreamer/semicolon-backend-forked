@@ -23,8 +23,6 @@ public record SettlementDetailResponse(
         Long feeAmount,
         Long settlementAmount,
         LocalDateTime settlementReservationDate,
-        String bankName,             // 외부 Deposit BC에서 조회
-        String accountNumber,        // 외부 Deposit BC에서 조회
         UUID orderUuid,
         LocalDateTime completedAt,
         LocalDateTime createdAt,
@@ -45,8 +43,6 @@ public record SettlementDetailResponse(
                 settlement.getFeeAmount(),
                 settlement.getSettlementAmount(),
                 settlement.getSettlementReservationDate(),
-                null,  // bankName - TODO: DepositApiClient 구현 후 사용
-                null,  // accountNumber - TODO: DepositApiClient 구현 후 사용
                 settlement.getOrderId(),
                 settlement.getCompletedAt(),
                 settlement.getCreatedAt(),
@@ -61,9 +57,7 @@ public record SettlementDetailResponse(
     public static SettlementDetailResponse of(
             Settlement settlement,
             String sellerNickname,
-            String productName,
-            String bankName,
-            String accountNumber
+            String productName
     ) {
         return new SettlementDetailResponse(
                 settlement.getUuid(),
@@ -76,8 +70,6 @@ public record SettlementDetailResponse(
                 settlement.getFeeAmount(),
                 settlement.getSettlementAmount(),
                 settlement.getSettlementReservationDate(),
-                bankName,
-                accountNumber,
                 settlement.getOrderId(),
                 settlement.getCompletedAt(),
                 settlement.getCreatedAt(),

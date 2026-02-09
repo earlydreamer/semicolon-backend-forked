@@ -26,13 +26,15 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 100
 
+
   jackson:
     time-zone: Asia/Seoul
     serialization:
       fail-on-empty-beans: false
 
   batch:
-    initialize-schema: always
+    jdbc:
+      initialize-schema: always
     job:
       enabled: false # 애플리케이션 시작 시 자동 실행 방지
 
@@ -61,6 +63,18 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 batch:
   settlement:
     chunk-size: 100
@@ -70,7 +84,7 @@ batch:
     page-size: 100
     scheduler:
       enabled: true
-      cron: "0 0 0 * * *" # 매일 자정 실행
+      cron: "0 0 2 1 * *" # 매월 1일 오전 2시 실행
 
 springdoc:
   api-docs:
@@ -96,6 +110,12 @@ custom:
       base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
+  user:
+    withdrawal:
+      restore-days: 30
+      purge-days: 90
+      purge-cron: "0 0 3 * * *"
+      mask-domain: "withdrawn.invalid"
 
 # 시스템 예치금 계정 설정
 system:

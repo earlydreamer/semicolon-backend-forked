@@ -3,8 +3,11 @@ package dukku.semicolon.boundedContext.settlement.in;
 import dukku.semicolon.boundedContext.settlement.app.SettlementFacade;
 import dukku.semicolon.shared.settlement.docs.SettlementApiDocs;
 import dukku.semicolon.shared.settlement.dto.*;
+import dukku.semicolon.shared.settlement.dto.BatchExecutionResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,7 +30,7 @@ public class SettlementController {
     @GetMapping
     @SettlementApiDocs.GetSettlements
     public Page<SettlementDetailResponse> getSettlements(
-            @Valid @ModelAttribute SettlementSearchRequest request,
+            @Valid @ParameterObject SettlementSearchRequest request,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return settlementFacade.getSettlements(request.toCondition(), pageable);
@@ -48,7 +51,7 @@ public class SettlementController {
     @GetMapping("/statistics")
     @SettlementApiDocs.GetSettlementStatistics
     public SettlementStatisticsResponse getStatistics(
-            @Valid @ModelAttribute SettlementStatisticsRequest request
+            @Valid @ParameterObject SettlementStatisticsRequest request
     ) {
         return settlementFacade.getStatistics(request.toCondition());
     }
@@ -61,7 +64,7 @@ public class SettlementController {
     @GetMapping("/statistics/batch/jobs")
     @SettlementApiDocs.GetBatchJobStatistics
     public SettlementBatchJobStatisticsResponse getBatchJobStatistics(
-            @Valid @ModelAttribute SettlementReportRequest request
+            @Valid @ParameterObject SettlementReportRequest request
     ) {
         return settlementFacade.getBatchJobStatistics(request.startDate(), request.endDate());
     }
@@ -72,7 +75,7 @@ public class SettlementController {
     @GetMapping("/statistics/batch/steps")
     @SettlementApiDocs.GetBatchStepStatistics
     public SettlementBatchStepStatisticsResponse getBatchStepStatistics(
-            @Valid @ModelAttribute SettlementReportRequest request
+            @Valid @ParameterObject SettlementReportRequest request
     ) {
         return settlementFacade.getBatchStepStatistics(request.startDate(), request.endDate());
     }
@@ -92,7 +95,7 @@ public class SettlementController {
     @GetMapping("/statistics/trend")
     @SettlementApiDocs.GetTrendStatistics
     public SettlementTrendStatisticsResponse getTrendStatistics(
-            @Valid @ModelAttribute SettlementReportRequest request
+            @Valid @ParameterObject SettlementReportRequest request
     ) {
         return settlementFacade.getTrendStatistics(request.startDate(), request.endDate());
     }
@@ -135,5 +138,27 @@ public class SettlementController {
     @SettlementApiDocs.FailSettlement
     public SettlementDetailResponse failSettlement(@PathVariable UUID settlementUuid) {
         return settlementFacade.failSettlement(settlementUuid);
+    }
+
+    // ===== 배치 수동 실행 API (개발, 테스트)=====
+
+    /**
+     * 정산 배치 수동 실행 (개발, 테스트)
+     */
+    @PostMapping("/batch/run")
+    @SettlementApiDocs.RunSettlementBatch
+    @Profile("dev, test")
+    public BatchExecutionResponse runSettlementBatch() {
+        return settlementFacade.runSettlementBatch();
+    }
+
+    /**
+     * 정산 재처리 배치 수동 실행 (개발, 테스트)
+     */
+    @PostMapping("/batch/retry")
+    @SettlementApiDocs.RunRetryBatch
+    @Profile("dev, test")
+    public BatchExecutionResponse runRetryBatch() {
+        return settlementFacade.runRetryBatch();
     }
 }

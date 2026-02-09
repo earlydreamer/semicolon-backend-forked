@@ -33,6 +33,7 @@ public class DepositEventListener {
                 event.paymentDeposit(),
                 event.orderUuid(),
                 event.itemDepositUsages());
+        depositFacade.increaseSystemDepositForPg(event.orderUuid(), event.pgAmount());
     }
 
     /**

@@ -22,6 +22,7 @@ dependencies {
     implementation "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}"
 
     // === Test ===
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
 
     // === Redis ===
