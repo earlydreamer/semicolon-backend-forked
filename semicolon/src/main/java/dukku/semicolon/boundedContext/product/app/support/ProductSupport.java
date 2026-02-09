@@ -41,6 +41,11 @@ public class ProductSupport {
         return product;
     }
 
+    public Product findByUuid(UUID productUuid) {
+        return productRepository.findByUuid(productUuid)
+                .orElseThrow(ProductNotFoundException::new);
+    }
+
     public void validateImageCount(int addCount) {
         if (addCount > 10) {
             throw new ProductImageLimitExceededException();
