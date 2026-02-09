@@ -18,4 +18,9 @@ public interface PaymentHistoryRepository extends JpaRepository<PaymentHistory, 
     List<PaymentHistory> findByPaymentId(int paymentId);
 
     List<PaymentHistory> findByType(PaymentHistoryType type);
+
+    /**
+     * 특정 결제의 특정 타입 이력 존재 여부 확인 (보상 트랜잭션 멱등성 체크용)
+     */
+    boolean existsByPaymentIdAndType(int paymentId, PaymentHistoryType type);
 }

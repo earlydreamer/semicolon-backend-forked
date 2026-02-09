@@ -127,6 +127,13 @@ public class PaymentSupport {
         return paymentHistoryRepository.save(history);
     }
 
+    /**
+     * 특정 결제의 특정 타입 이력 존재 여부 확인 (보상 트랜잭션 멱등성 체크용)
+     */
+    public boolean hasHistoryType(int paymentId, PaymentHistoryType type) {
+        return paymentHistoryRepository.existsByPaymentIdAndType(paymentId, type);
+    }
+
     // === Refund 관련 ===
 
     /**
@@ -136,5 +143,12 @@ public class PaymentSupport {
             CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     public Refund saveRefund(Refund refund) {
         return refundRepository.save(refund);
+    }
+
+    /**
+     * 멱등성 키로 환불 조회 (중복 환불 방지용)
+     */
+    public Optional<Refund> findRefundByIdempotencyKey(String idempotencyKey) {
+        return refundRepository.findByIdempotencyKey(idempotencyKey);
     }
 }

@@ -213,8 +213,8 @@ public class Payment extends BaseIdAndUUIDAndTime {
         /**
          * 환불 엔티티 생성 및 연관관계 설정 (Aggregate Root 책임)
          */
-        public Refund createRefund(Long refundAmount, Long depositRefundAmount) {
-                Refund refund = Refund.create(this, refundAmount, depositRefundAmount);
+        public Refund createRefund(Long refundAmount, Long depositRefundAmount, String idempotencyKey) {
+                Refund refund = Refund.create(this, refundAmount, depositRefundAmount, idempotencyKey);
                 this.addRefund(refund);
                 return refund;
         }

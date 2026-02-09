@@ -54,18 +54,22 @@ public class Refund extends BaseIdAndUUIDAndTime {
     @Column(comment = "환불 승인일")
     private LocalDateTime approvedAt;
 
+    @Column(unique = true, length = 100, comment = "멱등성 키 (중복 환불 방지)")
+    private String idempotencyKey;
+
     @Builder.Default
     @OneToMany(mappedBy = "refund", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RefundItem> items = new ArrayList<>();
 
     // === 정적 팩토리 메서드 ===
 
-    public static Refund create(Payment payment, Long amount, Long depositAmount) {
+    public static Refund create(Payment payment, Long amount, Long depositAmount, String idempotencyKey) {
         return Refund.builder()
                 .payment(payment)
                 .refundAmountTotal(amount)
                 .refundDepositTotal(depositAmount)
                 .refundStatus(RefundStatus.PENDING)
+                .idempotencyKey(idempotencyKey)
                 .build();
     }
 
