@@ -3,7 +3,10 @@ package dukku.semicolon.global;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.*;
+import dukku.semicolon.boundedContext.product.entity.Category;
+import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.semicolon.boundedContext.product.entity.ProductSeller;
+import dukku.semicolon.boundedContext.product.entity.ProductUser;
 import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
 import dukku.semicolon.boundedContext.product.out.*;
 import dukku.semicolon.boundedContext.user.app.user.RegisterUserUseCase;
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +29,7 @@ import java.util.*;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@Profile("release")
 @Order(2)
 public class ProductInitData {
 
@@ -219,7 +224,7 @@ public class ProductInitData {
     }
 
     private void createSeller(String sId, String uId, String nickname, double rating, String intro, int sales,
-            int active) {
+                              int active) {
         // [수정] 직접 생성 -> UseCase 사용 (이메일 인증 Mocking 포함)
         String email = uId + "@dukku.shop";
         String password = "TestUser123!";

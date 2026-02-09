@@ -3,7 +3,9 @@ package dukku.semicolon.global;
 import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.entity.type.Role;
 import dukku.semicolon.boundedContext.user.out.UserRepository;
+import dukku.semicolon.global.auth.jwt.AuthTokenIssuer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +13,13 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @Order(0)
@@ -20,26 +27,35 @@ public class UserInitData {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthTokenIssuer authTokenIssuer;
 
     @Bean
     public CommandLineRunner initUsers() {
-        return args -> initUserData();
-    }
+        return new CommandLineRunner() {
+            @Override
+            @Transactional
+            public void run(String... args) {
+                if (userRepository.count() >= 1000) {
+                    log.info("유저 데이터가 이미 존재하여 초기화를 건너뜁니다.");
+                    return;
+                }
 
-    @Transactional
-    public void initUserData() {
-        if (userRepository.count() > 0) {
-            return;
-        }
+                List<User> users = new ArrayList<>();
 
-        List<User> users = List.of(
-                createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN),
-                createUser("user1@semicolon.com", "User123!", "user1", Role.USER),
-                createUser("user2@semicolon.com", "User123!", "user2", Role.USER),
-                createUser("user3@semicolon.com", "User123!", "user3", Role.USER)
-        );
+                // 관리자
+                users.add(createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN));
 
-        userRepository.saveAll(users);
+                // 테스트 유저 1,000명
+                for (int i = 1; i <= 1000; i++) {
+                    users.add(createUser("user" + i + "@semicolon.com", "User123!", "user" + i, Role.USER));
+                }
+
+                List<User> savedUsers = userRepository.saveAll(users);
+                log.info("✅ 1001명의 유저 생성 완료");
+
+                saveTokensToFile(savedUsers);
+            }
+        };
     }
 
     private User createUser(String email, String rawPassword, String nickname, Role role) {
@@ -49,5 +65,18 @@ public class UserInitData {
                 .nickname(nickname)
                 .role(role)
                 .build();
+    }
+
+    private void saveTokensToFile(List<User> savedUsers) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("tokens.txt"))) {
+            for (User user : savedUsers) {
+                String accessToken = authTokenIssuer.createAccessToken(user.getUuid(), user.getRole().name());
+                writer.write(user.getEmail() + "," + accessToken);
+                writer.newLine();
+            }
+            log.info("✅ tokens.txt 생성 완료");
+        } catch (IOException e) {
+            log.error("토큰 파일 저장 실패", e);
+        }
     }
 }

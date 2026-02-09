@@ -3,7 +3,6 @@ package dukku.semicolon.global.auth.controller;
 import dukku.semicolon.global.auth.dto.LoginRequest;
 import dukku.semicolon.global.auth.dto.TokenResponse;
 import dukku.semicolon.global.auth.service.AuthService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

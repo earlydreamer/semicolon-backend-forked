@@ -7,15 +7,16 @@ import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.entity.type.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 /**
  * 시스템 예치금 관리를 위한 admin 계정 생성
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@Profile("release")
 @Order(3) // 다른 2개의 초기화 코드가 실행된 후 실행
 public class SystemDepositInitData {
 
