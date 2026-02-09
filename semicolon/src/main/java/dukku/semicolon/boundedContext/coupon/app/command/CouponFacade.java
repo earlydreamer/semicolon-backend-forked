@@ -28,7 +28,7 @@ public class CouponFacade {
     }
 
     // 쿠폰을 활성화 상태로 변경한다
-    public void activate(UUID couponUuid) {
+    public void activateCoupon(UUID couponUuid) {
         activateCouponUseCase.execute(couponUuid);
     }
 

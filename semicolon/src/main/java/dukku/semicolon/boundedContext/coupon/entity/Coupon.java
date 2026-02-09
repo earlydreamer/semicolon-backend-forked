@@ -1,9 +1,9 @@
 package dukku.semicolon.boundedContext.coupon.entity;
 
-import dukku.common.global.exception.ConflictException;
 import dukku.semicolon.boundedContext.coupon.entity.type.CouponStatus;
 import dukku.semicolon.shared.coupon.dto.CouponCreateRequest;
 import dukku.semicolon.shared.coupon.dto.CouponUpdateRequest;
+import dukku.semicolon.shared.coupon.exception.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -70,7 +70,7 @@ public class Coupon {
     // 발급 전(Active로 전환 전) 수정 허용
     public void updateDraft(CouponUpdateRequest request) {
         if (status != CouponStatus.DRAFT) {
-            throw new ConflictException("DRAFT 상태에서만 수정 가능합니다.");
+            throw new CouponUpdateNotAllowedException();
         }
         this.couponName = request.couponName();
         this.discountAmount = request.discountAmount();
@@ -81,14 +81,14 @@ public class Coupon {
     /* 상태 전이 */
     public void activate() {
         if (status != CouponStatus.DRAFT) {
-            throw new ConflictException("DRAFT만 활성화 가능");
+            throw new CouponActivationNotAllowedException();
         }
         this.status = CouponStatus.ACTIVE;
     }
 
     public void deactivate() {
         if (status != CouponStatus.ACTIVE) {
-            throw new ConflictException("ACTIVE만 비활성화 가능");
+            throw new CouponDeactivationNotAllowedException();
         }
         this.status = CouponStatus.INACTIVE;
     }
@@ -100,10 +100,10 @@ public class Coupon {
     /* 발급 */
     public void issue() {
         if (status != CouponStatus.ACTIVE) {
-            throw new ConflictException("활성화된 쿠폰만 발급 가능");
+            throw new CouponIssueNotAllowedException();
         }
         if (issuedQuantity >= totalQuantity) {
-            throw new ConflictException("쿠폰 수량 소진");
+            throw new CouponSoldOutException();
         }
         this.issuedQuantity++;
     }

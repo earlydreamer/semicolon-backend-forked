@@ -22,7 +22,7 @@ import java.util.UUID;
 public class CouponUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "user_uuid", nullable = false, updatable = false)
     private UUID userUuid;

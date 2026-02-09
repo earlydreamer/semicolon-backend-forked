@@ -8,6 +8,7 @@ import dukku.semicolon.boundedContext.coupon.entity.type.IssueResult;
 import dukku.semicolon.boundedContext.coupon.out.CouponIssueLogRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponUserRepository;
+import dukku.semicolon.shared.coupon.exception.CouponAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,7 @@ public class IssueCouponUseCase {
 
         try {
             if (couponUserRepository.existsByUserUuidAndCoupon_Uuid(userUuid, couponUuid)) {
-                throw new ConflictException("이미 쿠폰을 발급받은 유저");
+                throw new CouponAlreadyExistsException();
             }
 
             Coupon coupon = couponRepository.findByUuid(couponUuid)
