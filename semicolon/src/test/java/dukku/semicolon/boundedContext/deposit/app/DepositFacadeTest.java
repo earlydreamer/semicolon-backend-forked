@@ -18,13 +18,17 @@ class DepositFacadeTest {
 
     private DeductDepositForPaymentUseCase deductDepositForPaymentUseCase;
     private DepositFacade depositFacade;
+    private FindDepositByDepositUuidUseCase findDepositByDepositUuidUseCase;
+
 
     @BeforeEach
     void setUp() {
+        findDepositByDepositUuidUseCase = mock(FindDepositByDepositUuidUseCase.class);
         deductDepositForPaymentUseCase = mock(DeductDepositForPaymentUseCase.class);
 
         depositFacade = new DepositFacade(
                 mock(FindDepositUseCase.class),
+                findDepositByDepositUuidUseCase,
                 mock(IncreaseDepositUseCase.class),
                 mock(DecreaseDepositUseCase.class),
                 mock(FindDepositHistoriesUseCase.class),
