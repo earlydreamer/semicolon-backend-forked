@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,6 +52,8 @@ public class DeductDepositForPaymentUseCase {
         try {
             executeDeductions(userUuid, totalAmount, orderUuid, itemDepositUsages);
         } catch (Exception e) {
+            // 실패 시 부분 차감 커밋 방지: 현재 트랜잭션을 반드시 롤백시킨다.
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             handleDeductionError(userUuid, totalAmount, orderUuid, paymentUuid, e);
         }
     }
