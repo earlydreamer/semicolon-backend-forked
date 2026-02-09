@@ -7,6 +7,7 @@ import dukku.semicolon.boundedContext.payment.entity.Payment;
 import dukku.semicolon.boundedContext.payment.out.PaymentRepository;
 import dukku.semicolon.boundedContext.payment.out.TossPaymentClient;
 import dukku.semicolon.shared.payment.dto.PaymentRefundRequest;
+import dukku.semicolon.shared.payment.dto.PaymentRefundResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -111,9 +112,10 @@ class PaymentIntegrationTest {
                                 .reason("system_error")
                                 .build();
 
-                assertThatThrownBy(() -> refundPaymentUseCase.execute(request, "idempotency-key"))
-                                .isInstanceOf(RuntimeException.class)
-                                .hasMessageContaining("TOSS_CANCEL_FAILED");
+                PaymentRefundResponse response = refundPaymentUseCase.execute(request, "idempotency-key");
+
+                assertThat(response.isSuccess()).isFalse();
+                assertThat(response.getCode()).isEqualTo("PG_CANCEL_FAILED");
 
                 verify(increaseDepositUseCase, never()).increase(any(), any(), any(), any());
 
@@ -249,5 +251,57 @@ class PaymentIntegrationTest {
                 paymentSupport.savePayment(testPayment);
 
                 verify(paymentRepository, atLeastOnce()).save(any());
+        }
+
+        @Test
+        @DisplayName("Refund idempotency: duplicate key returns same result")
+        void refundIdempotencyTest() {
+                Map<String, Object> successResponse = new HashMap<>();
+                successResponse.put("statusCode", 200);
+                when(tossPaymentClient.cancel(anyString(), anyMap())).thenReturn(successResponse);
+
+                PaymentRefundRequest request = PaymentRefundRequest.builder()
+                                .paymentId(testPayment.getUuid())
+                                .refundAmount(20000L)
+                                .reason("idempotency-test")
+                                .build();
+
+                // 첫 번째 환불 요청
+                refundPaymentUseCase.execute(request, "same-idempotency-key");
+
+                // 두 번째 동일한 idempotencyKey로 환불 요청
+                refundPaymentUseCase.execute(request, "same-idempotency-key");
+
+                // PG 취소는 1번만 호출되어야 함
+                verify(tossPaymentClient, times(1)).cancel(eq("test-payment-key"), anyMap());
+                // 예치금 복구도 1번만 호출되어야 함
+                verify(increaseDepositUseCase, times(1)).increase(eq(userUuid), eq(15000L), any(), any());
+
+                // 최종 상태 확인
+                Payment updatedPayment = paymentSupport.findPaymentByUuid(testPayment.getUuid());
+                assertThat(updatedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED);
+                assertThat(updatedPayment.getRefundTotal()).isEqualTo(20000L);
+        }
+
+        @Test
+        @DisplayName("Compensation idempotency: duplicate execution skips second call")
+        void compensationIdempotencyTest() {
+                Map<String, Object> successResponse = new HashMap<>();
+                successResponse.put("statusCode", 200);
+                when(tossPaymentClient.cancel(anyString(), anyMap())).thenReturn(successResponse);
+
+                // 첫 번째 보상 트랜잭션
+                compensatePaymentUseCase.execute(testPayment.getOrderUuid(), "deposit deduction failed");
+
+                // 두 번째 보상 트랜잭션 (동일 orderUuid)
+                compensatePaymentUseCase.execute(testPayment.getOrderUuid(), "deposit deduction failed");
+
+                // PG 취소는 1번만 호출되어야 함
+                verify(tossPaymentClient, times(1)).cancel(eq("test-payment-key"), anyMap());
+
+                // 최종 상태 확인
+                Payment updatedPayment = paymentSupport.findPaymentByUuid(testPayment.getUuid());
+                assertThat(updatedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.FAILED);
+                assertThat(updatedPayment.getAmountPg()).isEqualTo(0L);
         }
 }
