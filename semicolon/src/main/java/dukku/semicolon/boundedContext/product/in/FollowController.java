@@ -17,13 +17,13 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/sellers")
 @FollowApiDocs.FollowTag
 public class FollowController {
 
     private final FollowFacade followFacade;
 
-    @PostMapping("/sellers/{sellerUuid}/follow")
+    @PostMapping("/{sellerUuid}/follow")
     @FollowApiDocs.FollowSeller
     public FollowActionResponse followSeller(
             @PathVariable UUID sellerUuid
@@ -31,7 +31,7 @@ public class FollowController {
         return followFacade.followSeller(UserUtil.getUserId(), sellerUuid);
     }
 
-    @DeleteMapping("/sellers/{sellerUuid}/follow")
+    @DeleteMapping("/{sellerUuid}/follow")
     @FollowApiDocs.UnfollowSeller
     public FollowActionResponse unfollowSeller(
             @PathVariable UUID sellerUuid
@@ -39,13 +39,13 @@ public class FollowController {
         return followFacade.unfollowSeller(UserUtil.getUserId(), sellerUuid);
     }
 
-    @GetMapping("/me/following/sellers")
+    @GetMapping("/me/following")
     @FollowApiDocs.GetFollowedSellers
     public List<FollowedSellerCardResponse> getFollowedSellers() {
         return followFacade.getFollowedSellers(UserUtil.getUserId());
     }
 
-    @GetMapping("/sellers/{sellerUuid}/followers")
+    @GetMapping("/{sellerUuid}/followers")
     @FollowApiDocs.GetSellerFollowers
     public List<FollowerUserCardResponse> getSellerFollowers(
             @PathVariable UUID sellerUuid
