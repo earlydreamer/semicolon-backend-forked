@@ -10,8 +10,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -28,31 +28,42 @@ public class UserInitData {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthTokenIssuer authTokenIssuer;
+    private final Environment env;
 
     @Bean
     public CommandLineRunner initUsers() {
-        return new CommandLineRunner() {
-            @Override
-            @Transactional
-            public void run(String... args) {
-                if (userRepository.count() >= 1000) {
-                    log.info("유저 데이터가 이미 존재하여 초기화를 건너뜁니다.");
-                    return;
+        return args -> {
+            String[] activeProfiles = env.getActiveProfiles();
+            boolean isDev = false;
+            for (String profile : activeProfiles) {
+                if (profile.equals("dev")) {
+                    isDev = true;
+                    break;
                 }
+            }
 
-                List<User> users = new ArrayList<>();
+            int userCount = isDev ? 1000 : 10; // dev=1000, release=10
+            boolean generateTokens = isDev;    // dev에서만 tokens.txt 생성
 
-                // 관리자
-                users.add(createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN));
+            if (userRepository.count() >= userCount) {
+                log.info("유저 데이터가 이미 존재하여 초기화를 건너뜁니다.");
+                return;
+            }
 
-                // 테스트 유저 1,000명
-                for (int i = 1; i <= 1000; i++) {
-                    users.add(createUser("user" + i + "@semicolon.com", "User123!", "user" + i, Role.USER));
-                }
+            List<User> users = new ArrayList<>();
 
-                List<User> savedUsers = userRepository.saveAll(users);
-                log.info("✅ 1001명의 유저 생성 완료");
+            // 관리자
+            users.add(createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN));
 
+            // 일반 유저
+            for (int i = 1; i <= userCount; i++) {
+                users.add(createUser("user" + i + "@semicolon.com", "User123!", "user" + i, Role.USER));
+            }
+
+            List<User> savedUsers = userRepository.saveAll(users);
+            log.info("✅ {}명의 유저 생성 완료", userCount + 1);
+
+            if (generateTokens) {
                 saveTokensToFile(savedUsers);
             }
         };

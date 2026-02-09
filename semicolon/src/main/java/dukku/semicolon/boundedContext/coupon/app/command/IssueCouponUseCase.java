@@ -9,6 +9,7 @@ import dukku.semicolon.boundedContext.coupon.out.CouponIssueLogRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponUserRepository;
 import dukku.semicolon.shared.coupon.exception.CouponAlreadyExistsException;
+import dukku.semicolon.shared.coupon.exception.CouponNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +35,7 @@ public class IssueCouponUseCase {
             }
 
             Coupon coupon = couponRepository.findByUuid(couponUuid)
-                    .orElseThrow();
+                    .orElseThrow(CouponNotFoundException::new);
 
             CouponUser couponUser = CouponUser.issue(userUuid, coupon);
             couponUserRepository.save(couponUser);
