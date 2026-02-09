@@ -17,7 +17,7 @@ import java.util.UUID;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@Order(1)
+@Order(4)
 public class CouponInitData {
 
     @Bean
