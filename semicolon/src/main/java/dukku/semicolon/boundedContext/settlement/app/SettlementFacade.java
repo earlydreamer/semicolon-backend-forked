@@ -1,12 +1,15 @@
 package dukku.semicolon.boundedContext.settlement.app;
 
+import dukku.semicolon.boundedContext.settlement.batch.scheduler.SettlementJobScheduler;
 import dukku.semicolon.boundedContext.settlement.entity.Settlement;
 import dukku.semicolon.shared.settlement.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -32,6 +35,7 @@ public class SettlementFacade {
     private final ManualCompleteSettlementUseCase manualCompleteSettlementUseCase;
     private final ManualFailSettlementUseCase manualFailSettlementUseCase;
     private final ManualProcessSettlementUseCase manualProcessSettlementUseCase;
+    private final SettlementJobScheduler settlementJobScheduler;
 
     @Transactional(readOnly = true)
     public SettlementDetailResponse getSettlement(UUID settlementUuid) {
@@ -116,5 +120,29 @@ public class SettlementFacade {
     public SettlementDetailResponse failSettlement(UUID settlementUuid) {
         Settlement settlement = manualFailSettlementUseCase.execute(settlementUuid);
         return SettlementDetailResponse.from(settlement);
+    }
+
+    // ===== 배치 수동 실행 API =====
+
+    /**
+     * 정산 배치 수동 실행
+     * - batch 폴더의 SettlementJobScheduler 재사용
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BatchExecutionResponse runSettlementBatch() {
+        log.info("[SettlementFacade] 정산 배치 수동 실행 요청");
+        JobExecution jobExecution = settlementJobScheduler.runManually();
+        return BatchExecutionResponse.from(jobExecution);
+    }
+
+    /**
+     * 정산 재처리 배치 수동 실행
+     * - batch 폴더의 SettlementJobScheduler 재사용
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BatchExecutionResponse runRetryBatch() {
+        log.info("[SettlementFacade] 정산 재처리 배치 수동 실행 요청");
+        JobExecution jobExecution = settlementJobScheduler.runRetryManually();
+        return BatchExecutionResponse.from(jobExecution);
     }
 }

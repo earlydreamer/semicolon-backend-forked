@@ -27,10 +27,12 @@ import java.util.UUID;
 public class DepositFacade {
 
     private final FindDepositUseCase findDepositUseCase;
+    private final FindDepositByDepositUuidUseCase findDepositByDepositUuidUseCase;
     private final IncreaseDepositUseCase increaseDepositUseCase;
     private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final FindDepositHistoriesUseCase findDepositHistoriesUseCase;
     private final DeductDepositForPaymentUseCase deductDepositForPaymentUseCase;
+    private final IncreaseSystemDepositForPgUseCase increaseSystemDepositForPgUseCase;
     private final RefundDepositUseCase refundDepositUseCase;
     private final ChargeDepositUseCase chargeDepositUseCase;
     private final ChargeDepositForSettlementUseCase chargeDepositForSettlementUseCase;
@@ -40,6 +42,10 @@ public class DepositFacade {
      */
     public DepositDto findDeposit(UUID userUuid) {
         return findDepositUseCase.findOrCreate(userUuid).toDto();
+    }
+
+    public DepositDto findDepositByDepositUuid(UUID depositUuid) {
+        return findDepositByDepositUuidUseCase.execute(depositUuid).toDto();
     }
 
     /**
@@ -105,6 +111,13 @@ public class DepositFacade {
             List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
         // paymentUuid 전달 (보상 트랜잭션 연계)
         deductDepositForPaymentUseCase.execute(userUuid, totalAmount, orderUuid, paymentUuid, itemDepositUsages);
+    }
+
+    /**
+     * PG 결제 승인분을 시스템 지갑에 반영
+     */
+    public void increaseSystemDepositForPg(UUID orderUuid, Long pgAmount) {
+        increaseSystemDepositForPgUseCase.execute(orderUuid, pgAmount);
     }
 
     /**

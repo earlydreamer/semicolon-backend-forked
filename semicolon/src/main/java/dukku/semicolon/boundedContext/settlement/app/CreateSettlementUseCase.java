@@ -1,16 +1,12 @@
 package dukku.semicolon.boundedContext.settlement.app;
 
-import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.shared.order.event.OrderItemConfirmedEvent;
-import dukku.common.shared.settlement.event.SettlementCreateFailedEvent;
-import dukku.common.shared.settlement.event.SettlementCreateSuccessEvent;
+import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
+import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.semicolon.boundedContext.settlement.entity.SettlementSchedulePolicy;
 import dukku.semicolon.shared.deposit.out.depositApiClient.DepositApiClient;
-// TODO: OrderApiClient, PaymentApiClient import 추가 예정
-// import dukku.semicolon.shared.order.out.OrderApiClient;
-// import dukku.semicolon.shared.payment.out.PaymentApiClient;
-// import dukku.semicolon.shared.order.dto.OrderItemDto;
-// import dukku.semicolon.shared.order.dto.OrderDto;
-// import dukku.semicolon.shared.payment.dto.PaymentDto;
+import dukku.semicolon.shared.order.out.OrderApiClient;
+import dukku.semicolon.shared.payment.dto.PaymentInternalResponse;
+import dukku.semicolon.shared.payment.out.PaymentApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +14,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 /**
- * 이벤트 기반 Settlement 생성 UseCase
- * - OrderItemConfirmedEvent 수신 → Settlement 생성 (PENDING 상태)
+ * 배치 기반 Settlement 생성 UseCase
+ * - 스케줄에 따라 구매 확정된 주문 상품 조회 → Settlement 생성 (PENDING 상태)
  * - 배치에서 PENDING Settlement를 조회하여 예치금 충전
  *
  * [아키텍처 원칙]
@@ -35,84 +34,75 @@ public class CreateSettlementUseCase {
 
     private final SettlementSupport settlementSupport;
     private final DepositApiClient depositApiClient;
-    private final EventPublisher eventPublisher;
-    // TODO: API Client 추가 필요
-    // private final OrderApiClient orderApiClient;
-    // private final PaymentApiClient paymentApiClient;
+    private final OrderApiClient orderApiClient;
+    private final PaymentApiClient paymentApiClient;
 
     @Value("${batch.settlement.fee-rate}")
     private BigDecimal feeRate;
 
+    /**
+     * 특정 기간의 구매 확정된 주문 상품들에 대해 정산 생성
+     *
+     * @param startDateTime 조회 시작 일시
+     * @param endDateTime   조회 종료 일시
+     * @return 생성된 Settlement 목록
+     */
     @Transactional
-    public void execute(OrderItemConfirmedEvent event) {
-        log.info("[정산 생성] 구매 확정 이벤트 수신. orderItemUuid={}", event.orderItemUuid());
+    public List<Settlement> execute(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        log.info("[정산 생성] 배치 실행. 조회 기간: {} ~ {}", startDateTime, endDateTime);
 
+        // 1. 구매 확정된 주문 상품 목록 조회
+        List<ConfirmedOrderItemResponse> confirmedItems = orderApiClient.findConfirmedItems(startDateTime, endDateTime);
+
+        log.info("[정산 생성] 구매 확정 주문 상품 조회 완료. 건수: {}", confirmedItems.size());
+
+        // 2. 각 주문 상품에 대해 정산 생성
+        List<Settlement> settlements = confirmedItems.stream()
+                .map(this::createSettlement)
+                .toList();
+
+        log.info("[정산 생성 완료] 총 {}건 정산 생성됨", settlements.size());
+
+        return settlements;
+    }
+
+    /**
+     * 단일 주문 상품에 대한 정산 생성
+     */
+    private Settlement createSettlement(ConfirmedOrderItemResponse orderItem) {
         try {
-            // TODO: API Client를 통한 데이터 조회 (Bounded Context 간 직접 참조 금지)
+            // 1. Payment 조회 - PaymentApiClient 사용 (주문에 대한 완료된 결제)
+            PaymentInternalResponse payment = paymentApiClient.getPaymentByOrderUuid(orderItem.orderUuid());
 
-            // 1. OrderItem 조회 - OrderApiClient 사용
-            // OrderItemDto orderItem = orderApiClient.getOrderItem(event.orderItemUuid());
+            // 2. Deposit UUID 조회 - DepositApiClient 사용 (판매자의 예치금)
+            UUID depositUuid = depositApiClient.getDepositUuid(orderItem.sellerUuid());
 
-            // 2. Order 조회 - OrderApiClient 사용
-            // OrderDto order = orderApiClient.getOrder(orderItem.getOrderUuid());
+            // 3. 정산 예약일 계산 (구매 확정 후 당일 자정 넘어서 00:00)
+            LocalDateTime reservationDate = SettlementSchedulePolicy.nextReservationDate();
 
-            // 3. Payment 조회 - PaymentApiClient 사용 (주문에 대한 완료된 결제)
-            // PaymentDto payment = paymentApiClient.getPaymentByOrderUuid(order.getUuid());
+            // 4. Settlement 생성
+            Settlement settlement = Settlement.create(
+                    orderItem.sellerUuid(),           // 판매자 UUID
+                    orderItem.buyerUuid(),            // 구매자 UUID
+                    payment.getPaymentUuid(),         // 결제 UUID
+                    orderItem.orderUuid(),            // 주문 UUID
+                    orderItem.orderItemUuid(),        // 주문 상품 UUID
+                    depositUuid,                      // 예치금 UUID
+                    Long.valueOf(orderItem.productPrice()), // 총액
+                    feeRate,                          // 수수료율 (5%)
+                    reservationDate                   // 정산 예약일 (구매 확정 후 당일 자정)
+            );
 
-            // 4. Deposit UUID 조회 - DepositApiClient 사용 (판매자의 예치금)
-            // UUID depositUuid = depositApiClient.getDepositUuid(orderItem.getSellerUuid());
+            settlementSupport.save(settlement);
 
-            // 5. 정산 예약일 계산 (구매 확정 후 당일 자정 넘어서 00:00)
-            // LocalDateTime reservationDate = SettlementSchedulePolicy.nextReservationDate();
+            log.debug("[정산 생성] settlementUuid={}, orderItemUuid={}, sellerUuid={}, amount={}",
+                    settlement.getUuid(), orderItem.orderItemUuid(), orderItem.sellerUuid(), orderItem.productPrice());
 
-            // 6. Settlement 생성
-            // Settlement settlement = Settlement.create(
-            //         orderItem.getSellerUuid(),        // 판매자 UUID
-            //         order.getBuyerUuid(),              // 구매자 UUID
-            //         payment.getUuid(),                 // 결제 UUID
-            //         order.getUuid(),                   // 주문 UUID
-            //         orderItem.getUuid(),               // 주문 상품 UUID
-            //         depositUuid,                       // 예치금 UUID
-            //         orderItem.getProductPrice(),       // 총액
-            //         feeRate,                           // 수수료율 (5%)
-            //         reservationDate                    // 정산 예약일 (구매 확정 후 당일 자정)
-            // );
-
-            // settlementSupport.save(settlement);
-
-            // log.info("[정산 생성 완료] settlementUuid={}, sellerUuid={}, amount={}, feeRate={}, reservationDate={}",
-            //         settlement.getUuid(), orderItem.getSellerUuid(), orderItem.getProductPrice(), feeRate, reservationDate);
-
-            // // 7. 성공 이벤트 발행
-            // publishSuccessEvent();
-
-
-            // ===========================================
-            // TODO: 위의 API Client 코드로 교체 필요
-            // ============================================
-            log.warn("[임시] API Client 미구현으로 정산 생성 로직 스킵. OrderApiClient, PaymentApiClient 구현 필요");
+            return settlement;
 
         } catch (Exception e) {
-            log.error("[정산 생성 실패] orderItemUuid={}, error={}", event.orderItemUuid(), e.getMessage(), e);
-            publishFailureEvent();
+            log.error("[정산 생성 실패] orderItemUuid={}, error={}", orderItem.orderItemUuid(), e.getMessage(), e);
             throw e;
         }
     }
-
-    private void publishSuccessEvent() {
-        // TODO: orderItem이 OrderItemDto로 변경되면 수정
-        eventPublisher.publish(
-                new SettlementCreateSuccessEvent()
-        );
-        log.info("[정산 생성 이벤트 발행]");
-    }
-
-    private void publishFailureEvent() {
-        eventPublisher.publish(
-                new SettlementCreateFailedEvent()
-        );
-        log.error("[정산 생성 실패 이벤트 발행]");
-    }
-
-
 }

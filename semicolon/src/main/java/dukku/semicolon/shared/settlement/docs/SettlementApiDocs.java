@@ -43,10 +43,10 @@ public final class SettlementApiDocs {
             - 기간별(startDate ~ endDate) 정산 내역을 조회할 수 있습니다.
             - 페이징을 지원하며, 기본값은 20개씩 최신순으로 정렬됩니다.
             """, parameters = {
-            @Parameter(name = "status", description = "정산 상태 (CREATED, PROCESSING, PENDING, SUCCESS, FAILED)", example = "SUCCESS"),
-            @Parameter(name = "sellerUuid", description = "판매자 UUID", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+            @Parameter(name = "status", description = "정산 상태 (PENDING, PROCESSING, SUCCESS, FAILED)", example = "SUCCESS"),
+            @Parameter(name = "sellerUuid", description = "판매자 UUID (홍길동상점)", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
             @Parameter(name = "startDate", description = "조회 시작일 (yyyy-MM-dd)", example = "2026-01-01"),
-            @Parameter(name = "endDate", description = "조회 종료일 (yyyy-MM-dd)", example = "2026-01-31"),
+            @Parameter(name = "endDate", description = "조회 종료일 (yyyy-MM-dd)", example = "2026-02-28"),
             @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
             @Parameter(name = "size", description = "페이지 크기", example = "20"),
             @Parameter(name = "sort", description = "정렬 기준", example = "createdAt,desc")
@@ -167,8 +167,8 @@ public final class SettlementApiDocs {
             - 조회 기간 내 완료된 정산 통계를 제공합니다.
             - startDate와 endDate로 조회 기간을 지정할 수 있습니다.
             """, parameters = {
-            @Parameter(name = "status", description = "정산 상태 필터 (CREATED, PROCESSING, PENDING, SUCCESS, FAILED)", example = "SUCCESS"),
-            @Parameter(name = "sellerUuid", description = "판매자 UUID 필터", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+            @Parameter(name = "status", description = "정산 상태 필터 (PENDING, PROCESSING, SUCCESS, FAILED)", example = "SUCCESS"),
+            @Parameter(name = "sellerUuid", description = "판매자 UUID 필터 (홍길동상점)", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
             @Parameter(name = "startDate", description = "조회 시작일 (yyyy-MM-dd)", example = "2026-01-01"),
             @Parameter(name = "endDate", description = "조회 종료일 (yyyy-MM-dd)", example = "2026-01-31")
     }, responses = {
@@ -457,5 +457,65 @@ public final class SettlementApiDocs {
             @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
     })
     public @interface ProcessSettlement {
+    }
+
+    // =============== 8) 정산 배치 수동 실행 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "정산 배치 수동 실행", description = """
+            관리자가 정산 배치를 수동으로 실행합니다.
+
+            - 스케줄러를 기다리지 않고 즉시 배치를 실행합니다.
+            - 배치 처리 순서: 정산 대상 생성 → 금액 검증 → 예치금 충전
+            - 실행 결과로 JobExecution 정보를 반환합니다.
+
+            **주의**: 이미 실행 중인 배치가 있는 경우 중복 실행될 수 있습니다.
+            """, responses = {
+            @ApiResponse(responseCode = "200", description = "배치 실행 시작", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Batch Run Response", value = """
+                    {
+                      "jobExecutionId": 1,
+                      "jobName": "settlementJob",
+                      "status": "COMPLETED",
+                      "startTime": "2026-01-25T10:00:00",
+                      "endTime": "2026-01-25T10:05:30",
+                      "exitCode": "COMPLETED",
+                      "exitDescription": ""
+                    }
+                    """))),
+            @ApiResponse(responseCode = "500", description = "배치 실행 실패", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"BATCH_EXECUTION_FAILED\", \"message\": \"정산 배치 실행에 실패했습니다.\"}"))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface RunSettlementBatch {
+    }
+
+    // =============== 9) 정산 재처리 배치 수동 실행 ===============
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "정산 재처리 배치 수동 실행", description = """
+            관리자가 정산 재처리 배치를 수동으로 실행합니다.
+
+            - FAILED 상태의 정산을 재처리합니다.
+            - 배치 처리 순서: 실패 정산 조회 → PENDING 상태로 변경 → 금액 검증 → 예치금 충전
+            - 실행 결과로 JobExecution 정보를 반환합니다.
+
+            **주의**: 이미 실행 중인 배치가 있는 경우 중복 실행될 수 있습니다.
+            """, responses = {
+            @ApiResponse(responseCode = "200", description = "재처리 배치 실행 시작", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Retry Batch Run Response", value = """
+                    {
+                      "jobExecutionId": 2,
+                      "jobName": "settlementRetryJob",
+                      "status": "COMPLETED",
+                      "startTime": "2026-01-25T11:00:00",
+                      "endTime": "2026-01-25T11:02:15",
+                      "exitCode": "COMPLETED",
+                      "exitDescription": ""
+                    }
+                    """))),
+            @ApiResponse(responseCode = "500", description = "배치 실행 실패", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"BATCH_EXECUTION_FAILED\", \"message\": \"정산 재처리 배치 실행에 실패했습니다.\"}"))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자 전용)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"FORBIDDEN\", \"message\": \"관리자만 접근 가능합니다.\"}")))
+    })
+    public @interface RunRetryBatch {
     }
 }

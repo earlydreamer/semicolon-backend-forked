@@ -3,7 +3,10 @@ package dukku.semicolon.global;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.*;
+import dukku.semicolon.boundedContext.product.entity.Category;
+import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.semicolon.boundedContext.product.entity.ProductSeller;
+import dukku.semicolon.boundedContext.product.entity.ProductUser;
 import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
 import dukku.semicolon.boundedContext.product.out.*;
 import dukku.semicolon.boundedContext.user.app.user.RegisterUserUseCase;
@@ -219,7 +222,7 @@ public class ProductInitData {
     }
 
     private void createSeller(String sId, String uId, String nickname, double rating, String intro, int sales,
-            int active) {
+                              int active) {
         // [수정] 직접 생성 -> UseCase 사용 (이메일 인증 Mocking 포함)
         String email = uId + "@dukku.shop";
         String password = "TestUser123!";
@@ -236,12 +239,7 @@ public class ProductInitData {
         userMap.put(uId, uuid);
 
         // 3. 판매자 생성
-        ProductSeller seller = ProductSeller.builder()
-                .userUuid(uuid)
-                .intro(intro)
-                .salesCount(sales)
-                .activeListingCount(active)
-                .build();
+        ProductSeller seller = ProductSeller.create(uuid, intro, sales, active);
         productSellerRepository.save(seller);
         sellerMap.put(sId, uuid);
     }
