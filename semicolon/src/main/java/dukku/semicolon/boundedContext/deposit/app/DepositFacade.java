@@ -27,6 +27,7 @@ import java.util.UUID;
 public class DepositFacade {
 
     private final FindDepositUseCase findDepositUseCase;
+    private final FindDepositByDepositUuidUseCase findDepositByDepositUuidUseCase;
     private final IncreaseDepositUseCase increaseDepositUseCase;
     private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final FindDepositHistoriesUseCase findDepositHistoriesUseCase;
@@ -41,6 +42,10 @@ public class DepositFacade {
      */
     public DepositDto findDeposit(UUID userUuid) {
         return findDepositUseCase.findOrCreate(userUuid).toDto();
+    }
+
+    public DepositDto findDepositByDepositUuid(UUID depositUuid) {
+        return findDepositByDepositUuidUseCase.execute(depositUuid).toDto();
     }
 
     /**

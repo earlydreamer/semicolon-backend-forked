@@ -1,10 +1,14 @@
 package dukku.semicolon.shared.user.out;
 
 import dukku.semicolon.boundedContext.user.entity.type.Role;
+import dukku.semicolon.shared.user.dto.UserAdminProfileResponse;
+import dukku.semicolon.shared.user.dto.UserProfileResponse;
 import dukku.semicolon.shared.user.dto.UserUuidResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
+import java.util.UUID;
 
 @Service
 public class UserApiClient {
@@ -45,5 +49,19 @@ public class UserApiClient {
                         .build())
                 .retrieve()
                 .body(UserUuidResponse.class);
+    }
+
+    public UserProfileResponse getUserProfile(UUID userUuid) {
+        return internalRestClient.get()
+                .uri("/{userUuid}/profile", userUuid)
+                .retrieve()
+                .body(UserProfileResponse.class);
+    }
+
+    public UserAdminProfileResponse getUserAdminProfile(UUID userUuid) {
+        return internalRestClient.get()
+                .uri("/{userUuid}/admin", userUuid)
+                .retrieve()
+                .body(UserAdminProfileResponse.class);
     }
 }
