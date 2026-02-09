@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class DeleteProductSyncUseCase {
-    private final ProductSearchRepository  productSearchRepository;
+    private final ProductSearchRepository productSearchRepository;
 
     @Transactional(readOnly = true)
     public void deletedProductToElasticsearch(int productId) {

@@ -222,7 +222,7 @@ public class ProductInitData {
     }
 
     private void createSeller(String sId, String uId, String nickname, double rating, String intro, int sales,
-            int active) {
+                              int active) {
         // [수정] 직접 생성 -> UseCase 사용 (이메일 인증 Mocking 포함)
         String email = uId + "@dukku.shop";
         String password = "TestUser123!";
