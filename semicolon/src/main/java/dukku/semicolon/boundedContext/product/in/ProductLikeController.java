@@ -14,13 +14,13 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/products")
 @ProductLikeApiDocs.ProductLikeTag
 public class ProductLikeController {
 
     private final ProductLikeFacade productLikeFacade;
 
-    @PostMapping("/products/{productUuid}/likes")
+    @PostMapping("/{productUuid}/like")
     @ProductLikeApiDocs.LikeProduct
     public ResponseEntity<Void> like(@PathVariable UUID productUuid) {
         productLikeFacade.like(productUuid);
@@ -28,7 +28,7 @@ public class ProductLikeController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/products/{productUuid}/likes")
+    @DeleteMapping("/{productUuid}/like")
     @ProductLikeApiDocs.UnlikeProduct
     public ResponseEntity<Void> unlike(
             @PathVariable UUID productUuid
@@ -38,7 +38,7 @@ public class ProductLikeController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/me/likes")
+    @GetMapping("/likes/me")
     @ProductLikeApiDocs.MyLikes
     public MyLikedProductListResponse myLikes(
             @RequestParam(defaultValue = "0") int page,
