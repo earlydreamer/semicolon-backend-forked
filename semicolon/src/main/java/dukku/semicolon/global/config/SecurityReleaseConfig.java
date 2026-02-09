@@ -59,7 +59,9 @@ public class SecurityReleaseConfig {
                                 "/swagger-ui.html",
                                 "/api/v1/users/email/**",
                                 "/api/v1/users/register",
-                                "/api/v1/auth/login"
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/logout"
                         )
                         .permitAll() // 인증 필요없음 -> filter 미실행
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
