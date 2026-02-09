@@ -74,7 +74,7 @@ public class ConfirmPaymentUseCase {
                     failureCode,
                     false,
                     buildFailureReason(failureCode, e.getMessage()));
-            throw e;
+            return payment.toPaymentConfirmResponse(false, "검증 실패: " + e.getMessage());
         }
 
 
@@ -96,7 +96,7 @@ public class ConfirmPaymentUseCase {
                     PaymentFailureCode.PG_CONFIRM_EXCEPTION,
                     true,
                     buildFailureReason(PaymentFailureCode.PG_CONFIRM_EXCEPTION, e.getMessage()));
-            throw e;
+            return payment.toPaymentConfirmResponse(false, "PG 승인 중 예외 발생: " + e.getMessage());
         }
 
         int statusCode = ((Number) tossResponse.getOrDefault("statusCode", 200)).intValue();

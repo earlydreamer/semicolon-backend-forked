@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 환불 처리 UseCase
@@ -51,66 +52,79 @@ public class RefundPaymentUseCase {
      */
     @Transactional
     public PaymentRefundResponse execute(PaymentRefundRequest request, String idempotencyKey) {
-        // 1. 결제 조회
+        // 1. 멱등성 검증 - 동일 idempotencyKey로 이미 처리된 환불이 있는지 확인
+        Optional<Refund> existingRefund = support.findRefundByIdempotencyKey(idempotencyKey);
+        if (existingRefund.isPresent()) {
+            Refund refund = existingRefund.get();
+            Payment payment = refund.getPayment();
+            log.info("[환불 멱등성] 이미 처리된 환불 요청입니다. idempotencyKey={}, refundUuid={}",
+                    idempotencyKey, refund.getUuid());
+
+            // 기존 환불 결과 반환 (PG 환불액 = 총 환불액 - 예치금 환불액)
+            Long pgRefundAmount = refund.getRefundAmountTotal() - refund.getRefundDepositTotal();
+            return refund.toPaymentRefundResponse(pgRefundAmount, payment.getTossOrderId());
+        }
+
+        // 2. 결제 조회
         Payment payment = support.findPaymentByUuid(request.getPaymentId());
 
-        // 2. 환불 가능 상태 검증
+        // 3. 환불 가능 상태 검증
         validateRefundable(payment);
 
-        // 3. 환불 금액 검증
+        // 4. 환불 금액 검증
         validateRefundAmount(payment, request.getRefundAmount());
 
-        // 4. 상태 변경 전 값 저장 (이력용)
+        // 5. 상태 변경 전 값 저장 (이력용)
         PaymentStatus originStatus = payment.getPaymentStatus();
         Long originAmountPg = payment.getAmountPg();
         Long originDeposit = payment.getPaymentDeposit();
 
-        // 5. 환불 금액 배분 산정
+        // 6. 환불 금액 배분 산정
         // 정책에 따라 예치금 복구액과 PG 취소액을 계산 (엔티티 도메인 로직 활용)
         Payment.RefundAllocation allocation = payment.calculateRefundAllocation(request.getRefundAmount());
 
-        // 6. PG 취소 수행 (외부 시스템 확정 먼저)
+        // 7. PG 취소 수행 (외부 시스템 확정 먼저)
         // PG 확정 후 내부 금액 반영
         if (allocation.pgRefundAmount() > 0) {
+            Map<String, Object> cancelBody = new HashMap<>();
+            cancelBody.put("cancelReason", request.getReason());
+            cancelBody.put("cancelAmount", allocation.pgRefundAmount());
+
+            // PG 취소 호출 (5xx → @Retryable 재시도 → 소진 시 RuntimeException)
+            Map<String, Object> response;
             try {
-                // PG 취소 요청 payload 구성
-                Map<String, Object> cancelBody = new HashMap<>();
-                cancelBody.put("cancelReason", request.getReason());
-                cancelBody.put("cancelAmount", allocation.pgRefundAmount());
-
-                // PG 취소 호출
-                Map<String, Object> response = tossClient.cancel(payment.getPgPaymentKey(), cancelBody);
-                int statusCode = ((Number) response.getOrDefault("statusCode", 200)).intValue();
-
-                // PG 취소 응답 상태 확인
-                if (HttpStatus.valueOf(statusCode).isError()) {
-                    log.error("[CRITICAL][취소 오류] PG 취소 실패: status={}, body={}. 관리자 확인 필요! paymentUuid={}",
-                            statusCode, response, payment.getUuid());
-                    // 최종 실패 시 ROLLBACK_FAILED 전이로 관리 포인트 격리
-                    handleFailure(payment, originStatus, originAmountPg, originDeposit,
-                            "PG_CANCEL_FAILED: " + response.get("message"));
-                    PaymentFailureCode failureCode = PaymentFailureCode.REFUND_PG_CANCEL_FAILED; // 환불 PG 취소 실패
-                    boolean retryable = isRetryableStatus(statusCode);
-                    // 환불 실패 이벤트 발행 (보상/운영 추적)
-                    publishRefundFailed(payment, allocation, request, failureCode, retryable,
-                            buildFailureReason(failureCode, String.valueOf(response.get("message"))));
-                    throw new RuntimeException("TOSS_CANCEL_FAILED: " + response.get("message"));
-                }
-            } catch (Exception e) {
-                // 기타 사유 실패
+                response = tossClient.cancel(payment.getPgPaymentKey(), cancelBody);
+            } catch (RuntimeException e) {
                 log.error("[CRITICAL][취소 오류] PG 취소 중 예외 발생: {}. 관리자 확인 필요! paymentUuid={}",
                         e.getMessage(), payment.getUuid());
                 handleFailure(payment, originStatus, originAmountPg, originDeposit,
                         "PG_CANCEL_EXCEPTION: " + e.getMessage());
-                PaymentFailureCode failureCode = PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION; // 환불 PG 취소 예외
-                // 예외 기반 실패도 실패 이벤트 발행
-                publishRefundFailed(payment, allocation, request, failureCode, true,
-                        buildFailureReason(failureCode, e.getMessage()));
-                throw e;
+                publishRefundFailed(payment, allocation, request,
+                        PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, true,
+                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, e.getMessage()));
+                return PaymentRefundResponse.builder()
+                        .success(false).code("PG_CANCEL_EXCEPTION")
+                        .message("PG 취소 중 예외 발생: " + e.getMessage()).build();
+            }
+
+            // PG 취소 응답 상태 확인 (여기 도달 시 2xx or 4xx만 가능)
+            int statusCode = ((Number) response.getOrDefault("statusCode", 200)).intValue();
+            if (HttpStatus.valueOf(statusCode).isError()) {
+                log.error("[CRITICAL][취소 오류] PG 취소 실패: status={}, body={}. 관리자 확인 필요! paymentUuid={}",
+                        statusCode, response, payment.getUuid());
+                handleFailure(payment, originStatus, originAmountPg, originDeposit,
+                        "PG_CANCEL_FAILED: " + response.get("message"));
+                publishRefundFailed(payment, allocation, request,
+                        PaymentFailureCode.REFUND_PG_CANCEL_FAILED, false,
+                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_FAILED,
+                                String.valueOf(response.get("message"))));
+                return PaymentRefundResponse.builder()
+                        .success(false).code("PG_CANCEL_FAILED")
+                        .message("PG 취소 실패: " + response.get("message")).build();
             }
         }
 
-        // 7. 예치금 복구 처리 (PG 성공 후)
+        // 8. 예치금 복구 처리 (PG 성공 후)
         // PG 취소 성공 또는 예치금 단독 환불 시 실행
         if (allocation.depositRefundAmount() > 0) {
             increaseDepositUseCase.increase(
@@ -120,29 +134,29 @@ public class RefundPaymentUseCase {
                     null);
         }
 
-        // 8. Refund 엔티티 및 이력 생성
+        // 9. Refund 엔티티 및 이력 생성 (idempotencyKey 포함)
         // 환불 스냅샷 영속화
         // 환불 스냅샷 생성
-        Refund refund = payment.createRefund(request.getRefundAmount(), allocation.depositRefundAmount());
+        Refund refund = payment.createRefund(request.getRefundAmount(), allocation.depositRefundAmount(), idempotencyKey);
         // 환불 완료 상태로 마킹
         refund.complete();
         // 환불 이력 저장
         support.saveRefund(refund);
 
-        // 9. 결제 상태 및 잔액 업데이트
+        // 10. 결제 상태 및 잔액 업데이트
         // 환불 결과를 결제 상태/금액에 반영
         payment.partialCancel(request.getRefundAmount(), allocation.pgRefundAmount(), allocation.depositRefundAmount());
         // 결제 상태 저장
         support.savePayment(payment);
 
-        // 10. 이력 생성
+        // 11. 이력 생성
         // 결제 상태 히스토리 생성
         PaymentHistoryType historyType = (payment.getPaymentStatus() == PaymentStatus.CANCELED)
                 ? PaymentHistoryType.FULL_REFUND_SUCCESS
                 : PaymentHistoryType.PARTIAL_REFUND_SUCCESS;
         support.createHistory(payment, historyType, originStatus, originAmountPg, originDeposit);
 
-        // 11. 이벤트 발행
+        // 12. 이벤트 발행
         // 후속 처리 리스너용 이벤트 발행 (주문 취소 확정 등 환불 완료 후속 작업)
         eventPublisher.publish(new RefundCompletedEvent(
                 refund.getUuid(),
@@ -196,10 +210,6 @@ public class RefundPaymentUseCase {
                 retryable,
                 reason,
                 LocalDateTime.now()));
-    }
-
-    private boolean isRetryableStatus(int statusCode) {
-        return statusCode >= 500;
     }
 
     private String buildFailureReason(PaymentFailureCode code, String detail) {

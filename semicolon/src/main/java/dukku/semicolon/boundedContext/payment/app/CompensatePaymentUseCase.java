@@ -53,6 +53,13 @@ public class CompensatePaymentUseCase {
             return;
         }
 
+        // 멱등성 검증 - 이미 보상 처리된 결제인지 확인 (PAYMENT_FAILED 이력 존재 여부)
+        if (support.hasHistoryType(payment.getId(), PaymentHistoryType.PAYMENT_FAILED)) {
+            log.info("[보상 멱등성] 이미 보상 처리된 결제입니다. paymentUuid={}, orderUuid={}",
+                    payment.getUuid(), orderUuid);
+            return;
+        }
+
         log.info("[보상 트랜잭션 시작] paymentUuid={}, orderUuid={}, reason={}", payment.getUuid(), orderUuid, reason);
 
         PaymentStatus originStatus = payment.getPaymentStatus();
@@ -86,7 +93,7 @@ public class CompensatePaymentUseCase {
                     true,
                     buildFailureReason(failureCode, e.getMessage()),
                     LocalDateTime.now()));
-            throw e;
+            // throw 제거: @Transactional 커밋 보장 → 실패 상태 영속화 + AFTER_COMMIT 이벤트 발행
         } finally {
             // 보상 경로 진입 시 주문 롤백 트리거로 실패 이벤트 발행
             eventPublisher.publish(new PaymentFailEvent(
