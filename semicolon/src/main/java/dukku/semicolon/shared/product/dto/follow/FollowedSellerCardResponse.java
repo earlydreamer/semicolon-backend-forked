@@ -9,6 +9,6 @@ public record FollowedSellerCardResponse(
         String intro,
         BigDecimal averageRating,
         int reviewCount,
-        int followerCount,
+        long followerCount,
         boolean followed
 ) {}
