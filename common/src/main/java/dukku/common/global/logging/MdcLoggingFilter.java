@@ -73,11 +73,13 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     }
 
     private String generateTraceId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        // 32 hex (W3C Trace Context / OpenTelemetry 표준 호환)
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     private String generateSpanId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        // 16 hex (W3C Span ID 표준 호환)
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     }
 
     private String getClientIp(HttpServletRequest request) {
