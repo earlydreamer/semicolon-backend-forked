@@ -6,7 +6,9 @@ import dukku.semicolon.boundedContext.coupon.entity.CouponUser;
 import dukku.semicolon.boundedContext.coupon.entity.type.IssueResult;
 import dukku.semicolon.boundedContext.coupon.out.CouponRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponUserRepository;
+import dukku.semicolon.shared.coupon.exception.CouponAlreadyExistsException;
 import dukku.semicolon.shared.coupon.exception.CouponNotFoundException;
+import dukku.semicolon.shared.coupon.exception.CouponSoldOutException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,13 +30,13 @@ public class IssueCouponUseCase {
         try {
             // 1. 중복 체크
             if (couponUserRepository.existsByUserUuidAndCoupon_Uuid(userUuid, couponUuid)) {
-                throw new ConflictException("이미 쿠폰을 발급받은 유저");
+                throw new CouponAlreadyExistsException();
             }
 
             // 2. DB 원자적 업데이트 (여기서 100개까지 순차적으로 성공함)
             int result = couponRepository.decreaseQuantity(couponUuid);
             if (result == 0) {
-                throw new ConflictException("쿠폰 수량 소진");
+                throw new CouponSoldOutException();
             }
 
             // 3. Coupon 엔티티는 단순 정보 참조용으로만 사용 (수정 X)

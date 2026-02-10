@@ -47,6 +47,6 @@ public class AdminCouponController {
     // 전체 쿠폰 리스트 (관리자)
     @GetMapping("/coupons")
     public List<CouponResponse> getAllCoupons() {
-        return couponQueryFacade.getAllCoupons();
+        return couponQueryFacade.findAllCoupons();
     }
 }
