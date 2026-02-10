@@ -11,7 +11,7 @@ import java.util.UUID;
  * <p>
  * 결제 플로우 실패 시 발행되며, 다른 BC가 롤백 처리할 수 있도록 알린다.
  */
-public record PaymentFailEvent(
+public record PaymentFailedEvent(
         UUID orderUuid,
         UUID paymentUuid,
         UUID userUuid,
@@ -21,12 +21,12 @@ public record PaymentFailEvent(
         String reason,
         LocalDateTime occurredAt) {
 
-    public PaymentFailEvent(UUID orderUuid, UUID paymentUuid, String reason) {
+    public PaymentFailedEvent(UUID orderUuid, UUID paymentUuid, String reason) {
         this(orderUuid, paymentUuid, null, PaymentFailureStage.SYSTEM, PaymentFailureCode.UNKNOWN, true, reason,
                 LocalDateTime.now());
     }
 
-    public PaymentFailEvent {
+    public PaymentFailedEvent {
         if (occurredAt == null) {
             occurredAt = LocalDateTime.now();
         }

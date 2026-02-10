@@ -2,7 +2,7 @@ package dukku.semicolon.boundedContext.payment.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.payment.event.PaymentCompensationFailedEvent;
-import dukku.common.shared.payment.event.PaymentFailEvent;
+import dukku.common.shared.payment.event.PaymentFailedEvent;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import dukku.common.shared.payment.type.PaymentFailureStage;
 import dukku.common.shared.payment.type.PaymentHistoryType;
@@ -96,7 +96,7 @@ public class CompensatePaymentUseCase {
             // throw 제거: @Transactional 커밋 보장 → 실패 상태 영속화 + AFTER_COMMIT 이벤트 발행
         } finally {
             // 보상 경로 진입 시 주문 롤백 트리거로 실패 이벤트 발행
-            eventPublisher.publish(new PaymentFailEvent(
+            eventPublisher.publish(new PaymentFailedEvent(
                     orderUuid,
                     payment.getUuid(),
                     payment.getUserUuid(),

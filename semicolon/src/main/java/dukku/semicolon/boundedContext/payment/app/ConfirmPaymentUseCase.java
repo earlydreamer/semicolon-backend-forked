@@ -2,7 +2,7 @@ package dukku.semicolon.boundedContext.payment.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.semicolon.boundedContext.payment.entity.Payment;
-import dukku.common.shared.payment.event.PaymentFailEvent;
+import dukku.common.shared.payment.event.PaymentFailedEvent;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import dukku.common.shared.payment.type.PaymentFailureStage;
@@ -77,7 +77,6 @@ public class ConfirmPaymentUseCase {
             return payment.toPaymentConfirmResponse(false, "검증 실패: " + e.getMessage());
         }
 
-
         // 6. 실제 토스페이먼츠 승인 요청 API 호출
         Map<String, Object> tossRequestBody = new HashMap<>();
         tossRequestBody.put("paymentKey", request.getToss().getPaymentKey());
@@ -101,7 +100,6 @@ public class ConfirmPaymentUseCase {
 
         int statusCode = ((Number) tossResponse.getOrDefault("statusCode", 200)).intValue();
 
-        
         if (HttpStatus.valueOf(statusCode).isError()) {
             log.error("[Toss Confirm API Error] status={}, body={}", statusCode, tossResponse);
             boolean retryable = isRetryableStatus(statusCode);
@@ -115,9 +113,8 @@ public class ConfirmPaymentUseCase {
                     retryable,
                     buildFailureReason(PaymentFailureCode.PG_CONFIRM_FAILED,
                             String.valueOf(tossResponse.get("message"))));
-            return payment.toPaymentConfirmResponse(false, "PG ?? ??: " + tossResponse.get("message"));
+            return payment.toPaymentConfirmResponse(false, "PG 승인 실패: " + tossResponse.get("message"));
         }
-
 
         // 7. 시스템 내 결제 승인 (상태 변경 및 결제키 저장)
         // 승인 상태 반영 (PG paymentKey 저장)
@@ -179,7 +176,7 @@ public class ConfirmPaymentUseCase {
         payment.fail();
         support.savePayment(payment);
         support.createHistory(payment, PaymentHistoryType.PAYMENT_FAILED, originStatus, originAmountPg, originDeposit);
-        eventPublisher.publish(new PaymentFailEvent(
+        eventPublisher.publish(new PaymentFailedEvent(
                 payment.getOrderUuid(),
                 payment.getUuid(),
                 payment.getUserUuid(),
