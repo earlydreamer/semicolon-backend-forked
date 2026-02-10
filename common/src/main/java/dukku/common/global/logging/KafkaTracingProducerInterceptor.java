@@ -21,14 +21,17 @@ public class KafkaTracingProducerInterceptor implements ProducerInterceptor<Stri
     @Override
     public ProducerRecord<String, Object> onSend(ProducerRecord<String, Object> record) {
         // MDC에서 TraceId 추출하여 Kafka 헤더에 주입
+        // 재시도 시 헤더 중복 방지를 위해 remove 후 add
         String traceId = MDC.get(MdcLoggingFilter.TRACE_ID);
         if (traceId != null) {
+            record.headers().remove(TRACE_ID_HEADER);
             record.headers().add(TRACE_ID_HEADER, traceId.getBytes(StandardCharsets.UTF_8));
             log.debug("Injected TraceId into Kafka header: {}", traceId);
         }
 
         String spanId = MDC.get(MdcLoggingFilter.SPAN_ID);
         if (spanId != null) {
+            record.headers().remove(SPAN_ID_HEADER);
             record.headers().add(SPAN_ID_HEADER, spanId.getBytes(StandardCharsets.UTF_8));
         }
 
