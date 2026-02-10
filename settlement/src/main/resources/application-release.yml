@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+jwt:
+  access:
+    secret:
+      key: ${JWT_ACCESS_SECRET}
+  refresh:
+    secret:
+      key: ${JWT_REFRESH_SECRET}
+
+crypto:
+  key: ${CRYPTO_KEY}
+
+slack:
+  webhook:
+    url: ${SLACK_WEBHOOK_URL}
+
+custom:
+  global:
+    internalBackUrl: http://localhost:${server.port:8080}
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}
