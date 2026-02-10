@@ -21,7 +21,7 @@ import dukku.semicolon.boundedContext.user.entity.type.Role;
 @Component
 public class AuthTokenIssuer {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 30L;            // 30분
+    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;            // 5분
     private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;  // 7일
     private static final String CLAIM_ROLE = "ROLE";
 
@@ -85,19 +85,30 @@ public class AuthTokenIssuer {
         }
     }
 
-    // === 3. 토큰 재발급 로직 ===
-    public String refresh(String refreshToken) {
-        // 1. Refresh Token 유효성 검사
-        if (!validateRefreshToken(refreshToken)) {
+    public Claims parseRefreshClaims(String refreshToken) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(refreshKey)
+                    .build()
+                    .parseSignedClaims(refreshToken)
+                    .getPayload();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("Refresh Token 검증 실패: {}", e.getMessage());
             throw new UnauthorizedException("유효하지 않은 Refresh Token입니다.");
         }
+    }
 
-        // 2. 정보 추출 (Refresh Key 사용)
-        Claims claims = Jwts.parser()
-                .verifyWith(refreshKey)
-                .build()
-                .parseSignedClaims(refreshToken)
-                .getPayload();
+    public long getRefreshTokenTtlMillis(String refreshToken) {
+        Claims claims = parseRefreshClaims(refreshToken);
+        Date expiration = claims.getExpiration();
+        long ttl = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(0, ttl);
+    }
+
+    // === 3. 토큰 재발급 로직 ===
+    public String refresh(String refreshToken) {
+        // 1. 정보 추출 (Refresh Key 사용)
+        Claims claims = parseRefreshClaims(refreshToken);
 
         UUID userUuid = UUID.fromString(claims.getSubject());
         String role = claims.get(CLAIM_ROLE, String.class);
