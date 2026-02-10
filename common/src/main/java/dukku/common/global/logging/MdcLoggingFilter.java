@@ -81,23 +81,68 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
+        // 1. X-Forwarded-For 확인 (가장 일반적, 여러 IP 가능 → 첫 번째만 추출)
+        String ip = extractFirstIp(request.getHeader("X-Forwarded-For"));
+        if (isValidIp(ip)) {
+            return ip;
         }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
+
+        // 2. Proxy-Client-IP 확인 (Apache, 단일 IP만 존재)
+        ip = request.getHeader("Proxy-Client-IP");
+        if (isValidIp(ip)) {
+            return ip;
         }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
+
+        // 3. WL-Proxy-Client-IP 확인 (WebLogic, 단일 IP만 존재)
+        ip = request.getHeader("WL-Proxy-Client-IP");
+        if (isValidIp(ip)) {
+            return ip;
         }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+
+        // 4. HTTP_CLIENT_IP 확인 (단일 IP만 존재)
+        ip = request.getHeader("HTTP_CLIENT_IP");
+        if (isValidIp(ip)) {
+            return ip;
         }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
+
+        // 5. HTTP_X_FORWARDED_FOR 확인 (여러 IP 가능 → 첫 번째만 추출)
+        ip = extractFirstIp(request.getHeader("HTTP_X_FORWARDED_FOR"));
+        if (isValidIp(ip)) {
+            return ip;
         }
-        return ip;
+
+        // 6. RemoteAddr 사용 (프록시 없을 때)
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * X-Forwarded-For 헤더에서 첫 번째 IP만 추출
+     *
+     * 예시:
+     *   "203.0.113.1, 198.51.100.2" → "203.0.113.1"
+     *   "203.0.113.1" → "203.0.113.1"
+     *
+     * @param header X-Forwarded-For 헤더 값
+     * @return 첫 번째 IP 주소 또는 null
+     */
+    private String extractFirstIp(String header) {
+        if (header == null || header.isEmpty()) {
+            return null;
+        }
+
+        // 쉼표로 분리하여 첫 번째 IP만 추출
+        String[] ips = header.split(",");
+        String firstIp = ips[0].trim();
+
+        // 빈 문자열 체크
+        return firstIp.isEmpty() ? null : firstIp;
+    }
+
+
+    private boolean isValidIp(String ip) {
+        return ip != null
+            && !ip.isEmpty()
+            && !"unknown".equalsIgnoreCase(ip);
     }
 
     @Override
