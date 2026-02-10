@@ -97,7 +97,9 @@ public class DeductDepositForPaymentUseCase {
         }
 
         // 결제 보상 트리거용 paymentUuid 전파
-        eventPublisher.publish(new DepositDeductionFailedEvent(
+        // setRollbackOnly()로 트랜잭션이 롤백 마킹되었으므로 afterCommit()이 호출되지 않음
+        // publishAfterCompletion()을 사용하여 롤백 완료 후에도 Kafka 발행을 보장한다
+        eventPublisher.publishAfterCompletion(new DepositDeductionFailedEvent(
                 orderUuid,
                 paymentUuid,
                 userUuid,

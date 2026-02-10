@@ -75,6 +75,7 @@ spring:
       auto-offset-reset: earliest
       properties:
         interceptor.classes: dukku.common.global.logging.KafkaTracingConsumerInterceptor
+        spring.json.trusted.packages: "dukku.common.shared.*"
 
   data:
     redis:
