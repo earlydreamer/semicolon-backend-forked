@@ -1,31 +1,45 @@
 spring:
   application:
     name: semicolon
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_service}?sslmode=${DB_SSLMODE:disable}
     driver-class-name: org.postgresql.Driver
+
     hikari:
-      minimum-idle: 5
-      maximum-pool-size: 30
+      # 🔑 Tomcat max-threads 대비 1:1 이하 유지
+      minimum-idle: 20
+      maximum-pool-size: 200
+
+      # 커넥션을 오래 붙잡지 않도록
       idle-timeout: 30000
-      connection-timeout: 30000
       max-lifetime: 1800000
+
+      # 부하 시 빠른 실패 (스레드 고착 방지)
+      connection-timeout: 3000
+
+      validation-timeout: 2000
+      leak-detection-threshold: 2000
 
   jpa:
     open-in-view: false
     properties:
       hibernate:
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
+        show_sql: false              # 부하 테스트 시 반드시 false
+        format_sql: false
+        use_sql_comments: false
+
         hbm2ddl:
-          auto: create
+          auto: update
+
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 100
 
+        jdbc:
+          time_zone: Asia/Seoul
 
   jackson:
     time-zone: Asia/Seoul
@@ -36,18 +50,17 @@ spring:
     jdbc:
       initialize-schema: always
     job:
-      enabled: false # 애플리케이션 시작 시 자동 실행 방지
+      enabled: false
 
   elasticsearch:
     uris: http://localhost:9200
-    #Uris: http://team05-elasticsearch:9200  # ES 서버 주소
     socket-timeout: 30s
     connection-timeout: 5s
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:} # 실제 이메일 인증
+    username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
@@ -75,17 +88,6 @@ management:
     tags:
       application: ${spring.application.name}
 
-batch:
-  settlement:
-    chunk-size: 100
-    fee-rate: 0.05
-    skip-limit: 10
-    retry-limit: 3
-    page-size: 100
-    scheduler:
-      enabled: true
-      cron: "0 0 2 1 * *" # 매월 1일 오전 2시 실행
-
 springdoc:
   api-docs:
     path: /api-docs
@@ -95,8 +97,28 @@ springdoc:
     operations-sorter: method
 
 server:
+  port: 8080
   forward-headers-strategy: framework
 
+  tomcat:
+    threads:
+      min-spare: 50
+      max: 300        # ⚠️ 1000 VU ≠ 1000 threads
+    accept-count: 500 # 대기 큐 확장 (빠른 실패 방지)
+
+    max-connections: 1000
+    connection-timeout: 2000
+
+    keep-alive-timeout: 15000
+    max-keep-alive-requests: 100
+
+    accesslog:
+      enabled: true
+      pattern: "%h %l %u %t \"%r\" %s %b %D"
+
+# =========================================================
+# Redis / Custom / Batch
+# =========================================================
 redis:
   product:
     view:
@@ -110,6 +132,7 @@ custom:
       base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
+
   user:
     withdrawal:
       restore-days: 30
@@ -117,7 +140,17 @@ custom:
       purge-cron: "0 0 3 * * *"
       mask-domain: "withdrawn.invalid"
 
-# 시스템 예치금 계정 설정
 system:
   admin-deposit:
     password: ${SYSTEM_DEPOSIT_PASSWORD}
+
+batch:
+  settlement:
+    chunk-size: 100
+    fee-rate: 0.05
+    skip-limit: 10
+    retry-limit: 3
+    page-size: 100
+    scheduler:
+      enabled: true
+      cron: "0 0 2 1 * *" # 매월 1일 오전 2시 실행

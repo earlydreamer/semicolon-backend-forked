@@ -1,10 +1,12 @@
 package dukku.semicolon;
 
-import org.springframework.resilience.annotation.EnableResilientMethods;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.resilience.annotation.EnableResilientMethods;
+import org.springframework.scheduling.annotation.EnableAsync;
 
+@EnableAsync
 @EnableResilientMethods
 @EnableJpaAuditing
 @SpringBootApplication(scanBasePackages = {
@@ -13,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 })
 public class Application {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 

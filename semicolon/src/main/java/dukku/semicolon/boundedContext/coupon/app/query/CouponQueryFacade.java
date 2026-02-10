@@ -15,18 +15,18 @@ public class CouponQueryFacade {
     private final CouponQueryService couponQueryService;
 
     // 사용자에게 발급 가능한 쿠폰 리스트
-    public List<CouponResponse> getIssuableCoupons(UUID userUuid) {
-        return couponQueryService.getIssuableCoupons(userUuid);
+    public List<CouponResponse> findIssuableCoupons(UUID userUuid) {
+        return couponQueryService.findIssuableCoupons(userUuid);
     }
 
     // 사용자가 보유한 쿠폰 리스트
-    public List<CouponResponse> getMyCoupons(UUID userUuid) {
-        return couponQueryService.getMyCoupons(userUuid);
+    public List<CouponResponse> findMyCoupons(UUID userUuid) {
+        return couponQueryService.findMyCoupons(userUuid);
     }
 
     // 관리자용 전체 쿠폰 리스트
-    public List<CouponResponse> getAllCoupons() {
-        return couponQueryService.getAllCoupons();
+    public List<CouponResponse> findAllCoupons() {
+        return couponQueryService.findAllCoupons();
     }
 }
 

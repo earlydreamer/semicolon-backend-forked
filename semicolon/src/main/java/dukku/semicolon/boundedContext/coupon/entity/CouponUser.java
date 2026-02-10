@@ -40,7 +40,19 @@ public class CouponUser {
 
     private LocalDateTime usedAt;
 
+    private LocalDateTime expiredAt;
+
+    public static CouponUser create(UUID userUuid, Coupon coupon) {
+        CouponUser cu = new CouponUser();
+        cu.userUuid = userUuid;
+        cu.coupon = coupon;
+        cu.status = CouponUserStatus.AVAILABLE;
+        cu.issuedAt = LocalDateTime.now();
+        return cu;
+    }
+
     /* 발급 */
+    // 시나리오 2에서는 coupon.issue()를 호출하지 않습니다.
     public static CouponUser issue(UUID userUuid, Coupon coupon) {
         coupon.issue(); // 쿠폰 수량 차감
 
@@ -65,5 +77,7 @@ public class CouponUser {
     public void expire() {
         if (status == CouponUserStatus.USED) return;
         this.status = CouponUserStatus.EXPIRED;
+
+        this.expiredAt = LocalDateTime.now();
     }
 }

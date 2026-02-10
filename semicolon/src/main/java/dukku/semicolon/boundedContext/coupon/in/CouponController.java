@@ -34,13 +34,13 @@ public class CouponController {
 
     // 발급 가능한 쿠폰 리스트 (유저)
     @GetMapping("/issuable")
-    public List<CouponResponse> getIssuableCoupons() {
-        return couponQueryFacade.getIssuableCoupons(UserUtil.getUserId());
+    public List<CouponResponse> findIssuableCoupons() {
+        return couponQueryFacade.findIssuableCoupons(UserUtil.getUserId());
     }
 
     // 내가 보유한 쿠폰 리스트 (유저)
     @GetMapping("/me")
-    public List<CouponResponse> getMyCoupons() {
-        return couponQueryFacade.getMyCoupons(UserUtil.getUserId());
+    public List<CouponResponse> findMyCoupons() {
+        return couponQueryFacade.findMyCoupons(UserUtil.getUserId());
     }
 }
