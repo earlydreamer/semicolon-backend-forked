@@ -31,12 +31,13 @@ class DepositEventListenerTest {
     void handlePaymentSuccessCreditsSystemDeposit() {
         UUID userUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
+        UUID paymentUuid = UUID.randomUUID();
         List<PaymentSuccessEvent.ItemDepositUsage> usages = List.of(
                 new PaymentSuccessEvent.ItemDepositUsage(UUID.randomUUID(), 5000L)
         );
 
         PaymentSuccessEvent event = new PaymentSuccessEvent(
-                UUID.randomUUID(),
+                paymentUuid,
                 UUID.randomUUID(),
                 orderUuid,
                 10000L,
@@ -49,7 +50,7 @@ class DepositEventListenerTest {
 
         depositEventListener.handle(event);
 
-        verify(depositFacade).deductDepositForPayment(userUuid, 7000L, orderUuid, usages);
+        verify(depositFacade).deductDepositForPayment(userUuid, 7000L, orderUuid, paymentUuid, usages);
         verify(depositFacade).increaseSystemDepositForPg(orderUuid, 3000L);
     }
 
@@ -58,10 +59,11 @@ class DepositEventListenerTest {
     void handlePaymentSuccessSkipsWhenPgAmountZero() {
         UUID userUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
+        UUID paymentUuid = UUID.randomUUID();
         List<PaymentSuccessEvent.ItemDepositUsage> usages = List.of();
 
         PaymentSuccessEvent event = new PaymentSuccessEvent(
-                UUID.randomUUID(),
+                paymentUuid,
                 UUID.randomUUID(),
                 orderUuid,
                 7000L,
@@ -74,7 +76,7 @@ class DepositEventListenerTest {
 
         depositEventListener.handle(event);
 
-        verify(depositFacade).deductDepositForPayment(userUuid, 7000L, orderUuid, usages);
+        verify(depositFacade).deductDepositForPayment(userUuid, 7000L, orderUuid, paymentUuid, usages);
         verify(depositFacade).increaseSystemDepositForPg(orderUuid, 0L);
     }
 }

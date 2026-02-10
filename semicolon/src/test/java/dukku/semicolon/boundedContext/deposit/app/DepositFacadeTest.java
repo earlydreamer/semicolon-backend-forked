@@ -45,6 +45,7 @@ class DepositFacadeTest {
         // Given
         UUID userUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
+        UUID paymentUuid = UUID.randomUUID();
         UUID itemUuid1 = UUID.randomUUID();
         UUID itemUuid2 = UUID.randomUUID();
 
@@ -53,9 +54,9 @@ class DepositFacadeTest {
                 new PaymentSuccessEvent.ItemDepositUsage(itemUuid2, 3000L));
 
         // When
-        depositFacade.deductDepositForPayment(userUuid, 8000L, orderUuid, usages);
+        depositFacade.deductDepositForPayment(userUuid, 8000L, orderUuid, paymentUuid, usages);
 
         // Then: UseCase가 호출되었는지 검증
-        verify(deductDepositForPaymentUseCase).execute(userUuid, 8000L, orderUuid, usages);
+        verify(deductDepositForPaymentUseCase).execute(userUuid, 8000L, orderUuid, paymentUuid, usages);
     }
 }

@@ -59,6 +59,7 @@ class DeductDepositForPaymentIntegrationTest extends IntegrationTestSupport {
                 try {
                         UUID userUuid = UUID.randomUUID();
                         UUID orderUuid = UUID.randomUUID();
+                        UUID paymentUuid = UUID.randomUUID();
                         UUID itemUuid1 = UUID.randomUUID();
                         UUID itemUuid2 = UUID.randomUUID();
 
@@ -73,7 +74,7 @@ class DeductDepositForPaymentIntegrationTest extends IntegrationTestSupport {
                                         .map(Deposit::getBalance)
                                         .orElse(0L);
 
-                        deductDepositForPaymentUseCase.execute(userUuid, 8000L, orderUuid, usages);
+                        deductDepositForPaymentUseCase.execute(userUuid, 8000L, orderUuid, paymentUuid, usages);
 
                         Deposit userDeposit = depositRepository.findByUserUuid(userUuid).orElseThrow();
                         Deposit systemDeposit = depositRepository
