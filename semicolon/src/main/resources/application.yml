@@ -10,19 +10,16 @@ spring:
     driver-class-name: org.postgresql.Driver
 
     hikari:
-      # 🔑 Tomcat max-threads 대비 1:1 이하 유지
-      minimum-idle: 20
-      maximum-pool-size: 200
-
-      # 커넥션을 오래 붙잡지 않도록
-      idle-timeout: 30000
-      max-lifetime: 1800000
-
-      # 부하 시 빠른 실패 (스레드 고착 방지)
-      connection-timeout: 3000
-
-      validation-timeout: 2000
-      leak-detection-threshold: 2000
+      maximum-pool-size: 100 # 풀에서 최대 커넥션 수 (기본값: 10)
+      minimum-idle: 100 # 최소 유휴 커넥션 수 (기본값: 10)
+      idle-timeout: 600000 # 유휴 커넥션을 풀에서 제거하기까지의 시간 (기본값: 600,000ms = 10분)
+      max-lifetime: 1800000 # 커넥션이 풀에서 제거되기 전 최대 사용 가능 시간 (기본값: 1,800,000ms = 30분)
+      connection-timeout: 30000 # 풀에서 커넥션을 가져오기 위한 최대 대기 시간 (기본값: 30,000ms = 30초)
+      validation-timeout: 5000 # 커넥션 유효성을 검사하기 위한 최대 대기 시간 (기본값: 5,000ms = 5초)
+      initialization-fail-timeout: 1 # 초기화 실패 시 최대 대기 시간 (기본값: 1ms, 0은 비활성화)
+      read-only: false # 풀에서 커넥션을 read-only 모드로 가져올지 여부 (기본값: false)
+      leak-detection-threshold: 0 # 커넥션 누수를 감지하기 위한 임계값 (기본값: 0ms = 비활성화)
+      registerMbeans: false # JMX MBean 등록 여부 (기본값: false)
 
   jpa:
     open-in-view: false
@@ -97,24 +94,18 @@ springdoc:
     operations-sorter: method
 
 server:
-  port: 8080
-  forward-headers-strategy: framework
-
+  shutdown: graceful # 애플리케이션 종료 시 요청을 정상적으로 처리하고 종료하는지 설정 (기본값: graceful)
   tomcat:
     threads:
-      min-spare: 50
-      max: 300        # ⚠️ 1000 VU ≠ 1000 threads
-    accept-count: 500 # 대기 큐 확장 (빠른 실패 방지)
-
-    max-connections: 1000
-    connection-timeout: 2000
-
-    keep-alive-timeout: 15000
-    max-keep-alive-requests: 100
-
-    accesslog:
-      enabled: true
-      pattern: "%h %l %u %t \"%r\" %s %b %D"
+      max: 200 # 최대 워커 스레드 수. 요청 처리를 위해 사용할 최대 스레드 수 (기본값: 200)
+      min-spare: 10 # 최소 유휴 스레드 수. 준비 상태를 유지하는 최소 스레드 수 (기본값: 10)
+      max-queue-capacity: 2147483647 # 대기 큐의 최대 용량. 모든 스레드가 사용 중일 때 대기할 수 있는 요청 수 (기본값: Integer.MAX_VALUE)
+    max-connections: 8192 # 동시 연결의 최대 수. HTTP 커넥션에서 허용할 동시 연결 수 제한 (기본값: 8192)
+    accept-count: 100 # 최대 연결 대기 큐 크기. 허용된 스레드가 모두 사용 중일 때 추가 연결 요청을 대기시킬 수 있는 큐 크기 (기본값: 100)
+    connection-timeout: 60000 # 서버 소켓이 연결을 대기하는 최대 시간 (밀리초 단위, 기본값: 60000ms)
+    keep-alive-timeout: 30000 # Keep-Alive 커넥션이 유지되는 최대 시간 (밀리초 단위, 기본값: 30000ms)
+    max-http-header-size: 8192 # HTTP 요청 및 응답 헤더의 최대 크기 (바이트 단위, 기본값: 8192)
+    max-keep-alive-requests: 100 # 단일 Keep-Alive 연결에서 처리할 최대 요청 수 (기본값: 100)
 
 # =========================================================
 # Redis / Custom / Batch

@@ -25,8 +25,9 @@ import java.util.UUID;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@Profile("release")
 @Order(4)
-@Profile({"dev", "test"})
+//@Profile({"dev", "test"})
 public class SettlementInitData {
 
     private static final BigDecimal DEFAULT_FEE_RATE = new BigDecimal("0.05");
