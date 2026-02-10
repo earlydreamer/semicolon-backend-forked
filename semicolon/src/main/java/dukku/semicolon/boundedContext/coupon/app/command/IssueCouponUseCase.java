@@ -2,14 +2,13 @@ package dukku.semicolon.boundedContext.coupon.app.command;
 
 import dukku.common.global.exception.ConflictException;
 import dukku.semicolon.boundedContext.coupon.entity.Coupon;
-import dukku.semicolon.boundedContext.coupon.entity.CouponIssueLog;
 import dukku.semicolon.boundedContext.coupon.entity.CouponUser;
 import dukku.semicolon.boundedContext.coupon.entity.type.IssueResult;
-import dukku.semicolon.boundedContext.coupon.out.CouponIssueLogRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponRepository;
 import dukku.semicolon.boundedContext.coupon.out.CouponUserRepository;
 import dukku.semicolon.shared.coupon.exception.CouponAlreadyExistsException;
 import dukku.semicolon.shared.coupon.exception.CouponNotFoundException;
+import dukku.semicolon.shared.coupon.exception.CouponSoldOutException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,45 +20,37 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class IssueCouponUseCase {
-
     private final CouponRepository couponRepository;
     private final CouponUserRepository couponUserRepository;
-    private final CouponIssueLogRepository couponIssueLogRepository;
+    private final CouponIssueLogManager couponIssueLogManager;
 
     public void execute(UUID userUuid, UUID couponUuid) {
         LocalDateTime requestedAt = LocalDateTime.now();
 
         try {
+            // 1. 중복 체크
             if (couponUserRepository.existsByUserUuidAndCoupon_Uuid(userUuid, couponUuid)) {
                 throw new CouponAlreadyExistsException();
             }
 
+            // 2. DB 원자적 업데이트 (여기서 100개까지 순차적으로 성공함)
+            int result = couponRepository.decreaseQuantity(couponUuid);
+            if (result == 0) {
+                throw new CouponSoldOutException();
+            }
+
+            // 3. Coupon 엔티티는 단순 정보 참조용으로만 사용 (수정 X)
             Coupon coupon = couponRepository.findByUuid(couponUuid)
                     .orElseThrow(CouponNotFoundException::new);
 
-            CouponUser couponUser = CouponUser.issue(userUuid, coupon);
+            // 4. 이력 저장 (내부에서 coupon.issue() 호출 금지)
+            CouponUser couponUser = CouponUser.create(userUuid, coupon);
             couponUserRepository.save(couponUser);
 
-            couponIssueLogRepository.save(
-                    CouponIssueLog.of(
-                            couponUuid,
-                            userUuid,
-                            IssueResult.SUCCESS,
-                            requestedAt
-                    )
-            );
+            couponIssueLogManager.record(couponUuid, userUuid, IssueResult.SUCCESS, requestedAt);
 
         } catch (ConflictException e) {
-
-            couponIssueLogRepository.save(
-                    CouponIssueLog.of(
-                            couponUuid,
-                            userUuid,
-                            mapResult(e),
-                            requestedAt
-                    )
-            );
-
+            couponIssueLogManager.record(couponUuid, userUuid, mapResult(e), requestedAt);
             throw e;
         }
     }
@@ -67,7 +58,6 @@ public class IssueCouponUseCase {
     private IssueResult mapResult(ConflictException e) {
         if (e.getMessage().contains("이미")) return IssueResult.DUPLICATE;
         if (e.getMessage().contains("소진")) return IssueResult.SOLD_OUT;
-        if (e.getMessage().contains("활성")) return IssueResult.INACTIVE;
         return IssueResult.ERROR;
     }
 }
