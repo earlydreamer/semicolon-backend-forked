@@ -18,4 +18,9 @@ public interface RefundRepository extends JpaRepository<Refund, Integer> {
     List<Refund> findByPaymentId(int paymentId);
 
     List<Refund> findByRefundStatus(RefundStatus status);
+
+    /**
+     * 멱등성 키로 환불 조회 (중복 환불 방지용)
+     */
+    Optional<Refund> findByIdempotencyKey(String idempotencyKey);
 }

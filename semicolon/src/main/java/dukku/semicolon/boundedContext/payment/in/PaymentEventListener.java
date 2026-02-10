@@ -6,6 +6,7 @@ import dukku.semicolon.boundedContext.payment.app.PaymentFacade;
 import dukku.semicolon.boundedContext.payment.app.PaymentSupport;
 import dukku.semicolon.boundedContext.payment.entity.Payment;
 import dukku.semicolon.shared.payment.dto.PaymentRefundRequest;
+import dukku.semicolon.shared.payment.dto.PaymentRefundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -38,7 +39,8 @@ public class PaymentEventListener {
      * DepositDeductionFailedEvent 수신 시 이미 승인된 PG 결제를 취소하여 데이터 일관성을 유지함.
      */
     @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    // 차감 트랜잭션이 롤백된 이후에만 보상 취소를 시작해 부분 커밋 가능성을 차단한다.
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     public void handle(DepositDeductionFailedEvent event) {
         log.warn("[결제 보상 트랜잭션 시작] 예치금 차감 실패 감지: orderUuid={}, reason={}",
                 event.orderUuid(), event.reason());
@@ -53,7 +55,7 @@ public class PaymentEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handle(PaymentRollbackRequestEvent event) {
-        log.info("[결제 롤백] 주문 처리 실패로 인한 자동 환불 시작. orderUuid={}, 사유={}",
+        log.info("[결제 롤백] 주문 처리 실패로 인한 자동 환불 시작. orderUuid={}, reason={}",
                 event.orderUuid(), event.reason());
 
         // 해당 주문에 대한 완료된 결제 조회
@@ -67,9 +69,15 @@ public class PaymentEventListener {
                         .reason(event.reason())
                         .build();
 
-                // Idempotency Key는 내부 롤백이므로 랜덤 생성 혹은 Prefix 사용
-                paymentFacade.refundPayment(refundRequest, "rollback-" + payment.getUuid());
-                log.info("[결제 롤백] 환불 성공. paymentUuid={}", payment.getUuid());
+                // Idempotency Key는 내부 롤백이므로 Prefix 사용
+                PaymentRefundResponse response = paymentFacade.refundPayment(refundRequest,
+                        "rollback-" + payment.getUuid());
+                if (response.isSuccess()) {
+                    log.info("[결제 롤백] 환불 성공. paymentUuid={}", payment.getUuid());
+                } else {
+                    log.error("[결제 롤백] PG 환불 실패. 수동 조치 필요. paymentUuid={}, code={}, message={}",
+                            payment.getUuid(), response.getCode(), response.getMessage());
+                }
             } catch (Exception e) {
                 // 자동 롤백 프로세스 중 발생하는 모든 예외를 잡아서 로그를 남겨야 함.
                 // 여기서 예외를 놓치면 결제는 성공했는데 주문은 실패한 상태로 남을 수 있음 (데이터 불일치)

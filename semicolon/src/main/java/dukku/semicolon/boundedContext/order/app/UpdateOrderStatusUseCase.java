@@ -43,8 +43,14 @@ public class UpdateOrderStatusUseCase {
     public void failPayment(UUID orderUuid) {
         Order order = orderSupport.findOrderByUuid(orderUuid);
 
-        if (order.getStatus() != OrderStatus.PENDING) {
+        if (order.getStatus() == OrderStatus.CANCELED) {
             log.info("유효하지 않은 결제 실패 요청입니다 (이미 처리됨). orderUuid={}, currentStatus={}",
+                    orderUuid, order.getStatus());
+            return;
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PAID) {
+            log.info("결제 실패 보상 대상이 아닙니다. orderUuid={}, currentStatus={}",
                     orderUuid, order.getStatus());
             return;
         }

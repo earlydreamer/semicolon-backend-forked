@@ -1,5 +1,7 @@
 package dukku.common.shared.deposit.event;
 
+import dukku.common.shared.deposit.type.DepositFailureCode;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -8,10 +10,26 @@ import java.util.UUID;
  * <p>
  * 예치금 잔액 부족 등의 이유로 차감이 실패했을 때 발행.
  * Payment BC는 이 이벤트를 수신하여 보상 트랜잭션(결제 취소)을 수행해야 함.
+ * paymentUuid는 결제 식별자(레거시 발행자는 null 가능).
+ * failureCode/retryable은 재시도 및 운영 판단에 사용.
  */
 public record DepositDeductionFailedEvent(
         UUID orderUuid,
+        UUID paymentUuid,
         UUID userUuid,
         Long amount,
-        String reason) {
+        DepositFailureCode failureCode,
+        boolean retryable,
+        String reason,
+        LocalDateTime occurredAt) {
+
+    public DepositDeductionFailedEvent(UUID orderUuid, UUID userUuid, Long amount, String reason) {
+        this(orderUuid, null, userUuid, amount, DepositFailureCode.UNKNOWN, true, reason, LocalDateTime.now());
+    }
+
+    public DepositDeductionFailedEvent {
+        if (occurredAt == null) {
+            occurredAt = LocalDateTime.now();
+        }
+    }
 }
