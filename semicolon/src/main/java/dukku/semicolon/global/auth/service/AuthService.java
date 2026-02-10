@@ -6,7 +6,7 @@ import dukku.semicolon.boundedContext.user.entity.User;
 import dukku.semicolon.boundedContext.user.out.UserRepository;
 import dukku.semicolon.global.auth.dto.AccessTokenResponse;
 import dukku.semicolon.global.auth.dto.LoginRequest;
-import dukku.semicolon.global.auth.dto.LoginTokens;
+import dukku.semicolon.global.auth.dto.TokenResponse;
 import dukku.semicolon.global.auth.jwt.AuthTokenIssuer;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -23,16 +23,16 @@ public class AuthService {
     private final AuthTokenIssuer authTokenIssuer;
     private final RefreshTokenStoreService refreshTokenStoreService;
 
-    public LoginTokens login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
-                .orElseThrow(() ->  new NotFoundException("議댁옱?섏? ?딅뒗 ?뚯썝?낅땲??"));
+                .orElseThrow(() ->  new NotFoundException("현재 존재하지 않는 회원입니다."));
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword()
         )) {
-            throw new UnauthorizedException("鍮꾨?踰덊샇媛 ?щ컮瑜댁? ?딆뒿?덈떎.");
+            throw new UnauthorizedException("비밀번호가 올바르지 않습니다.");
         }
 
         String accessToken = authTokenIssuer.createAccessToken(user.getUuid(), user.getRole().name());
@@ -41,7 +41,7 @@ public class AuthService {
         long ttlMillis = authTokenIssuer.getRefreshTokenTtlMillis(refreshToken);
         refreshTokenStoreService.save(user.getUuid(), refreshToken, java.time.Duration.ofMillis(ttlMillis));
 
-        return new LoginTokens(accessToken, refreshToken);
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     public AccessTokenResponse refresh(String refreshToken) {
@@ -70,7 +70,4 @@ public class AuthService {
         }
     }
 
-    public long getRefreshTokenTtlMillis(String refreshToken) {
-        return authTokenIssuer.getRefreshTokenTtlMillis(refreshToken);
-    }
 }

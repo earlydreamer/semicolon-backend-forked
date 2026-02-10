@@ -21,7 +21,7 @@ import dukku.semicolon.boundedContext.user.entity.type.Role;
 @Component
 public class AuthTokenIssuer {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;            // 30분
+    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;            // 5분
     private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;  // 7일
     private static final String CLAIM_ROLE = "ROLE";
 
