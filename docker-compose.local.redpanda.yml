@@ -1,0 +1,97 @@
+# Redpanda Kafka 로컬 개발 환경
+# MSA 로깅 시스템을 위한 Kafka 브로커 + Console UI
+# 사용법: docker-compose -f docker-compose.local.redpanda.yml up -d
+version: "3.8"
+
+services:
+  # ============================================
+  # Redpanda Kafka Broker
+  # ============================================
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: semicolon-redpanda
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+
+      #  내부/외부 리스너 분리
+      # - internal: Docker 컨테이너 간 통신용 (포트 9092)
+      # - external: 호스트(Spring Boot) 접근용 (포트 19092)
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+
+      #  광고 주소 설정
+      # - internal: 도커 내부 클라이언트는 redpanda:9092 사용
+      # - external: 호스트 클라이언트는 localhost:19092 사용
+      - --advertise-kafka-addr
+      - internal://redpanda:9092,external://localhost:19092
+
+      # (선택) 개발 환경 리소스 제한 - 필요시 주석 해제
+      # - --smp
+      # - "1"
+      # - --memory
+      # - "1G"
+      # - --overprovisioned
+      # - --reserved-memory
+      # - "0M"
+
+    ports:
+      - "19092:19092" # 호스트(Spring Boot) 접근용 - Kafka
+      - "9644:9644"   # Admin API (선택사항)
+
+    volumes:
+      # 데이터 영속성: 컨테이너 재시작 시에도 토픽/메시지 유지
+      - redpanda_data:/var/lib/redpanda/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health -X brokers=localhost:19092 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+    networks:
+      - semicolon-network
+
+  # ============================================
+  # Redpanda Console (Kafka UI)
+  # ============================================
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: semicolon-redpanda-console
+    ports:
+      - "8090:8080"  # 웹 UI 접속: http://localhost:8090
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:9092"]  # 도커 내부 네트워크 사용
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+
+    depends_on:
+      redpanda:
+        condition: service_healthy  #  Redpanda 준비 완료 후 시작
+
+    networks:
+      - semicolon-network
+
+# ============================================
+# 볼륨 (데이터 영속성)
+# ============================================
+volumes:
+  redpanda_data:
+    driver: local
+
+# ============================================
+# 네트워크 (기존 서비스와 연결)
+# ============================================
+networks:
+  semicolon-network:
+    driver: bridge

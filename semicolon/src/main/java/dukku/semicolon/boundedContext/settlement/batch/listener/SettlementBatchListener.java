@@ -3,6 +3,7 @@ package dukku.semicolon.boundedContext.settlement.batch.listener;
 import dukku.semicolon.boundedContext.settlement.batch.notification.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.listener.JobExecutionListener;
@@ -26,6 +27,8 @@ public class SettlementBatchListener implements JobExecutionListener, StepExecut
 
     @Override
     public void beforeJob(JobExecution jobExecution) {
+        MDC.put("traceId", "batch-" + jobExecution.getId());
+        MDC.put("jobName", jobExecution.getJobInstance().getJobName());
         log.info("========== 정산 배치 작업 시작 ==========");
         log.info("Job Name: {}", jobExecution.getJobInstance().getJobName());
         log.info("Job Parameters: {}", jobExecution.getJobParameters());
@@ -59,6 +62,7 @@ public class SettlementBatchListener implements JobExecutionListener, StepExecut
 
         // Slack 알림 전송
         slackNotificationService.sendJobCompletionNotification(jobExecution);
+        MDC.clear();
     }
 
     @Override

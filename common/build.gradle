@@ -31,10 +31,21 @@ dependencies {
     // 필요 시 root의 uuidCreatorVersion 등 활용 가능
     implementation "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}"
 
-    // === Spring Batch (임시)===
+    // === 5. Spring Batch ===
     api 'org.springframework.boot:spring-boot-starter-batch'
 
-    //
+    // === 6. Kafka ===
+    api 'org.springframework.kafka:spring-kafka'
+
+    // === 7. Logback Kafka Appender ===
+    api 'com.github.danielwegener:logback-kafka-appender:0.2.0-RC2'
+
+    // === 8. JSON 로그 포맷 ===
+    api 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // === 9. Micrometer Tracing (TraceId/SpanId 자동 주입) ===
+    api 'io.micrometer:micrometer-tracing-bridge-brave'
+    api 'io.micrometer:micrometer-tracing'
 }
 
 // === QueryDSL 설정 ===

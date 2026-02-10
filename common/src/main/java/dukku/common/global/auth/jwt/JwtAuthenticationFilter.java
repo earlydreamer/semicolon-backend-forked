@@ -1,12 +1,14 @@
 package dukku.common.global.auth.jwt;
 
 import dukku.common.global.auth.detail.CustomUserDetails;
+import dukku.common.global.logging.MdcLoggingFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,6 +44,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             );
 
             SecurityContextHolder.getContext().setAuthentication(auth);
+
+            // MDC에 userId 추가 (로그에 사용자 정보 포함)
+            // MdcLoggingFilter가 먼저 실행되어 MDC가 초기화된 상태이므로 안전
+            MDC.put(MdcLoggingFilter.USER_ID, userUuid.toString());
+            log.debug("User authenticated: {}", userUuid);
         }
 
         filterChain.doFilter(request, response);
