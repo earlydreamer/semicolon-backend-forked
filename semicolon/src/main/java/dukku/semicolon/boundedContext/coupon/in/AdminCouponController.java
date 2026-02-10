@@ -40,13 +40,13 @@ public class AdminCouponController {
     // 쿠폰 활성화 (관리자)
     @PostMapping("/coupons/{couponUuid}/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void activate(@PathVariable UUID couponUuid) {
+    public void activateCoupon(@PathVariable UUID couponUuid) {
         couponFacade.activateCoupon(couponUuid);
     }
 
     // 전체 쿠폰 리스트 (관리자)
     @GetMapping("/coupons")
-    public List<CouponResponse> getAllCoupons() {
+    public List<CouponResponse> findAllCoupons() {
         return couponQueryFacade.findAllCoupons();
     }
 }
