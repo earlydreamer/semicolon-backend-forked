@@ -1,16 +1,16 @@
-package dukku.semicolon.boundedContext.product.app.usecase.cart;
+package dukku.product.boundedContext.product.app.usecase.cart;
 
 import dukku.common.global.exception.BadRequestException;
 import dukku.common.global.exception.ConflictException;
 import dukku.common.global.exception.NotFoundException;
 import dukku.common.shared.product.type.AccountStatus;
 import dukku.common.shared.product.type.SaleStatus;
-import dukku.semicolon.boundedContext.product.entity.Cart;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductUser;
-import dukku.semicolon.boundedContext.product.out.CartRepository;
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
-import dukku.semicolon.boundedContext.product.out.ProductUserRepository;
+import dukku.product.boundedContext.product.entity.Cart;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductUser;
+import dukku.product.boundedContext.product.out.CartRepository;
+import dukku.product.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.out.ProductUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

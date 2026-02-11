@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.app.support;
+package dukku.product.boundedContext.product.app.support;
 
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductImage;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductImage;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 

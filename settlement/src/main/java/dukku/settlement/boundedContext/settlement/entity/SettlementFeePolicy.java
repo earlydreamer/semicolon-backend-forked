@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.settlement.entity;
+package dukku.settlement.boundedContext.settlement.entity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

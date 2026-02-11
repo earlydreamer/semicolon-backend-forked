@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
+import dukku.product.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
 import dukku.common.shared.product.event.ReviewStatsSyncedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

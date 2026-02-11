@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.product.boundedContext.product.app.cqrs;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.review.ReviewStatsSyncFacade;
+import dukku.product.boundedContext.product.app.cqrs.review.ReviewStatsSyncFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.settlement.entity;
+package dukku.settlement.boundedContext.settlement.entity;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

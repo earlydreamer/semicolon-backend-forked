@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.usecase.review;
+package dukku.product.boundedContext.product.app.usecase.review;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
-import dukku.semicolon.boundedContext.product.app.support.SellerReviewMapper;
-import dukku.semicolon.boundedContext.product.entity.SellerReview;
-import dukku.semicolon.boundedContext.product.out.SellerReviewRepository;
+import dukku.product.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
+import dukku.product.boundedContext.product.app.support.SellerReviewMapper;
+import dukku.product.boundedContext.product.entity.SellerReview;
+import dukku.product.boundedContext.product.out.SellerReviewRepository;
 import dukku.common.shared.product.dto.review.SellerReviewResponse;
 import dukku.common.shared.product.dto.review.SellerReviewUpdateRequest;
 import dukku.common.shared.product.exception.ReviewNotFoundException;

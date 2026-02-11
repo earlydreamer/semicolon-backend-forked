@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.facade;
+package dukku.product.boundedContext.product.app.facade;
 
-import dukku.semicolon.boundedContext.product.app.usecase.follow.FollowSellerUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.follow.GetFollowedSellersUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.follow.GetSellerFollowersUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.follow.UnfollowSellerUseCase;
+import dukku.product.boundedContext.product.app.usecase.follow.FollowSellerUseCase;
+import dukku.product.boundedContext.product.app.usecase.follow.GetFollowedSellersUseCase;
+import dukku.product.boundedContext.product.app.usecase.follow.GetSellerFollowersUseCase;
+import dukku.product.boundedContext.product.app.usecase.follow.UnfollowSellerUseCase;
 import dukku.common.shared.product.dto.follow.FollowActionResponse;
 import dukku.common.shared.product.dto.follow.FollowedSellerCardResponse;
 import dukku.common.shared.product.dto.follow.FollowerUserCardResponse;

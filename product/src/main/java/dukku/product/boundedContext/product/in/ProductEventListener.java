@@ -1,12 +1,12 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
 import dukku.common.shared.order.event.OrderProductSaleConfirmedEvent;
 import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
-import dukku.semicolon.boundedContext.product.app.cqrs.ProductSyncFacade;
-import dukku.semicolon.boundedContext.product.app.cqrs.SaveToElasticSearchUseCase;
-import dukku.semicolon.boundedContext.product.app.cqrs.SyncSearchProductStatsUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.product.ConfirmProductSaleUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.product.ReleaseProductReservationUseCase;
+import dukku.product.boundedContext.product.app.cqrs.ProductSyncFacade;
+import dukku.product.boundedContext.product.app.cqrs.SaveToElasticSearchUseCase;
+import dukku.product.boundedContext.product.app.cqrs.SyncSearchProductStatsUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.ConfirmProductSaleUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.ReleaseProductReservationUseCase;
 import dukku.common.shared.product.event.ProductCreatedEvent;
 import dukku.common.shared.product.event.ProductDeletedEvent;
 import dukku.common.shared.product.event.ProductStatsBulkUpdatedEvent;

@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.deposit.in;
+package dukku.deposit.boundedContext.deposit.in;
 
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
 import dukku.common.shared.settlement.event.SettlementDepositChargeRequestedEvent;
-import dukku.semicolon.boundedContext.deposit.app.DepositFacade;
+import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

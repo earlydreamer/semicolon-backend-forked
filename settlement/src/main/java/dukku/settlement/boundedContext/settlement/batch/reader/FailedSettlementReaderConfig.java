@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.settlement.batch.reader;
+package dukku.settlement.boundedContext.settlement.batch.reader;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
-import dukku.semicolon.boundedContext.settlement.batch.config.SettlementBatchProperties;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
+import dukku.settlement.boundedContext.settlement.batch.config.SettlementBatchProperties;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

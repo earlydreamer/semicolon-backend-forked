@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.product.app.usecase.like;
+package dukku.product.boundedContext.product.app.usecase.like;
 
-import dukku.semicolon.boundedContext.product.app.cqrs.ProductStatsRedisSupport;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductLike;
-import dukku.semicolon.boundedContext.product.out.ProductLikeRepository;
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.app.cqrs.ProductStatsRedisSupport;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductLike;
+import dukku.product.boundedContext.product.out.ProductLikeRepository;
+import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.common.shared.product.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.user.app.email;
+package dukku.user.boundedContext.user.app.email;
 
 import dukku.common.global.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;

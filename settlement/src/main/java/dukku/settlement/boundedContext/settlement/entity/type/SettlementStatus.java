@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.settlement.entity.type;
+package dukku.settlement.boundedContext.settlement.entity.type;
 
 import lombok.Getter;
 /**

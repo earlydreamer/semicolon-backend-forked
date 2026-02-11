@@ -1,16 +1,16 @@
-package dukku.semicolon.global;
+package dukku.product.global;
 
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.Category;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductSeller;
-import dukku.semicolon.boundedContext.product.entity.ProductUser;
-import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
-import dukku.semicolon.boundedContext.product.out.*;
-import dukku.semicolon.boundedContext.user.app.user.RegisterUserUseCase;
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.product.boundedContext.product.entity.Category;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductSeller;
+import dukku.product.boundedContext.product.entity.ProductUser;
+import dukku.product.boundedContext.product.entity.query.ProductDocument;
+import dukku.product.boundedContext.product.out.*;
+import dukku.product.boundedContext.user.app.user.RegisterUserUseCase;
+import dukku.product.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import lombok.RequiredArgsConstructor;

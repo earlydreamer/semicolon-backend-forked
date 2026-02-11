@@ -1,15 +1,15 @@
-package dukku.semicolon.boundedContext.payment.app;
+package dukku.payment.boundedContext.payment.app;
 
-import dukku.semicolon.boundedContext.payment.entity.Payment;
-import dukku.semicolon.boundedContext.payment.entity.PaymentHistory;
-import dukku.semicolon.boundedContext.payment.entity.PaymentOrderItem;
-import dukku.semicolon.boundedContext.payment.entity.Refund;
+import dukku.payment.boundedContext.payment.entity.Payment;
+import dukku.payment.boundedContext.payment.entity.PaymentHistory;
+import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
+import dukku.payment.boundedContext.payment.entity.Refund;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
-import dukku.semicolon.boundedContext.payment.out.PaymentHistoryRepository;
-import dukku.semicolon.boundedContext.payment.out.PaymentOrderItemRepository;
-import dukku.semicolon.boundedContext.payment.out.PaymentRepository;
-import dukku.semicolon.boundedContext.payment.out.RefundRepository;
+import dukku.payment.boundedContext.payment.out.PaymentHistoryRepository;
+import dukku.payment.boundedContext.payment.out.PaymentOrderItemRepository;
+import dukku.payment.boundedContext.payment.out.PaymentRepository;
+import dukku.payment.boundedContext.payment.out.RefundRepository;
 import dukku.common.shared.payment.exception.PaymentNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.retry.annotation.Backoff;

@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.user.app.user;
+package dukku.user.boundedContext.user.app.user;
 
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.UserStatus;
-import dukku.semicolon.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

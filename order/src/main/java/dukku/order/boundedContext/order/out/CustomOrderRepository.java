@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.order.out;
+package dukku.order.boundedContext.order.out;
 
-import dukku.semicolon.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.entity.Order;
 import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

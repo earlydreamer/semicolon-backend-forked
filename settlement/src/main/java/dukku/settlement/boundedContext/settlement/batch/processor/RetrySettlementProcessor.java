@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.batch.processor;
+package dukku.settlement.boundedContext.settlement.batch.processor;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.common.shared.settlement.exception.SettlementValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

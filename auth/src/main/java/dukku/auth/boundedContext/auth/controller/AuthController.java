@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.auth.controller;
+package dukku.auth.boundedContext.auth.controller;
 
-import dukku.semicolon.boundedContext.auth.dto.AccessTokenResponse;
-import dukku.semicolon.boundedContext.auth.dto.LoginRequest;
-import dukku.semicolon.boundedContext.auth.dto.TokenResponse;
-import dukku.semicolon.boundedContext.auth.service.AuthService;
+import dukku.auth.boundedContext.auth.dto.AccessTokenResponse;
+import dukku.auth.boundedContext.auth.dto.LoginRequest;
+import dukku.auth.boundedContext.auth.dto.TokenResponse;
+import dukku.auth.boundedContext.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

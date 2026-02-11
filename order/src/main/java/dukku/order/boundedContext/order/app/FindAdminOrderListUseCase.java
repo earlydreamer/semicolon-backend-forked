@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.exception.ForbiddenException;
-import dukku.semicolon.boundedContext.order.entity.Order;
-import dukku.semicolon.boundedContext.order.out.OrderRepository;
+import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.out.OrderRepository;
 import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import dukku.common.shared.order.dto.OrderListResponse;
 import lombok.RequiredArgsConstructor;

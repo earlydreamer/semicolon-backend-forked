@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.settlement.in;
+package dukku.settlement.boundedContext.settlement.in;
 
 import dukku.common.shared.settlement.dto.*;
-import dukku.semicolon.boundedContext.settlement.app.SettlementFacade;
+import dukku.settlement.boundedContext.settlement.app.SettlementFacade;
 import dukku.common.shared.settlement.docs.SettlementApiDocs;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.batch.scheduler;
+package dukku.settlement.boundedContext.settlement.batch.scheduler;
 
-import dukku.semicolon.boundedContext.settlement.batch.config.SettlementBatchProperties;
+import dukku.settlement.boundedContext.settlement.batch.config.SettlementBatchProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.job.Job;

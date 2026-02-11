@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.deposit.app;
+package dukku.deposit.boundedContext.deposit.app;
 
-import dukku.semicolon.boundedContext.deposit.entity.Deposit;
-import dukku.semicolon.boundedContext.deposit.entity.DepositHistory;
-import dukku.semicolon.boundedContext.deposit.out.DepositHistoryRepository;
-import dukku.semicolon.boundedContext.deposit.out.DepositRepository;
+import dukku.deposit.boundedContext.deposit.entity.Deposit;
+import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
+import dukku.deposit.boundedContext.deposit.out.DepositHistoryRepository;
+import dukku.deposit.boundedContext.deposit.out.DepositRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

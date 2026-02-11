@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.product.boundedContext.product.app.cqrs;
 
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.common.shared.product.dto.cqrs.ProductStatDto;
 import dukku.common.shared.product.event.ProductStatsBulkUpdatedEvent;
 import lombok.RequiredArgsConstructor;

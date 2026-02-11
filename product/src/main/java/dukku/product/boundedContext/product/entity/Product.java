@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.product.entity;
+package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.tag.ProductTag;
-import dukku.semicolon.boundedContext.product.entity.tag.Tag;
+import dukku.product.boundedContext.product.entity.tag.ProductTag;
+import dukku.product.boundedContext.product.entity.tag.Tag;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;

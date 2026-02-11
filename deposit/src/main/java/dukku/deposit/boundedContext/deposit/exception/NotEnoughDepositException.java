@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.deposit.exception;
+package dukku.deposit.boundedContext.deposit.exception;
 
 import dukku.common.global.exception.BaseException;
 import org.springframework.http.HttpStatus;

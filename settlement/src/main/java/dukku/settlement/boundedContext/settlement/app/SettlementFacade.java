@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
 import dukku.common.shared.settlement.dto.*;
-import dukku.semicolon.boundedContext.settlement.batch.scheduler.SettlementJobScheduler;
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.batch.scheduler.SettlementJobScheduler;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.job.JobExecution;

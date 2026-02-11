@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.deposit.entity;
+package dukku.deposit.boundedContext.deposit.entity;
 
 import dukku.common.global.jpa.entity.BaseEntity;
-import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
+import dukku.deposit.boundedContext.deposit.entity.enums.DepositHistoryType;
 import dukku.common.shared.deposit.dto.DepositHistoryDto;
 import jakarta.persistence.*;
 import lombok.*;

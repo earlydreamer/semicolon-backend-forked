@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.support;
+package dukku.product.boundedContext.product.app.support;
 
-import dukku.semicolon.boundedContext.product.entity.SellerReview;
+import dukku.product.boundedContext.product.entity.SellerReview;
 import dukku.common.shared.product.dto.review.SellerReviewResponse;
 
 public class SellerReviewMapper {

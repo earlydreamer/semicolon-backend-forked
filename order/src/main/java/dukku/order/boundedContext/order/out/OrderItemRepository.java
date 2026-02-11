@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.order.out;
+package dukku.order.boundedContext.order.out;
 
 import dukku.common.shared.order.type.OrderItemStatus;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
+import dukku.order.boundedContext.order.entity.OrderItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

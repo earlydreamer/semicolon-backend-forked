@@ -1,8 +1,8 @@
-package dukku.semicolon.global;
+package dukku.settlement.global;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
-import dukku.semicolon.boundedContext.settlement.out.SettlementRepository;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
+import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;

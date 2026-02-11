@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.product.boundedContext.product.app.cqrs;
 
 import dukku.common.shared.product.dto.cqrs.ProductStatDto;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.exception.ForbiddenException;
-import dukku.semicolon.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

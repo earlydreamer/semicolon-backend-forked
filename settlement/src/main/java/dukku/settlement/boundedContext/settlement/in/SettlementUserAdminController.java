@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.settlement.in;
+package dukku.settlement.boundedContext.settlement.in;
 
-import dukku.semicolon.boundedContext.settlement.app.GetSettlementUseCase;
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.app.GetSettlementUseCase;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.out.UserApiClient;
 import lombok.RequiredArgsConstructor;

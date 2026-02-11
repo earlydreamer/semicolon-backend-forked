@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.payment.entity.enums;
+package dukku.payment.boundedContext.payment.entity.enums;
 
 /**
  * 결제 주문 상태

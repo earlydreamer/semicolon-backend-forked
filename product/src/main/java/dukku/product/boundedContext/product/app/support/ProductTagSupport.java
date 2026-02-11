@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.app.support;
+package dukku.product.boundedContext.product.app.support;
 
-import dukku.semicolon.boundedContext.product.entity.tag.Tag;
-import dukku.semicolon.boundedContext.product.out.TagRepository;
+import dukku.product.boundedContext.product.entity.tag.Tag;
+import dukku.product.boundedContext.product.out.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

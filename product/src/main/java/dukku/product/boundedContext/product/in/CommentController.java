@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.product.app.facade.CommentFacade;
+import dukku.product.boundedContext.product.app.facade.CommentFacade;
 import dukku.common.shared.product.docs.CommentApiDocs;
 import dukku.common.shared.product.dto.comment.CommentCreateRequest;
 import dukku.common.shared.product.dto.comment.CommentListResponse;

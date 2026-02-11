@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.settlement.batch.reader;
+package dukku.settlement.boundedContext.settlement.batch.reader;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.common.shared.order.out.OrderApiClient;

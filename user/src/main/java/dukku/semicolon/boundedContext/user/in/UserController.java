@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.user.in;
+package dukku.user.boundedContext.user.in;
 
-import dukku.semicolon.boundedContext.user.app.user.UserFacade;
+import dukku.user.boundedContext.user.app.user.UserFacade;
 import dukku.common.shared.user.dto.PasswordUpdateRequest;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.dto.UserResponse;

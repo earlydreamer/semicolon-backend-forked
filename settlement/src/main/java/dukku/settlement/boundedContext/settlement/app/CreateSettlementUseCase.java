@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.entity.SettlementSchedulePolicy;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.SettlementSchedulePolicy;
 import dukku.common.shared.deposit.out.depositApiClient.DepositApiClient;
 import dukku.common.shared.order.out.OrderApiClient;
 import dukku.common.shared.payment.dto.PaymentInternalResponse;

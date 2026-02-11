@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.user.in.dto;
+package dukku.user.boundedContext.user.in.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

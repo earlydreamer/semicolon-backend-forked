@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.out.SettlementBatchMetaRepository;
+import dukku.settlement.boundedContext.settlement.out.SettlementBatchMetaRepository;
 import dukku.common.shared.settlement.dto.SettlementBatchJobStatisticsResponse;
 import dukku.common.shared.settlement.dto.SettlementBatchStepStatisticsResponse;
 import dukku.common.shared.settlement.dto.SettlementBatchStepStatisticsResponse.StepPerformance;

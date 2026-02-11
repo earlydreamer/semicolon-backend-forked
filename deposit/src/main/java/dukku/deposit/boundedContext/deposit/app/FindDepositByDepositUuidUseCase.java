@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.deposit.app;
+package dukku.deposit.boundedContext.deposit.app;
 
-import dukku.semicolon.boundedContext.deposit.entity.Deposit;
+import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import dukku.common.shared.deposit.exception.DepositNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

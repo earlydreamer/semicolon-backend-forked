@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.order.out;
+package dukku.order.boundedContext.order.out;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
-import dukku.semicolon.boundedContext.order.app.UpdateOrderRefundStatusUseCase;
-import dukku.semicolon.boundedContext.order.app.UpdateOrderStatusUseCase;
+import dukku.order.boundedContext.order.app.UpdateOrderRefundStatusUseCase;
+import dukku.order.boundedContext.order.app.UpdateOrderStatusUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;

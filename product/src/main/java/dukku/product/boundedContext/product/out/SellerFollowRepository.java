@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.out;
+package dukku.product.boundedContext.product.out;
 
-import dukku.semicolon.boundedContext.product.entity.SellerFollow;
+import dukku.product.boundedContext.product.entity.SellerFollow;
 import dukku.common.shared.product.dto.follow.FollowedSellerCardResponse;
 import dukku.common.shared.product.dto.follow.FollowerUserCardResponse;
 import org.springframework.data.jpa.repository.JpaRepository;

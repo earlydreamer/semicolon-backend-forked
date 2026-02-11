@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.usecase.review;
+package dukku.product.boundedContext.product.app.usecase.review;
 
-import dukku.semicolon.boundedContext.product.out.SellerReviewRepository;
+import dukku.product.boundedContext.product.out.SellerReviewRepository;
 import dukku.common.shared.product.dto.review.SellerReviewSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

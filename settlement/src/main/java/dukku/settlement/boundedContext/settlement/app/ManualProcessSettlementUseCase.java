@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.common.shared.deposit.dto.DepositChargeForSettlementResponse;
 import dukku.common.shared.deposit.out.depositApiClient.DepositApiClient;
 import dukku.common.shared.settlement.exception.SettlementProcessingException;

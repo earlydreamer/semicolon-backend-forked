@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.product.app.usecase.follow;
+package dukku.product.boundedContext.product.app.usecase.follow;
 
-import dukku.semicolon.boundedContext.product.entity.SellerFollow;
-import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
-import dukku.semicolon.boundedContext.product.out.SellerFollowRepository;
+import dukku.product.boundedContext.product.entity.SellerFollow;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
+import dukku.product.boundedContext.product.out.SellerFollowRepository;
 import dukku.common.shared.product.dto.follow.FollowActionResponse;
 import dukku.common.shared.product.exception.ProductSellerNotFoundException;
 import dukku.common.shared.product.exception.SelfFollowNotAllowedException;

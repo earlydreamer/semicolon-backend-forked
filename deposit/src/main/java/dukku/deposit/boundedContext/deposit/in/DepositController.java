@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.deposit.in;
+package dukku.deposit.boundedContext.deposit.in;
 
 import dukku.common.global.UserUtil;
 import dukku.common.shared.deposit.docs.DepositApiDocs;
 import dukku.common.shared.deposit.dto.DepositBalanceResponse;
 import dukku.common.shared.deposit.dto.DepositHistoryResponse;
-import dukku.semicolon.boundedContext.deposit.app.DepositFacade;
+import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import dukku.common.shared.deposit.dto.DepositDto;
 import dukku.common.shared.deposit.dto.DepositHistoryDto;
 import lombok.RequiredArgsConstructor;

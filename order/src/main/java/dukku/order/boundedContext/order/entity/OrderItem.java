@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.order.entity;
+package dukku.order.boundedContext.order.entity;
 
 import dukku.common.global.exception.ConflictException;
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;

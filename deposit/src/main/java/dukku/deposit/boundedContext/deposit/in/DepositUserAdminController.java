@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.deposit.in;
+package dukku.deposit.boundedContext.deposit.in;
 
-import dukku.semicolon.boundedContext.deposit.app.DepositFacade;
+import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import dukku.common.shared.deposit.docs.DepositApiDocs;
 import dukku.common.shared.deposit.dto.DepositDto;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;

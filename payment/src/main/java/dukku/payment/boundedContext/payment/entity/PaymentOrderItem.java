@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.payment.entity;
+package dukku.payment.boundedContext.payment.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
 import dukku.common.shared.payment.dto.PaymentOrderItemDto;

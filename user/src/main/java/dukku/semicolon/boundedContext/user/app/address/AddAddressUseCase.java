@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.user.app.address;
+package dukku.user.boundedContext.user.app.address;
 
-import dukku.semicolon.boundedContext.user.entity.Address;
-import dukku.semicolon.boundedContext.user.in.dto.AddressRequest;
-import dukku.semicolon.boundedContext.user.in.dto.AddressResponse;
-import dukku.semicolon.boundedContext.user.out.AddressRepository;
+import dukku.user.boundedContext.user.entity.Address;
+import dukku.user.boundedContext.user.in.dto.AddressRequest;
+import dukku.user.boundedContext.user.in.dto.AddressResponse;
+import dukku.user.boundedContext.user.out.AddressRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

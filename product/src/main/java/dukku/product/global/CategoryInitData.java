@@ -1,7 +1,7 @@
-package dukku.semicolon.global;
+package dukku.product.global;
 
-import dukku.semicolon.boundedContext.product.entity.Category;
-import dukku.semicolon.boundedContext.product.out.CategoryRepository;
+import dukku.product.boundedContext.product.entity.Category;
+import dukku.product.boundedContext.product.out.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;

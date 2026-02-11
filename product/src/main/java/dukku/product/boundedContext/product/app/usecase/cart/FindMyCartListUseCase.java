@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.usecase.cart;
+package dukku.product.boundedContext.product.app.usecase.cart;
 
-import dukku.semicolon.boundedContext.product.entity.Cart;
-import dukku.semicolon.boundedContext.product.out.CartRepository;
 import dukku.common.shared.product.dto.cart.CartDto;
 import dukku.common.shared.product.dto.cart.CartListResponse;
+import dukku.product.boundedContext.product.entity.Cart;
+import dukku.product.boundedContext.product.out.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +22,7 @@ public class FindMyCartListUseCase {
         List<Cart> carts = cartRepository.findAllWithProductByUserUuid(userUuid);
 
         List<CartDto> cartDtos = carts.stream()
-                .map(CartDto::toDto)
+                .map(Cart::toDto)
                 .toList();
 
         int totalCount = cartDtos.size();

@@ -1,12 +1,15 @@
-package dukku.semicolon.boundedContext.product.entity;
+package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndTime;
+import dukku.common.shared.product.dto.cart.CartDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import java.util.Comparator;
 
 @Entity
 @Table(
@@ -41,5 +44,36 @@ public class Cart extends BaseIdAndTime {
                 .user(user)
                 .product(product)
                 .build();
+    }
+
+    public static CartDto toDto(Cart cart) {
+        Product product = cart.getProduct(); // 지연 로딩 없이 바로 접근 가능
+
+        /*
+        썸네일 이미지 결정 로직
+        1순위: isThumbnail = true인 이미지
+        2순위: sortOrder가 가장 낮은(1번) 이미지
+        3순위: null (이미지가 아예 없을 때)
+        */
+        String thumbnailUrl = product.getImages().stream()
+                .filter(ProductImage::isThumbnail)
+                .findFirst()
+                .map(ProductImage::getImageUrl)
+                .orElseGet(() ->
+                        product.getImages().stream()
+                                .min(Comparator.comparingInt(ProductImage::getSortOrder))
+                                .map(ProductImage::getImageUrl)
+                                .orElse(null)
+                );
+
+        return new CartDto(
+                cart.getId(),
+                product.getUuid(),
+                product.getTitle(),
+                product.getPrice(),
+                product.getSaleStatus(),
+                thumbnailUrl,
+                cart.getCreatedAt()
+        );
     }
 }

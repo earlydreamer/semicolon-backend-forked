@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.deposit.entity.enums;
+package dukku.deposit.boundedContext.deposit.entity.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

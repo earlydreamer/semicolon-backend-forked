@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.payment.app;
+package dukku.payment.boundedContext.payment.app;
 
-import dukku.semicolon.boundedContext.payment.entity.Payment;
+import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.common.shared.payment.exception.PaymentNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

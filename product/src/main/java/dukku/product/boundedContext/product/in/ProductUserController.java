@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
-import dukku.semicolon.boundedContext.product.app.usecase.product.FindProductByUuidUseCase;
-import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.app.usecase.product.FindProductByUuidUseCase;
+import dukku.product.boundedContext.product.entity.Product;
 import dukku.common.shared.user.dto.UserProfileResponse;
 import dukku.common.shared.user.out.UserApiClient;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.dto.product.ProductReserveRequest;
-import dukku.semicolon.boundedContext.product.app.facade.ProductFacade;
+import dukku.product.boundedContext.product.app.facade.ProductFacade;
 import dukku.common.shared.product.docs.ProductApiDocs;
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.entity.tag;
+package dukku.product.boundedContext.product.entity.tag;
 
 import dukku.common.global.jpa.entity.BaseIdAndTime;
 import jakarta.persistence.Column;

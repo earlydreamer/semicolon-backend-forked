@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.user.in.dto;
+package dukku.user.boundedContext.user.in.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

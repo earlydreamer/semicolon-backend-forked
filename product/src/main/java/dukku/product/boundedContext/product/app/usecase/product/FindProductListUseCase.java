@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.usecase.product;
+package dukku.product.boundedContext.product.app.usecase.product;
 
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.out.CategoryRepository;
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.out.CategoryRepository;
+import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.common.shared.product.dto.product.ProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

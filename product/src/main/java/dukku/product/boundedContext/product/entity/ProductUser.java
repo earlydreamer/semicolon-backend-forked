@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.entity;
+package dukku.product.boundedContext.product.entity;
 
 import dukku.common.shared.product.type.AccountStatus;
 import jakarta.persistence.*;

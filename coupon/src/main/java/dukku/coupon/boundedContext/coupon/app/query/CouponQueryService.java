@@ -1,0 +1,62 @@
+package dukku.coupon.boundedContext.coupon.app.query;
+
+import dukku.coupon.boundedContext.coupon.entity.CouponUser;
+import dukku.coupon.boundedContext.coupon.entity.type.CouponStatus;
+import dukku.coupon.boundedContext.coupon.entity.type.CouponUserStatus;
+import dukku.coupon.boundedContext.coupon.out.CouponRepository;
+import dukku.coupon.boundedContext.coupon.out.CouponUserRepository;
+import dukku.coupon.shared.coupon.dto.CouponResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class CouponQueryService {
+    private final CouponRepository couponRepository;
+    private final CouponUserRepository couponUserRepository;
+
+    /**
+     * 사용자가 발급 가능한 쿠폰 목록
+     * - ACTIVE 상태
+     * - 아직 해당 쿠폰을 발급받지 않은 경우
+     */
+    public List<CouponResponse> findIssuableCoupons(UUID userUuid) {
+        return couponRepository.findByStatus(CouponStatus.ACTIVE)
+                .stream()
+                .filter(coupon ->
+                        !couponUserRepository.existsByUserUuidAndCoupon_Uuid(
+                                userUuid,
+                                coupon.getUuid()
+                        )
+                )
+                .map(CouponResponse::from)
+                .toList();
+    }
+
+    /**
+     * 사용자가 보유한 쿠폰 목록
+     */
+    public List<CouponResponse> findMyCoupons(UUID userUuid) {
+        List<CouponUser> couponUsers = couponUserRepository.findByUserUuidAndStatus(userUuid, CouponUserStatus.AVAILABLE);
+
+        return couponUsers.stream()
+                .map(CouponUser::getCoupon)
+                .map(CouponResponse::from)
+                .toList();
+    }
+
+    /**
+     * 관리자용 전체 쿠폰 목록
+     */
+    public List<CouponResponse> findAllCoupons() {
+        return couponRepository.findAll()
+                .stream()
+                .map(CouponResponse::from)
+                .toList();
+    }
+}

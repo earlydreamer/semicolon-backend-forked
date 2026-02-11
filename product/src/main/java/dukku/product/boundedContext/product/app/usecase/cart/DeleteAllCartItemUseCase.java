@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.usecase.cart;
+package dukku.product.boundedContext.product.app.usecase.cart;
 
-import dukku.semicolon.boundedContext.product.out.CartRepository;
+import dukku.product.boundedContext.product.out.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

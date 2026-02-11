@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.user.in;
+package dukku.user.boundedContext.user.in;
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.user.app.address.AddAddressUseCase;
-import dukku.semicolon.boundedContext.user.app.address.FindAddressUseCase;
-import dukku.semicolon.boundedContext.user.in.dto.AddressRequest;
-import dukku.semicolon.boundedContext.user.in.dto.AddressResponse;
+import dukku.user.boundedContext.user.app.address.AddAddressUseCase;
+import dukku.user.boundedContext.user.app.address.FindAddressUseCase;
+import dukku.user.boundedContext.user.in.dto.AddressRequest;
+import dukku.user.boundedContext.user.in.dto.AddressResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

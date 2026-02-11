@@ -1,4 +1,4 @@
-package dukku.semicolon.global.config;
+package dukku.order.global.config;
 
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;

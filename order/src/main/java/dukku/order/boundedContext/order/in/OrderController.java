@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.order.in;
+package dukku.order.boundedContext.order.in;
 
 import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import dukku.common.shared.order.dto.DeliveryInfoRequest;
 import dukku.common.shared.order.dto.OrderCreateRequest;
 import dukku.common.shared.order.dto.OrderResponse;
 import dukku.common.shared.order.type.OrderItemStatus;
-import dukku.semicolon.boundedContext.order.app.OrderFacade;
+import dukku.order.boundedContext.order.app.OrderFacade;
 import dukku.common.shared.order.docs.OrderApiDocs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

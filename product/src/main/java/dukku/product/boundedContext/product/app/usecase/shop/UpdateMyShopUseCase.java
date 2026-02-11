@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.app.usecase.shop;
+package dukku.product.boundedContext.product.app.usecase.shop;
 
-import dukku.semicolon.boundedContext.product.entity.ProductSeller;
-import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
+import dukku.product.boundedContext.product.entity.ProductSeller;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.common.shared.product.dto.shop.ShopResponse;
 import dukku.common.shared.product.dto.shop.UpdateShopRequest;
 import dukku.common.shared.product.exception.ProductSellerNotFoundException;

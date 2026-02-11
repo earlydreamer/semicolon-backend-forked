@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.user.app.user;
+package dukku.user.boundedContext.user.app.user;
 
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.exception.UserNotFoundException;
-import dukku.semicolon.boundedContext.user.out.UserRepository;
+import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

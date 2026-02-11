@@ -1,9 +1,9 @@
-package dukku.semicolon.global;
+package dukku.deposit.global;
 
-import dukku.semicolon.boundedContext.deposit.app.DepositFacade;
-import dukku.semicolon.boundedContext.user.app.user.UserFacade;
-import dukku.semicolon.boundedContext.user.app.user.UserSupport;
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.deposit.boundedContext.deposit.app.DepositFacade;
+import dukku.deposit.boundedContext.user.app.user.UserFacade;
+import dukku.deposit.boundedContext.user.app.user.UserSupport;
+import dukku.deposit.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
