@@ -3,10 +3,10 @@ package dukku.order.boundedContext.order.out.impl;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.order.boundedContext.order.out.CustomOrderRepository;
-import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static dukku.semicolon.boundedContext.order.entity.QOrder.order;
+import static dukku.order.boundedContext.order.entity.QOrder.order;
+
 
 @RequiredArgsConstructor
 public class CustomOrderRepositoryImpl implements CustomOrderRepository {

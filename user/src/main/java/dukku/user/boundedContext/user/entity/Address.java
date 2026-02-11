@@ -1,13 +1,10 @@
 package dukku.user.boundedContext.user.entity;
 
 import jakarta.persistence.*;
-
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Entity
 @Table(name = "addresses")
@@ -18,7 +15,9 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 사용자 UUID */
+    /**
+     * 사용자 UUID
+     */
     @Column(name = "user_uuid", nullable = false, length = 36)
     private java.util.UUID userUuid;
 

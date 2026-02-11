@@ -1,11 +1,12 @@
 package dukku.coupon.boundedContext.coupon.app.query;
 
+import dukku.common.shared.coupon.dto.CouponResponse;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.coupon.type.CouponUserStatus;
+import dukku.coupon.boundedContext.coupon.entity.Coupon;
 import dukku.coupon.boundedContext.coupon.entity.CouponUser;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
 import dukku.coupon.boundedContext.coupon.out.CouponUserRepository;
-import dukku.coupon.shared.coupon.dto.CouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +35,7 @@ public class CouponQueryService {
                                 coupon.getUuid()
                         )
                 )
-                .map(CouponResponse::from)
+                .map(Coupon::from)
                 .toList();
     }
 
@@ -46,7 +47,7 @@ public class CouponQueryService {
 
         return couponUsers.stream()
                 .map(CouponUser::getCoupon)
-                .map(CouponResponse::from)
+                .map(Coupon::from)
                 .toList();
     }
 
@@ -56,7 +57,7 @@ public class CouponQueryService {
     public List<CouponResponse> findAllCoupons() {
         return couponRepository.findAll()
                 .stream()
-                .map(CouponResponse::from)
+                .map(Coupon::from)
                 .toList();
     }
 }

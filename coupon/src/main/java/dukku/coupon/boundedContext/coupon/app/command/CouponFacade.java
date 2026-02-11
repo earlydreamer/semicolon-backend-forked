@@ -1,8 +1,8 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
-import dukku.coupon.shared.coupon.dto.CouponCreateRequest;
-import dukku.coupon.shared.coupon.dto.CouponResponse;
-import dukku.coupon.shared.coupon.dto.CouponUpdateRequest;
+import dukku.common.shared.coupon.dto.CouponCreateRequest;
+import dukku.common.shared.coupon.dto.CouponResponse;
+import dukku.common.shared.coupon.dto.CouponUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

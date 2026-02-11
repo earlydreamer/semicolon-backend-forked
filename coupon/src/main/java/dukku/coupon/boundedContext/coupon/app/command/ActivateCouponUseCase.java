@@ -1,8 +1,8 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
+import dukku.common.shared.coupon.exception.CouponNotFoundException;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
-import dukku.coupon.shared.coupon.exception.CouponNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

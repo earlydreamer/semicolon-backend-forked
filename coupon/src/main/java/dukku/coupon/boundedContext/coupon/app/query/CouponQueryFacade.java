@@ -1,6 +1,6 @@
 package dukku.coupon.boundedContext.coupon.app.query;
 
-import dukku.coupon.shared.coupon.dto.CouponResponse;
+import dukku.common.shared.coupon.dto.CouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

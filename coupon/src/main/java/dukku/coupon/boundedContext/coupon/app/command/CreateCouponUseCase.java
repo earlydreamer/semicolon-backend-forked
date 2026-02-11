@@ -1,9 +1,9 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
+import dukku.common.shared.coupon.dto.CouponCreateRequest;
+import dukku.common.shared.coupon.dto.CouponResponse;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
-import dukku.coupon.shared.coupon.dto.CouponCreateRequest;
-import dukku.coupon.shared.coupon.dto.CouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +19,6 @@ public class CreateCouponUseCase {
         Coupon coupon = Coupon.createCoupon(request);
         couponRepository.save(coupon);
 
-        return CouponResponse.from(coupon);
+        return Coupon.from(coupon);
     }
 }

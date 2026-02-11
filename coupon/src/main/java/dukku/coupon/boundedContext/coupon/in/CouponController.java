@@ -1,9 +1,9 @@
 package dukku.coupon.boundedContext.coupon.in;
 
 import dukku.common.global.UserUtil;
+import dukku.common.shared.coupon.dto.CouponResponse;
 import dukku.coupon.boundedContext.coupon.app.command.CouponFacade;
 import dukku.coupon.boundedContext.coupon.app.query.CouponQueryFacade;
-import dukku.coupon.shared.coupon.dto.CouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
