@@ -15,7 +15,7 @@ public class ProductSyncFacade {
         syncProductStatsUseCase.execute();
     }
 
-    public void syncProductToElasticsearch(int productId) {
+    public void syncProductToElasticsearch(Long productId) {
         deleteProductSyncUseCase.deletedProductToElasticsearch(productId);
     }
 }

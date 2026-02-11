@@ -13,11 +13,10 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import dukku.user.boundedContext.user.app.user.VerifyUserCredentialsUseCase;
+import dukku.common.shared.user.dto.UserVerificationRequest;
+import dukku.common.shared.user.dto.UserVerificationResponse;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -31,6 +30,7 @@ public class UserInternalController {
     private final FindUserByRoleUseCase findUserByRole;
     private final FindUserByEmailUseCase findUserByEmail;
     private final FindUserUseCase findUser;
+    private final VerifyUserCredentialsUseCase verifyUserCredentialsUseCase;
 
     @GetMapping("/uuid")
     public ResponseEntity<UserUuidResponse> getUserUuid(
@@ -92,5 +92,17 @@ public class UserInternalController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+    @PostMapping("/verify-password")
+    public ResponseEntity<UserVerificationResponse> verifyPassword(@RequestBody UserVerificationRequest request) {
+        User user = verifyUserCredentialsUseCase.execute(request.getEmail(), request.getPassword());
+        
+        log.info("[Internal API] User credentials verified. email={}", request.getEmail());
+        
+        return ResponseEntity.ok(UserVerificationResponse.builder()
+                .userUuid(user.getUuid())
+                .role(user.getRole())
+                .nickname(user.getNickname())
+                .build());
     }
 }

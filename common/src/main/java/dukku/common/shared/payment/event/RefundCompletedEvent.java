@@ -9,6 +9,8 @@ import java.util.UUID;
  * 환불 처리가 완료되었을 때 발행.
  * 예치금 롤백 및 주문/상품 상태 변경의 트리거가 됩니다.
  */
+import dukku.common.global.event.DomainEvent;
+
 public record RefundCompletedEvent(
         UUID refundId,
         UUID paymentId,
@@ -17,5 +19,14 @@ public record RefundCompletedEvent(
         Long refundDepositAmount, // 환불된 예치금
         UUID userUuid,
         LocalDateTime occurredAt
-) {
+) implements DomainEvent {
+    @Override
+    public String getTopic() {
+        return "payment.refund-completed";
+    }
+
+    @Override
+    public String getKey() {
+        return orderUuid.toString();
+    }
 }

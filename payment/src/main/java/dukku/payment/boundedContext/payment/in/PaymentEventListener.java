@@ -9,12 +9,7 @@ import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
@@ -38,9 +33,7 @@ public class PaymentEventListener {
      * <p>
      * DepositDeductionFailedEvent 수신 시 이미 승인된 PG 결제를 취소하여 데이터 일관성을 유지함.
      */
-    @Async
-    // 차감 트랜잭션이 롤백된 이후에만 보상 취소를 시작해 부분 커밋 가능성을 차단한다.
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    @org.springframework.kafka.annotation.KafkaListener(topics = "deposit.deduction-failed", groupId = "${spring.application.name}-group")
     public void handle(DepositDeductionFailedEvent event) {
         log.warn("[결제 보상 트랜잭션 시작] 예치금 차감 실패 감지: orderUuid={}, reason={}",
                 event.orderUuid(), event.reason());
@@ -51,9 +44,7 @@ public class PaymentEventListener {
     /**
      * 주문 처리 실패 시 결제 롤백(자동 환불) 처리
      */
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.rollback", groupId = "${spring.application.name}-group")
     public void handle(PaymentRollbackRequestEvent event) {
         log.info("[결제 롤백] 주문 처리 실패로 인한 자동 환불 시작. orderUuid={}, reason={}",
                 event.orderUuid(), event.reason());

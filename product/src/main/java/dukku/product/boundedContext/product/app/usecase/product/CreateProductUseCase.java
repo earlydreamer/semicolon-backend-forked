@@ -1,5 +1,6 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.product.dto.product.ProductCreateRequest;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.exception.ProductCategoryNotFoundException;
@@ -13,7 +14,6 @@ import dukku.product.boundedContext.product.out.CategoryRepository;
 import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.global.event.ProductCreatedEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class CreateProductUseCase {
     private final ProductTagSupport productTagSupport;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     public ProductDetailResponse execute(UUID sellerUuid, ProductCreateRequest request) {
         if (!productSupport.existsByCategoryId(request.getCategoryId())) {
@@ -54,7 +54,7 @@ public class CreateProductUseCase {
         product.replaceTags(tags);
 
         Product savedProduct = productRepository.save(product);
-        eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct));
+        eventPublisher.publish(new ProductCreatedEvent(savedProduct.getId()));
 
         return ProductMapper.toDetail(savedProduct);
     }
