@@ -5,7 +5,7 @@
     <!-- 프로퍼티 설정                                  -->
     <!-- ============================================ -->
     <!-- Spring Boot 설정에서 읽어오는 동적 프로퍼티 -->
-    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="settlement-service"/>
+    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="deposit-service"/>
     <springProperty scope="context" name="KAFKA_BOOTSTRAP_SERVERS" source="spring.kafka.bootstrap-servers" defaultValue="localhost:19092"/>
 
     <!-- 로컬 프로퍼티 (하위 호환성) -->
