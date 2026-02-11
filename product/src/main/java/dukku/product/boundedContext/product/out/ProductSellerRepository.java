@@ -10,4 +10,6 @@ public interface ProductSellerRepository extends JpaRepository<ProductSeller, In
     Optional<ProductSeller> findByUserUuid(UUID userUuid);
 
     Optional<ProductSeller> findByUuid(UUID shopUuid);
+
+    boolean existsByUuid(UUID sellerUuid);
 }

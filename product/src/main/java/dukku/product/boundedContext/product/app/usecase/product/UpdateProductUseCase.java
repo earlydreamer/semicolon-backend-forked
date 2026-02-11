@@ -1,5 +1,6 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.dto.product.ProductUpdateRequest;
 import dukku.common.shared.product.exception.ProductCategoryNotFoundException;
@@ -10,7 +11,6 @@ import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.CategoryRepository;
 import dukku.product.global.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +22,7 @@ import java.util.UUID;
 public class UpdateProductUseCase {
     private final ProductSupport productSupport;
     private final CategoryRepository categoryRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public ProductDetailResponse execute(UUID productUuid, UUID sellerUuid, ProductUpdateRequest request) {
@@ -58,7 +58,7 @@ public class UpdateProductUseCase {
         }
 
         // 3. 이벤트 발행 (변경 플래그 포함)
-        eventPublisher.publishEvent(new ProductUpdatedEvent(product, isCategoryChanged));
+        eventPublisher.publish(new ProductUpdatedEvent(product.getId(), isCategoryChanged));
 
         return ProductMapper.toDetail(product);
     }

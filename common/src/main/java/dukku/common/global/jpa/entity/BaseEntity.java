@@ -1,6 +1,7 @@
 package dukku.common.global.jpa.entity;
 
 import dukku.common.global.config.GlobalConfig;
+import dukku.common.global.event.DomainEvent;
 import dukku.common.standard.modelType.CanGetModelTypeCode;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 // 모든 엔티티들의 조상
 public abstract class BaseEntity<T> implements CanGetModelTypeCode {
 
-    protected void publishEvent(Object event) {
+    protected void publishEvent(DomainEvent event) {
         GlobalConfig.getEventPublisher().publish(event);
     }
 

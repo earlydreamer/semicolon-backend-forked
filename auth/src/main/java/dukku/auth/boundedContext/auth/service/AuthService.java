@@ -1,16 +1,14 @@
 package dukku.auth.boundedContext.auth.service;
 
-import dukku.common.global.exception.NotFoundException;
-import dukku.common.global.exception.UnauthorizedException;
 import dukku.auth.boundedContext.auth.dto.AccessTokenResponse;
 import dukku.auth.boundedContext.auth.dto.LoginRequest;
 import dukku.auth.boundedContext.auth.dto.TokenResponse;
+import dukku.auth.boundedContext.auth.infra.UserClient;
 import dukku.auth.boundedContext.auth.jwt.AuthTokenIssuer;
-import dukku.auth.boundedContext.user.entity.User;
-import dukku.auth.boundedContext.user.out.UserRepository;
+import dukku.common.global.exception.UnauthorizedException;
+import dukku.common.shared.user.dto.UserVerificationResponse;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -18,28 +16,19 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserClient userClient;
     private final AuthTokenIssuer authTokenIssuer;
     private final RefreshTokenStoreService refreshTokenStoreService;
 
     public TokenResponse login(LoginRequest request) {
+        // [변경] User 모듈에 인증 요청 (REST API)
+        UserVerificationResponse user = userClient.verifyUser(request.getEmail(), request.getPassword());
 
-        User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("현재 존재하지 않는 회원입니다."));
-
-        if (!passwordEncoder.matches(
-                request.getPassword(),
-                user.getPassword()
-        )) {
-            throw new UnauthorizedException("비밀번호가 올바르지 않습니다.");
-        }
-
-        String accessToken = authTokenIssuer.createAccessToken(user.getUuid(), user.getRole().name());
-        String refreshToken = authTokenIssuer.createRefreshToken(user.getUuid(), user.getRole().name());
+        String accessToken = authTokenIssuer.createAccessToken(user.getUserUuid(), user.getRole().name());
+        String refreshToken = authTokenIssuer.createRefreshToken(user.getUserUuid(), user.getRole().name());
 
         long ttlMillis = authTokenIssuer.getRefreshTokenTtlMillis(refreshToken);
-        refreshTokenStoreService.save(user.getUuid(), refreshToken, java.time.Duration.ofMillis(ttlMillis));
+        refreshTokenStoreService.save(user.getUserUuid(), refreshToken, java.time.Duration.ofMillis(ttlMillis));
 
         return new TokenResponse(accessToken, refreshToken);
     }

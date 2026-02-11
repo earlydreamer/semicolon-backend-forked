@@ -9,17 +9,12 @@ import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.product.boundedContext.product.entity.ProductUser;
 import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import dukku.product.boundedContext.product.out.*;
-import dukku.product.boundedContext.user.app.user.RegisterUserUseCase;
-import dukku.product.boundedContext.user.entity.User;
-import dukku.common.shared.user.type.Role;
-import dukku.common.shared.user.dto.UserRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -36,9 +31,6 @@ public class ProductInitData {
     private final CategoryRepository categoryRepository;
     private final ProductUserRepository productUserRepository;
     private final ProductSearchRepository productSearchRepository; // ES Repository
-
-    private final RegisterUserUseCase registerUserUseCase;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     // 관계 매핑을 위한 임시 저장소
     private final Map<String, UUID> userMap = new HashMap<>();
@@ -199,48 +191,51 @@ public class ProductInitData {
     }
 
     private void initUsersAndSellers() {
-        createSeller("s1", "u1", "세미콜론", 4.5, "깔끔한 거래 원해요", 3, 2);
-        createSeller("s2", "u2", "테크마스터", 4.9, "전자기기 전문", 154, 12);
-        createSeller("s3", "u3", "소리사랑", 4.8, "음향기기 수집가", 89, 8);
-        createSeller("s4", "u4", "숲속의집", 4.7, "감성 캠핑 용품", 210, 25);
-        createSeller("s5", "u5", "나이스샷", 4.6, "골프 클럽 거래", 67, 15);
-        createSeller("s6", "u6", "최애보관소", 5.0, "K-POP 굿즈", 320, 40);
-        createSeller("s7", "u7", "찰칵찰칵", 4.2, null, 12, 2);
-        createSeller("s8", "u8", "라이더", 4.0, null, 8, 1);
-        createSeller("s9", "u9", "책벌레", 4.5, null, 45, 5);
-        createSeller("s10", "u10", "겜돌이", 4.8, null, 23, 4);
-        createSeller("s11", "u11", "강태공", 3.5, null, 3, 1);
-        createSeller("s12", "u12", "요리왕", 4.1, null, 15, 2);
-        createSeller("s13", "u13", "블럭쌓기", 4.9, null, 67, 6);
-        createSeller("s14", "u14", "슈즈홀릭", 4.3, null, 22, 3);
-        createSeller("s15", "u15", "가방조아", 4.7, null, 9, 2);
-        createSeller("s16", "u16", "식집사", 4.4, null, 18, 4);
-        createSeller("s17", "u17", "차마시는날", 5.0, null, 4, 1);
-        createSeller("s18", "u18", "득근득근", 4.0, null, 11, 2);
-        createSeller("s19", "u19", "그림쟁이", 4.6, null, 5, 1);
-        createSeller("s20", "u20", "레트로매니아", 4.8, null, 56, 7);
+        // u1 ~ u20 (ProductInitData에서는 Seller로 등록)
+        // UserInitData에서 생성한 UUID 규칙 (00000000-0000-0000-0000-0000000000xx)을 따름
+
+        createSeller("s1", "u1", "세미콜론", 4.5, "깔끔한 거래 원해요", 3, 2, 1);
+        createSeller("s2", "u2", "테크마스터", 4.9, "전자기기 전문", 154, 12, 2);
+        createSeller("s3", "u3", "소리사랑", 4.8, "음향기기 수집가", 89, 8, 3);
+        createSeller("s4", "u4", "숲속의집", 4.7, "감성 캠핑 용품", 210, 25, 4);
+        createSeller("s5", "u5", "나이스샷", 4.6, "골프 클럽 거래", 67, 15, 5);
+        createSeller("s6", "u6", "최애보관소", 5.0, "K-POP 굿즈", 320, 40, 6);
+        createSeller("s7", "u7", "찰칵찰칵", 4.2, null, 12, 2, 7);
+        createSeller("s8", "u8", "라이더", 4.0, null, 8, 1, 8);
+        createSeller("s9", "u9", "책벌레", 4.5, null, 45, 5, 9);
+        createSeller("s10", "u10", "겜돌이", 4.8, null, 23, 4, 10);
+        createSeller("s11", "u11", "강태공", 3.5, null, 3, 1, 11);
+        createSeller("s12", "u12", "요리왕", 4.1, null, 15, 2, 12);
+        createSeller("s13", "u13", "블럭쌓기", 4.9, null, 67, 6, 13);
+        createSeller("s14", "u14", "슈즈홀릭", 4.3, null, 22, 3, 14);
+        createSeller("s15", "u15", "가방조아", 4.7, null, 9, 2, 15);
+        createSeller("s16", "u16", "식집사", 4.4, null, 18, 4, 16);
+        createSeller("s17", "u17", "차마시는날", 5.0, null, 4, 1, 17);
+        createSeller("s18", "u18", "득근득근", 4.0, null, 11, 2, 18);
+        createSeller("s19", "u19", "그림쟁이", 4.6, null, 5, 1, 19);
+        createSeller("s20", "u20", "레트로매니아", 4.8, null, 56, 7, 20);
     }
 
     private void createSeller(String sId, String uId, String nickname, double rating, String intro, int sales,
-                              int active) {
-        // [수정] 직접 생성 -> UseCase 사용 (이메일 인증 Mocking 포함)
-        String email = uId + "@dukku.shop";
-        String password = "TestUser123!";
+                              int active, int seed) {
 
-        // 1. Redis에 미리 인증 완료 상태로 세팅
-        redisTemplate.opsForValue().set("email:verify:ok:" + email, "true", java.time.Duration.ofMinutes(5));
+        // 고정 UUID 생성
+        String uuidStr = String.format("00000000-0000-0000-0000-%012d", seed);
+        UUID uuid = UUID.fromString(uuidStr);
 
-        // 2. 회원가입 실행
-        UserRegisterRequest req = new UserRegisterRequest(email, password, nickname);
-        User user = registerUserUseCase.execute(req, Role.USER);
-
-        UUID uuid = user.getUuid();
-        productUserRepository.save(ProductUser.create(uuid, nickname));
+        // 1. ProductUser 저장 (로컬 복제본)
+        if (!productUserRepository.existsById(uuid)) {
+            productUserRepository.save(ProductUser.create(uuid, nickname));
+        }
         userMap.put(uId, uuid);
 
-        // 3. 판매자 생성
-        ProductSeller seller = ProductSeller.create(uuid, intro, sales, active);
-        productSellerRepository.save(seller);
+        // 2. ProductSeller 저장
+        if (!productSellerRepository.existsByUuid(uuid)) {
+            ProductSeller seller = ProductSeller.create(uuid, intro, sales, active);
+            // 평점 등 추가 세팅이 필요하다면 여기서 setter 사용 (Entity에 setter가 있다면) 
+            // 현재 create factory method는 rating을 초기화하므로, rating을 반영하려면 별도 메서드 필요하거나 무시
+            productSellerRepository.save(seller);
+        }
         sellerMap.put(sId, uuid);
     }
 

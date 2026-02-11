@@ -34,4 +34,4 @@ services:
       - POSTGRES_PASSWORD=P@ssw0rd
       - POSTGRES_DB=semicolon
     ports:
-      - "5433:5432"
+      - "5432:5432"

@@ -5,7 +5,7 @@ import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.global.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
+import dukku.common.global.eventPublisher.EventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +29,7 @@ public class ReleaseProductReservationUseCase {
 
             // 2. ES 동기화 트리거
             // TODO: N+1으로 병목 발생 가능성 있음. 추후 부하테스트 시 확인 필요
-            eventPublisher.publishEvent(new ProductUpdatedEvent(product, false));
+            eventPublisher.publish(new ProductUpdatedEvent(product.getId(), false));
         }
 
         log.info("Reservation Released for products: {}", productUuids);

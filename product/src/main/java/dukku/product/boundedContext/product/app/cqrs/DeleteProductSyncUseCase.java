@@ -15,7 +15,7 @@ public class DeleteProductSyncUseCase {
     private final ProductSearchRepository productSearchRepository;
 
     @Transactional(readOnly = true)
-    public void deletedProductToElasticsearch(int productId) {
+    public void deletedProductToElasticsearch(Long productId) {
         // 3. Document 변환
         // 이때 product의 visibilityStatus가 HIDDEN이거나 deletedAt이 있으면 그대로 ES 문서에 반영됨
         ProductDocument document = productSearchRepository.findById(String.valueOf(productId))

@@ -31,40 +31,51 @@ public class UserInitData {
             String[] activeProfiles = env.getActiveProfiles();
             boolean isDev = false;
             for (String profile : activeProfiles) {
-                if (profile.equals("dev")) {
+                if (profile.equals("dev") || profile.equals("local")) {
                     isDev = true;
                     break;
                 }
             }
 
-            int userCount = isDev ? 1000 : 10; // dev=1000, release=10
-
-            if (userRepository.count() >= userCount) {
-                log.info("유저 데이터가 이미 존재하여 초기화를 건너뜁니다.");
-                return;
+            // [변경] 개발 환경에서 고정된 테스트 데이터 생성 (u1 ~ u20)
+            if (isDev) {
+                createFixedUsers();
             }
-
-            List<User> users = new ArrayList<>();
-
-            // 관리자
-            users.add(createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN));
-
-            // 일반 유저
-            for (int i = 1; i <= userCount; i++) {
-                users.add(createUser("user" + i + "@semicolon.com", "User123!", "user" + i, Role.USER));
-            }
-
-            userRepository.saveAll(users);
-            log.info("✅ {}명의 유저 생성 완료", userCount + 1);
         };
     }
 
-    private User createUser(String email, String rawPassword, String nickname, Role role) {
+    private void createFixedUsers() {
+        List<User> users = new ArrayList<>();
+
+        // 1. 관리자 (UUID ...0000)
+        users.add(createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN, 0));
+
+        // 2. 일반 유저 (u1 ~ u20 -> UUID ...0001 ~ ...0020)
+        for (int i = 1; i <= 20; i++) {
+            users.add(createUser("u" + i + "@company.com", "TestUser123!", "u" + i, Role.USER, i));
+        }
+
+        userRepository.saveAll(users);
+        log.info("✅ 고정 테스트 유저 (admin, u1~u20) 생성 완료");
+    }
+
+    private User createUser(String email, String rawPassword, String nickname, Role role, int seed) {
+        // 이미 존재하면 생성 안 함
+        if (userRepository.findByEmail(email).isPresent()) {
+            return null;
+        }
+
+        // 고정 UUID 생성 (00000000-0000-0000-0000-0000000000xx)
+        String uuidStr = String.format("00000000-0000-0000-0000-%012d", seed);
+        java.util.UUID uuid = java.util.UUID.fromString(uuidStr);
+
         return User.builder()
+                .uuid(uuid) // SourceUser 필드에 직접 주입
                 .email(email)
                 .password(passwordEncoder.encode(rawPassword))
                 .nickname(nickname)
                 .role(role)
+                .status(dukku.common.shared.user.type.UserStatus.ACTIVE)
                 .build();
     }
 }

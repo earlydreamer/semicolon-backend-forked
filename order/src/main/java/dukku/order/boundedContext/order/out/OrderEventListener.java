@@ -11,12 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
@@ -45,8 +40,7 @@ public class OrderEventListener {
      * TODO: 최종 프로젝트에서 환불 적용.
      */
     @Retryable(backoff = @Backoff(delay = 1000))
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
     public void handle(PaymentSuccessEvent event) {
         updateOrderStatusUseCase.confirmPayment(event.orderUuid());
     }
@@ -68,10 +62,8 @@ public class OrderEventListener {
      * retry 실패 할 경우 로그를 남기며 보상 트랜잭션 실행
      * TODO: 최종 프로젝트에서 환불 적용.
      */
-    @Async
     @Retryable(backoff = @Backoff(delay = 1000))
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.failed", groupId = "${spring.application.name}-group")
     public void handle(PaymentFailedEvent event) {
         updateOrderStatusUseCase.failPayment(event.orderUuid());
     }

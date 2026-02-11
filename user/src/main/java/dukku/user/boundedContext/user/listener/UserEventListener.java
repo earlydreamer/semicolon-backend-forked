@@ -10,7 +10,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 public class UserEventListener {
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @org.springframework.kafka.annotation.KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
     public void handleUserJoined(UserJoinedEvent event) {
         log.info("[UserJoinedEvent] userUuid={}", event.member().userUuid());
 
