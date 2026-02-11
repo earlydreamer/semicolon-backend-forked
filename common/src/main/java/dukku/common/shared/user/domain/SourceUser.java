@@ -1,7 +1,7 @@
 package dukku.common.shared.user.domain;
 
 import com.github.f4b6a3.uuid.UuidCreator;
-import dukku.semicolon.boundedContext.user.entity.type.UserStatus;
+import dukku.common.shared.user.type.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;

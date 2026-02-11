@@ -1,7 +1,6 @@
 package dukku.common.shared.order.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
 import lombok.Builder;
@@ -43,17 +42,5 @@ public class OrderResponse {
 
         private String carrierName;
         private String trackingNumber;
-
-        public static OrderItemResponse from(OrderItem item) {
-            return OrderItemResponse.builder()
-                    .productUuid(item.getProductUuid())
-                    .productName(item.getProductName())
-                    .productPrice(item.getProductPrice())
-                    .imageUrl(item.getImageUrl())
-                    .itemStatus(item.getStatus())
-                    .carrierName(item.getCarrierName())
-                    .trackingNumber(item.getTrackingNumber())
-                    .build();
-        }
     }
 }

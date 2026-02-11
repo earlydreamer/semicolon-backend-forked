@@ -1,7 +1,7 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
+import dukku.common.shared.coupon.type.IssueResult;
 import dukku.coupon.boundedContext.coupon.entity.CouponIssueLog;
-import dukku.coupon.boundedContext.coupon.entity.type.IssueResult;
 import dukku.coupon.boundedContext.coupon.out.CouponIssueLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

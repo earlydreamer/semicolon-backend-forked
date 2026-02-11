@@ -1,12 +1,12 @@
 package dukku.product.boundedContext.product.app.usecase.comment;
 
-import dukku.product.boundedContext.product.entity.Product;
-import dukku.product.boundedContext.product.entity.ProductComment;
-import dukku.product.boundedContext.product.out.ProductCommentRepository;
 import dukku.common.shared.product.dto.comment.CommentResponse;
 import dukku.common.shared.product.dto.comment.CommentUpdateRequest;
 import dukku.common.shared.product.exception.CommentNotFoundException;
 import dukku.common.shared.product.exception.CommentUnauthorizedException;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductComment;
+import dukku.product.boundedContext.product.out.ProductCommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +42,6 @@ public class UpdateCommentUseCase {
         // (3) 수정
         comment.changeContent(request.getContent());
 
-        return CommentResponse.from(comment);
+        return ProductComment.from(comment);
     }
 }

@@ -1,6 +1,7 @@
 package dukku.common.shared.settlement.dto;
 
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
+
+import dukku.common.shared.settlement.type.SettlementStatus;
 
 import java.time.LocalDate;
 import java.util.UUID;

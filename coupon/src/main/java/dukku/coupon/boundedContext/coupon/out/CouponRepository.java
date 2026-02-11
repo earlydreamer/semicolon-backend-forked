@@ -1,7 +1,7 @@
 package dukku.coupon.boundedContext.coupon.out;
 
+import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
-import dukku.coupon.boundedContext.coupon.entity.type.CouponStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

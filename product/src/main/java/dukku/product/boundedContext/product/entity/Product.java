@@ -1,6 +1,8 @@
 package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
+import dukku.common.shared.product.dto.product.ProductListItemResponse;
+import dukku.common.shared.product.dto.product.ProductListResponse;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
@@ -11,9 +13,11 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -217,5 +221,39 @@ public class Product extends BaseIdAndUUIDAndTime {
             this.saleStatus = SaleStatus.ON_SALE;
             this.reservedOrderUuid = null; // 예약 정보 삭제
         }
+    }
+
+    public static ProductListItemResponse from(Product product) {
+        String thumbnail = product.getImages() == null
+                ? null
+                : product.getImages().stream()
+                .min(Comparator.comparingInt(ProductImage::getSortOrder))
+                .map(ProductImage::getImageUrl)
+                .orElse(null);
+
+        return ProductListItemResponse.builder()
+                .productUuid(product.getUuid())
+                .title(product.getTitle())
+                .price(product.getPrice())
+                .thumbnailUrl(thumbnail)
+                .saleStatus(product.getSaleStatus())
+                .likeCount(product.getLikeCount())
+                .commentCount(product.getCommentCount())
+                .viewCount(product.getViewCount())
+                .createdAt(product.getCreatedAt())
+                .tagNames(product.getTagNames())
+                .build();
+    }
+
+    public static ProductListResponse from(Page<Product> result) {
+        return ProductListResponse.builder()
+                .items(result.getContent().stream()
+                        .map(ProductListItemResponse::from)
+                        .toList())
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalCount(result.getTotalElements())
+                .hasNext(result.hasNext())
+                .build();
     }
 }

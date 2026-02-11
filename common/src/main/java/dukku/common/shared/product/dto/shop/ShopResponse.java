@@ -1,6 +1,5 @@
 package dukku.common.shared.product.dto.shop;
 
-import dukku.semicolon.boundedContext.product.entity.ProductSeller;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,13 +12,4 @@ public class ShopResponse {
     private String intro;
     private int salesCount;
     private int activeListingCount;
-
-    public static ShopResponse from(ProductSeller seller) {
-        return ShopResponse.builder()
-                .shopUuid(seller.getUuid())
-                .intro(seller.getIntro())
-                .salesCount(seller.getSalesCount())
-                .activeListingCount(seller.getActiveListingCount())
-                .build();
-    }
 }

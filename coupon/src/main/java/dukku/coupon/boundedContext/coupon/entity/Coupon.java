@@ -1,9 +1,10 @@
 package dukku.coupon.boundedContext.coupon.entity;
 
-import dukku.coupon.boundedContext.coupon.entity.type.CouponStatus;
-import dukku.coupon.shared.coupon.dto.CouponCreateRequest;
-import dukku.coupon.shared.coupon.dto.CouponUpdateRequest;
-import dukku.coupon.shared.coupon.exception.*;
+import dukku.common.shared.coupon.dto.CouponCreateRequest;
+import dukku.common.shared.coupon.dto.CouponResponse;
+import dukku.common.shared.coupon.dto.CouponUpdateRequest;
+import dukku.common.shared.coupon.exception.*;
+import dukku.common.shared.coupon.type.CouponStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -106,6 +107,20 @@ public class Coupon {
             throw new CouponSoldOutException();
         }
         this.issuedQuantity++;
+    }
+
+    public static CouponResponse from(Coupon coupon) {
+        return new CouponResponse(
+                coupon.getUuid(),
+                coupon.getCouponName(),
+                coupon.getDiscountAmount(),
+                coupon.getMinimumOrderAmount(),
+                coupon.getValidFrom(),
+                coupon.getCreatedAt(),
+                coupon.getStatus(),
+                coupon.getTotalQuantity(),
+                coupon.getIssuedQuantity()
+        );
     }
 }
 

@@ -1,6 +1,6 @@
 package dukku.coupon.boundedContext.coupon.entity;
 
-import dukku.coupon.boundedContext.coupon.entity.type.IssueResult;
+import dukku.common.shared.coupon.type.IssueResult;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

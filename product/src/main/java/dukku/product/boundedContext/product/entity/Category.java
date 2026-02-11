@@ -2,6 +2,7 @@ package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.exception.BadRequestException;
 import dukku.common.global.jpa.entity.BaseIdAndTime;
+import dukku.common.shared.product.dto.product.CategoryCreateResponse;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -48,6 +49,19 @@ public class Category extends BaseIdAndTime {
                 .categoryName(name)
                 .parent(parent)
                 .depth(parent.getDepth() + 1)
+                .build();
+    }
+
+    public static CategoryCreateResponse from(Category category) {
+        return CategoryCreateResponse.builder()
+                .id(category.getId())
+                .name(category.getCategoryName())
+                .depth(category.getDepth())
+                .parentId(
+                        category.getParent() == null
+                                ? null
+                                : category.getParent().getId()
+                )
                 .build();
     }
 }

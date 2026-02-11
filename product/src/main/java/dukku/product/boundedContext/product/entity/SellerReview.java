@@ -1,7 +1,11 @@
 package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
-import jakarta.persistence.*;
+import dukku.common.shared.product.dto.review.SellerReviewResponse;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
@@ -70,9 +74,13 @@ public class SellerReview extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
-    public void softDelete() { this.deletedAt = LocalDateTime.now(); }
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 
-    public boolean isDeleted() { return deletedAt != null; }
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 
     public void changeContent(String content) {
         this.content = content;
@@ -80,5 +88,18 @@ public class SellerReview extends BaseIdAndUUIDAndTime {
 
     public void changeRating(int rating) {
         this.rating = rating;
+    }
+
+    public static SellerReviewResponse from(SellerReview r) {
+        return SellerReviewResponse.builder()
+                .reviewUuid(r.getUuid())
+                .sellerUuid(r.getSellerUuid())
+                .buyerUuid(r.getBuyerUuid())
+                .orderItemUuid(r.getOrderItemUuid())
+                .productUuid(r.getProductUuid())
+                .rating(r.getRating())
+                .content(r.isDeleted() ? "삭제된 후기입니다." : r.getContent())
+                .createdAt(r.getCreatedAt())
+                .build();
     }
 }

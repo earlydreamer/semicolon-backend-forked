@@ -1,7 +1,7 @@
 package dukku.coupon.global;
 
+import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
-import dukku.coupon.boundedContext.coupon.entity.type.CouponStatus;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

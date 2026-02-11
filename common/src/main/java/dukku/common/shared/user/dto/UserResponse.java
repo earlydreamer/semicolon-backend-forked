@@ -1,8 +1,8 @@
 package dukku.common.shared.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dukku.semicolon.boundedContext.user.entity.type.Role;
-import dukku.semicolon.boundedContext.user.entity.type.UserStatus;
+import dukku.common.shared.user.type.Role;
+import dukku.common.shared.user.type.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;

@@ -1,14 +1,14 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
+import dukku.common.shared.product.dto.product.ProductDetailResponse;
+import dukku.common.shared.product.dto.product.ProductUpdateRequest;
+import dukku.common.shared.product.exception.ProductCategoryNotFoundException;
 import dukku.product.boundedContext.product.app.support.ProductMapper;
 import dukku.product.boundedContext.product.app.support.ProductSupport;
 import dukku.product.boundedContext.product.entity.Category;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.CategoryRepository;
-import dukku.common.shared.product.dto.product.ProductDetailResponse;
-import dukku.common.shared.product.dto.product.ProductUpdateRequest;
-import dukku.common.shared.product.event.ProductUpdatedEvent;
-import dukku.common.shared.product.exception.ProductCategoryNotFoundException;
+import dukku.product.global.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;

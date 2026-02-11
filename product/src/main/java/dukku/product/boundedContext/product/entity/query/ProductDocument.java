@@ -1,5 +1,6 @@
 package dukku.product.boundedContext.product.entity.query;
 
+import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
@@ -16,6 +17,7 @@ import org.springframework.data.elasticsearch.annotations.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -122,6 +124,21 @@ public class ProductDocument {
                         .orElse(null))
                 .deletedAt(product.getDeletedAt())
                 .conditionStatus(product.getConditionStatus())
+                .build();
+    }
+
+    public static ProductListItemResponse from(ProductDocument doc) {
+        return ProductListItemResponse.builder()
+                .productUuid(UUID.fromString(doc.getProductUuid())) // String UUID -> UUID 변환
+                .title(doc.getTitle())
+                .price(doc.getPrice())
+                .thumbnailUrl(doc.getThumbnailImageUrl())
+                .saleStatus(doc.getSaleStatus())
+                .likeCount(doc.getLikeCount())
+                .commentCount(doc.getCommentCount())
+                .viewCount(doc.getViewCount())
+                .createdAt(doc.getCreatedAt())
+                .tagNames(doc.getTags())
                 .build();
     }
 }

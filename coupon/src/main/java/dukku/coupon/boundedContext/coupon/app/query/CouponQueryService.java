@@ -1,8 +1,8 @@
 package dukku.coupon.boundedContext.coupon.app.query;
 
+import dukku.common.shared.coupon.type.CouponStatus;
+import dukku.common.shared.coupon.type.CouponUserStatus;
 import dukku.coupon.boundedContext.coupon.entity.CouponUser;
-import dukku.coupon.boundedContext.coupon.entity.type.CouponStatus;
-import dukku.coupon.boundedContext.coupon.entity.type.CouponUserStatus;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
 import dukku.coupon.boundedContext.coupon.out.CouponUserRepository;
 import dukku.coupon.shared.coupon.dto.CouponResponse;

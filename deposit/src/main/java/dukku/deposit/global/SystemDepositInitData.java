@@ -1,3 +1,7 @@
+/* TODO: 현재 모듈 분리 이후 UserFacade, UserSupport, User를 import할 수 없으므로 수정해야함.
+관련된 코드는 모두 주석처리 했음.*/
+
+/*
 package dukku.deposit.global;
 
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
@@ -17,11 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+*/
 /**
  * 시스템 예치금 관리를 위한 admin 계정 생성
  * User-Deposit 1:1 대응이므로 계정 생성 시 Deposit 함께 생성
  * 일단 임시로 초기화 코드를 이용해 밀어넣는 방식으로 구현, 추후 Admin을 타고 관리하는 방식으로 변경 고려
- */
+ *//*
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -87,3 +93,4 @@ public class SystemDepositInitData {
         };
     }
 }
+*/

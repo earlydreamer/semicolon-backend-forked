@@ -1,7 +1,7 @@
 package dukku.common.shared.settlement.dto;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
+
+import dukku.common.shared.settlement.type.SettlementStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,52 +28,4 @@ public record SettlementDetailResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    /**
-     * Settlement 엔티티만으로 응답 생성 (외부 정보 null)
-     */
-    public static SettlementDetailResponse from(Settlement settlement) {
-        return new SettlementDetailResponse(
-                settlement.getUuid(),
-                settlement.getSettlementStatus(),
-                settlement.getSellerUuid(),
-                null,  // sellerNickname - TODO: UserApiClient 구현 후 사용
-                null,  // productName - TODO: ProductApiClient 구현 후 사용
-                settlement.getTotalAmount(),
-                settlement.getFee(),
-                settlement.getFeeAmount(),
-                settlement.getSettlementAmount(),
-                settlement.getSettlementReservationDate(),
-                settlement.getOrderId(),
-                settlement.getCompletedAt(),
-                settlement.getCreatedAt(),
-                settlement.getUpdatedAt()
-        );
-    }
-
-    /**
-     * Settlement + 외부 BC 정보를 조합하여 응답 생성
-     * - API Client 구현 후 사용
-     */
-    public static SettlementDetailResponse of(
-            Settlement settlement,
-            String sellerNickname,
-            String productName
-    ) {
-        return new SettlementDetailResponse(
-                settlement.getUuid(),
-                settlement.getSettlementStatus(),
-                settlement.getSellerUuid(),
-                sellerNickname,
-                productName,
-                settlement.getTotalAmount(),
-                settlement.getFee(),
-                settlement.getFeeAmount(),
-                settlement.getSettlementAmount(),
-                settlement.getSettlementReservationDate(),
-                settlement.getOrderId(),
-                settlement.getCompletedAt(),
-                settlement.getCreatedAt(),
-                settlement.getUpdatedAt()
-        );
-    }
 }

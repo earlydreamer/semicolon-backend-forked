@@ -4,10 +4,9 @@ import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
 import dukku.common.shared.deposit.event.DepositUsedEvent;
 import dukku.common.shared.deposit.type.DepositFailureCode;
+import dukku.common.shared.deposit.type.DepositHistoryType;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
-import dukku.deposit.boundedContext.deposit.entity.enums.DepositHistoryType;
 import dukku.deposit.boundedContext.deposit.exception.NotEnoughDepositException;
-import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,7 @@ public class DeductDepositForPaymentUseCase {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void execute(UUID userUuid, Long totalAmount, UUID orderUuid, UUID paymentUuid,
-            List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
+                        List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
         if (totalAmount == null || totalAmount <= 0) {
             return;
         }
@@ -61,7 +60,7 @@ public class DeductDepositForPaymentUseCase {
     }
 
     private void executeDeductions(UUID userUuid, Long totalAmount, UUID orderUuid,
-            List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
+                                   List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
         // 상품별 예치금 차감 및 이력 생성
         for (PaymentSuccessEvent.ItemDepositUsage usage : itemDepositUsages) {
             decreaseDepositUseCase.decrease(userUuid, usage.depositAmount(), DepositHistoryType.USE,
@@ -70,11 +69,11 @@ public class DeductDepositForPaymentUseCase {
 
         // 전체 차감 완료 성공 이벤트 발행
         // 시스템 지갑 예치금 증가
-        increaseDepositUseCase.increase(
-                SystemDepositInitData.SYSTEM_USER_UUID,
-                totalAmount,
-                DepositHistoryType.DEPOSIT_CHARGE,
-                orderUuid);
+//        increaseDepositUseCase.increase(
+//                SystemDepositInitData.SYSTEM_USER_UUID,
+//                totalAmount,
+//                DepositHistoryType.DEPOSIT_CHARGE,
+//                orderUuid);
 
         // 전체 차감 완료 성공 이벤트 발행
         eventPublisher.publish(new DepositUsedEvent(orderUuid, userUuid, totalAmount));

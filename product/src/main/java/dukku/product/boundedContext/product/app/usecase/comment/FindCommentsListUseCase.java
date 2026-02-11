@@ -1,9 +1,9 @@
 package dukku.product.boundedContext.product.app.usecase.comment;
 
-import dukku.product.boundedContext.product.entity.ProductComment;
-import dukku.product.boundedContext.product.out.ProductCommentRepository;
 import dukku.common.shared.product.dto.comment.CommentListResponse;
 import dukku.common.shared.product.dto.comment.CommentResponse;
+import dukku.product.boundedContext.product.entity.ProductComment;
+import dukku.product.boundedContext.product.out.ProductCommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -71,11 +71,11 @@ public class FindCommentsListUseCase {
                     // 대댓글 정렬: 오래된 순
                     List<CommentResponse> replyResponses = rs.stream()
                             .sorted(Comparator.comparing(ProductComment::getCreatedAt))
-                            .map(CommentResponse::from)
+                            .map(ProductComment::from)
                             .toList();
 
                     return CommentListResponse.CommentThreadResponse.builder()
-                            .parent(CommentResponse.from(parent))
+                            .parent(ProductComment.from(parent))
                             .replies(replyResponses)
                             .build();
                 })

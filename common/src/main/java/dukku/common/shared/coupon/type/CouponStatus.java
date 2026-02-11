@@ -1,4 +1,4 @@
-package dukku.coupon.boundedContext.coupon.entity.type;
+package dukku.common.shared.coupon.type;
 
 public enum CouponStatus {
     DRAFT,      // 생성 후 발급 전
