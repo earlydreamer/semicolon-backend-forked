@@ -23,7 +23,8 @@ COPY coupon coupon
 # 3. 빌드 실행 (MODULE_NAME을 인자로 받음)
 ARG MODULE_NAME
 RUN chmod +x ./gradlew
-RUN ./gradlew clean :${MODULE_NAME}:bootJar -x test
+# clean 제거: 일부 모듈 빌드 시 의존성(common) 결과물이 삭제될 가능성 방지 및 캐싱 활용
+RUN ./gradlew :${MODULE_NAME}:bootJar -x test
 
 # plain JAR 제거 (COPY 시 모호성 방지)
 RUN rm -f ${MODULE_NAME}/build/libs/*-plain.jar
