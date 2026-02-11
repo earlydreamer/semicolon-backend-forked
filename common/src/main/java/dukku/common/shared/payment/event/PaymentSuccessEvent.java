@@ -1,5 +1,7 @@
 package dukku.common.shared.payment.event;
 
+import dukku.common.global.eventPublisher.KafkaRoutableEvent;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -11,15 +13,18 @@ import java.util.UUID;
  * 이후 예치금 차감(Deposit BC) 및 주문 상태 변경(Order BC)의 트리거가 됩니다.
  */
 public record PaymentSuccessEvent(
-                UUID paymentUuid, // 2026-01-24 추가
-                UUID paymentId, // 2026-01-24 추가
+                UUID paymentUuid, // 2026-01-24
+                UUID paymentId, // 2026-01-24
                 UUID orderUuid,
                 Long amount,
                 Long pgAmount, // pg 결제 금액
                 Long paymentDeposit, // 사용된 예치금
                 UUID userUuid,
                 LocalDateTime occurredAt,
-                List<ItemDepositUsage> itemDepositUsages) { // 2026-01-24 추가
+                List<ItemDepositUsage> itemDepositUsages) implements KafkaRoutableEvent { // 2026-01-24
+
+        @Override
+        public String topic() { return TOPIC; }
 
         /**
          * 이 이벤트가 발행되는 Kafka 토픽명.

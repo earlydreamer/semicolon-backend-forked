@@ -1,5 +1,6 @@
 package dukku.common.shared.payment.event;
 
+import dukku.common.global.eventPublisher.KafkaRoutableEvent;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import dukku.common.shared.payment.type.PaymentFailureStage;
 import java.time.LocalDateTime;
@@ -19,7 +20,10 @@ public record PaymentFailedEvent(
         PaymentFailureCode failureCode,
         boolean retryable,
         String reason,
-        LocalDateTime occurredAt) {
+        LocalDateTime occurredAt) implements KafkaRoutableEvent {
+
+    @Override
+    public String topic() { return TOPIC; }
 
     /**
      * 이 이벤트가 발행되는 Kafka 토픽명.

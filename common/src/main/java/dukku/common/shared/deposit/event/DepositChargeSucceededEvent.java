@@ -1,5 +1,7 @@
 package dukku.common.shared.deposit.event;
 
+import dukku.common.global.eventPublisher.KafkaRoutableEvent;
+
 import java.util.UUID;
 
 /**
@@ -11,7 +13,11 @@ import java.util.UUID;
 public record DepositChargeSucceededEvent(
         UUID userUuid,
         Long amount,
-        UUID settlementUuid) {
+        UUID settlementUuid) implements KafkaRoutableEvent {
+
+    @Override
+    public String topic() { return TOPIC; }
+
     /**
      * 이 이벤트가 발행되는 Kafka 토픽명.
      * Producer(EventPublisher)와 Consumer(@KafkaListener)가 동일한 상수를 참조하여
