@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.usecase.product;
+package dukku.product.boundedContext.product.app.usecase.product;
 
-import dukku.semicolon.boundedContext.product.out.CategoryRepository;
+import dukku.product.boundedContext.product.out.CategoryRepository;
 import dukku.common.shared.product.dto.product.CategoryCreateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

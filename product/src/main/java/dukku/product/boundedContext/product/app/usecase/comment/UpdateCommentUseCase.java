@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.product.app.usecase.comment;
+package dukku.product.boundedContext.product.app.usecase.comment;
 
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductComment;
-import dukku.semicolon.boundedContext.product.out.ProductCommentRepository;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductComment;
+import dukku.product.boundedContext.product.out.ProductCommentRepository;
 import dukku.common.shared.product.dto.comment.CommentResponse;
 import dukku.common.shared.product.dto.comment.CommentUpdateRequest;
 import dukku.common.shared.product.exception.CommentNotFoundException;

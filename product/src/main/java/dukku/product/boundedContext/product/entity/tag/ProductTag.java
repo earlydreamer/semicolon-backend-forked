@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.entity.tag;
+package dukku.product.boundedContext.product.entity.tag;
 
-import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.product.boundedContext.product.app.cqrs;
 
 import dukku.common.shared.product.type.SaleStatus;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductImage;
-import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
-import dukku.semicolon.boundedContext.product.out.CategoryRepository;
-import dukku.semicolon.boundedContext.product.out.ProductSearchRepository;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductImage;
+import dukku.product.boundedContext.product.entity.query.ProductDocument;
+import dukku.product.boundedContext.product.out.CategoryRepository;
+import dukku.product.boundedContext.product.out.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;

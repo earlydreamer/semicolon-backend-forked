@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.deposit.out;
+package dukku.deposit.boundedContext.deposit.out;
 
-import dukku.semicolon.boundedContext.deposit.entity.Deposit;
+import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

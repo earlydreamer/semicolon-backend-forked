@@ -1,4 +1,4 @@
-package dukku.semicolon;
+package dukku.auth;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

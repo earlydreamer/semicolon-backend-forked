@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.product.app.cqrs;
+package dukku.product.boundedContext.product.app.cqrs;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import dukku.semicolon.boundedContext.product.entity.query.ProductDocument;
+import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
 import dukku.common.shared.product.dto.cqrs.ProductSortType;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;

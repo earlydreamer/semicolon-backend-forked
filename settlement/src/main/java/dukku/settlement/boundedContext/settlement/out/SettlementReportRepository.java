@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.settlement.out;
+package dukku.settlement.boundedContext.settlement.out;
 
 import dukku.common.shared.settlement.dto.SellerStatisticsResponse.SellerSettlementSummary;
 import dukku.common.shared.settlement.dto.SettlementFinancialStatisticsResponse;

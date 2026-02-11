@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.payment.in;
+package dukku.payment.boundedContext.payment.in;
 
-import dukku.semicolon.boundedContext.payment.app.FindPaymentUseCase;
-import dukku.semicolon.boundedContext.payment.entity.Payment;
+import dukku.payment.boundedContext.payment.app.FindPaymentUseCase;
+import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.common.shared.payment.dto.PaymentInternalResponse;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;

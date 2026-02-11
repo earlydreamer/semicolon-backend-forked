@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
-import dukku.semicolon.boundedContext.product.app.facade.ProductLikeFacade;
+import dukku.product.boundedContext.product.app.facade.ProductLikeFacade;
 import dukku.common.shared.product.docs.ProductLikeApiDocs;
 import dukku.common.shared.product.dto.like.MyLikedProductListResponse;
 import lombok.RequiredArgsConstructor;

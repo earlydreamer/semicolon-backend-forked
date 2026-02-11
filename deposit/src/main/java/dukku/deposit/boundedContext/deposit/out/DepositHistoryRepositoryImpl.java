@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.deposit.out;
+package dukku.deposit.boundedContext.deposit.out;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import dukku.semicolon.boundedContext.deposit.entity.DepositHistory;
-import dukku.semicolon.boundedContext.deposit.entity.QDepositHistory;
+import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
+import dukku.deposit.boundedContext.deposit.entity.QDepositHistory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;

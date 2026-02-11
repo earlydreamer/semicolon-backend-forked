@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.order.in;
+package dukku.order.boundedContext.order.in;
 
-import dukku.semicolon.boundedContext.order.app.FindOrderByUuidUseCase;
-import dukku.semicolon.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.app.FindOrderByUuidUseCase;
+import dukku.order.boundedContext.order.entity.Order;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.out.UserApiClient;
 import lombok.RequiredArgsConstructor;

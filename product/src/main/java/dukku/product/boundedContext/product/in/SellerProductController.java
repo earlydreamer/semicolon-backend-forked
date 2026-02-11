@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
-import dukku.semicolon.boundedContext.product.app.facade.SellerProductFacade;
+import dukku.product.boundedContext.product.app.facade.SellerProductFacade;
 import dukku.common.shared.product.docs.SellerProductApiDocs;
 import dukku.common.shared.product.dto.product.ProductCreateRequest;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;

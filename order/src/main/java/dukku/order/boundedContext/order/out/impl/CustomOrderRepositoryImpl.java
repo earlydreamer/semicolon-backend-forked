@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.order.out.impl;
+package dukku.order.boundedContext.order.out.impl;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import dukku.common.shared.order.type.OrderStatus;
-import dukku.semicolon.boundedContext.order.entity.Order;
-import dukku.semicolon.boundedContext.order.out.CustomOrderRepository;
+import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.out.CustomOrderRepository;
 import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -1,4 +1,4 @@
-package dukku.semicolon.global.config;
+package dukku.settlement.global.config;
 
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.EnableJdbcJobRepository;

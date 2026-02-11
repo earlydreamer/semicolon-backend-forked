@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.payment.out;
+package dukku.payment.boundedContext.payment.out;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;

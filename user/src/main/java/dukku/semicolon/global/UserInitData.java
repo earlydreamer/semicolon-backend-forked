@@ -1,8 +1,8 @@
-package dukku.semicolon.global;
+package dukku.user.global;
 
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
-import dukku.semicolon.boundedContext.user.out.UserRepository;
+import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;

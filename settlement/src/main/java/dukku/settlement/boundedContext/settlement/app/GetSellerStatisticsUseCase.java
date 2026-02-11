@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.out.SettlementReportRepository;
+import dukku.settlement.boundedContext.settlement.out.SettlementReportRepository;
 import dukku.common.shared.settlement.dto.SellerStatisticsResponse;
 import dukku.common.shared.settlement.dto.SellerStatisticsResponse.SellerSettlementSummary;
 import lombok.RequiredArgsConstructor;

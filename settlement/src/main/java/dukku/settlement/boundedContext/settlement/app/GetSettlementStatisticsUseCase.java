@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
 import com.querydsl.core.Tuple;
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
-import dukku.semicolon.boundedContext.settlement.out.SettlementRepository;
+import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
+import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import dukku.common.shared.settlement.dto.SettlementStatisticsCondition;
 import dukku.common.shared.settlement.dto.SettlementStatisticsResponse;
 import lombok.RequiredArgsConstructor;

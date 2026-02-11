@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

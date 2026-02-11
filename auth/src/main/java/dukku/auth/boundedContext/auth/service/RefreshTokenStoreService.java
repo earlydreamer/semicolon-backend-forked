@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.auth.service;
+package dukku.auth.boundedContext.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.payment.app;
+package dukku.payment.boundedContext.payment.app;
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.payment.entity.Payment;
-import dukku.semicolon.boundedContext.payment.entity.PaymentOrderItem;
+import dukku.payment.boundedContext.payment.entity.Payment;
+import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentType;
 import dukku.common.shared.deposit.out.depositApiClient.DepositApiClient;

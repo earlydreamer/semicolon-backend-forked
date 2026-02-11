@@ -1,13 +1,13 @@
-package dukku.semicolon.boundedContext.auth.service;
+package dukku.auth.boundedContext.auth.service;
 
 import dukku.common.global.exception.NotFoundException;
 import dukku.common.global.exception.UnauthorizedException;
-import dukku.semicolon.boundedContext.auth.dto.AccessTokenResponse;
-import dukku.semicolon.boundedContext.auth.dto.LoginRequest;
-import dukku.semicolon.boundedContext.auth.dto.TokenResponse;
-import dukku.semicolon.boundedContext.auth.jwt.AuthTokenIssuer;
-import dukku.semicolon.boundedContext.user.entity.User;
-import dukku.semicolon.boundedContext.user.out.UserRepository;
+import dukku.auth.boundedContext.auth.dto.AccessTokenResponse;
+import dukku.auth.boundedContext.auth.dto.LoginRequest;
+import dukku.auth.boundedContext.auth.dto.TokenResponse;
+import dukku.auth.boundedContext.auth.jwt.AuthTokenIssuer;
+import dukku.auth.boundedContext.user.entity.User;
+import dukku.auth.boundedContext.user.out.UserRepository;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

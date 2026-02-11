@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.settlement.batch.listener;
+package dukku.settlement.boundedContext.settlement.batch.listener;
 
-import dukku.semicolon.boundedContext.settlement.batch.notification.SlackNotificationService;
+import dukku.settlement.boundedContext.settlement.batch.notification.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;

@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.settlement.out.impl;
+package dukku.settlement.boundedContext.settlement.out.impl;
 
 import com.querydsl.core.Tuple;
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.common.shared.settlement.dto.SettlementSearchCondition;
 import dukku.common.shared.settlement.dto.SettlementStatisticsCondition;
 import org.springframework.data.domain.Page;

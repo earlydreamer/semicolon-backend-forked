@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.user.app.user;
+package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.dto.UserRegisterRequest;
-import dukku.semicolon.boundedContext.user.app.email.EmailVerificationService;
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.app.email.EmailVerificationService;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.exception.UserConflictException;
 import dukku.common.shared.user.event.UserJoinedEvent;

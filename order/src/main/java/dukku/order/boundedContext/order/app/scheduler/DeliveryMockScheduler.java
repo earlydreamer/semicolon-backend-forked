@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.order.app.scheduler;
+package dukku.order.boundedContext.order.app.scheduler;
 
 import dukku.common.shared.order.type.OrderItemStatus;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
-import dukku.semicolon.boundedContext.order.out.OrderItemRepository;
+import dukku.order.boundedContext.order.entity.OrderItem;
+import dukku.order.boundedContext.order.out.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

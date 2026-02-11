@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.eventPublisher.EventPublisher;
@@ -8,8 +8,8 @@ import dukku.common.shared.order.event.OrderItemCanceledEvent;
 import dukku.common.shared.order.event.OrderItemConfirmedEvent;
 import dukku.common.shared.order.event.OrderItemRefundRequestedEvent;
 import dukku.common.shared.order.type.OrderItemStatus;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
-import dukku.semicolon.boundedContext.order.out.OrderItemRepository;
+import dukku.order.boundedContext.order.entity.OrderItem;
+import dukku.order.boundedContext.order.out.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

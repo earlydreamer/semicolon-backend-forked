@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.order.in;
+package dukku.order.boundedContext.order.in;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
-import dukku.semicolon.boundedContext.order.app.OrderFacade;
+import dukku.order.boundedContext.order.app.OrderFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

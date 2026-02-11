@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.product.out;
+package dukku.product.boundedContext.product.out;
 
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
-import dukku.semicolon.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

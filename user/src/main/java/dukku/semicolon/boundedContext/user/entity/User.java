@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.user.entity;
+package dukku.user.boundedContext.user.entity;
 
 import dukku.common.global.auth.crypto.converter.AesGcmConverter;
-import dukku.semicolon.boundedContext.user.exception.AlreadyWithdrawUserException;
-import dukku.semicolon.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import dukku.user.boundedContext.user.exception.AlreadyWithdrawUserException;
+import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.dto.UserResponse;
 import dukku.common.shared.user.dto.UserUpdateRequest;

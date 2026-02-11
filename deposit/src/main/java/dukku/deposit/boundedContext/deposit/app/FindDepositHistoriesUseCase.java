@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.deposit.app;
+package dukku.deposit.boundedContext.deposit.app;
 
-import dukku.semicolon.boundedContext.deposit.entity.DepositHistory;
+import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;

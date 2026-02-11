@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.payment.app;
+package dukku.payment.boundedContext.payment.app;
 
 import dukku.common.shared.payment.dto.PaymentConfirmRequest;
 import dukku.common.shared.payment.dto.PaymentConfirmResponse;

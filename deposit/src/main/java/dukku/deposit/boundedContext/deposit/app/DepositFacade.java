@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.deposit.app;
+package dukku.deposit.boundedContext.deposit.app;
 
-import dukku.semicolon.boundedContext.deposit.entity.DepositHistory;
-import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
+import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
+import dukku.deposit.boundedContext.deposit.entity.enums.DepositHistoryType;
 import dukku.common.shared.deposit.dto.DepositDto;
 import dukku.common.shared.deposit.dto.DepositHistoryDto;
 import dukku.common.shared.deposit.dto.DepositChargeForSettlementResponse;

@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.usecase.like;
+package dukku.product.boundedContext.product.app.usecase.like;
 
-import dukku.semicolon.boundedContext.product.app.support.ProductMapper;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.out.ProductLikeRepository;
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.app.support.ProductMapper;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.out.ProductLikeRepository;
+import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.common.shared.product.dto.like.MyLikedProductListResponse;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import lombok.RequiredArgsConstructor;

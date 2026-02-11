@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.settlement.event.SettlementDepositChargeRequestedEvent;
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.common.shared.settlement.exception.SettlementProcessingException;
 import dukku.common.shared.settlement.exception.SettlementValidationException;
 import lombok.RequiredArgsConstructor;

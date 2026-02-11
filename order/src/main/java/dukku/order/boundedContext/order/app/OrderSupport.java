@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
-import dukku.semicolon.boundedContext.order.entity.Order;
-import dukku.semicolon.boundedContext.order.out.OrderRepository;
+import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.out.OrderRepository;
 import dukku.common.shared.order.exception.OrderNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

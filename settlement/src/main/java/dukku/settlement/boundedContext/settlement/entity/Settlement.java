@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.settlement.entity;
+package dukku.settlement.boundedContext.settlement.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
+import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
 import dukku.common.shared.settlement.exception.SettlementValidationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

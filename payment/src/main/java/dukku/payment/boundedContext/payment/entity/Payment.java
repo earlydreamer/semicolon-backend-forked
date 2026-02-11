@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.payment.entity;
+package dukku.payment.boundedContext.payment.entity;
 
 import dukku.common.global.auth.crypto.converter.AesGcmConverter;
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;

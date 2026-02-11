@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.exception.ForbiddenException;
 import dukku.common.global.exception.NotFoundException;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
-import dukku.semicolon.boundedContext.order.out.OrderItemRepository;
+import dukku.order.boundedContext.order.entity.OrderItem;
+import dukku.order.boundedContext.order.out.OrderItemRepository;
 import dukku.common.shared.order.dto.DeliveryInfoRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

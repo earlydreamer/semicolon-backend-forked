@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.facade;
+package dukku.product.boundedContext.product.app.facade;
 
-import dukku.semicolon.boundedContext.product.app.usecase.comment.*;
+import dukku.product.boundedContext.product.app.usecase.comment.*;
 import dukku.common.shared.product.dto.comment.CommentCreateRequest;
 import dukku.common.shared.product.dto.comment.CommentListResponse;
 import dukku.common.shared.product.dto.comment.CommentResponse;

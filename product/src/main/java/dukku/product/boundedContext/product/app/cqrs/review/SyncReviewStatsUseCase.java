@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.app.cqrs.review;
+package dukku.product.boundedContext.product.app.cqrs.review;
 
-import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.common.shared.product.dto.cqrs.SellerReviewStatDto;
 import dukku.common.shared.product.event.ReviewStatsSyncedEvent;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.app.cqrs.review;
+package dukku.product.boundedContext.product.app.cqrs.review;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.settlement.app;
+package dukku.settlement.boundedContext.settlement.app;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.out.SettlementRepository;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import dukku.common.shared.settlement.exception.SettlementNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

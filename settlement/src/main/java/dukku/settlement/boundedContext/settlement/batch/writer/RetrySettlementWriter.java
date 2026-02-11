@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.settlement.batch.writer;
+package dukku.settlement.boundedContext.settlement.batch.writer;
 
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.out.SettlementRepository;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.infrastructure.item.Chunk;

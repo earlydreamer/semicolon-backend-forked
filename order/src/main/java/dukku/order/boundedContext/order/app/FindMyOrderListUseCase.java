@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.order.entity.Order;
-import dukku.semicolon.boundedContext.order.out.OrderRepository;
+import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.out.OrderRepository;
 import dukku.common.shared.order.dto.OrderListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

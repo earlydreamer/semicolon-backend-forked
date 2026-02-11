@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.product.app.usecase.product;
+package dukku.product.boundedContext.product.app.usecase.product;
 
-import dukku.semicolon.boundedContext.product.app.support.ProductMapper;
-import dukku.semicolon.boundedContext.product.app.support.ProductSupport;
-import dukku.semicolon.boundedContext.product.entity.Category;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.out.CategoryRepository;
+import dukku.product.boundedContext.product.app.support.ProductMapper;
+import dukku.product.boundedContext.product.app.support.ProductSupport;
+import dukku.product.boundedContext.product.entity.Category;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.out.CategoryRepository;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.dto.product.ProductUpdateRequest;
 import dukku.common.shared.product.event.ProductUpdatedEvent;

@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.user.in.dto;
+package dukku.user.boundedContext.user.in.dto;
 
-import dukku.semicolon.boundedContext.user.entity.Address;
+import dukku.user.boundedContext.user.entity.Address;
 import lombok.Getter;
 
 @Getter

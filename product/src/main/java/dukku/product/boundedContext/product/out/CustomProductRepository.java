@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.out;
+package dukku.product.boundedContext.product.out;
 
 import dukku.common.shared.product.dto.cqrs.ProductStatDto;
 

@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.product.entity;
+package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.exception.BadRequestException;
 import dukku.common.global.jpa.entity.BaseIdAndTime;

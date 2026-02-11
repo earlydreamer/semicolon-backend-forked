@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.user.app.user;
+package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.dto.PasswordUpdateRequest;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.dto.UserResponse;
 import dukku.common.shared.user.dto.UserUpdateRequest;
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

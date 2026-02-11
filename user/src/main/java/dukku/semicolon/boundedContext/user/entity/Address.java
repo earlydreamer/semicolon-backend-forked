@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.user.entity;
+package dukku.user.boundedContext.user.entity;
 
 import jakarta.persistence.*;
 

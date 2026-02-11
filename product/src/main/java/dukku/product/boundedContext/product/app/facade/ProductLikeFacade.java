@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.facade;
+package dukku.product.boundedContext.product.app.facade;
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.product.app.usecase.like.FindMyLikedProductsUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.like.LikeProductUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.like.UnlikeProductUseCase;
+import dukku.product.boundedContext.product.app.usecase.like.FindMyLikedProductsUseCase;
+import dukku.product.boundedContext.product.app.usecase.like.LikeProductUseCase;
+import dukku.product.boundedContext.product.app.usecase.like.UnlikeProductUseCase;
 import dukku.common.shared.product.dto.like.MyLikedProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

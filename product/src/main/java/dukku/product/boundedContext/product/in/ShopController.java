@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
 import dukku.common.shared.product.type.SaleStatus;
-import dukku.semicolon.boundedContext.product.app.facade.ShopFacade;
+import dukku.product.boundedContext.product.app.facade.ShopFacade;
 import dukku.common.shared.product.docs.ShopApiDocs;
 import dukku.common.shared.product.dto.shop.ShopProductListResponse;
 import dukku.common.shared.product.dto.shop.ShopResponse;

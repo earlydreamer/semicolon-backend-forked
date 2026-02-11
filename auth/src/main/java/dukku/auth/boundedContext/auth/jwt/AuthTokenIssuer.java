@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.auth.jwt;
+package dukku.auth.boundedContext.auth.jwt;
 
 import dukku.common.global.auth.jwt.JwtTokenUtil;
 import dukku.common.global.exception.UnauthorizedException;

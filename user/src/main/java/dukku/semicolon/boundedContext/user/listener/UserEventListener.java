@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.user.listener;
+package dukku.user.boundedContext.user.listener;
 
 import dukku.common.shared.user.event.UserJoinedEvent;
 import lombok.extern.slf4j.Slf4j;

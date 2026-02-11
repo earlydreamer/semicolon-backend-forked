@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.deposit.entity;
+package dukku.deposit.boundedContext.deposit.entity;
 
 import dukku.common.global.jpa.entity.BaseEntity;
-import dukku.semicolon.boundedContext.deposit.exception.NotEnoughDepositException;
+import dukku.deposit.boundedContext.deposit.exception.NotEnoughDepositException;
 import dukku.common.shared.deposit.dto.DepositDto;
 import jakarta.persistence.*;
 import lombok.*;

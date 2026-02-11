@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.settlement.out.impl;
+package dukku.settlement.boundedContext.settlement.out.impl;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import dukku.semicolon.boundedContext.settlement.entity.Settlement;
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
+import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
 import dukku.common.shared.settlement.dto.SettlementSearchCondition;
 import dukku.common.shared.settlement.dto.SettlementStatisticsCondition;
 import lombok.RequiredArgsConstructor;

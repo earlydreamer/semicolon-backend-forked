@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.order.entity.Order;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
+import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.entity.OrderItem;
 import dukku.common.shared.order.dto.OrderCreateRequest;
 import dukku.common.shared.product.out.ProductApiClient;
 import lombok.RequiredArgsConstructor;

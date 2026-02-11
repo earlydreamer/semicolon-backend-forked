@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.user.out;
+package dukku.user.boundedContext.user.out;
 
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.type.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

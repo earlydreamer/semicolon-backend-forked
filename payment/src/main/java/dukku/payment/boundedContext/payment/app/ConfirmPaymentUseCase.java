@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.payment.app;
+package dukku.payment.boundedContext.payment.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.semicolon.boundedContext.payment.entity.Payment;
+import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.common.shared.payment.type.PaymentFailureCode;
@@ -13,7 +13,7 @@ import dukku.common.shared.payment.dto.PaymentConfirmResponse;
 import dukku.common.shared.payment.exception.DuplicatePaymentKeyException;
 import dukku.common.shared.payment.exception.PaymentNotPendingException;
 import dukku.common.shared.payment.exception.TossAmountMismatchException;
-import dukku.semicolon.boundedContext.payment.out.TossPaymentClient;
+import dukku.payment.boundedContext.payment.out.TossPaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

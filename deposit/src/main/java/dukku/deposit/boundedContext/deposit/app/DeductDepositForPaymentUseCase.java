@@ -1,13 +1,13 @@
-package dukku.semicolon.boundedContext.deposit.app;
+package dukku.deposit.boundedContext.deposit.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
 import dukku.common.shared.deposit.event.DepositUsedEvent;
 import dukku.common.shared.deposit.type.DepositFailureCode;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
-import dukku.semicolon.boundedContext.deposit.entity.enums.DepositHistoryType;
-import dukku.semicolon.boundedContext.deposit.exception.NotEnoughDepositException;
-import dukku.semicolon.global.SystemDepositInitData;
+import dukku.deposit.boundedContext.deposit.entity.enums.DepositHistoryType;
+import dukku.deposit.boundedContext.deposit.exception.NotEnoughDepositException;
+import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

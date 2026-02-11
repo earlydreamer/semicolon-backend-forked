@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.settlement.in;
+package dukku.settlement.boundedContext.settlement.in;
 
 import dukku.common.shared.deposit.event.DepositChargeFailedEvent;
 import dukku.common.shared.deposit.event.DepositChargeSucceededEvent;
 import dukku.common.shared.order.event.OrderItemConfirmedEvent;
-import dukku.semicolon.boundedContext.settlement.app.SettlementFacade;
+import dukku.settlement.boundedContext.settlement.app.SettlementFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

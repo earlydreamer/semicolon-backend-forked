@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
 import dukku.common.global.UserUtil;
 import dukku.common.shared.product.dto.review.SellerReviewCreateRequest;
 import dukku.common.shared.product.dto.review.SellerReviewListResponse;
 import dukku.common.shared.product.dto.review.SellerReviewSummaryResponse;
 import dukku.common.shared.product.dto.review.SellerReviewUpdateRequest;
-import dukku.semicolon.boundedContext.product.app.facade.ReviewFacade;
+import dukku.product.boundedContext.product.app.facade.ReviewFacade;
 import dukku.common.shared.product.docs.ReviewApiDocs;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

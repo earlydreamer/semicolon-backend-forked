@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.payment.out;
+package dukku.payment.boundedContext.payment.out;
 
-import dukku.semicolon.boundedContext.payment.entity.RefundItem;
+import dukku.payment.boundedContext.payment.entity.RefundItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

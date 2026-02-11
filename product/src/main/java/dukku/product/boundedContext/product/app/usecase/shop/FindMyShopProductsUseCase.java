@@ -1,11 +1,11 @@
-package dukku.semicolon.boundedContext.product.app.usecase.shop;
+package dukku.product.boundedContext.product.app.usecase.shop;
 
 import dukku.common.shared.product.type.SaleStatus;
-import dukku.semicolon.boundedContext.product.app.support.ProductMapper;
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.entity.ProductSeller;
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
-import dukku.semicolon.boundedContext.product.out.ProductSellerRepository;
+import dukku.product.boundedContext.product.app.support.ProductMapper;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.entity.ProductSeller;
+import dukku.product.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.common.shared.product.dto.shop.ShopProductListResponse;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import dukku.common.shared.product.exception.ProductSellerNotFoundException;

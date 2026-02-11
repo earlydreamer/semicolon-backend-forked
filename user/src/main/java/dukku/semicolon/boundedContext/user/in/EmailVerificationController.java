@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.user.in;
+package dukku.user.boundedContext.user.in;
 
-import dukku.semicolon.boundedContext.user.app.email.EmailVerificationService;
-import dukku.semicolon.boundedContext.user.in.dto.EmailSendRequest;
-import dukku.semicolon.boundedContext.user.in.dto.EmailVerifyResponse;
+import dukku.user.boundedContext.user.app.email.EmailVerificationService;
+import dukku.user.boundedContext.user.in.dto.EmailSendRequest;
+import dukku.user.boundedContext.user.in.dto.EmailVerifyResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

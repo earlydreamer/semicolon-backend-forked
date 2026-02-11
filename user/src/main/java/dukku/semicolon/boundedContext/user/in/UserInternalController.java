@@ -1,10 +1,10 @@
-package dukku.semicolon.boundedContext.user.in;
+package dukku.user.boundedContext.user.in;
 
 import dukku.common.global.exception.BadRequestException;
-import dukku.semicolon.boundedContext.user.app.user.FindUserByEmailUseCase;
-import dukku.semicolon.boundedContext.user.app.user.FindUserByRoleUseCase;
-import dukku.semicolon.boundedContext.user.app.user.FindUserUseCase;
-import dukku.semicolon.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.app.user.FindUserByEmailUseCase;
+import dukku.user.boundedContext.user.app.user.FindUserByRoleUseCase;
+import dukku.user.boundedContext.user.app.user.FindUserUseCase;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.dto.UserProfileResponse;

@@ -1,4 +1,4 @@
-package dukku.semicolon.boundedContext.user.exception;
+package dukku.user.boundedContext.user.exception;
 
 import dukku.common.global.exception.ConflictException;
 

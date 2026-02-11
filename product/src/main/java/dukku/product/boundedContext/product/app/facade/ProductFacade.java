@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.product.app.facade;
+package dukku.product.boundedContext.product.app.facade;
 
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.dto.product.ProductReserveRequest;
-import dukku.semicolon.boundedContext.product.app.cqrs.SearchProductUseCase;
-import dukku.semicolon.boundedContext.product.app.usecase.product.*;
+import dukku.product.boundedContext.product.app.cqrs.SearchProductUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.*;
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
 import dukku.common.shared.product.dto.cqrs.ProductSortType;
 import lombok.RequiredArgsConstructor;

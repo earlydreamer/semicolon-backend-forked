@@ -1,8 +1,8 @@
-package dukku.semicolon.boundedContext.product.in;
+package dukku.product.boundedContext.product.in;
 
 
 import dukku.common.global.UserUtil;
-import dukku.semicolon.boundedContext.product.app.facade.FollowFacade;
+import dukku.product.boundedContext.product.app.facade.FollowFacade;
 import dukku.common.shared.product.docs.FollowApiDocs;
 import dukku.common.shared.product.dto.follow.FollowActionResponse;
 import dukku.common.shared.product.dto.follow.FollowedSellerCardResponse;

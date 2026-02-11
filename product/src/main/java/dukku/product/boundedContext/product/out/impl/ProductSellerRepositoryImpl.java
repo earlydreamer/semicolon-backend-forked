@@ -1,6 +1,6 @@
-package dukku.semicolon.boundedContext.product.out.impl;
+package dukku.product.boundedContext.product.out.impl;
 
-import dukku.semicolon.boundedContext.product.out.CustomProductSellerRepository;
+import dukku.product.boundedContext.product.out.CustomProductSellerRepository;
 import dukku.common.shared.product.dto.cqrs.SellerReviewStatDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

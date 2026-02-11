@@ -1,9 +1,9 @@
-package dukku.semicolon.boundedContext.order.app;
+package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.common.shared.order.type.OrderItemStatus;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
-import dukku.semicolon.boundedContext.order.out.OrderItemRepository;
+import dukku.order.boundedContext.order.entity.OrderItem;
+import dukku.order.boundedContext.order.out.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

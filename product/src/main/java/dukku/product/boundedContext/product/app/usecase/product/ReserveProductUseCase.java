@@ -1,7 +1,7 @@
-package dukku.semicolon.boundedContext.product.app.usecase.product;
+package dukku.product.boundedContext.product.app.usecase.product;
 
-import dukku.semicolon.boundedContext.product.entity.Product;
-import dukku.semicolon.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.entity.Product;
+import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.common.shared.product.dto.product.ProductReserveRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
