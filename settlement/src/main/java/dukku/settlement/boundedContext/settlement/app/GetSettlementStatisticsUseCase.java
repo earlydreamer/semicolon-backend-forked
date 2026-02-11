@@ -1,10 +1,10 @@
 package dukku.settlement.boundedContext.settlement.app;
 
 import com.querydsl.core.Tuple;
-import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
-import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import dukku.common.shared.settlement.dto.SettlementStatisticsCondition;
 import dukku.common.shared.settlement.dto.SettlementStatisticsResponse;
+import dukku.common.shared.settlement.type.SettlementStatus;
+import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,35 +101,29 @@ public class GetSettlementStatisticsUseCase {
     }
 
     /**
-     * 상태별 통계 일급 컬렉션
-     */
-    private static class StatusStatisticsMap {
-
-        private final Map<SettlementStatus, StatusStatistics> map;
-
-        private StatusStatisticsMap(Map<SettlementStatus, StatusStatistics> map) {
-            this.map = map;
-        }
+         * 상태별 통계 일급 컬렉션
+         */
+        private record StatusStatisticsMap(Map<SettlementStatus, StatusStatistics> map) {
 
         static StatusStatisticsMap from(List<Tuple> tuples) {
-            Map<SettlementStatus, StatusStatistics> map = new EnumMap<>(SettlementStatus.class);
-            for (Tuple tuple : tuples) {
-                SettlementStatus status = tuple.get(settlement.settlementStatus);
-                map.put(status, new StatusStatistics(
-                        status,
-                        tuple.get(settlement.count()),
-                        tuple.get(settlement.settlementAmount.sum().coalesce(0L))
-                ));
+                Map<SettlementStatus, StatusStatistics> map = new EnumMap<>(SettlementStatus.class);
+                for (Tuple tuple : tuples) {
+                    SettlementStatus status = tuple.get(settlement.settlementStatus);
+                    map.put(status, new StatusStatistics(
+                            status,
+                            tuple.get(settlement.count()),
+                            tuple.get(settlement.settlementAmount.sum().coalesce(0L))
+                    ));
+                }
+                return new StatusStatisticsMap(map);
             }
-            return new StatusStatisticsMap(map);
-        }
 
-        long count(SettlementStatus status) {
-            return map.getOrDefault(status, StatusStatistics.EMPTY).count();
-        }
+            long count(SettlementStatus status) {
+                return map.getOrDefault(status, StatusStatistics.EMPTY).count();
+            }
 
-        long amount(SettlementStatus status) {
-            return map.getOrDefault(status, StatusStatistics.EMPTY).settlementAmount();
+            long amount(SettlementStatus status) {
+                return map.getOrDefault(status, StatusStatistics.EMPTY).settlementAmount();
+            }
         }
-    }
 }

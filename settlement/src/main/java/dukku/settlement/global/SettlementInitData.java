@@ -1,7 +1,7 @@
 package dukku.settlement.global;
 
+import dukku.common.shared.settlement.type.SettlementStatus;
 import dukku.settlement.boundedContext.settlement.entity.Settlement;
-import dukku.settlement.boundedContext.settlement.entity.type.SettlementStatus;
 import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

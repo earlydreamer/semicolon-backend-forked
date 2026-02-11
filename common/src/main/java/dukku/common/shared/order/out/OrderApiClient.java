@@ -1,16 +1,13 @@
 package dukku.common.shared.order.out;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
-import dukku.semicolon.shared.product.dto.product.ProductReserveRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 public class OrderApiClient {

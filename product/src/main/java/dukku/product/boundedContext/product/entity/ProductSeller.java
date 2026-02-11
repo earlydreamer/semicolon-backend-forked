@@ -1,6 +1,7 @@
 package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
+import dukku.common.shared.product.dto.shop.ShopResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -71,5 +72,14 @@ public class ProductSeller extends BaseIdAndUUIDAndTime {
 
     public void changeIntro(String intro) {
         this.intro = intro;
+    }
+
+    public static ShopResponse from(ProductSeller seller) {
+        return ShopResponse.builder()
+                .shopUuid(seller.getUuid())
+                .intro(seller.getIntro())
+                .salesCount(seller.getSalesCount())
+                .activeListingCount(seller.getActiveListingCount())
+                .build();
     }
 }

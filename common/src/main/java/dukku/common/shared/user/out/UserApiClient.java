@@ -1,9 +1,9 @@
 package dukku.common.shared.user.out;
 
-import dukku.semicolon.boundedContext.user.entity.type.Role;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.dto.UserProfileResponse;
 import dukku.common.shared.user.dto.UserUuidResponse;
+import dukku.common.shared.user.type.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;

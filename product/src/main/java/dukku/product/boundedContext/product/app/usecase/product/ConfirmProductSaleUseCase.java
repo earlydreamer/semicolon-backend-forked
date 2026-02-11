@@ -2,7 +2,7 @@ package dukku.product.boundedContext.product.app.usecase.product;
 
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.ProductRepository;
-import dukku.common.shared.product.event.ProductUpdatedEvent;
+import dukku.product.global.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;

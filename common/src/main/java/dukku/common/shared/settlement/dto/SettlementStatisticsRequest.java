@@ -1,6 +1,6 @@
 package dukku.common.shared.settlement.dto;
 
-import dukku.semicolon.boundedContext.settlement.entity.type.SettlementStatus;
+import dukku.common.shared.settlement.type.SettlementStatus;
 import jakarta.validation.constraints.PastOrPresent;
 
 import java.time.LocalDate;

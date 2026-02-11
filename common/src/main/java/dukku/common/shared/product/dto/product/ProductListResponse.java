@@ -1,6 +1,5 @@
 package dukku.common.shared.product.dto.product;
 
-import dukku.semicolon.boundedContext.product.entity.Product;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -16,18 +15,6 @@ public class ProductListResponse {
     private int size;
     private long totalCount;
     private boolean hasNext;
-
-    public static ProductListResponse from(Page<Product> result) {
-        return ProductListResponse.builder()
-                .items(result.getContent().stream()
-                        .map(ProductListItemResponse::from)
-                        .toList())
-                .page(result.getNumber())
-                .size(result.getSize())
-                .totalCount(result.getTotalElements())
-                .hasNext(result.hasNext())
-                .build();
-    }
 
     public static ProductListResponse fromByQuery(Page<ProductListItemResponse> pageResult) {
         return ProductListResponse.builder()

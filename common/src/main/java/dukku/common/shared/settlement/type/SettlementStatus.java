@@ -1,6 +1,7 @@
-package dukku.settlement.boundedContext.settlement.entity.type;
+package dukku.common.shared.settlement.type;
 
 import lombok.Getter;
+
 /**
  * 정산 상태
  * - 상태 전이 규칙을 Enum 내부에서 관리

@@ -1,6 +1,7 @@
 package dukku.product.boundedContext.product.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
+import dukku.common.shared.product.dto.comment.CommentResponse;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -76,5 +77,26 @@ public class ProductComment extends BaseIdAndUUIDAndTime {
 
     public boolean isDeleted() {
         return this.deletedAt != null;
+    }
+
+    public static CommentResponse from(ProductComment comment) {
+        Product product = comment.getProduct();
+
+        String role = product.getSellerUuid().equals(comment.getAuthorUuid())
+                ? "SELLER"
+                : "BUYER";
+
+        String content = comment.isDeleted()
+                ? "삭제된 댓글입니다."
+                : comment.getContent();
+
+        return CommentResponse.builder()
+                .commentUuid(comment.getUuid())
+                .productUuid(product.getUuid())
+                .authorUuid(comment.getAuthorUuid())
+                .authorRole(role)
+                .content(content)
+                .parentCommentUuid(comment.getParent() == null ? null : comment.getParent().getUuid())
+                .build();
     }
 }

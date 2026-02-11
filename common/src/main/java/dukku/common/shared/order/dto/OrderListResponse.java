@@ -3,8 +3,6 @@ package dukku.common.shared.order.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
-import dukku.semicolon.boundedContext.order.entity.Order;
-import dukku.semicolon.boundedContext.order.entity.OrderItem;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -23,18 +21,6 @@ public class OrderListResponse {
 
     private List<SimpleOrderItemResponse> items;
 
-    public static OrderListResponse from(Order order) {
-        return OrderListResponse.builder()
-                .orderUuid(order.getUuid())
-                .orderDate(order.getCreatedAt())
-                .status(order.getStatus())
-                .totalAmount(order.getTotalAmount())
-                .items(order.getOrderItems().stream()
-                        .map(SimpleOrderItemResponse::from)
-                        .toList())
-                .build();
-    }
-
     @Getter
     @Builder
     public static class SimpleOrderItemResponse {
@@ -43,15 +29,5 @@ public class OrderListResponse {
         private int productPrice;
         private String imageUrl;
         private OrderItemStatus itemStatus; // 개별 상품 상태 (예: 배송중, 구매확정)
-
-        public static SimpleOrderItemResponse from(OrderItem item) {
-            return SimpleOrderItemResponse.builder()
-                    .productUuid(item.getProductUuid())
-                    .productName(item.getProductName())
-                    .productPrice(item.getProductPrice())
-                    .imageUrl(item.getImageUrl())
-                    .itemStatus(item.getStatus())
-                    .build();
-        }
     }
 }

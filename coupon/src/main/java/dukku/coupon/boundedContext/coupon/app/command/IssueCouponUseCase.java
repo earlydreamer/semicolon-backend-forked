@@ -1,9 +1,9 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
 import dukku.common.global.exception.ConflictException;
+import dukku.common.shared.coupon.type.IssueResult;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
 import dukku.coupon.boundedContext.coupon.entity.CouponUser;
-import dukku.coupon.boundedContext.coupon.entity.type.IssueResult;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
 import dukku.coupon.boundedContext.coupon.out.CouponUserRepository;
 import dukku.coupon.shared.coupon.exception.CouponAlreadyExistsException;

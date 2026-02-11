@@ -1,7 +1,7 @@
 package dukku.coupon.boundedContext.coupon.entity;
 
 import dukku.common.global.exception.ConflictException;
-import dukku.coupon.boundedContext.coupon.entity.type.CouponUserStatus;
+import dukku.common.shared.coupon.type.CouponUserStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

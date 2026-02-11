@@ -2,10 +2,11 @@ package dukku.order.boundedContext.order.entity;
 
 import dukku.common.global.exception.ConflictException;
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
+import dukku.common.shared.order.dto.OrderCreateRequest;
+import dukku.common.shared.order.dto.OrderListResponse;
+import dukku.common.shared.order.dto.OrderResponse;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
-import dukku.common.shared.order.dto.OrderCreateRequest;
-import dukku.common.shared.order.dto.OrderResponse;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -113,5 +114,39 @@ public class Order extends BaseIdAndUUIDAndTime {
         return orderItems.stream()
                 .map(BaseIdAndUUIDAndTime::getUuid)
                 .toList();
+    }
+
+    public static OrderListResponse fromOrderListResponse(Order order) {
+        return OrderListResponse.builder()
+                .orderUuid(order.getUuid())
+                .orderDate(order.getCreatedAt())
+                .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
+                .items(order.getOrderItems().stream()
+                        .map(Order::fromSimpleOrderItemResponse)
+                        .toList())
+                .build();
+    }
+
+    public static OrderResponse.OrderItemResponse fromOrderItemResponse(OrderItem item) {
+        return OrderResponse.OrderItemResponse.builder()
+                .productUuid(item.getProductUuid())
+                .productName(item.getProductName())
+                .productPrice(item.getProductPrice())
+                .imageUrl(item.getImageUrl())
+                .itemStatus(item.getStatus())
+                .carrierName(item.getCarrierName())
+                .trackingNumber(item.getTrackingNumber())
+                .build();
+    }
+
+    public static OrderListResponse.SimpleOrderItemResponse fromSimpleOrderItemResponse(OrderItem item) {
+        return OrderListResponse.SimpleOrderItemResponse.builder()
+                .productUuid(item.getProductUuid())
+                .productName(item.getProductName())
+                .productPrice(item.getProductPrice())
+                .imageUrl(item.getImageUrl())
+                .itemStatus(item.getStatus())
+                .build();
     }
 }
