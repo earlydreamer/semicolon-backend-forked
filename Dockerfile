@@ -25,6 +25,9 @@ ARG MODULE_NAME
 RUN chmod +x ./gradlew
 RUN ./gradlew clean :${MODULE_NAME}:bootJar -x test
 
+# plain JAR 제거 (COPY 시 모호성 방지)
+RUN rm -f ${MODULE_NAME}/build/libs/*-plain.jar
+
 # [Stage 2] 실행 단계
 FROM eclipse-temurin:25-jre
 
