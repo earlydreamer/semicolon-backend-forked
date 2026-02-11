@@ -99,7 +99,7 @@ public class Order extends BaseIdAndUUIDAndTime {
                 .contactNumber(order.getContactNumber())
                 .address(order.getAddress())
                 .items(order.getOrderItems().stream()
-                        .map(OrderResponse.OrderItemResponse::from)
+                        .map(Order::fromOrderItemResponse)
                         .toList())
                 .build();
     }

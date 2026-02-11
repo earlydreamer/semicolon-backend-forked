@@ -1,14 +1,14 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
 import dukku.common.global.exception.ConflictException;
+import dukku.common.shared.coupon.exception.CouponAlreadyExistsException;
+import dukku.common.shared.coupon.exception.CouponNotFoundException;
+import dukku.common.shared.coupon.exception.CouponSoldOutException;
 import dukku.common.shared.coupon.type.IssueResult;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
 import dukku.coupon.boundedContext.coupon.entity.CouponUser;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
 import dukku.coupon.boundedContext.coupon.out.CouponUserRepository;
-import dukku.coupon.shared.coupon.exception.CouponAlreadyExistsException;
-import dukku.coupon.shared.coupon.exception.CouponNotFoundException;
-import dukku.coupon.shared.coupon.exception.CouponSoldOutException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

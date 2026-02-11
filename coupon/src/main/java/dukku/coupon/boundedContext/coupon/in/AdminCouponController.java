@@ -1,10 +1,10 @@
 package dukku.coupon.boundedContext.coupon.in;
 
+import dukku.common.shared.coupon.dto.CouponCreateRequest;
+import dukku.common.shared.coupon.dto.CouponResponse;
+import dukku.common.shared.coupon.dto.CouponUpdateRequest;
 import dukku.coupon.boundedContext.coupon.app.command.CouponFacade;
 import dukku.coupon.boundedContext.coupon.app.query.CouponQueryFacade;
-import dukku.coupon.shared.coupon.dto.CouponCreateRequest;
-import dukku.coupon.shared.coupon.dto.CouponResponse;
-import dukku.coupon.shared.coupon.dto.CouponUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

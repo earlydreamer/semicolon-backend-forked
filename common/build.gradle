@@ -46,6 +46,9 @@ dependencies {
     // === 9. Micrometer Tracing (TraceId/SpanId 자동 주입) ===
     api 'io.micrometer:micrometer-tracing-bridge-brave'
     api 'io.micrometer:micrometer-tracing'
+
+    // === 10. Redis ===
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 // === QueryDSL 설정 ===
