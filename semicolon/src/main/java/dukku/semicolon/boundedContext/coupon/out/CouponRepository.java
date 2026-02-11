@@ -3,7 +3,9 @@ package dukku.semicolon.boundedContext.coupon.out;
 import dukku.semicolon.boundedContext.coupon.entity.Coupon;
 import dukku.semicolon.boundedContext.coupon.entity.type.CouponStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,4 +30,9 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
     List<Coupon> findIssuableCoupons(UUID userUuid, LocalDateTime now);
 
     List<Coupon> findByStatus(CouponStatus status);
+
+    @Modifying
+    @Query("UPDATE Coupon c SET c.issuedQuantity = c.issuedQuantity + 1 " +
+            "WHERE c.uuid = :uuid AND c.issuedQuantity < c.totalQuantity")
+    int decreaseQuantity(@Param("uuid") UUID uuid);
 }

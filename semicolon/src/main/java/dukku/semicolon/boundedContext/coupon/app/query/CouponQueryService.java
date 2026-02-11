@@ -25,7 +25,7 @@ public class CouponQueryService {
      * - ACTIVE 상태
      * - 아직 해당 쿠폰을 발급받지 않은 경우
      */
-    public List<CouponResponse> getIssuableCoupons(UUID userUuid) {
+    public List<CouponResponse> findIssuableCoupons(UUID userUuid) {
         return couponRepository.findByStatus(CouponStatus.ACTIVE)
                 .stream()
                 .filter(coupon ->
@@ -41,7 +41,7 @@ public class CouponQueryService {
     /**
      * 사용자가 보유한 쿠폰 목록
      */
-    public List<CouponResponse> getMyCoupons(UUID userUuid) {
+    public List<CouponResponse> findMyCoupons(UUID userUuid) {
         List<CouponUser> couponUsers = couponUserRepository.findByUserUuidAndStatus(userUuid, CouponUserStatus.AVAILABLE);
 
         return couponUsers.stream()
@@ -53,7 +53,7 @@ public class CouponQueryService {
     /**
      * 관리자용 전체 쿠폰 목록
      */
-    public List<CouponResponse> getAllCoupons() {
+    public List<CouponResponse> findAllCoupons() {
         return couponRepository.findAll()
                 .stream()
                 .map(CouponResponse::from)

@@ -1,6 +1,7 @@
 package dukku.common.global;
 
 import dukku.common.global.auth.detail.CustomUserDetails;
+import dukku.common.global.exception.UnauthorizedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,14 +16,14 @@ public class UserUtil {
     private static CustomUserDetails getCustomUserDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new IllegalStateException("User is not authenticated.");
+            throw new UnauthorizedException("Authentication is required.");
         }
 
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails) {
             return (CustomUserDetails) principal;
         }
-        throw new IllegalStateException("Unexpected principal type: " + principal.getClass());
+        throw new UnauthorizedException("Authentication is required.");
     }
 
     public static UUID getUserId() {
@@ -35,7 +36,7 @@ public class UserUtil {
         return userDetails.getAuthorities().stream()
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
-                .orElseThrow(() -> new IllegalStateException("User has no role assigned."));
+                .orElseThrow(() -> new UnauthorizedException("Authentication is required."));
     }
 
     public static boolean isAdmin() {
