@@ -40,13 +40,13 @@ public class SettlementFacade {
     @Transactional(readOnly = true)
     public dukku.common.shared.settlement.dto.SettlementDetailResponse getSettlement(UUID settlementUuid) {
         Settlement settlement = getSettlementUseCase.execute(settlementUuid);
-        return dukku.common.shared.settlement.dto.SettlementDetailResponse.from(settlement);
+        return Settlement.from(settlement);
     }
 
     @Transactional(readOnly = true)
     public Page<dukku.common.shared.settlement.dto.SettlementDetailResponse> getSettlements(SettlementSearchCondition condition, Pageable pageable) {
         Page<Settlement> settlements = getSettlementListUseCase.execute(condition, pageable);
-        return settlements.map(dukku.common.shared.settlement.dto.SettlementDetailResponse::from);
+        return settlements.map(Settlement::from);
     }
 
     @Transactional(readOnly = true)
@@ -103,7 +103,7 @@ public class SettlementFacade {
      */
     public dukku.common.shared.settlement.dto.SettlementDetailResponse retrySettlement(UUID settlementUuid) {
         Settlement settlement = retrySettlementUseCase.execute(settlementUuid);
-        return dukku.common.shared.settlement.dto.SettlementDetailResponse.from(settlement);
+        return Settlement.from(settlement);
     }
 
     /**
@@ -111,7 +111,7 @@ public class SettlementFacade {
      */
     public dukku.common.shared.settlement.dto.SettlementDetailResponse completeSettlement(UUID settlementUuid) {
         Settlement settlement = manualCompleteSettlementUseCase.execute(settlementUuid);
-        return dukku.common.shared.settlement.dto.SettlementDetailResponse.from(settlement);
+        return Settlement.from(settlement);
     }
 
     /**
@@ -119,7 +119,7 @@ public class SettlementFacade {
      */
     public dukku.common.shared.settlement.dto.SettlementDetailResponse failSettlement(UUID settlementUuid) {
         Settlement settlement = manualFailSettlementUseCase.execute(settlementUuid);
-        return dukku.common.shared.settlement.dto.SettlementDetailResponse.from(settlement);
+        return Settlement.from(settlement);
     }
 
     // ===== 배치 수동 실행 API =====

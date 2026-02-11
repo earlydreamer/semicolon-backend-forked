@@ -1,5 +1,6 @@
 package dukku.settlement.boundedContext.settlement.out;
 
+import dukku.common.shared.settlement.dto.SettlementBatchJobStatisticsResponse.*;
 import dukku.common.shared.settlement.dto.SettlementBatchStepStatisticsResponse.StepPerformance;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

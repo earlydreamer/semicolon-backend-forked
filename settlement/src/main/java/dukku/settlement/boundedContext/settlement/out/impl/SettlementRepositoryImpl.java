@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import static dukku.semicolon.boundedContext.settlement.entity.QSettlement.settlement;
+import static dukku.settlement.boundedContext.settlement.entity.QSettlement.settlement;
 
 /**
  * 정산 검색/동적 쿼리 구현체

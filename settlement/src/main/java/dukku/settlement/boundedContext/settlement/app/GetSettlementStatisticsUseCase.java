@@ -13,7 +13,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import static dukku.semicolon.boundedContext.settlement.entity.QSettlement.settlement;
+import static dukku.settlement.boundedContext.settlement.entity.QSettlement.settlement;
 
 @Component
 @RequiredArgsConstructor
