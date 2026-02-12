@@ -71,6 +71,7 @@ jobs:
               -e CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }} \
               -e SLACK_WEBHOOK_URL=${{secrets.SLACK_WEBHOOK_URL}}\
               -e SYSTEM_DEPOSIT_PASSWORD=${{secrets.SYSTEM_DEPOSIT_PASSWORD}}\
+              -e OPENAI_API_KEY=${{secrets.OPENAI_API_KEY}}\
               ${{ env.DOCKER_IMAGE }}:latest
             
             
