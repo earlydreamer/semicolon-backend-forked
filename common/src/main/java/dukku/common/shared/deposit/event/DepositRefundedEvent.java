@@ -1,5 +1,6 @@
 package dukku.common.shared.deposit.event;
 
+import dukku.common.global.event.DomainEvent;
 import java.util.UUID;
 
 /**
@@ -12,5 +13,14 @@ import java.util.UUID;
 public record DepositRefundedEvent(
         UUID orderUuid,
         UUID userUuid,
-        Long amount) {
+        Long amount) implements DomainEvent {
+    @Override
+    public String getTopic() {
+        return "deposit.refunded";
+    }
+
+    @Override
+    public String getKey() {
+        return userUuid.toString();
+    }
 }

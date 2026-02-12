@@ -1,5 +1,6 @@
 package dukku.common.shared.deposit.event;
 
+import dukku.common.global.event.DomainEvent;
 import java.util.UUID;
 
 /**
@@ -11,5 +12,14 @@ import java.util.UUID;
 public record DepositChargeSucceededEvent(
         UUID userUuid,
         Long amount,
-        UUID settlementUuid) {
+        UUID settlementUuid) implements DomainEvent {
+    @Override
+    public String getTopic() {
+        return "deposit.charge.succeeded";
+    }
+
+    @Override
+    public String getKey() {
+        return userUuid.toString();
+    }
 }
