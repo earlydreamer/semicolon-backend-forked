@@ -7,7 +7,7 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 
-import dukku.ai.app.MemoryRetrievalUseCase;
+import dukku.ai.app.service.MemoryRetrievalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +17,7 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
 
     public static final String USER_ID_KEY = "user_id";
 
-    private final MemoryRetrievalUseCase memoryRetrievalService;
+    private final MemoryRetrievalService memoryRetrievalService;
     private final int order;
 
     @Override

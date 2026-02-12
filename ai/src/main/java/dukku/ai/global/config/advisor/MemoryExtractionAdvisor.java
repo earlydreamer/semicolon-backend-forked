@@ -6,7 +6,7 @@ import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
 import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.model.ChatResponse;
 
-import dukku.ai.app.MemoryExtractionUseCase;
+import dukku.ai.app.service.MemoryExtractionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MemoryExtractionAdvisor implements BaseAdvisor {
 
-    private final MemoryExtractionUseCase memoryExtractionService;
+    private final MemoryExtractionService memoryExtractionService;
     private final int order;
 
     @Override
