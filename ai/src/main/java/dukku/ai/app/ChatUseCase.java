@@ -12,10 +12,13 @@ public class ChatUseCase {
         this.chatClient = chatClient;
     }
 
-    public String chat(String conversationId, String userMessage) {
+    public String chat(String conversationId, Long userId, String userMessage) {
         return chatClient.prompt()
                 .user(userMessage)
-                .advisors(a -> a.param("chat_memory_conversation_id", conversationId))
+                .advisors(a -> a
+                        .param("chat_memory_conversation_id", conversationId)
+                        .param("user_id", userId)
+                        .param("user_message", userMessage))
                 .call()
                 .content();
     }

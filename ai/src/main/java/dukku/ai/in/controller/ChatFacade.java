@@ -16,7 +16,7 @@ public class ChatFacade {
 
     public ChatResponse chat(ChatRequest request) {
         String conversationId = resolveConversationId(request.conversationId());
-        String reply = chatUseCase.chat(conversationId, request.message());
+        String reply = chatUseCase.chat(conversationId, request.userId(), request.message());
         return new ChatResponse(conversationId, reply);
     }
 
@@ -29,6 +29,7 @@ public class ChatFacade {
 
     public record ChatRequest(
             String conversationId,
+            Long userId,
             String message
     ) {
     }
