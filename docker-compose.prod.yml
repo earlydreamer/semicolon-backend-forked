@@ -26,7 +26,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-auth:latest
     container_name: semicolon-auth
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=auth_service
@@ -37,6 +37,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
     networks:
       - semicolon-network
     deploy:
@@ -48,12 +49,15 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-user:latest
     container_name: semicolon-user
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=user_service
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -71,7 +75,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-product:latest
     container_name: semicolon-product
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=product_service
@@ -81,6 +85,9 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - ELASTICSEARCH_URIS=${ELASTICSEARCH_URIS}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
     networks:
       - semicolon-network
     deploy:
@@ -92,7 +99,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-order:latest
     container_name: semicolon-order
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=order_service
@@ -102,6 +109,9 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
     networks:
       - semicolon-network
     deploy:
@@ -113,7 +123,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-coupon:latest
     container_name: semicolon-coupon
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=coupon_service
@@ -123,6 +133,9 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
     networks:
       - semicolon-network
     deploy:
@@ -134,7 +147,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-payment:latest
     container_name: semicolon-payment
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=payment_service
@@ -145,6 +158,9 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
       - TOSS_API_SECRET_KEY=${TOSS_API_SECRET_KEY}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
     networks:
       - semicolon-network
     deploy:
@@ -156,7 +172,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-deposit:latest
     container_name: semicolon-deposit
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=deposit_service
@@ -167,6 +183,9 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
       - SYSTEM_DEPOSIT_PASSWORD=${SYSTEM_DEPOSIT_PASSWORD}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
     networks:
       - semicolon-network
     deploy:
@@ -178,7 +197,7 @@ services:
     image: ${DOCKER_IMAGE_PREFIX:-dukku}/semicolon-settlement:latest
     container_name: semicolon-settlement
     environment:
-      - SPRING_PROFILES_ACTIVE=release
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=settlement_service
@@ -188,6 +207,10 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CRYPTO_KEY=${CRYPTO_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
     networks:
       - semicolon-network
     deploy:
