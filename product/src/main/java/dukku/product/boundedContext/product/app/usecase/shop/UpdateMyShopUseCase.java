@@ -1,10 +1,10 @@
 package dukku.product.boundedContext.product.app.usecase.shop;
 
-import dukku.product.boundedContext.product.entity.ProductSeller;
-import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.common.shared.product.dto.shop.ShopResponse;
 import dukku.common.shared.product.dto.shop.UpdateShopRequest;
 import dukku.common.shared.product.exception.ProductSellerNotFoundException;
+import dukku.product.boundedContext.product.entity.ProductSeller;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +27,6 @@ public class UpdateMyShopUseCase {
             seller.changeIntro(request.getIntro());
         }
 
-        return ShopResponse.from(seller);
+        return ProductSeller.from(seller);
     }
 }
