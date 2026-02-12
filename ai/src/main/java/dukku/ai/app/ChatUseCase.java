@@ -15,10 +15,15 @@ public class ChatUseCase {
     public String chat(String conversationId, Long userId, String userMessage) {
         return chatClient.prompt()
                 .user(userMessage)
-                .advisors(a -> a
-                        .param("chat_memory_conversation_id", conversationId)
-                        .param("user_id", userId)
-                        .param("user_message", userMessage))
+                .advisors(a -> {
+                    a.param("chat_memory_conversation_id", conversationId);
+                    if (userId != null) {
+                        a.param("user_id", userId);
+                    }
+                    if (userMessage != null) {
+                        a.param("user_message", userMessage);
+                    }
+                })
                 .call()
                 .content();
     }

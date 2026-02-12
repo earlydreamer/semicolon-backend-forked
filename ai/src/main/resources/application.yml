@@ -52,7 +52,9 @@ management:
       application: ${spring.application.name}
     distribution:
       percentiles-histogram:
-        ai: true
+        spring.ai: true
+        gen_ai: true
+        db.vector: true
 
 
 
