@@ -4,11 +4,11 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
 import dukku.common.shared.product.dto.cqrs.ProductSortType;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import dukku.common.shared.product.dto.product.ProductListResponse;
+import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -112,7 +112,7 @@ public class SearchProductUseCase {
 
         // 4. 결과 변환
         List<ProductListItemResponse> items = searchHits.stream()
-                .map(hit -> ProductListItemResponse.from(hit.getContent()))
+                .map(hit -> ProductDocument.from(hit.getContent()))
                 .collect(Collectors.toList());
 
         return ProductListResponse.fromByQuery(new PageImpl<>(items, pageable, searchHits.getTotalHits()));

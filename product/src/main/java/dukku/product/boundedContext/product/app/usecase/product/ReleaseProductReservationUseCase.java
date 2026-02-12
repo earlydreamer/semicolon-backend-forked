@@ -1,11 +1,11 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.global.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import dukku.common.global.eventPublisher.EventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReleaseProductReservationUseCase {
     private final ProductRepository productRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public void execute(UUID orderUuid, List<UUID> productUuids) {

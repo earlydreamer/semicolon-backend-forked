@@ -1,10 +1,10 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
+import dukku.common.shared.product.dto.product.ProductListResponse;
 import dukku.common.shared.product.type.VisibilityStatus;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.CategoryRepository;
 import dukku.product.boundedContext.product.out.ProductRepository;
-import dukku.common.shared.product.dto.product.ProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +29,6 @@ public class FindProductListUseCase {
             result = productRepository.findByCategory_IdInAndVisibilityStatusAndDeletedAtIsNull(categoryIds, VisibilityStatus.VISIBLE, pageable);
         }
 
-        return ProductListResponse.from(result);
+        return Product.from(result);
     }
 }

@@ -248,7 +248,7 @@ public class Product extends BaseIdAndUUIDAndTime {
     public static ProductListResponse from(Page<Product> result) {
         return ProductListResponse.builder()
                 .items(result.getContent().stream()
-                        .map(ProductListItemResponse::from)
+                        .map(Product::from)
                         .toList())
                 .page(result.getNumber())
                 .size(result.getSize())
