@@ -1,4 +1,11 @@
 rootProject.name = 'dukku'
 
 include 'common'
-include 'semicolon'
+include 'auth'
+include 'user'
+include 'settlement'
+include 'product'
+include 'deposit'
+include 'order'
+include 'payment'
+include 'coupon'

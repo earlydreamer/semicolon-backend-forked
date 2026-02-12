@@ -1,5 +1,6 @@
 package dukku.common.shared.payment.event;
 
+import dukku.common.global.event.DomainEvent;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,11 +21,21 @@ public record RefundFailedEvent(
         PaymentFailureCode failureCode,
         boolean retryable,
         String reason,
-        LocalDateTime occurredAt) {
+        LocalDateTime occurredAt) implements DomainEvent {
 
     public RefundFailedEvent {
         if (occurredAt == null) {
             occurredAt = LocalDateTime.now();
         }
+    }
+
+    @Override
+    public String getTopic() {
+        return "payment.refund.failed";
+    }
+
+    @Override
+    public String getKey() {
+        return paymentUuid.toString();
     }
 }

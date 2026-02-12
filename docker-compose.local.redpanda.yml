@@ -9,7 +9,7 @@ services:
   # ============================================
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
-    container_name: semicolon-redpanda
+    container_name: team05-redpanda
     command:
       - redpanda
       - start
@@ -46,21 +46,21 @@ services:
       - redpanda_data:/var/lib/redpanda/data
 
     healthcheck:
-      test: ["CMD-SHELL", "rpk cluster health -X brokers=localhost:19092 || exit 1"]
+      test: [ "CMD-SHELL", "rpk cluster health -X brokers=localhost:19092 || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 10s
 
     networks:
-      - semicolon-network
+      - team05-network
 
   # ============================================
   # Redpanda Console (Kafka UI)
   # ============================================
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:latest
-    container_name: semicolon-redpanda-console
+    container_name: team05-redpanda-console
     ports:
       - "8090:8080"  # 웹 UI 접속: http://localhost:8090
     entrypoint: /bin/sh
@@ -80,7 +80,7 @@ services:
         condition: service_healthy  #  Redpanda 준비 완료 후 시작
 
     networks:
-      - semicolon-network
+      - team05-network
 
 # ============================================
 # 볼륨 (데이터 영속성)

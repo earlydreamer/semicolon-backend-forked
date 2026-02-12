@@ -1,0 +1,59 @@
+server:
+  port: 8083
+
+spring:
+  config:
+    import: classpath:application-common.yml
+  application:
+    name: product
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:product_service}?sslmode=${DB_SSLMODE:disable}
+
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+
+  elasticsearch:
+    uris: http://localhost:9200
+    socket-timeout: 30s
+    connection-timeout: 5s
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+springdoc:
+  user:
+    withdrawal:
+      restore-days: 30
+      purge-days: 90
+      purge-cron: "0 0 3 * * *"
+      mask-domain: "withdrawn.invalid"
+
+batch:
+  settlement:
+    chunk-size: 100
+    fee-rate: 0.05
+    skip-limit: 10
+    retry-limit: 3
+    page-size: 100
+    scheduler:
+      enabled: true
+      cron: "0 0 2 1 * *" # 매월 1일 오전 2시 실행

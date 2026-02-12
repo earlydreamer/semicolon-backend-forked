@@ -13,6 +13,8 @@ import java.util.UUID;
  * paymentUuid는 결제 식별자(레거시 발행자는 null 가능).
  * failureCode/retryable은 재시도 및 운영 판단에 사용.
  */
+import dukku.common.global.event.DomainEvent;
+
 public record DepositDeductionFailedEvent(
         UUID orderUuid,
         UUID paymentUuid,
@@ -21,7 +23,17 @@ public record DepositDeductionFailedEvent(
         DepositFailureCode failureCode,
         boolean retryable,
         String reason,
-        LocalDateTime occurredAt) {
+        LocalDateTime occurredAt) implements DomainEvent {
+
+    @Override
+    public String getTopic() {
+        return "deposit.deduction-failed";
+    }
+
+    @Override
+    public String getKey() {
+        return orderUuid.toString();
+    }
 
     public DepositDeductionFailedEvent(UUID orderUuid, UUID userUuid, Long amount, String reason) {
         this(orderUuid, null, userUuid, amount, DepositFailureCode.UNKNOWN, true, reason, LocalDateTime.now());
