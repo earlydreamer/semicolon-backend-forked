@@ -123,9 +123,9 @@ public class DepositFacade {
     /**
      * 환불 처리 (Saga 참여)
      */
-    public void refundDeposit(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid) {
+    public void refundDeposit(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid, UUID refundUuid) {
         // paymentUuid 전달 (환불 실패 이벤트 연계)
-        refundDepositUseCase.execute(userUuid, amount, orderUuid, paymentUuid);
+        refundDepositUseCase.execute(userUuid, amount, orderUuid, paymentUuid, refundUuid);
     }
 
     /**

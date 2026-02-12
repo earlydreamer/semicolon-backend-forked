@@ -31,13 +31,14 @@ public class RefundDepositUseCase {
     /**
      * 환불 처리 실행
      *
-     * @param userUuid  사용자 UUID
-     * @param amount    환불 금액
-     * @param orderUuid 주문 UUID
+     * @param userUuid    사용자 UUID
+     * @param amount      환불 금액
+     * @param orderUuid   주문 UUID
      * @param paymentUuid 결제 UUID (실패 이벤트 연계용)
+     * @param refundUuid  환불 UUID (사가 상태 연계용)
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void execute(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid) {
+    public void execute(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid, UUID refundUuid) {
         if (amount == null || amount <= 0) {
             return;
         }
@@ -47,12 +48,13 @@ public class RefundDepositUseCase {
             increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.ROLLBACK, orderUuid);
 
             // 롤백 성공 이벤트 발행
-            eventPublisher.publish(new DepositRefundedEvent(orderUuid, userUuid, amount));
+            eventPublisher.publish(new DepositRefundedEvent(refundUuid, paymentUuid, orderUuid, userUuid, amount));
 
         } catch (Exception e) {
             log.error("[예치금 환불/롤백 실패] userUuid={}, amount={}, orderUuid={}", userUuid, amount, orderUuid, e);
             // 환불 실패 이벤트 발행 (보상/운영 추적)
             eventPublisher.publish(new DepositRefundFailedEvent(
+                    refundUuid,
                     orderUuid,
                     paymentUuid,
                     userUuid,
