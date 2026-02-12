@@ -45,9 +45,16 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+    public dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor() {
+        return new dukku.common.global.logging.KafkaTracingRecordInterceptor();
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+            dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.setRecordInterceptor(kafkaTracingRecordInterceptor);
         return factory;
     }
 }
