@@ -7,6 +7,7 @@ import java.util.UUID;
 import dukku.ai.app.usecase.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import dukku.ai.entity.AiMemory;
 import dukku.ai.entity.enums.MemorySubType;
@@ -32,10 +33,9 @@ public class AiFacade {
         this.deleteAiMemoryUseCase = deleteAiMemoryUseCase;
     }
 
-    public ChatResponse chat(ChatRequest request) {
+    public Flux<String> chat(ChatRequest request) {
         String conversationId = resolveConversationId(request.conversationId());
-        String reply = chatUseCase.chat(conversationId, request.userId(), request.message());
-        return new ChatResponse(conversationId, reply);
+        return chatUseCase.chat(conversationId, request.userId(), request.message());
     }
 
     private String resolveConversationId(String conversationId) {

@@ -2,6 +2,7 @@ package dukku.ai.app.usecase;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 public class ChatUseCase {
@@ -12,7 +13,7 @@ public class ChatUseCase {
         this.chatClient = chatClient;
     }
 
-    public String chat(String conversationId, Long userId, String userMessage) {
+    public Flux<String> chat(String conversationId, Long userId, String userMessage) {
         return chatClient.prompt()
                 .user(userMessage)
                 .advisors(a -> {
@@ -24,7 +25,7 @@ public class ChatUseCase {
                         a.param("user_message", userMessage);
                     }
                 })
-                .call()
+                .stream()
                 .content();
     }
 

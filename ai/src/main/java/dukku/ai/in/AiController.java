@@ -1,9 +1,10 @@
-package dukku.ai.in.controller;
+package dukku.ai.in;
 
 import java.util.List;
 
 import dukku.ai.app.AiFacade;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,24 +24,21 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "AI", description = "AI 채팅 및 장기 기억 관리 API")
 @RestController
 @RequestMapping("/api")
-public class ChatController {
+public class AiController {
 
-    private final ChatFacade chatFacade;
-    private final AiFacade aiMemoryFacade;
+    private final AiFacade aiFacade;
 
-    public ChatController(ChatFacade chatFacade, AiFacade aiMemoryFacade) {
-        this.chatFacade = chatFacade;
-        this.aiMemoryFacade = aiMemoryFacade;
+    public AiController(AiFacade aiFacade) {
+        this.aiFacade = aiFacade;
     }
 
     // ========== Chat ==========
 
-    @Operation(summary = "AI 채팅", description = "AI 모델과 대화합니다. 사용자 정보 기반 상품 추천을 받을 수 있습니다.")
+    @Operation(summary = "AI 채팅", description = "AI 모델과 대화합니다. 사용자 정보 기반 상품 추천을 받을 수 있습니다. 스트리밍 방식으로 응답합니다.")
     @ApiResponse(responseCode = "200", description = "응답 성공")
-    @PostMapping("/chat")
-    public ResponseEntity<ChatFacade.ChatResponse> chat(@RequestBody ChatFacade.ChatRequest request) {
-        ChatFacade.ChatResponse response = chatFacade.chat(request);
-        return ResponseEntity.ok(response);
+    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> chat(@RequestBody AiFacade.ChatRequest request) {
+        return aiFacade.chat(request);
     }
 
     // ========== AI Memory ==========
@@ -48,7 +47,7 @@ public class ChatController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/ai-memories")
     public ResponseEntity<List<AiFacade.AiMemoryResponse>> findAllMemories() {
-        return ResponseEntity.ok(aiMemoryFacade.findAll());
+        return ResponseEntity.ok(aiFacade.findAll());
     }
 
     @Operation(summary = "AI 메모리 단건 조회", description = "ID로 특정 AI 장기 기억을 조회합니다.")
@@ -57,7 +56,7 @@ public class ChatController {
     @GetMapping("/ai-memories/{id}")
     public ResponseEntity<AiFacade.AiMemoryResponse> findMemoryById(
             @Parameter(description = "메모리 ID") @PathVariable Long id) {
-        return ResponseEntity.ok(aiMemoryFacade.findById(id));
+        return ResponseEntity.ok(aiFacade.findById(id));
     }
 
     @Operation(summary = "AI 메모리 생성", description = "새로운 AI 장기 기억을 생성합니다.")
@@ -65,7 +64,7 @@ public class ChatController {
     @PostMapping("/ai-memories")
     public ResponseEntity<AiFacade.AiMemoryResponse> createMemory(
             @RequestBody AiFacade.CreateAiMemoryRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(aiMemoryFacade.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(aiFacade.create(request));
     }
 
     @Operation(summary = "AI 메모리 수정", description = "기존 AI 장기 기억의 중요도/신뢰도 점수를 수정합니다.")
@@ -75,7 +74,7 @@ public class ChatController {
     public ResponseEntity<AiFacade.AiMemoryResponse> updateMemory(
             @Parameter(description = "메모리 ID") @PathVariable Long id,
             @RequestBody AiFacade.UpdateAiMemoryRequest request) {
-        return ResponseEntity.ok(aiMemoryFacade.update(id, request));
+        return ResponseEntity.ok(aiFacade.update(id, request));
     }
 
     @Operation(summary = "AI 메모리 삭제", description = "특정 AI 장기 기억을 삭제합니다.")
@@ -84,7 +83,7 @@ public class ChatController {
     @DeleteMapping("/ai-memories/{id}")
     public ResponseEntity<Void> deleteMemory(
             @Parameter(description = "메모리 ID") @PathVariable Long id) {
-        aiMemoryFacade.delete(id);
+        aiFacade.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
