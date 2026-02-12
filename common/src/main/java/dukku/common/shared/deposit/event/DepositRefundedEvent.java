@@ -11,6 +11,8 @@ import java.util.UUID;
  * 알림 서비스 등에서 사용.
  */
 public record DepositRefundedEvent(
+        UUID refundId,
+        UUID paymentUuid,
         UUID orderUuid,
         UUID userUuid,
         Long amount) implements DomainEvent {
@@ -21,6 +23,6 @@ public record DepositRefundedEvent(
 
     @Override
     public String getKey() {
-        return userUuid.toString();
+        return paymentUuid.toString();
     }
 }
