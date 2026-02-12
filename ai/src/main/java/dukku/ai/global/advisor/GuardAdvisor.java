@@ -1,4 +1,4 @@
-package dukku.ai.global.config.advisor;
+package dukku.ai.global.advisor;
 
 import java.util.List;
 

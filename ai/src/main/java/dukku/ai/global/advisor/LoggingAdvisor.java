@@ -1,4 +1,4 @@
-package dukku.ai.global.config.advisor;
+package dukku.ai.global.advisor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

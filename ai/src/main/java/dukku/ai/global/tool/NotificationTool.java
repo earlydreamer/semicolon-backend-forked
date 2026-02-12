@@ -1,4 +1,4 @@
-package dukku.ai.global.config.tool;
+package dukku.ai.global.tool;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package dukku.ai.global.config.advisor;
+package dukku.ai.global.advisor;
 
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
@@ -7,33 +7,42 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 
-import dukku.ai.app.service.DocumentRetrievalService;
+import dukku.ai.app.service.MemoryRetrievalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DocumentRetrievalAdvisor implements BaseAdvisor {
+public class MemoryRetrievalAdvisor implements BaseAdvisor {
 
-    private final DocumentRetrievalService documentRetrievalUseCase;
+    public static final String USER_ID_KEY = "user_id";
+
+    private final MemoryRetrievalService memoryRetrievalService;
     private final int order;
 
     @Override
     public ChatClientRequest before(ChatClientRequest request, AdvisorChain chain) {
+        Object userIdObj = request.context().get(USER_ID_KEY);
+        if (userIdObj == null) {
+            return request;
+        }
+
+        Long userId = Long.valueOf(userIdObj.toString());
         UserMessage userMessage = request.prompt().getUserMessage();
         if (userMessage == null) {
             return request;
         }
 
-        String context = documentRetrievalUseCase.retrieve(userMessage.getText());
+        String memoryContext = memoryRetrievalService.retrieveMemoryContext(
+                userId, userMessage.getText());
 
-        if (context.isEmpty()) {
+        if (memoryContext.isEmpty()) {
             return request;
         }
 
-        log.debug("[DocumentRetrievalAdvisor] 문서 컨텍스트 주입, length={}", context.length());
+        log.debug("장기 기억 주입: userId={}, context length={}", userId, memoryContext.length());
 
-        Prompt augmented = request.prompt().augmentSystemMessage(context);
+        Prompt augmented = request.prompt().augmentSystemMessage(memoryContext);
         return request.mutate().prompt(augmented).build();
     }
 
@@ -44,7 +53,7 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
 
     @Override
     public String getName() {
-        return "DocumentRetrievalAdvisor";
+        return "MemoryRetrievalAdvisor";
     }
 
     @Override

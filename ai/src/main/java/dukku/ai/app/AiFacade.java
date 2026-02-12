@@ -1,37 +1,50 @@
-package dukku.ai.in.controller;
+package dukku.ai.app;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
+import dukku.ai.app.usecase.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import dukku.ai.app.usecase.CreateAiMemoryUseCase;
-import dukku.ai.app.usecase.DeleteAiMemoryUseCase;
-import dukku.ai.app.usecase.FindAiMemoryUseCase;
-import dukku.ai.app.usecase.UpdateAiMemoryUseCase;
 import dukku.ai.entity.AiMemory;
 import dukku.ai.entity.enums.MemorySubType;
 import dukku.ai.entity.enums.MemoryType;
 
 @Component
 @Transactional(readOnly = true)
-public class AiMemoryFacade {
+public class AiFacade {
 
+    private final ChatUseCase chatUseCase;
     private final FindAiMemoryUseCase findAiMemoryUseCase;
     private final CreateAiMemoryUseCase createAiMemoryUseCase;
     private final UpdateAiMemoryUseCase updateAiMemoryUseCase;
     private final DeleteAiMemoryUseCase deleteAiMemoryUseCase;
 
-    public AiMemoryFacade(FindAiMemoryUseCase findAiMemoryUseCase,
-                          CreateAiMemoryUseCase createAiMemoryUseCase,
-                          UpdateAiMemoryUseCase updateAiMemoryUseCase,
-                          DeleteAiMemoryUseCase deleteAiMemoryUseCase) {
+
+
+    public AiFacade(ChatUseCase chatUseCase, FindAiMemoryUseCase findAiMemoryUseCase, CreateAiMemoryUseCase createAiMemoryUseCase, UpdateAiMemoryUseCase updateAiMemoryUseCase, DeleteAiMemoryUseCase deleteAiMemoryUseCase) {
+        this.chatUseCase = chatUseCase;
         this.findAiMemoryUseCase = findAiMemoryUseCase;
         this.createAiMemoryUseCase = createAiMemoryUseCase;
         this.updateAiMemoryUseCase = updateAiMemoryUseCase;
         this.deleteAiMemoryUseCase = deleteAiMemoryUseCase;
     }
+
+    public ChatResponse chat(ChatRequest request) {
+        String conversationId = resolveConversationId(request.conversationId());
+        String reply = chatUseCase.chat(conversationId, request.userId(), request.message());
+        return new ChatResponse(conversationId, reply);
+    }
+
+    private String resolveConversationId(String conversationId) {
+        if (conversationId == null || conversationId.isBlank()) {
+            return UUID.randomUUID().toString();
+        }
+        return conversationId;
+    }
+
 
     public List<AiMemoryResponse> findAll() {
         return findAiMemoryUseCase.findAll().stream()
@@ -84,6 +97,19 @@ public class AiMemoryFacade {
                 memory.getCreatedAt(),
                 memory.getUpdatedAt()
         );
+    }
+
+    public record ChatRequest(
+            String conversationId,
+            Long userId,
+            String message
+    ) {
+    }
+
+    public record ChatResponse(
+            String conversationId,
+            String reply
+    ) {
     }
 
     public record CreateAiMemoryRequest(

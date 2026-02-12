@@ -7,23 +7,23 @@ import dukku.ai.app.service.MemoryRetrievalService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import dukku.ai.app.service.DocumentRetrievalService;
-import dukku.ai.global.config.advisor.DocumentRetrievalAdvisor;
+import dukku.ai.global.advisor.DocumentRetrievalAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import dukku.ai.global.config.advisor.GuardAdvisor;
-import dukku.ai.global.config.advisor.LoggingAdvisor;
-import dukku.ai.global.config.advisor.MemoryExtractionAdvisor;
-import dukku.ai.global.config.advisor.MemoryRetrievalAdvisor;
-import dukku.ai.global.config.advisor.ToolAdvisor;
-import dukku.ai.global.config.tool.CartHistoryTool;
-import dukku.ai.global.config.tool.NotificationTool;
-import dukku.ai.global.config.tool.PurchaseHistoryTool;
-import dukku.ai.global.config.tool.RecommendationSaveTool;
-import dukku.ai.global.config.tool.RecommendationTool;
+import dukku.ai.global.advisor.GuardAdvisor;
+import dukku.ai.global.advisor.LoggingAdvisor;
+import dukku.ai.global.advisor.MemoryExtractionAdvisor;
+import dukku.ai.global.advisor.MemoryRetrievalAdvisor;
+import dukku.ai.global.advisor.ToolAdvisor;
+import dukku.ai.global.tool.CartHistoryTool;
+import dukku.ai.global.tool.NotificationTool;
+import dukku.ai.global.tool.PurchaseHistoryTool;
+import dukku.ai.global.tool.RecommendationSaveTool;
+import dukku.ai.global.tool.RecommendationTool;
 
 @Configuration
 public class ChatClientConfig {

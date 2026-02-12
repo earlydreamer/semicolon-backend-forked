@@ -2,7 +2,7 @@ package dukku.ai.in.controller;
 
 import java.util.List;
 
-import dukku.ai.app.ChatFacade;
+import dukku.ai.app.AiFacade;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,9 +25,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class ChatController {
 
     private final ChatFacade chatFacade;
-    private final AiMemoryFacade aiMemoryFacade;
+    private final AiFacade aiMemoryFacade;
 
-    public ChatController(ChatFacade chatFacade, AiMemoryFacade aiMemoryFacade) {
+    public ChatController(ChatFacade chatFacade, AiFacade aiMemoryFacade) {
         this.chatFacade = chatFacade;
         this.aiMemoryFacade = aiMemoryFacade;
     }
@@ -47,7 +47,7 @@ public class ChatController {
     @Operation(summary = "AI 메모리 전체 조회", description = "저장된 모든 AI 장기 기억을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/ai-memories")
-    public ResponseEntity<List<AiMemoryFacade.AiMemoryResponse>> findAllMemories() {
+    public ResponseEntity<List<AiFacade.AiMemoryResponse>> findAllMemories() {
         return ResponseEntity.ok(aiMemoryFacade.findAll());
     }
 
@@ -55,7 +55,7 @@ public class ChatController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @GetMapping("/ai-memories/{id}")
-    public ResponseEntity<AiMemoryFacade.AiMemoryResponse> findMemoryById(
+    public ResponseEntity<AiFacade.AiMemoryResponse> findMemoryById(
             @Parameter(description = "메모리 ID") @PathVariable Long id) {
         return ResponseEntity.ok(aiMemoryFacade.findById(id));
     }
@@ -63,8 +63,8 @@ public class ChatController {
     @Operation(summary = "AI 메모리 생성", description = "새로운 AI 장기 기억을 생성합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공")
     @PostMapping("/ai-memories")
-    public ResponseEntity<AiMemoryFacade.AiMemoryResponse> createMemory(
-            @RequestBody AiMemoryFacade.CreateAiMemoryRequest request) {
+    public ResponseEntity<AiFacade.AiMemoryResponse> createMemory(
+            @RequestBody AiFacade.CreateAiMemoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(aiMemoryFacade.create(request));
     }
 
@@ -72,9 +72,9 @@ public class ChatController {
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @PatchMapping("/ai-memories/{id}")
-    public ResponseEntity<AiMemoryFacade.AiMemoryResponse> updateMemory(
+    public ResponseEntity<AiFacade.AiMemoryResponse> updateMemory(
             @Parameter(description = "메모리 ID") @PathVariable Long id,
-            @RequestBody AiMemoryFacade.UpdateAiMemoryRequest request) {
+            @RequestBody AiFacade.UpdateAiMemoryRequest request) {
         return ResponseEntity.ok(aiMemoryFacade.update(id, request));
     }
 
