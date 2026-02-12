@@ -1,6 +1,5 @@
 package dukku.common.shared.payment.event;
 
-import dukku.common.global.eventPublisher.KafkaRoutableEvent;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import dukku.common.shared.payment.type.PaymentFailureStage;
 import java.time.LocalDateTime;
@@ -12,6 +11,8 @@ import java.util.UUID;
  * <p>
  * 결제 플로우 실패 시 발행되며, 다른 BC가 롤백 처리할 수 있도록 알린다.
  */
+import dukku.common.global.event.DomainEvent;
+
 public record PaymentFailedEvent(
         UUID orderUuid,
         UUID paymentUuid,
@@ -20,17 +21,17 @@ public record PaymentFailedEvent(
         PaymentFailureCode failureCode,
         boolean retryable,
         String reason,
-        LocalDateTime occurredAt) implements KafkaRoutableEvent {
+        LocalDateTime occurredAt) implements DomainEvent {
 
     @Override
-    public String topic() { return TOPIC; }
+    public String getTopic() {
+        return "payment.failed";
+    }
 
-    /**
-     * 이 이벤트가 발행되는 Kafka 토픽명.
-     * Producer(EventPublisher)와 Consumer(@KafkaListener)가 동일한 상수를 참조하여
-     * 토픽명 불일치를 컴파일 타임에 방지한다.
-     */
-    public static final String TOPIC = "payment.failed";
+    @Override
+    public String getKey() {
+        return orderUuid.toString();
+    }
 
     public PaymentFailedEvent(UUID orderUuid, UUID paymentUuid, String reason) {
         this(orderUuid, paymentUuid, null, PaymentFailureStage.SYSTEM, PaymentFailureCode.UNKNOWN, true, reason,

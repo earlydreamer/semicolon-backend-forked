@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 
 @Slf4j
-public class KafkaTracingRecordInterceptor implements RecordInterceptor<String, Object> {
+public class KafkaTracingRecordInterceptor implements RecordInterceptor<String, String> {
 
     private static final String TRACE_ID_HEADER = "X-Trace-Id";
     private static final String SPAN_ID_HEADER = "X-Span-Id";
@@ -20,8 +20,8 @@ public class KafkaTracingRecordInterceptor implements RecordInterceptor<String, 
      * 리스너 처리 전 호출 - Kafka 헤더에서 traceId/spanId 추출하여 MDC에 세팅
      */
     @Override
-    public ConsumerRecord<String, Object> intercept(ConsumerRecord<String, Object> record,
-                                                     Consumer<String, Object> consumer) {
+    public ConsumerRecord<String, String> intercept(ConsumerRecord<String, String> record,
+                                                     Consumer<String, String> consumer) {
         MDC.clear();
 
         Header traceIdHeader = record.headers().lastHeader(TRACE_ID_HEADER);
@@ -45,8 +45,8 @@ public class KafkaTracingRecordInterceptor implements RecordInterceptor<String, 
      * 리스너 처리 성공 후 호출 - MDC 정리
      */
     @Override
-    public void afterRecord(ConsumerRecord<String, Object> record,
-                            Consumer<String, Object> consumer) {
+    public void afterRecord(ConsumerRecord<String, String> record,
+                            Consumer<String, String> consumer) {
         MDC.clear();
     }
 }

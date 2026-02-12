@@ -1,0 +1,23 @@
+server:
+  port: 8085
+
+spring:
+  config:
+    import: classpath:application-common.yml
+  application:
+    name: coupon
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:coupon_service}?sslmode=${DB_SSLMODE:disable}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

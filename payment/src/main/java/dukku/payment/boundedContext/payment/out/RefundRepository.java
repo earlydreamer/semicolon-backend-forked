@@ -1,0 +1,26 @@
+package dukku.payment.boundedContext.payment.out;
+
+import dukku.payment.boundedContext.payment.entity.Refund;
+import dukku.common.shared.payment.type.RefundStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * 환불 Repository
+ */
+public interface RefundRepository extends JpaRepository<Refund, Integer> {
+
+    Optional<Refund> findByUuid(UUID uuid);
+
+    List<Refund> findByPaymentId(int paymentId);
+
+    List<Refund> findByRefundStatus(RefundStatus status);
+
+    /**
+     * 멱등성 키로 환불 조회 (중복 환불 방지용)
+     */
+    Optional<Refund> findByIdempotencyKey(String idempotencyKey);
+}

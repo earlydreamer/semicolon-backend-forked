@@ -1,0 +1,23 @@
+server:
+  port: 8084
+
+spring:
+  config:
+    import: classpath:application-common.yml
+  application:
+    name: order
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:order_service}?sslmode=${DB_SSLMODE:disable}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

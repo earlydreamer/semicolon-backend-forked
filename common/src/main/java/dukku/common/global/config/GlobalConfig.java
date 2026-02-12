@@ -14,4 +14,5 @@ public class GlobalConfig {
     public void setEventPublisher(EventPublisher eventPublisher) {
         GlobalConfig.eventPublisher = eventPublisher;
     }
+
 }

@@ -1,0 +1,40 @@
+server:
+  port: 8088
+
+spring:
+  config:
+    import: classpath:application-common.yml
+  application:
+    name: settlement
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:settlement_service}?sslmode=${DB_SSLMODE:disable}
+
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+batch:
+  settlement:
+    chunk-size: 100
+    fee-rate: 0.05
+    skip-limit: 10
+    retry-limit: 3
+    page-size: 100
+    scheduler:
+      enabled: true
+      cron: "0 0 2 1 * *" # 매월 1일 오전 2시 실행

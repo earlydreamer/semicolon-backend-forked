@@ -1,0 +1,50 @@
+server:
+  port: 8082
+
+spring:
+  config:
+    import: classpath:application-common.yml
+  application:
+    name: user
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_service}?sslmode=${DB_SSLMODE:disable}
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+custom:
+  email:
+    verification:
+      required: true
+      base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
+      token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
+      verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}

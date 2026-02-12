@@ -1,5 +1,6 @@
 package dukku.common.shared.settlement.event;
 
+import dukku.common.global.event.DomainEvent;
 import java.util.UUID;
 
 /**
@@ -12,5 +13,14 @@ import java.util.UUID;
 public record SettlementPayoutRequestedEvent(
         UUID userUuid,
         Long amount,
-        UUID settlementUuid) {
+        UUID settlementUuid) implements DomainEvent {
+    @Override
+    public String getTopic() {
+        return "settlement.payout.requested";
+    }
+
+    @Override
+    public String getKey() {
+        return settlementUuid.toString();
+    }
 }

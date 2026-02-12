@@ -1,5 +1,6 @@
 package dukku.common.shared.settlement.event;
 
+import dukku.common.global.event.DomainEvent;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -20,5 +21,14 @@ public record SettlementCompletedEvent(
         UUID sellerUuid,
         Long settlementAmount,
         LocalDateTime completedAt
-) {
+) implements DomainEvent {
+    @Override
+    public String getTopic() {
+        return "settlement.completed";
+    }
+
+    @Override
+    public String getKey() {
+        return settlementUuid.toString();
+    }
 }

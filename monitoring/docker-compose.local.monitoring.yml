@@ -21,7 +21,7 @@ services:
       - "9090:9090"
     restart: unless-stopped
     networks:
-      - monitoring
+      - team05-network
     extra_hosts:
       - "host.docker.internal:host-gateway"  # Linux에서도 작동하도록 설정
 
@@ -47,18 +47,16 @@ services:
       - "3000:3000"
     restart: unless-stopped
     networks:
-      - monitoring
+      - team05-network
     depends_on:
       - prometheus
 
 # 영구 볼륨 정의
 volumes:
   prometheus_data:
-    driver: local
   grafana_data:
-    driver: local
 
 # 네트워크 정의
 networks:
-  monitoring:
-    driver: bridge
+  team05-network:
+    external: true

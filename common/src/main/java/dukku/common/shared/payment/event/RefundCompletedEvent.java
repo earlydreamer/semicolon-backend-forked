@@ -1,7 +1,5 @@
 package dukku.common.shared.payment.event;
 
-import dukku.common.global.eventPublisher.KafkaRoutableEvent;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,6 +9,8 @@ import java.util.UUID;
  * 환불 처리가 완료되었을 때 발행.
  * 예치금 롤백 및 주문/상품 상태 변경의 트리거가 됩니다.
  */
+import dukku.common.global.event.DomainEvent;
+
 public record RefundCompletedEvent(
         UUID refundId,
         UUID paymentId,
@@ -19,15 +19,14 @@ public record RefundCompletedEvent(
         Long refundDepositAmount, // 환불된 예치금
         UUID userUuid,
         LocalDateTime occurredAt
-) implements KafkaRoutableEvent {
+) implements DomainEvent {
+    @Override
+    public String getTopic() {
+        return "payment.refund-completed";
+    }
 
     @Override
-    public String topic() { return TOPIC; }
-
-    /**
-     * 이 이벤트가 발행되는 Kafka 토픽명.
-     * Producer(EventPublisher)와 Consumer(@KafkaListener)가 동일한 상수를 참조하여
-     * 토픽명 불일치를 컴파일 타임에 방지한다.
-     */
-    public static final String TOPIC = "payment.refund-completed";
+    public String getKey() {
+        return orderUuid.toString();
+    }
 }
