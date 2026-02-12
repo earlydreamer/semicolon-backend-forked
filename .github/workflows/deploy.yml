@@ -55,7 +55,7 @@ jobs:
           username: ${{ env.EC2_USERNAME }}
           key: ${{ env.EC2_SSH_KEY }}
           port: 22
-          source: "docker-compose.prod.yml,nginx/nginx.conf"
+          source: "docker-compose.prod.yml"
           target: "/home/${{ env.EC2_USERNAME }}/semicolon-backend"
 
       - name: Deploy to EC2 via SSH
