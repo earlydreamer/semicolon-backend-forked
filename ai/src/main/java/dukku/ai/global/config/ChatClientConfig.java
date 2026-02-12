@@ -18,6 +18,12 @@ import dukku.ai.global.config.advisor.GuardAdvisor;
 import dukku.ai.global.config.advisor.LoggingAdvisor;
 import dukku.ai.global.config.advisor.MemoryExtractionAdvisor;
 import dukku.ai.global.config.advisor.MemoryRetrievalAdvisor;
+import dukku.ai.global.config.advisor.ToolAdvisor;
+import dukku.ai.global.config.tool.CartHistoryTool;
+import dukku.ai.global.config.tool.NotificationTool;
+import dukku.ai.global.config.tool.PurchaseHistoryTool;
+import dukku.ai.global.config.tool.RecommendationSaveTool;
+import dukku.ai.global.config.tool.RecommendationTool;
 
 @Configuration
 public class ChatClientConfig {
@@ -51,22 +57,41 @@ public class ChatClientConfig {
     }
 
     @Bean
+    ToolAdvisor toolAdvisor() {
+        return new ToolAdvisor(120);
+    }
+
+    @Bean
     ChatClient chatClient(ChatClient.Builder builder,
                           ChatMemory chatMemory,
                           VectorStore vectorStore,
                           GuardAdvisor guardAdvisor,
                           LoggingAdvisor loggingAdvisor,
                           MemoryRetrievalAdvisor memoryRetrievalAdvisor,
-                          MemoryExtractionAdvisor memoryExtractionAdvisor) {
+                          MemoryExtractionAdvisor memoryExtractionAdvisor,
+                          ToolAdvisor toolAdvisor,
+                          CartHistoryTool cartHistoryTool,
+                          PurchaseHistoryTool purchaseHistoryTool,
+                          RecommendationTool recommendationTool,
+                          RecommendationSaveTool recommendationSaveTool,
+                          NotificationTool notificationTool) {
         return builder
                 .defaultSystem("당신은 사용자 정보 기반 상품 추천 모델입니다")
+                .defaultTools(
+                        cartHistoryTool,
+                        purchaseHistoryTool,
+                        recommendationTool,
+                        recommendationSaveTool,
+                        notificationTool
+                )
                 .defaultAdvisors(
                         guardAdvisor,                                           // 1. 입력 검증 (order=0)
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),   // 2. 대화 메모리
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
-                        QuestionAnswerAdvisor.builder(vectorStore).build(),     // 4. RAG 문서 검색
-                        memoryExtractionAdvisor,                                // 5. 기억 추출 (order=150)
-                        loggingAdvisor                                          // 6. 로깅/관측 (order=200)
+                        toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
+                        QuestionAnswerAdvisor.builder(vectorStore).build(),     // 5. RAG 문서 검색
+                        memoryExtractionAdvisor,                                // 6. 기억 추출 (order=150)
+                        loggingAdvisor                                          // 7. 로깅/관측 (order=200)
                 )
                 .build();
     }
