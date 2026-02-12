@@ -126,8 +126,10 @@ public class RefundPaymentUseCase {
         // 환불 스냅샷 영속화
         // 환불 스냅샷 생성
         Refund refund = payment.createRefund(request.getRefundAmount(), allocation.depositRefundAmount(), idempotencyKey);
-        // 환불 완료 상태로 마킹
-        refund.complete();
+        // 예치금 복구가 없는 환불은 즉시 완료 처리
+        if (allocation.depositRefundAmount() == 0) {
+            refund.complete();
+        }
         // 환불 이력 저장
         support.saveRefund(refund);
 

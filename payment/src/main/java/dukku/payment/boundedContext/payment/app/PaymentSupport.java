@@ -151,4 +151,11 @@ public class PaymentSupport {
     public Optional<Refund> findRefundByIdempotencyKey(String idempotencyKey) {
         return refundRepository.findByIdempotencyKey(idempotencyKey);
     }
+
+    /**
+     * UUID로 환불 조회 (Optional)
+     */
+    public Optional<Refund> findRefundByUuid(UUID refundUuid) {
+        return refundRepository.findByUuid(refundUuid);
+    }
 }

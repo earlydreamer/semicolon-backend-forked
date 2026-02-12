@@ -1,7 +1,12 @@
 package dukku.payment.boundedContext.payment.in;
 
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
+import dukku.common.shared.deposit.event.DepositRefundFailedEvent;
+import dukku.common.shared.deposit.event.DepositRefundedEvent;
 import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
+import dukku.common.shared.payment.type.PaymentHistoryType;
+import dukku.common.shared.payment.type.PaymentStatus;
+import dukku.common.shared.payment.type.RefundStatus;
 import dukku.payment.boundedContext.payment.app.PaymentFacade;
 import dukku.payment.boundedContext.payment.app.PaymentSupport;
 import dukku.payment.boundedContext.payment.entity.Payment;
@@ -77,5 +82,55 @@ public class PaymentEventListener {
                         payment.getUuid(), e.getMessage());
             }
         }
+    }
+
+    /**
+     * 예치금 환불(복구) 성공 시 환불 Saga 완료 처리.
+     */
+    @org.springframework.kafka.annotation.KafkaListener(topics = "deposit.refunded", groupId = "${spring.application.name}-group")
+    public void handle(DepositRefundedEvent event) {
+        paymentSupport.findRefundByUuid(event.refundId()).ifPresentOrElse(refund -> {
+            if (refund.getRefundStatus() == RefundStatus.COMPLETED) {
+                return;
+            }
+            refund.complete();
+            paymentSupport.saveRefund(refund);
+            log.info("[환불 Saga 완료] refundUuid={}, paymentUuid={}", event.refundId(), event.paymentUuid());
+        }, () -> log.warn("[환불 Saga] refundUuid를 찾을 수 없습니다. refundUuid={}, paymentUuid={}",
+                event.refundId(), event.paymentUuid()));
+    }
+
+    /**
+     * 예치금 환불(복구) 실패 시 결제/환불 상태를 장애 상태로 전환.
+     */
+    @org.springframework.kafka.annotation.KafkaListener(topics = "deposit.refund.failed", groupId = "${spring.application.name}-group")
+    public void handle(DepositRefundFailedEvent event) {
+        paymentSupport.findRefundByUuid(event.refundId()).ifPresentOrElse(refund -> {
+            if (refund.getRefundStatus() == RefundStatus.COMPLETED) {
+                log.warn("[환불 Saga 실패 무시] 이미 완료된 환불 이벤트입니다. refundUuid={}", event.refundId());
+                return;
+            }
+            refund.cancel();
+            paymentSupport.saveRefund(refund);
+        }, () -> log.warn("[환불 Saga 실패] refundUuid를 찾을 수 없습니다. refundUuid={}, paymentUuid={}",
+                event.refundId(), event.paymentUuid()));
+
+        paymentSupport.findPaymentByUuidOptional(event.paymentUuid()).ifPresentOrElse(payment -> {
+            if (payment.getPaymentStatus() == PaymentStatus.ROLLBACK_FAILED) {
+                return;
+            }
+
+            PaymentStatus originStatus = payment.getPaymentStatus();
+            Long originAmountPg = payment.getAmountPg();
+            Long originDeposit = payment.getPaymentDeposit();
+
+            payment.rollbackFailedStatus();
+            paymentSupport.savePayment(payment);
+            paymentSupport.createHistory(payment, PaymentHistoryType.PAYMENT_ROLLBACK_FAILED,
+                    originStatus, originAmountPg, originDeposit);
+
+            log.error("[환불 Saga 실패] 예치금 환불 실패로 롤백 실패 상태 전환. paymentUuid={}, reason={}",
+                    event.paymentUuid(), event.reason());
+        }, () -> log.warn("[환불 Saga 실패] paymentUuid를 찾을 수 없습니다. paymentUuid={}", event.paymentUuid()));
     }
 }

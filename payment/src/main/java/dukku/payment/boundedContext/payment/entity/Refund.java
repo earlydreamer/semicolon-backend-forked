@@ -76,8 +76,15 @@ public class Refund extends BaseIdAndUUIDAndTime {
     // === 도메인 로직 ===
 
     public void complete() {
+        if (this.refundStatus == RefundStatus.COMPLETED) {
+            return;
+        }
         this.refundStatus = RefundStatus.COMPLETED;
         this.approvedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        this.refundStatus = RefundStatus.CANCELED;
     }
 
     public void addRefundItem(RefundItem item) {
