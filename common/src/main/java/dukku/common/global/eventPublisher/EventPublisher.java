@@ -13,7 +13,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @RequiredArgsConstructor
 public class EventPublisher {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public void publish(DomainEvent event) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
@@ -29,14 +30,19 @@ public class EventPublisher {
     }
 
     private void send(DomainEvent event) {
-        log.info("Publishing event to Kafka: topic={}, key={}", event.getTopic(), event.getKey());
-        kafkaTemplate.send(event.getTopic(), event.getKey(), event)
-                .whenComplete((result, ex) -> {
+        try {
+            String eventJson = objectMapper.writeValueAsString(event);
+            log.info("Publishing event to Kafka: topic={}, key={}", event.getTopic(), event.getKey());
+            kafkaTemplate.send(event.getTopic(), event.getKey(), eventJson)
+                    .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.error("Failed to publish event: {}", event, ex);
                     } else {
                         log.debug("Event published successfully: offset={}", result.getRecordMetadata().offset());
                     }
                 });
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("Failed to serialize event: {}", event, e);
+        }
     }
 }
