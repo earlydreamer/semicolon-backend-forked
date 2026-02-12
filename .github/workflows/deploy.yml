@@ -94,9 +94,9 @@ jobs:
             CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
             EOF
 
-            # Docker Compose 실행
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
+            # Docker Compose 실행 (v2 사용)
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
             
             # 불필요한 이미지 정리
             docker image prune -f
