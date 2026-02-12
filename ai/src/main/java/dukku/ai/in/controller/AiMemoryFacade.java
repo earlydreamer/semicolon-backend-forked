@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import dukku.ai.app.usecase.CreateAiMemoryUseCase;
 import dukku.ai.app.usecase.DeleteAiMemoryUseCase;
@@ -14,6 +15,7 @@ import dukku.ai.entity.enums.MemorySubType;
 import dukku.ai.entity.enums.MemoryType;
 
 @Component
+@Transactional(readOnly = true)
 public class AiMemoryFacade {
 
     private final FindAiMemoryUseCase findAiMemoryUseCase;
@@ -41,6 +43,7 @@ public class AiMemoryFacade {
         return toResponse(findAiMemoryUseCase.findById(id));
     }
 
+    @Transactional
     public AiMemoryResponse create(CreateAiMemoryRequest request) {
         AiMemory memory = createAiMemoryUseCase.create(
                 request.userId(),
@@ -53,6 +56,7 @@ public class AiMemoryFacade {
         return toResponse(memory);
     }
 
+    @Transactional
     public AiMemoryResponse update(Long id, UpdateAiMemoryRequest request) {
         AiMemory memory = updateAiMemoryUseCase.update(
                 id,
@@ -62,6 +66,7 @@ public class AiMemoryFacade {
         return toResponse(memory);
     }
 
+    @Transactional
     public void delete(Long id) {
         deleteAiMemoryUseCase.delete(id);
     }

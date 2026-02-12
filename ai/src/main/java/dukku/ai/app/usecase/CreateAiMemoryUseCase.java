@@ -1,7 +1,6 @@
 package dukku.ai.app.usecase;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import dukku.ai.entity.AiMemory;
 import dukku.ai.entity.enums.MemorySubType;
@@ -17,7 +16,6 @@ public class CreateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    @Transactional
     public AiMemory create(Long userId, MemoryType memoryType, MemorySubType subType,
                            String content, Double importanceScore, Double confidenceScore) {
         AiMemory memory = AiMemory.builder()

@@ -1,6 +1,6 @@
-package dukku.ai.in.controller;
+package dukku.ai.app;
 
-import dukku.ai.app.ChatUseCase;
+import dukku.ai.app.usecase.ChatUseCase;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;

@@ -1,7 +1,6 @@
 package dukku.ai.app.usecase;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import dukku.ai.entity.AiMemory;
 import dukku.ai.out.AiMemoryRepository;
@@ -15,7 +14,6 @@ public class DeleteAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    @Transactional
     public void delete(Long id) {
         AiMemory memory = aiMemoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("AI 메모리를 찾을 수 없습니다. id=" + id));

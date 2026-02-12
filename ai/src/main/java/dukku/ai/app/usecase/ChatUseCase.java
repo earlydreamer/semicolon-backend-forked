@@ -1,4 +1,4 @@
-package dukku.ai.app;
+package dukku.ai.app.usecase;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
