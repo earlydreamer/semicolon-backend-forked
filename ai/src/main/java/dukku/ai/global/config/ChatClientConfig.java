@@ -2,18 +2,18 @@ package dukku.ai.global.config;
 
 import java.util.List;
 
+import dukku.ai.app.service.MemoryExtractionService;
+import dukku.ai.app.service.MemoryRetrievalService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import dukku.ai.app.service.DocumentRetrievalService;
+import dukku.ai.global.config.advisor.DocumentRetrievalAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import dukku.ai.app.MemoryExtractionUseCase;
-import dukku.ai.app.MemoryRetrievalUseCase;
 import dukku.ai.global.config.advisor.GuardAdvisor;
 import dukku.ai.global.config.advisor.LoggingAdvisor;
 import dukku.ai.global.config.advisor.MemoryExtractionAdvisor;
@@ -47,12 +47,12 @@ public class ChatClientConfig {
     }
 
     @Bean
-    MemoryRetrievalAdvisor memoryRetrievalAdvisor(MemoryRetrievalUseCase memoryRetrievalService) {
+    MemoryRetrievalAdvisor memoryRetrievalAdvisor(MemoryRetrievalService memoryRetrievalService) {
         return new MemoryRetrievalAdvisor(memoryRetrievalService, 110);
     }
 
     @Bean
-    MemoryExtractionAdvisor memoryExtractionAdvisor(MemoryExtractionUseCase memoryExtractionService) {
+    MemoryExtractionAdvisor memoryExtractionAdvisor(MemoryExtractionService memoryExtractionService) {
         return new MemoryExtractionAdvisor(memoryExtractionService, 150);
     }
 
@@ -62,14 +62,19 @@ public class ChatClientConfig {
     }
 
     @Bean
+    DocumentRetrievalAdvisor documentRetrievalAdvisor(DocumentRetrievalService documentRetrievalUseCase) {
+        return new DocumentRetrievalAdvisor(documentRetrievalUseCase, 130);
+    }
+
+    @Bean
     ChatClient chatClient(ChatClient.Builder builder,
                           ChatMemory chatMemory,
-                          VectorStore vectorStore,
                           GuardAdvisor guardAdvisor,
                           LoggingAdvisor loggingAdvisor,
                           MemoryRetrievalAdvisor memoryRetrievalAdvisor,
                           MemoryExtractionAdvisor memoryExtractionAdvisor,
                           ToolAdvisor toolAdvisor,
+                          DocumentRetrievalAdvisor documentRetrievalAdvisor,
                           CartHistoryTool cartHistoryTool,
                           PurchaseHistoryTool purchaseHistoryTool,
                           RecommendationTool recommendationTool,
@@ -89,7 +94,7 @@ public class ChatClientConfig {
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),   // 2. 대화 메모리
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
                         toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
-                        QuestionAnswerAdvisor.builder(vectorStore).build(),     // 5. RAG 문서 검색
+                        documentRetrievalAdvisor,                               // 5. 선택적 문서 검색 (order=130)
                         memoryExtractionAdvisor,                                // 6. 기억 추출 (order=150)
                         loggingAdvisor                                          // 7. 로깅/관측 (order=200)
                 )
