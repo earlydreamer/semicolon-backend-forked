@@ -1,22 +1,28 @@
 package dukku.user.boundedContext.user.in;
 
-import dukku.common.global.exception.BadRequestException;
-import dukku.user.boundedContext.user.app.user.FindUserByEmailUseCase;
-import dukku.user.boundedContext.user.app.user.FindUserByRoleUseCase;
-import dukku.user.boundedContext.user.app.user.FindUserUseCase;
-import dukku.user.boundedContext.user.entity.User;
-import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.dto.UserProfileResponse;
 import dukku.common.shared.user.dto.UserUuidResponse;
+import dukku.common.shared.user.dto.UserVerificationRequest;
+import dukku.common.shared.user.dto.UserVerificationResponse;
+import dukku.common.shared.user.type.Role;
+import dukku.user.boundedContext.user.app.user.FindUserByEmailUseCase;
+import dukku.user.boundedContext.user.app.user.FindUserByRoleUseCase;
+import dukku.user.boundedContext.user.app.user.FindUserUseCase;
+import dukku.user.boundedContext.user.app.user.VerifyUserCredentialsUseCase;
+import dukku.user.boundedContext.user.entity.User;
+import dukku.user.boundedContext.user.exception.InvalidUserLookupRequestException;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import dukku.user.boundedContext.user.app.user.VerifyUserCredentialsUseCase;
-import dukku.common.shared.user.dto.UserVerificationRequest;
-import dukku.common.shared.user.dto.UserVerificationResponse;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -38,10 +44,10 @@ public class UserInternalController {
             @RequestParam(required = false) String email
     ) {
         if ((role == null) == (email == null)) {
-            throw new BadRequestException("Provide exactly one of role or email.");
+            throw InvalidUserLookupRequestException.roleOrEmailOnly();
         }
         if (email != null && email.trim().isEmpty()) {
-            throw new BadRequestException("Email must not be blank.");
+            throw InvalidUserLookupRequestException.emailBlank();
         }
 
         User user = role != null
@@ -93,12 +99,13 @@ public class UserInternalController {
 
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/verify-password")
     public ResponseEntity<UserVerificationResponse> verifyPassword(@RequestBody UserVerificationRequest request) {
         User user = verifyUserCredentialsUseCase.execute(request.getEmail(), request.getPassword());
-        
+
         log.info("[Internal API] User credentials verified. email={}", request.getEmail());
-        
+
         return ResponseEntity.ok(UserVerificationResponse.builder()
                 .userUuid(user.getUuid())
                 .role(user.getRole())

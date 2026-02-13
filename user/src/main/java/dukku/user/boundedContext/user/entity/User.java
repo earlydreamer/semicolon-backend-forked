@@ -1,17 +1,23 @@
 package dukku.user.boundedContext.user.entity;
 
 import dukku.common.global.auth.crypto.converter.AesGcmConverter;
-import dukku.user.boundedContext.user.exception.AlreadyWithdrawUserException;
-import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import dukku.common.shared.user.domain.SourceUser;
+import dukku.common.shared.user.dto.UserDto;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.dto.UserResponse;
 import dukku.common.shared.user.dto.UserUpdateRequest;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.type.UserStatus;
-import dukku.common.shared.user.domain.SourceUser;
-import dukku.common.shared.user.dto.UserDto;
-import jakarta.persistence.*;
-import lombok.*;
+import dukku.user.boundedContext.user.exception.AlreadyWithdrawUserException;
+import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
@@ -23,7 +29,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends SourceUser {
-    @Column(length = 100, nullable = false, comment = "암호화된 비밀번호")
+    @Column(length = 100, nullable = false, comment = "보호된 비밀번호")
     private String password;
 
     @Convert(converter = AesGcmConverter.class)
@@ -71,10 +77,10 @@ public class User extends SourceUser {
 
     public void restoreFromWithdrawal(String encodedPassword) {
         if (this.getStatus() != UserStatus.WITHDRAWN_PENDING && this.getStatus() != UserStatus.DELETED) {
-            throw new WithdrawRestoreNotAllowedException("User is not restorable.");
+            throw WithdrawRestoreNotAllowedException.userIsNotRestorable();
         }
         if (this.withdrawalEmailBackup == null) {
-            throw new WithdrawRestoreNotAllowedException("Missing withdrawal backup.");
+            throw WithdrawRestoreNotAllowedException.missingWithdrawalBackup();
         }
         this.setEmail(this.withdrawalEmailBackup);
         this.setNickname(this.withdrawalNicknameBackup);

@@ -1,6 +1,7 @@
 package dukku.user.boundedContext.user.app.email;
 
-import dukku.common.global.exception.BadRequestException;
+import dukku.user.boundedContext.user.exception.EmailVerificationRequiredException;
+import dukku.user.boundedContext.user.exception.EmailVerificationTokenInvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -51,7 +52,7 @@ public class EmailVerificationService {
         String normalizedToken = token == null ? "" : token.trim();
         String email = getStoredEmail(normalizedToken);
         if (email == null) {
-            throw new BadRequestException("인증 토큰이 만료되었거나 존재하지 않습니다.");
+            throw new EmailVerificationTokenInvalidException();
         }
         redisTemplate.delete(tokenKey(normalizedToken));
         markVerified(email);
@@ -65,7 +66,7 @@ public class EmailVerificationService {
         String normalizedEmail = normalizeEmail(email);
         Object verified = redisTemplate.opsForValue().get(verifiedKey(normalizedEmail));
         if (verified == null) {
-            throw new BadRequestException("이메일 인증이 필요합니다.");
+            throw new EmailVerificationRequiredException();
         }
         redisTemplate.delete(verifiedKey(normalizedEmail));
     }
