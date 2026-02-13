@@ -3,6 +3,7 @@ package dukku.order.boundedContext.order.out;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
+import dukku.order.boundedContext.order.in.OrderEventListener;
 import dukku.order.boundedContext.order.app.UpdateOrderStatusUseCase;
 import dukku.order.boundedContext.order.entity.Order;
 import org.junit.jupiter.api.BeforeEach;
