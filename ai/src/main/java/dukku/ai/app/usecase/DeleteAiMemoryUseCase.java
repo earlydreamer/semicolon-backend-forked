@@ -15,7 +15,7 @@ public class DeleteAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public void delete(Long id) {
+    public void delete(Integer id) {
         AiMemory memory = aiMemoryRepository.findById(id)
                 .orElseThrow(() -> new AiMemoryNotFoundException(id));
         aiMemoryRepository.delete(memory);

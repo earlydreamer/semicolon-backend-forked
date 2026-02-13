@@ -59,7 +59,7 @@ public class AiController {
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @GetMapping("/ai-memories/{id}")
     public ResponseEntity<AiMemoryResponse> findMemoryById(
-            @Parameter(description = "메모리 ID") @PathVariable Long id) {
+            @Parameter(description = "메모리 ID") @PathVariable Integer id) {
         return ResponseEntity.ok(aiFacade.findById(id));
     }
 
@@ -76,7 +76,7 @@ public class AiController {
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @PatchMapping("/ai-memories/{id}")
     public ResponseEntity<AiMemoryResponse> updateMemory(
-            @Parameter(description = "메모리 ID") @PathVariable Long id,
+            @Parameter(description = "메모리 ID") @PathVariable Integer id,
             @RequestBody UpdateAiMemoryRequest request) {
         return ResponseEntity.ok(aiFacade.update(id, request));
     }
@@ -86,7 +86,7 @@ public class AiController {
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @DeleteMapping("/ai-memories/{id}")
     public ResponseEntity<Void> deleteMemory(
-            @Parameter(description = "메모리 ID") @PathVariable Long id) {
+            @Parameter(description = "메모리 ID") @PathVariable Integer id) {
         aiFacade.delete(id);
         return ResponseEntity.noContent().build();
     }

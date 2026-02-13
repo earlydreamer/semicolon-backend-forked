@@ -50,7 +50,7 @@ public class AiFacade {
                 .toList();
     }
 
-    public AiMemoryResponse findById(Long id) {
+    public AiMemoryResponse findById(Integer id) {
         return toResponse(findAiMemoryUseCase.findById(id));
     }
 
@@ -68,7 +68,7 @@ public class AiFacade {
     }
 
     @Transactional
-    public AiMemoryResponse update(Long id, UpdateAiMemoryRequest request) {
+    public AiMemoryResponse update(Integer id, UpdateAiMemoryRequest request) {
         AiMemory memory = updateAiMemoryUseCase.update(
                 id,
                 request.importanceScore(),
@@ -78,7 +78,7 @@ public class AiFacade {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Integer id) {
         deleteAiMemoryUseCase.delete(id);
     }
 

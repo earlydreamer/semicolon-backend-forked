@@ -1,7 +1,8 @@
 package dukku.ai.entity;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
+import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import org.hibernate.annotations.Array;
@@ -12,27 +13,25 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "ai_memory")
 @Getter
+@SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AiMemory {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class AiMemory extends BaseIdAndUUIDAndTime {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -56,46 +55,21 @@ public class AiMemory {
     @Column(nullable = false)
     private Double confidenceScore;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Integer accessCount;
+    private Integer accessCount = 0;
 
     private String sourceMessageId;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    @Builder
-    public AiMemory(Long userId, MemoryType memoryType, MemorySubType subType,
-                    String content, float[] embedding, Double importanceScore,
-                    Double confidenceScore, String sourceMessageId) {
-        this.userId = userId;
-        this.memoryType = memoryType;
-        this.subType = subType;
-        this.content = content;
-        this.embedding = embedding;
-        this.importanceScore = importanceScore;
-        this.confidenceScore = confidenceScore;
-        this.accessCount = 0;
-        this.sourceMessageId = sourceMessageId;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
     public void incrementAccessCount() {
         this.accessCount++;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void updateConfidence(Double newConfidence) {
         this.confidenceScore = (this.confidenceScore + newConfidence) / 2.0;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void updateImportanceScore(Double score) {
         this.importanceScore = score;
-        this.updatedAt = LocalDateTime.now();
     }
 }

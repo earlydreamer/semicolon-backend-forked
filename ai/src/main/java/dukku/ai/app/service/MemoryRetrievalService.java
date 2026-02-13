@@ -3,6 +3,7 @@ package dukku.ai.app.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -28,7 +29,7 @@ public class MemoryRetrievalService {
         this.embeddingModel = embeddingModel;
     }
 
-    public String retrieveMemoryContext(Long userId, String userMessage) {
+    public String retrieveMemoryContext(UUID userId, String userMessage) {
         List<AiMemory> profileMemories = aiMemoryRepository.findTopByUserIdAndMemoryType(
                 userId, MemoryType.PROFILE.name(), PROFILE_LIMIT);
 

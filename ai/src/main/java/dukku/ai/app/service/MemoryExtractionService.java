@@ -2,6 +2,7 @@ package dukku.ai.app.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -64,7 +65,7 @@ public class MemoryExtractionService {
     }
 
     @Async
-    public void extractAndStoreMemories(Long userId, String userMessage, String aiResponse) {
+    public void extractAndStoreMemories(UUID userId, String userMessage, String aiResponse) {
         try {
             String prompt = EXTRACTION_PROMPT.formatted(userMessage, aiResponse);
             String result = chatModel.call(new Prompt(prompt))
@@ -95,7 +96,7 @@ public class MemoryExtractionService {
         }
     }
 
-    private void processExtraction(Long userId, MemoryExtraction extraction) {
+    private void processExtraction(UUID userId, MemoryExtraction extraction) {
         float[] embedding = embeddingModel.embed(extraction.content());
         String embeddingStr = Arrays.toString(embedding);
 

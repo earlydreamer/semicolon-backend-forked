@@ -1,5 +1,7 @@
 package dukku.ai.global.advisor;
 
+import java.util.UUID;
+
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
@@ -30,7 +32,7 @@ public class MemoryExtractionAdvisor implements BaseAdvisor {
                 return response;
             }
 
-            Long userId = Long.valueOf(userIdObj.toString());
+            UUID userId = UUID.fromString(userIdObj.toString());
 
             ChatResponse chatResponse = response.chatResponse();
             if (chatResponse == null || chatResponse.getResult() == null) {

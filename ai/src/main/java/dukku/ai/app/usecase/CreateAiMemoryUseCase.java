@@ -1,5 +1,7 @@
 package dukku.ai.app.usecase;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiMemory;
@@ -16,7 +18,7 @@ public class CreateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public AiMemory create(Long userId, MemoryType memoryType, MemorySubType subType,
+    public AiMemory create(UUID userId, MemoryType memoryType, MemorySubType subType,
                            String content, Double importanceScore, Double confidenceScore) {
         AiMemory memory = AiMemory.builder()
                 .userId(userId)

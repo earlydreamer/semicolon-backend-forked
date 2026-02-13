@@ -15,7 +15,7 @@ public class UpdateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public AiMemory update(Long id, Double importanceScore, Double confidenceScore) {
+    public AiMemory update(Integer id, Double importanceScore, Double confidenceScore) {
         AiMemory memory = aiMemoryRepository.findById(id)
                 .orElseThrow(() -> new AiMemoryNotFoundException(id));
 

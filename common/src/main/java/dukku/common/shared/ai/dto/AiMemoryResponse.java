@@ -4,10 +4,11 @@ import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record AiMemoryResponse(
-        Long id,
-        Long userId,
+        Integer id,
+        UUID userId,
         MemoryType memoryType,
         MemorySubType subType,
         String content,
