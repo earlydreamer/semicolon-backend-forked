@@ -1,11 +1,10 @@
 package dukku.product.boundedContext.product.app.facade;
 
-import dukku.common.shared.product.dto.product.ProductDetailResponse;
-import dukku.common.shared.product.dto.product.ProductReserveRequest;
-import dukku.product.boundedContext.product.app.cqrs.SearchProductUseCase;
-import dukku.product.boundedContext.product.app.usecase.product.*;
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
 import dukku.common.shared.product.dto.cqrs.ProductSortType;
+import dukku.common.shared.product.dto.product.*;
+import dukku.product.boundedContext.product.app.cqrs.SearchProductUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -26,11 +25,11 @@ public class ProductFacade {
     private final ReserveProductUseCase reserveProductUseCase;
     private final SearchProductUseCase searchProductUseCase;
 
-    public List<dukku.common.shared.product.dto.product.CategoryCreateResponse> findCategories() {
+    public List<CategoryCreateResponse> findCategories() {
         return findCategoryListUseCase.execute();
     }
 
-    public List<dukku.common.shared.product.dto.product.ProductListItemResponse> findFeatured(int size) {
+    public List<ProductListItemResponse> findFeatured(int size) {
         // 1. 인기순(LIKES) 검색 조건 생성
         ProductSearchRequest request = new ProductSearchRequest();
         request.setSortType(ProductSortType.LIKES);
@@ -50,7 +49,7 @@ public class ProductFacade {
         }
     }
 
-    public dukku.common.shared.product.dto.product.ProductListResponse findProducts(ProductSearchRequest request, int page, int size) {
+    public ProductListResponse findProducts(ProductSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(size, 50));
 
         try {

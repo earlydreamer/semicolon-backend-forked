@@ -53,6 +53,9 @@ subprojects {
 
         // === 3. Test (기존 유지) ===
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+        // === 4. Kafka Test (전체 모듈 공통 적용) ===
+        testImplementation 'org.springframework.kafka:spring-kafka-test'
     }
 
     // === 4. QueryDSL 빌드 경로 설정 (모든 서브 모듈 자동 적용) ===
