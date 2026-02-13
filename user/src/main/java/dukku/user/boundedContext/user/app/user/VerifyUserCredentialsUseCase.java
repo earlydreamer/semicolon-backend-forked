@@ -2,7 +2,7 @@ package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.exception.UserNotFoundException;
 import dukku.user.boundedContext.user.entity.User;
-import dukku.user.boundedContext.user.exception.InvalidUserCredentialsException;
+import dukku.common.shared.user.exception.UserInvalidCredentialsException;
 import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +22,7 @@ public class VerifyUserCredentialsUseCase {
                 .orElseThrow(UserNotFoundException::new);
 
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new InvalidUserCredentialsException();
+            throw new UserInvalidCredentialsException();
         }
 
         return user;

@@ -1,7 +1,7 @@
 package dukku.user.boundedContext.user.app.email;
 
-import dukku.user.boundedContext.user.exception.EmailVerificationRequiredException;
-import dukku.user.boundedContext.user.exception.EmailVerificationTokenInvalidException;
+import dukku.common.shared.user.exception.UserEmailVerificationRequiredException;
+import dukku.common.shared.user.exception.UserEmailVerificationTokenInvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -52,7 +52,7 @@ public class EmailVerificationService {
         String normalizedToken = token == null ? "" : token.trim();
         String email = getStoredEmail(normalizedToken);
         if (email == null) {
-            throw new EmailVerificationTokenInvalidException();
+            throw new UserEmailVerificationTokenInvalidException();
         }
         redisTemplate.delete(tokenKey(normalizedToken));
         markVerified(email);
@@ -66,7 +66,7 @@ public class EmailVerificationService {
         String normalizedEmail = normalizeEmail(email);
         Object verified = redisTemplate.opsForValue().get(verifiedKey(normalizedEmail));
         if (verified == null) {
-            throw new EmailVerificationRequiredException();
+            throw new UserEmailVerificationRequiredException();
         }
         redisTemplate.delete(verifiedKey(normalizedEmail));
     }
@@ -90,8 +90,8 @@ public class EmailVerificationService {
         String link = buildVerifyLink(token);
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("세미콜론 이메일 인증");
-        message.setText("아래 링크를 클릭해 이메일 인증을 완료해 주세요.\n" + link);
+        message.setSubject("\uC138\uBBF8\uCF5C\uB860 \uC774\uBA54\uC77C \uC778\uC99D");
+        message.setText("\uC544\uB798 \uB9C1\uD06C\uB97C \uD074\uB9AD\uD574 \uC774\uBA54\uC77C \uC778\uC99D\uC744 \uC644\uB8CC\uD574 \uC8FC\uC138\uC694.\n" + link);
         if (mailFrom != null && !mailFrom.isBlank()) {
             message.setFrom(mailFrom);
         }

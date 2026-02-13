@@ -2,7 +2,7 @@ package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.exception.UserNotFoundException;
 import dukku.user.boundedContext.user.entity.User;
-import dukku.user.boundedContext.user.exception.InactiveUserException;
+import dukku.common.shared.user.exception.UserInactiveException;
 import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,7 +36,7 @@ public class UserSupport {
 
     public User getActiveUserByUuid(UUID userUuid) {
         return repository.findByUuidAndDeletedAtIsNull(userUuid)
-                .orElseThrow(InactiveUserException::new);
+                .orElseThrow(UserInactiveException::new);
     }
 
     public boolean isActiveEmailInUse(String email, Integer excludeUserId) {

@@ -2,7 +2,7 @@ package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.type.UserStatus;
 import dukku.user.boundedContext.user.entity.User;
-import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import dukku.common.shared.user.exception.UserWithdrawRestoreNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class RestoreWithdrawnUserUseCase {
 
         String backupEmail = user.getWithdrawalEmailBackup();
         if (backupEmail != null && userSupport.isActiveEmailInUse(backupEmail, user.getId())) {
-            throw WithdrawRestoreNotAllowedException.emailAlreadyInUse();
+            throw UserWithdrawRestoreNotAllowedException.emailAlreadyInUse();
         }
 
         String encodedPassword = userSupport.encode(newPassword);
@@ -36,15 +36,15 @@ public class RestoreWithdrawnUserUseCase {
 
     private void assertRestorable(User user) {
         if (user.getDeletedAt() == null) {
-            throw WithdrawRestoreNotAllowedException.userIsNotWithdrawn();
+            throw UserWithdrawRestoreNotAllowedException.userIsNotWithdrawn();
         }
         if (user.getStatus() == UserStatus.WITHDRAWN_FINAL) {
-            throw WithdrawRestoreNotAllowedException.restoreWindowExpired();
+            throw UserWithdrawRestoreNotAllowedException.restoreWindowExpired();
         }
         LocalDateTime deletedAt = user.getDeletedAt();
         LocalDateTime restoreDeadline = deletedAt.plusDays(restoreDays);
         if (LocalDateTime.now().isAfter(restoreDeadline)) {
-            throw WithdrawRestoreNotAllowedException.restoreWindowExpired();
+            throw UserWithdrawRestoreNotAllowedException.restoreWindowExpired();
         }
     }
 }

@@ -6,7 +6,7 @@ import dukku.common.shared.user.dto.PasswordUpdateRequest;
 import dukku.common.shared.user.event.UserModifiedEvent;
 import dukku.common.shared.user.exception.UserNotFoundException;
 import dukku.user.boundedContext.user.entity.User;
-import dukku.user.boundedContext.user.exception.UserPasswordMismatchException;
+import dukku.common.shared.user.exception.UserPasswordMismatchException;
 import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

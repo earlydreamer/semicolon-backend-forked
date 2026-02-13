@@ -8,8 +8,8 @@ import dukku.common.shared.user.dto.UserResponse;
 import dukku.common.shared.user.dto.UserUpdateRequest;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.type.UserStatus;
-import dukku.user.boundedContext.user.exception.AlreadyWithdrawUserException;
-import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import dukku.common.shared.user.exception.UserAlreadyWithdrawException;
+import dukku.common.shared.user.exception.UserWithdrawRestoreNotAllowedException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends SourceUser {
-    @Column(length = 100, nullable = false, comment = "보호된 비밀번호")
+    @Column(length = 100, nullable = false, comment = "Protected password")
     private String password;
 
     @Convert(converter = AesGcmConverter.class)
@@ -64,7 +64,7 @@ public class User extends SourceUser {
 
     public void withdraw(String maskedEmail, String maskedNickname, String encodedPassword) {
         if (isWithdrawnStatus()) {
-            throw new AlreadyWithdrawUserException();
+            throw new UserAlreadyWithdrawException();
         }
         this.withdrawalEmailBackup = this.getEmail();
         this.withdrawalNicknameBackup = this.getNickname();
@@ -77,10 +77,10 @@ public class User extends SourceUser {
 
     public void restoreFromWithdrawal(String encodedPassword) {
         if (this.getStatus() != UserStatus.WITHDRAWN_PENDING && this.getStatus() != UserStatus.DELETED) {
-            throw WithdrawRestoreNotAllowedException.userIsNotRestorable();
+            throw UserWithdrawRestoreNotAllowedException.userIsNotRestorable();
         }
         if (this.withdrawalEmailBackup == null) {
-            throw WithdrawRestoreNotAllowedException.missingWithdrawalBackup();
+            throw UserWithdrawRestoreNotAllowedException.missingWithdrawalBackup();
         }
         this.setEmail(this.withdrawalEmailBackup);
         this.setNickname(this.withdrawalNicknameBackup);

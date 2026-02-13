@@ -11,7 +11,7 @@ import dukku.user.boundedContext.user.app.user.FindUserByRoleUseCase;
 import dukku.user.boundedContext.user.app.user.FindUserUseCase;
 import dukku.user.boundedContext.user.app.user.VerifyUserCredentialsUseCase;
 import dukku.user.boundedContext.user.entity.User;
-import dukku.user.boundedContext.user.exception.InvalidUserLookupRequestException;
+import dukku.common.shared.user.exception.UserInvalidLookupRequestException;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +44,10 @@ public class UserInternalController {
             @RequestParam(required = false) String email
     ) {
         if ((role == null) == (email == null)) {
-            throw InvalidUserLookupRequestException.roleOrEmailOnly();
+            throw UserInvalidLookupRequestException.roleOrEmailOnly();
         }
         if (email != null && email.trim().isEmpty()) {
-            throw InvalidUserLookupRequestException.emailBlank();
+            throw UserInvalidLookupRequestException.emailBlank();
         }
 
         User user = role != null
