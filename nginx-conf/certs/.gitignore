@@ -1,0 +1,2 @@
+# Keep certificate directory, but do not commit private/public cert files.
+*.pem
