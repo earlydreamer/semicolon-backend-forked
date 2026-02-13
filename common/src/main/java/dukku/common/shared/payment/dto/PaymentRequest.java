@@ -15,6 +15,7 @@ import java.util.UUID;
 /**
  * 결제 요청 DTO
  *
+ * <p>
  * 프론트에서 결제 준비(prepare) 요청 시 전송하는 데이터
  */
 @Data
