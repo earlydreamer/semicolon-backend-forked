@@ -2,13 +2,14 @@ package dukku.payment.boundedContext.payment.in;
 
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
 import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
+import dukku.common.shared.payment.dto.PaymentRefundRequest;
+import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import dukku.payment.boundedContext.payment.app.PaymentFacade;
 import dukku.payment.boundedContext.payment.app.PaymentSupport;
 import dukku.payment.boundedContext.payment.entity.Payment;
-import dukku.common.shared.payment.dto.PaymentRefundRequest;
-import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class PaymentEventListener {
      * <p>
      * DepositDeductionFailedEvent 수신 시 이미 승인된 PG 결제를 취소하여 데이터 일관성을 유지함.
      */
-    @org.springframework.kafka.annotation.KafkaListener(topics = "deposit.deduction-failed", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "deposit.deduction-failed", groupId = "${spring.application.name}-group")
     public void handle(DepositDeductionFailedEvent event) {
         log.warn("[결제 보상 트랜잭션 시작] 예치금 차감 실패 감지: orderUuid={}, reason={}",
                 event.orderUuid(), event.reason());
@@ -44,7 +45,7 @@ public class PaymentEventListener {
     /**
      * 주문 처리 실패 시 결제 롤백(자동 환불) 처리
      */
-    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.rollback", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "payment.rollback", groupId = "${spring.application.name}-group")
     public void handle(PaymentRollbackRequestEvent event) {
         log.info("[결제 롤백] 주문 처리 실패로 인한 자동 환불 시작. orderUuid={}, reason={}",
                 event.orderUuid(), event.reason());

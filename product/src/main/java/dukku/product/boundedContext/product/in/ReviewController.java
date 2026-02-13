@@ -1,12 +1,9 @@
 package dukku.product.boundedContext.product.in;
 
 import dukku.common.global.UserUtil;
-import dukku.common.shared.product.dto.review.SellerReviewCreateRequest;
-import dukku.common.shared.product.dto.review.SellerReviewListResponse;
-import dukku.common.shared.product.dto.review.SellerReviewSummaryResponse;
-import dukku.common.shared.product.dto.review.SellerReviewUpdateRequest;
-import dukku.product.boundedContext.product.app.facade.ReviewFacade;
 import dukku.common.shared.product.docs.ReviewApiDocs;
+import dukku.common.shared.product.dto.review.*;
+import dukku.product.boundedContext.product.app.facade.ReviewFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +25,7 @@ public class ReviewController {
 
     @PostMapping("/seller-reviews")
     @ReviewApiDocs.CreateSellerReview
-    public dukku.common.shared.product.dto.review.SellerReviewResponse createSellerReview(
+    public SellerReviewResponse createSellerReview(
             @RequestBody @Valid SellerReviewCreateRequest request
     ) {
         return reviewFacade.createSellerReview(UserUtil.getUserId(), request);
@@ -36,7 +33,7 @@ public class ReviewController {
 
     @PatchMapping("/seller-reviews/{reviewUuid}")
     @ReviewApiDocs.UpdateSellerReview
-    public dukku.common.shared.product.dto.review.SellerReviewResponse updateSellerReview(
+    public SellerReviewResponse updateSellerReview(
             @PathVariable UUID reviewUuid,
             @RequestBody @Valid SellerReviewUpdateRequest request
     ) {
