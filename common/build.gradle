@@ -50,14 +50,3 @@ dependencies {
     // === 10. Redis ===
     api 'org.springframework.boot:spring-boot-starter-data-redis'
 }
-
-// === QueryDSL 설정 ===
-def querydslDir = "$buildDir/generated/querydsl"
-
-tasks.withType(JavaCompile) {
-    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
-}
-
-clean {
-    delete file(querydslDir)
-}

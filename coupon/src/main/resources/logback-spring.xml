@@ -40,7 +40,7 @@
          - 콘솔 출력만
          - 파일 로그 생성 안 함 -->
     <springProfile name="dev">
-        <root level="DEBUG">
+        <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
 

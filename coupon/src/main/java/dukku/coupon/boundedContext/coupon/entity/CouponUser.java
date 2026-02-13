@@ -14,7 +14,10 @@ import java.util.UUID;
 @Table(
         name = "coupon_users",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"user_uuid", "coupon_id"})
+                @UniqueConstraint(name = "uk_user_coupon", columnNames = {"user_uuid", "coupon_id"})
+        },
+        indexes = {
+                @Index(name = "idx_coupon_users_query", columnList = "user_uuid, coupon_id")
         }
 )
 @Getter
@@ -56,12 +59,7 @@ public class CouponUser {
     public static CouponUser issue(UUID userUuid, Coupon coupon) {
         coupon.issue(); // 쿠폰 수량 차감
 
-        CouponUser cu = new CouponUser();
-        cu.userUuid = userUuid;
-        cu.coupon = coupon;
-        cu.status = CouponUserStatus.AVAILABLE;
-        cu.issuedAt = LocalDateTime.now();
-        return cu;
+        return create(userUuid, coupon);
     }
 
     /* 사용 */

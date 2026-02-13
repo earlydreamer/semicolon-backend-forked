@@ -2,7 +2,9 @@ package dukku.coupon.boundedContext.coupon.out;
 
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -39,4 +41,10 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
     @Modifying
     @Query("UPDATE Coupon c SET c.issuedQuantity = c.issuedQuantity + 1 WHERE c.uuid = :uuid")
     int decreaseQuantity(@Param("uuid") UUID uuid);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE) // DB 수준에서 FOR UPDATE 락을 겁니다.
+    @Query("SELECT c FROM Coupon c WHERE c.uuid = :uuid")
+    Optional<Coupon> findWithLockByUuid(@Param("uuid") UUID uuid);
+
+    List<Coupon> findAllByStatus(CouponStatus status);
 }
