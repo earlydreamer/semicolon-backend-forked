@@ -2,6 +2,9 @@ server:
   port: 8081
 
 spring:
+  profiles:
+    active: dev
+
   config:
     import: classpath:application-common.yml
   application:

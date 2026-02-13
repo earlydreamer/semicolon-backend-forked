@@ -31,7 +31,7 @@ services:
     container_name: team05-postgres
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=P@ssw0rd
+      - POSTGRES_PASSWORD=1234
       - POSTGRES_DB=semicolon
     ports:
       - "5432:5432"

@@ -59,3 +59,21 @@ springdoc:
     path: /swagger-ui.html
     url: /api-docs
     operations-sorter: method
+
+jwt:
+  access:
+    secret:
+      key: ${JWT_ACCESS_SECRET}
+  refresh:
+    secret:
+      key: ${JWT_REFRESH_SECRET}
+
+crypto:
+  key: ${CRYPTO_KEY}
+
+custom:
+  global:
+    internalBackUrl: ${INTERNAL_BACK_URL:http://localhost:8080}
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}
