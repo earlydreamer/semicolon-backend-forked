@@ -48,7 +48,7 @@ public class SecurityReleaseConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v3/api-docs/**",
+                                "/v3/api-docs/**",
                                 "/api/v1/categories", // GET: Public
                                 "/api/v1/products/featured", // GET: Public
                                 "/api/v1/products", // GET: Public
@@ -57,6 +57,7 @@ public class SecurityReleaseConfig {
                                 "/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/swagger-config",
                                 "/api/v1/users/email/**",
                                 "/api/v1/users/register",
                                 "/api/v1/auth/**"

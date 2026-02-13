@@ -38,19 +38,19 @@ public class SettlementFacade {
     private final SettlementJobScheduler settlementJobScheduler;
 
     @Transactional(readOnly = true)
-    public dukku.common.shared.settlement.dto.SettlementDetailResponse getSettlement(UUID settlementUuid) {
+    public SettlementDetailResponse getSettlement(UUID settlementUuid) {
         Settlement settlement = getSettlementUseCase.execute(settlementUuid);
         return Settlement.from(settlement);
     }
 
     @Transactional(readOnly = true)
-    public Page<dukku.common.shared.settlement.dto.SettlementDetailResponse> getSettlements(SettlementSearchCondition condition, Pageable pageable) {
+    public Page<SettlementDetailResponse> getSettlements(SettlementSearchCondition condition, Pageable pageable) {
         Page<Settlement> settlements = getSettlementListUseCase.execute(condition, pageable);
         return settlements.map(Settlement::from);
     }
 
     @Transactional(readOnly = true)
-    public SettlementStatisticsResponse getStatistics(dukku.common.shared.settlement.dto.SettlementStatisticsCondition condition) {
+    public SettlementStatisticsResponse getStatistics(SettlementStatisticsCondition condition) {
         return getSettlementStatisticsUseCase.execute(condition);
     }
 
@@ -101,7 +101,7 @@ public class SettlementFacade {
     /**
      * 실패한 정산 재처리 (FAILED → PENDING)
      */
-    public dukku.common.shared.settlement.dto.SettlementDetailResponse retrySettlement(UUID settlementUuid) {
+    public SettlementDetailResponse retrySettlement(UUID settlementUuid) {
         Settlement settlement = retrySettlementUseCase.execute(settlementUuid);
         return Settlement.from(settlement);
     }
@@ -109,7 +109,7 @@ public class SettlementFacade {
     /**
      * 정산 수동 완료 처리 (PROCESSING → SUCCESS)
      */
-    public dukku.common.shared.settlement.dto.SettlementDetailResponse completeSettlement(UUID settlementUuid) {
+    public SettlementDetailResponse completeSettlement(UUID settlementUuid) {
         Settlement settlement = manualCompleteSettlementUseCase.execute(settlementUuid);
         return Settlement.from(settlement);
     }
@@ -117,7 +117,7 @@ public class SettlementFacade {
     /**
      * 정산 수동 실패 처리 (PROCESSING → FAILED)
      */
-    public dukku.common.shared.settlement.dto.SettlementDetailResponse failSettlement(UUID settlementUuid) {
+    public SettlementDetailResponse failSettlement(UUID settlementUuid) {
         Settlement settlement = manualFailSettlementUseCase.execute(settlementUuid);
         return Settlement.from(settlement);
     }
@@ -129,10 +129,10 @@ public class SettlementFacade {
      * - batch 폴더의 SettlementJobScheduler 재사용
      */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public dukku.common.shared.settlement.dto.BatchExecutionResponse runSettlementBatch() {
+    public BatchExecutionResponse runSettlementBatch() {
         log.info("[SettlementFacade] 정산 배치 수동 실행 요청");
         JobExecution jobExecution = settlementJobScheduler.runManually();
-        return dukku.common.shared.settlement.dto.BatchExecutionResponse.from(jobExecution);
+        return BatchExecutionResponse.from(jobExecution);
     }
 
     /**
@@ -140,9 +140,9 @@ public class SettlementFacade {
      * - batch 폴더의 SettlementJobScheduler 재사용
      */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public dukku.common.shared.settlement.dto.BatchExecutionResponse runRetryBatch() {
+    public BatchExecutionResponse runRetryBatch() {
         log.info("[SettlementFacade] 정산 재처리 배치 수동 실행 요청");
         JobExecution jobExecution = settlementJobScheduler.runRetryManually();
-        return dukku.common.shared.settlement.dto.BatchExecutionResponse.from(jobExecution);
+        return BatchExecutionResponse.from(jobExecution);
     }
 }

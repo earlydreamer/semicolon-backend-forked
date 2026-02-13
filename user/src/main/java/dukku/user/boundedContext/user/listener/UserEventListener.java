@@ -2,15 +2,14 @@ package dukku.user.boundedContext.user.listener;
 
 import dukku.common.shared.user.event.UserJoinedEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
 public class UserEventListener {
 
-    @org.springframework.kafka.annotation.KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
     public void handleUserJoined(UserJoinedEvent event) {
         log.info("[UserJoinedEvent] userUuid={}", event.member().userUuid());
 

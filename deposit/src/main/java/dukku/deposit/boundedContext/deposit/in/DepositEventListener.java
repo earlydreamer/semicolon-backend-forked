@@ -7,6 +7,7 @@ import dukku.deposit.boundedContext.deposit.app.ChargeDepositForSettlementUseCas
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,7 +24,7 @@ public class DepositEventListener {
      * 결제 트랜잭션이 최종 커밋된 후(AFTER_COMMIT), 비동기적으로 예치금 차감 프로세스를 시작한다.
      * 상품별 사용 상세 내역(itemDepositUsages)을 포함하여 파사드에 위임한다.
      */
-    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
     public void handle(PaymentSuccessEvent event) {
         // paymentUuid 전달 (보상 트랜잭션 식별)
         depositFacade.deductDepositForPayment(
@@ -42,7 +43,7 @@ public class DepositEventListener {
      * RefundCompletedEvent 수신 시 예치금을 롤백(재적립)한다.
      * 복구 성공 시 DepositRefundedEvent 발행.
      */
-    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
     public void handle(RefundCompletedEvent event) {
         // paymentId 전달 (예치금 롤백 실패 연계)
         depositFacade.refundDeposit(
@@ -66,7 +67,7 @@ public class DepositEventListener {
      *             이벤트 기반 방식은 하위 호환성을 위해 유지되나, 향후 제거될 예정입니다.
      */
     @Deprecated
-    @org.springframework.kafka.annotation.KafkaListener(topics = "settlement.deposit-charge", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "settlement.deposit-charge", groupId = "${spring.application.name}-group")
     public void handle(SettlementDepositChargeRequestedEvent command) {
         log.warn("[DEPRECATED] 이벤트 기반 정산 충전 요청이 수신되었습니다. API 방식으로의 전환이 필요합니다. settlementUuid={}",
                 command.settlementUuid());
