@@ -1,10 +1,9 @@
 package dukku.product.boundedContext.product.in;
 
-import dukku.common.shared.product.dto.product.ProductDetailResponse;
-import dukku.common.shared.product.dto.product.ProductReserveRequest;
-import dukku.product.boundedContext.product.app.facade.ProductFacade;
 import dukku.common.shared.product.docs.ProductApiDocs;
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
+import dukku.common.shared.product.dto.product.*;
+import dukku.product.boundedContext.product.app.facade.ProductFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,13 +21,13 @@ public class ProductController {
 
     @GetMapping("/categories")
     @ProductApiDocs.FindCategories
-    public List<dukku.common.shared.product.dto.product.CategoryCreateResponse> findCategories() {
+    public List<CategoryCreateResponse> findCategories() {
         return productFacade.findCategories();
     }
 
     @GetMapping("/products/featured")
     @ProductApiDocs.FindFeaturedProducts
-    public List<dukku.common.shared.product.dto.product.ProductListItemResponse> findFeaturedProducts(
+    public List<ProductListItemResponse> findFeaturedProducts(
             @RequestParam(defaultValue = "20") int size
     ) {
         return productFacade.findFeatured(size);
@@ -36,9 +35,9 @@ public class ProductController {
 
     @GetMapping("/products")
     @ProductApiDocs.FindProductList
-    public dukku.common.shared.product.dto.product.ProductListResponse findProducts(ProductSearchRequest request,
-                                                                                    @RequestParam int page,
-                                                                                    @RequestParam int size) {
+    public ProductListResponse findProducts(ProductSearchRequest request,
+                                            @RequestParam int page,
+                                            @RequestParam int size) {
         return productFacade.findProducts(request, page, size);
     }
 

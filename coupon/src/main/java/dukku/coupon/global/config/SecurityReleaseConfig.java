@@ -4,8 +4,8 @@ import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -48,7 +48,7 @@ public class SecurityReleaseConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(
-                                        "/api/v3/api-docs/**",
+                                        "/v3/api-docs/**",
                                         "/api/v1/categories", // GET: Public
                                         "/api/v1/products/featured", // GET: Public
                                         "/api/v1/products", // GET: Public
@@ -57,9 +57,10 @@ public class SecurityReleaseConfig {
                                         "/api-docs/**",
                                         "/swagger-ui/**",
                                         "/swagger-ui.html",
+                                        "/swagger-config",
                                         "/api/v1/users/email/**",
                                         "/api/v1/users/register",
-                                        "/api/v1/auth/login"
+                                        "/api/v1/auth/**"
                                 )
                                 .permitAll() // 인증 필요없음 -> filter 미실행
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
@@ -77,8 +78,8 @@ public class SecurityReleaseConfig {
                     corsConfig.setAllowedOrigins(
                             Arrays.asList(allowedOrigins)
                     );
-                    corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Idempotency-Key"));
+                    corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))

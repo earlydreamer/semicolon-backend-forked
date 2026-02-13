@@ -1,8 +1,8 @@
 package dukku.settlement.boundedContext.settlement.in;
 
+import dukku.common.shared.settlement.docs.SettlementApiDocs;
 import dukku.common.shared.settlement.dto.*;
 import dukku.settlement.boundedContext.settlement.app.SettlementFacade;
-import dukku.common.shared.settlement.docs.SettlementApiDocs;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -50,7 +50,7 @@ public class SettlementController {
     @GetMapping("/statistics")
     @SettlementApiDocs.GetSettlementStatistics
     public SettlementStatisticsResponse getStatistics(
-            @Valid @ParameterObject dukku.common.shared.settlement.dto.SettlementStatisticsRequest request
+            @Valid @ParameterObject SettlementStatisticsRequest request
     ) {
         return settlementFacade.getStatistics(request.toCondition());
     }
