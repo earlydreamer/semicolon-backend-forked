@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiMemory;
 import dukku.ai.out.AiMemoryRepository;
+import dukku.common.shared.ai.exception.AiMemoryNotFoundException;
 
 @Service
 public class UpdateAiMemoryUseCase {
@@ -16,7 +17,7 @@ public class UpdateAiMemoryUseCase {
 
     public AiMemory update(Long id, Double importanceScore, Double confidenceScore) {
         AiMemory memory = aiMemoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("AI 메모리를 찾을 수 없습니다. id=" + id));
+                .orElseThrow(() -> new AiMemoryNotFoundException(id));
 
         if (importanceScore != null) {
             memory.updateImportanceScore(importanceScore);

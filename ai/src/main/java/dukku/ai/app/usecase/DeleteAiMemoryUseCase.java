@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiMemory;
 import dukku.ai.out.AiMemoryRepository;
+import dukku.common.shared.ai.exception.AiMemoryNotFoundException;
 
 @Service
 public class DeleteAiMemoryUseCase {
@@ -16,7 +17,7 @@ public class DeleteAiMemoryUseCase {
 
     public void delete(Long id) {
         AiMemory memory = aiMemoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("AI 메모리를 찾을 수 없습니다. id=" + id));
+                .orElseThrow(() -> new AiMemoryNotFoundException(id));
         aiMemoryRepository.delete(memory);
     }
 }
