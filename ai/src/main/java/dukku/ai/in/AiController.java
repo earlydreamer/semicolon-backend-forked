@@ -3,6 +3,10 @@ package dukku.ai.in;
 import java.util.List;
 
 import dukku.ai.app.AiFacade;
+import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.common.shared.ai.dto.ChatRequest;
+import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +41,7 @@ public class AiController {
     @Operation(summary = "AI 채팅", description = "AI 모델과 대화합니다. 사용자 정보 기반 상품 추천을 받을 수 있습니다. 스트리밍 방식으로 응답합니다.")
     @ApiResponse(responseCode = "200", description = "응답 성공")
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chat(@RequestBody AiFacade.ChatRequest request) {
+    public Flux<String> chat(@RequestBody ChatRequest request) {
         return aiFacade.chat(request);
     }
 
@@ -46,7 +50,7 @@ public class AiController {
     @Operation(summary = "AI 메모리 전체 조회", description = "저장된 모든 AI 장기 기억을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/ai-memories")
-    public ResponseEntity<List<AiFacade.AiMemoryResponse>> findAllMemories() {
+    public ResponseEntity<List<AiMemoryResponse>> findAllMemories() {
         return ResponseEntity.ok(aiFacade.findAll());
     }
 
@@ -54,7 +58,7 @@ public class AiController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @GetMapping("/ai-memories/{id}")
-    public ResponseEntity<AiFacade.AiMemoryResponse> findMemoryById(
+    public ResponseEntity<AiMemoryResponse> findMemoryById(
             @Parameter(description = "메모리 ID") @PathVariable Long id) {
         return ResponseEntity.ok(aiFacade.findById(id));
     }
@@ -62,8 +66,8 @@ public class AiController {
     @Operation(summary = "AI 메모리 생성", description = "새로운 AI 장기 기억을 생성합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공")
     @PostMapping("/ai-memories")
-    public ResponseEntity<AiFacade.AiMemoryResponse> createMemory(
-            @RequestBody AiFacade.CreateAiMemoryRequest request) {
+    public ResponseEntity<AiMemoryResponse> createMemory(
+            @RequestBody CreateAiMemoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(aiFacade.create(request));
     }
 
@@ -71,9 +75,9 @@ public class AiController {
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiResponse(responseCode = "400", description = "존재하지 않는 메모리 ID")
     @PatchMapping("/ai-memories/{id}")
-    public ResponseEntity<AiFacade.AiMemoryResponse> updateMemory(
+    public ResponseEntity<AiMemoryResponse> updateMemory(
             @Parameter(description = "메모리 ID") @PathVariable Long id,
-            @RequestBody AiFacade.UpdateAiMemoryRequest request) {
+            @RequestBody UpdateAiMemoryRequest request) {
         return ResponseEntity.ok(aiFacade.update(id, request));
     }
 

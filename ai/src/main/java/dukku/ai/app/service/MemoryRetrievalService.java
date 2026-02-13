@@ -9,7 +9,7 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiMemory;
-import dukku.ai.entity.enums.MemoryType;
+import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
 
 @Service

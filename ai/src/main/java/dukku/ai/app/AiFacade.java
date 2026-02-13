@@ -1,17 +1,18 @@
 package dukku.ai.app;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import dukku.ai.app.usecase.*;
+import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.common.shared.ai.dto.ChatRequest;
+import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import dukku.ai.entity.AiMemory;
-import dukku.ai.entity.enums.MemorySubType;
-import dukku.ai.entity.enums.MemoryType;
 
 @Component
 @Transactional(readOnly = true)
@@ -22,8 +23,6 @@ public class AiFacade {
     private final CreateAiMemoryUseCase createAiMemoryUseCase;
     private final UpdateAiMemoryUseCase updateAiMemoryUseCase;
     private final DeleteAiMemoryUseCase deleteAiMemoryUseCase;
-
-
 
     public AiFacade(ChatUseCase chatUseCase, FindAiMemoryUseCase findAiMemoryUseCase, CreateAiMemoryUseCase createAiMemoryUseCase, UpdateAiMemoryUseCase updateAiMemoryUseCase, DeleteAiMemoryUseCase deleteAiMemoryUseCase) {
         this.chatUseCase = chatUseCase;
@@ -44,7 +43,6 @@ public class AiFacade {
         }
         return conversationId;
     }
-
 
     public List<AiMemoryResponse> findAll() {
         return findAiMemoryUseCase.findAll().stream()
@@ -97,48 +95,5 @@ public class AiFacade {
                 memory.getCreatedAt(),
                 memory.getUpdatedAt()
         );
-    }
-
-    public record ChatRequest(
-            String conversationId,
-            Long userId,
-            String message
-    ) {
-    }
-
-    public record ChatResponse(
-            String conversationId,
-            String reply
-    ) {
-    }
-
-    public record CreateAiMemoryRequest(
-            Long userId,
-            MemoryType memoryType,
-            MemorySubType subType,
-            String content,
-            Double importanceScore,
-            Double confidenceScore
-    ) {
-    }
-
-    public record UpdateAiMemoryRequest(
-            Double importanceScore,
-            Double confidenceScore
-    ) {
-    }
-
-    public record AiMemoryResponse(
-            Long id,
-            Long userId,
-            MemoryType memoryType,
-            MemorySubType subType,
-            String content,
-            Double importanceScore,
-            Double confidenceScore,
-            Integer accessCount,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
     }
 }

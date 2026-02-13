@@ -2,8 +2,8 @@ package dukku.ai.entity;
 
 import java.time.LocalDateTime;
 
-import dukku.ai.entity.enums.MemorySubType;
-import dukku.ai.entity.enums.MemoryType;
+import dukku.common.shared.ai.type.MemorySubType;
+import dukku.common.shared.ai.type.MemoryType;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;

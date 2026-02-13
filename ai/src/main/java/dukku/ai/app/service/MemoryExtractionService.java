@@ -13,8 +13,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dukku.ai.entity.AiMemory;
-import dukku.ai.entity.enums.MemorySubType;
-import dukku.ai.entity.enums.MemoryType;
+import dukku.common.shared.ai.type.MemorySubType;
+import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
 import lombok.extern.slf4j.Slf4j;
 
