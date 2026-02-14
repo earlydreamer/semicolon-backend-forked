@@ -6,6 +6,7 @@ import dukku.common.shared.deposit.dto.DepositDto;
 import dukku.common.shared.deposit.event.DepositChargeFailedEvent;
 import dukku.common.shared.deposit.type.DepositChargeResultCode;
 import dukku.common.shared.deposit.type.DepositHistoryType;
+import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,12 +60,11 @@ public class ChargeDepositForSettlementUseCase {
             }
 
             increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.SETTLEMENT, settlementUuid);
-//            decreaseDepositUseCase.decrease(
-//                    SystemDepositInitData.SYSTEM_USER_UUID,
-//                    amount,
-//                    DepositHistoryType.SETTLEMENT,
-//                    settlementUuid);
-//            eventPublisher.publish(new DepositChargeSucceededEvent(userUuid, amount, settlementUuid));
+            decreaseDepositUseCase.decrease(
+                    SystemDepositInitData.SYSTEM_USER_UUID,
+                    amount,
+                    DepositHistoryType.SETTLEMENT,
+                    settlementUuid);
 
             DepositDto deposit = findDepositUseCase.findOrCreate(userUuid).toDto();
             log.info("[Internal API] 정산 예치금 충전 성공. userUuid={}, amount={}, settlementUuid={}",

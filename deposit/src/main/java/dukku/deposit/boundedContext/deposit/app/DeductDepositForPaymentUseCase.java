@@ -7,6 +7,7 @@ import dukku.common.shared.deposit.type.DepositFailureCode;
 import dukku.common.shared.deposit.type.DepositHistoryType;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.deposit.boundedContext.deposit.exception.NotEnoughDepositException;
+import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -67,13 +68,12 @@ public class DeductDepositForPaymentUseCase {
                     usage.orderItemUuid());
         }
 
-        // 전체 차감 완료 성공 이벤트 발행
         // 시스템 지갑 예치금 증가
-//        increaseDepositUseCase.increase(
-//                SystemDepositInitData.SYSTEM_USER_UUID,
-//                totalAmount,
-//                DepositHistoryType.DEPOSIT_CHARGE,
-//                orderUuid);
+        increaseDepositUseCase.increase(
+                SystemDepositInitData.SYSTEM_USER_UUID,
+                totalAmount,
+                DepositHistoryType.DEPOSIT_CHARGE,
+                orderUuid);
 
         // 전체 차감 완료 성공 이벤트 발행
         eventPublisher.publish(new DepositUsedEvent(orderUuid, userUuid, totalAmount));

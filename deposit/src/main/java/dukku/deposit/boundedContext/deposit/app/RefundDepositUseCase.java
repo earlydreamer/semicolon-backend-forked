@@ -5,6 +5,7 @@ import dukku.common.shared.deposit.event.DepositRefundedEvent;
 import dukku.common.shared.deposit.event.DepositRefundFailedEvent;
 import dukku.common.shared.deposit.type.DepositFailureCode;
 import dukku.common.shared.deposit.type.DepositHistoryType;
+import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.UUID;
 public class RefundDepositUseCase {
 
     private final IncreaseDepositUseCase increaseDepositUseCase;
+    private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final EventPublisher eventPublisher;
 
     /**
@@ -46,6 +48,11 @@ public class RefundDepositUseCase {
         try {
             // 예치금 롤백 처리
             increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.ROLLBACK, orderUuid);
+            decreaseDepositUseCase.decrease(
+                    SystemDepositInitData.SYSTEM_USER_UUID,
+                    amount,
+                    DepositHistoryType.ROLLBACK,
+                    orderUuid);
 
             // 롤백 성공 이벤트 발행
             eventPublisher.publish(new DepositRefundedEvent(refundUuid, paymentUuid, orderUuid, userUuid, amount));
