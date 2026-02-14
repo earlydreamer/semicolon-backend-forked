@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "AI", description = "AI 채팅 및 장기 기억 관리 API")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1/ai")
 public class AiController {
 
     private final AiFacade aiFacade;
