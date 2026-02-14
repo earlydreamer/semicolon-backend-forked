@@ -16,7 +16,7 @@ import dukku.ai.out.AiMemoryRepository;
 @Service
 public class MemoryRetrievalService {
 
-    private static final double SIMILARITY_THRESHOLD = 0.3;
+    private static final double MEMORY_SIMILARITY_THRESHOLD = 0.3;
     private static final int PROFILE_LIMIT = 3;
     private static final int SIMILAR_LIMIT = 5;
 
@@ -37,7 +37,7 @@ public class MemoryRetrievalService {
         String embeddingStr = toVectorString(queryEmbedding);
 
         List<AiMemory> similarMemories = aiMemoryRepository.findSimilarMemories(
-                userId, embeddingStr, SIMILARITY_THRESHOLD, SIMILAR_LIMIT);
+                userId, embeddingStr, MEMORY_SIMILARITY_THRESHOLD, SIMILAR_LIMIT);
 
         similarMemories.forEach(AiMemory::incrementAccessCount);
         if (!similarMemories.isEmpty()) {

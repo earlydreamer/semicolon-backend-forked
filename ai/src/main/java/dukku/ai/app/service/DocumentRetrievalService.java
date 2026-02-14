@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DocumentRetrievalService {
 
     private static final int TOP_K = 5;
-    private static final double SIMILARITY_THRESHOLD = 0.7;
+    private static final double DOCUMENT_SIMILARITY_THRESHOLD = 0.7;
 
     private static final Set<String> RETRIEVAL_KEYWORDS = Set.of(
             "상품", "추천", "환불", "정책", "배송", "교환", "가격", "할인",
@@ -36,7 +36,7 @@ public class DocumentRetrievalService {
         SearchRequest request = SearchRequest.builder()
                 .query(userMessage)
                 .topK(TOP_K)
-                .similarityThreshold(SIMILARITY_THRESHOLD)
+                .similarityThreshold(DOCUMENT_SIMILARITY_THRESHOLD)
                 .build();
 
         List<Document> docs = vectorStore.similaritySearch(request);
