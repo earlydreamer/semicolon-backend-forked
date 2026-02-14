@@ -17,9 +17,9 @@ public class AiApiClient {
 
     private final RestClient restClient;
 
-    public AiApiClient(@Value("${custom.global.aiBackUrl}") String aiBackUrl) {
+    public AiApiClient(@Value("${custom.global.internalBackUrl:http://localhost:8080}") String internalBackUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl(aiBackUrl + "/api")
+                .baseUrl(internalBackUrl + "/api/v1/ai")
                 .build();
     }
 
