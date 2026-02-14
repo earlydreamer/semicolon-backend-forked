@@ -1,6 +1,7 @@
 package dukku.payment.boundedContext.payment.app;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import dukku.common.shared.payment.dto.PaymentConfirmRequest;
 import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.type.PaymentStatus;
@@ -152,7 +153,7 @@ class PaymentKafkaIntegrationTest {
                     Set.of(PAYMENT_SUCCESS_TOPIC, REFUND_COMPLETED_TOPIC));
 
             ConsumerRecord<String, String> successRecord = recordsByTopic.get(PAYMENT_SUCCESS_TOPIC);
-            var successJson = objectMapper.readTree(successRecord.value());
+            JsonNode successJson = objectMapper.readTree(successRecord.value());
 
             assertThat(successRecord.key()).isEqualTo(pendingPayment.getOrderUuid().toString());
             assertThat(successJson.get("orderUuid").asText()).isEqualTo(pendingPayment.getOrderUuid().toString());
@@ -163,7 +164,7 @@ class PaymentKafkaIntegrationTest {
             assertThat(successJson.get("paymentDeposit").asLong()).isEqualTo(0L);
 
             ConsumerRecord<String, String> refundRecord = recordsByTopic.get(REFUND_COMPLETED_TOPIC);
-            var refundJson = objectMapper.readTree(refundRecord.value());
+            JsonNode refundJson = objectMapper.readTree(refundRecord.value());
 
             assertThat(refundRecord.key()).isEqualTo(pendingPayment.getOrderUuid().toString());
             assertThat(refundJson.get("orderUuid").asText()).isEqualTo(pendingPayment.getOrderUuid().toString());

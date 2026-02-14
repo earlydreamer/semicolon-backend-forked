@@ -141,7 +141,7 @@ class DepositMoneyFlowIntegrationTest {
         assertThat(depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID))
                 .isEmpty();
 
-        var eventCaptor = org.mockito.ArgumentCaptor.forClass(DomainEvent.class);
+        org.mockito.ArgumentCaptor<DomainEvent> eventCaptor = org.mockito.ArgumentCaptor.forClass(DomainEvent.class);
         verify(eventPublisher).publish(eventCaptor.capture());
         assertThat(eventCaptor.getValue()).isInstanceOf(DepositRefundFailedEvent.class);
         DepositRefundFailedEvent event = (DepositRefundFailedEvent) eventCaptor.getValue();

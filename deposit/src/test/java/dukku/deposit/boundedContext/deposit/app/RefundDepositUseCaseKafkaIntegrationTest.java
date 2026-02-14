@@ -121,9 +121,9 @@ class RefundDepositUseCaseKafkaIntegrationTest {
             assertThat(payload.get("amount").asLong()).isEqualTo(refundDepositAmount);
 
             // then: 湲곗〈 ?덉튂湲?5,000?먯뿉 3,000?먯씠 媛?곕릺??8,000?먯씠 ?쒕떎.
-            var after = depositRepository.findByUserUuid(userUuid).orElseThrow();
+            Deposit after = depositRepository.findByUserUuid(userUuid).orElseThrow();
             assertThat(after.getBalance()).isEqualTo(8000L);
-            var systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow();
+            Deposit systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow();
             assertThat(systemAfter.getBalance()).isEqualTo(997000L);
 
             List<DepositHistory> histories = depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(userUuid);
