@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -41,10 +43,7 @@ public class RefundDepositUseCase {
 
             eventPublisher.publish(new DepositRefundedEvent(refundUuid, paymentUuid, orderUuid, userUuid, amount));
         } catch (Exception e) {
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-
-            log.error("[예치금 환불/롤백 실패] userUuid={}, amount={}, orderUuid={}", userUuid, amount, orderUuid, e);
-            eventPublisher.publish(new DepositRefundFailedEvent(
+            var failEvent = new DepositRefundFailedEvent(
                     refundUuid,
                     orderUuid,
                     paymentUuid,
@@ -53,8 +52,29 @@ public class RefundDepositUseCase {
                     DepositFailureCode.PERSISTENCE_ERROR,
                     true,
                     buildFailureReason(DepositFailureCode.PERSISTENCE_ERROR, e.getMessage()),
-                    LocalDateTime.now()));
+                    LocalDateTime.now());
+
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            log.error("[예치금 환불/롤백 실패] userUuid={}, amount={}, orderUuid={}", userUuid, amount, orderUuid, e);
+
+            publishFailAfterRollback(failEvent);
         }
+    }
+
+    private void publishFailAfterRollback(DepositRefundFailedEvent failEvent) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        eventPublisher.publish(failEvent);
+                    }
+                }
+            });
+            return;
+        }
+
+        eventPublisher.publish(failEvent);
     }
 
     private String buildFailureReason(DepositFailureCode code, String detail) {
