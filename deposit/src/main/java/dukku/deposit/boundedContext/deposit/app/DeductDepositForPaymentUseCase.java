@@ -21,6 +21,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 결제에 따른 예치금 차감 UseCase (Saga 패턴 참여)
+ *
+ * <p>
+ * 결제 성공 시 각 상품별로 할당된 예치금을 차감하고,
+ * 전체 차감 결과를 이벤트로 전파한다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,6 +37,15 @@ public class DeductDepositForPaymentUseCase {
     private final IncreaseDepositUseCase increaseDepositUseCase;
     private final EventPublisher eventPublisher;
 
+    /**
+     * 결제에 따른 예치금 차감 실행
+     *
+     * @param userUuid          예치금을 소유한 유저 식별자
+     * @param totalAmount       차감될 총 예치금액
+     * @param orderUuid         관련 주문 식별자
+     * @param paymentUuid       관련 결제 식별자(보상 트리거용)
+     * @param itemDepositUsages 상품별 예치금 사용 상세 내역
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void execute(UUID userUuid, Long totalAmount, UUID orderUuid, UUID paymentUuid,
                         List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
@@ -40,7 +56,9 @@ public class DeductDepositForPaymentUseCase {
         try {
             executeDeductions(userUuid, totalAmount, orderUuid, itemDepositUsages);
         } catch (Exception e) {
+            // 부분 반영 방지를 위해 트랜잭션을 롤백으로 고정
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+
             DepositDeductionFailedEvent failEvent = createFailEvent(
                     userUuid, totalAmount, orderUuid, paymentUuid, e);
             publishFailAfterRollback(failEvent);
@@ -49,17 +67,20 @@ public class DeductDepositForPaymentUseCase {
 
     private void executeDeductions(UUID userUuid, Long totalAmount, UUID orderUuid,
                                    List<PaymentSuccessEvent.ItemDepositUsage> itemDepositUsages) {
+        // 상품별 예치금 차감 및 이력 생성
         for (PaymentSuccessEvent.ItemDepositUsage usage : itemDepositUsages) {
             decreaseDepositUseCase.decrease(userUuid, usage.depositAmount(), DepositHistoryType.USE,
                     usage.orderItemUuid());
         }
 
+        // 사용자 차감만큼 시스템 지갑으로 입금
         increaseDepositUseCase.increase(
                 SystemDepositInitData.SYSTEM_USER_UUID,
                 totalAmount,
                 DepositHistoryType.DEPOSIT_CHARGE,
                 orderUuid);
 
+        // 전체 차감 완료 이벤트 발행
         eventPublisher.publish(new DepositUsedEvent(orderUuid, userUuid, totalAmount));
     }
 
@@ -91,6 +112,10 @@ public class DeductDepositForPaymentUseCase {
                 LocalDateTime.now());
     }
 
+    /**
+     * rollback-only 경로에서 실패 이벤트가 유실되지 않도록
+     * 롤백 완료 시점에 별도로 발행한다.
+     */
     private void publishFailAfterRollback(DepositDeductionFailedEvent failEvent) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
