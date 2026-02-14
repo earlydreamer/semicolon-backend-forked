@@ -49,7 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "crypto.key=dGhpcy1rZXktaXMtdGVzdC1rZXktY3J5cHRvLTAxMjM="
 })
 @EmbeddedKafka(partitions = 1, topics = {
-        "payment.refund-completed",
+        "payment.refund-requested",
         "deposit.refunded"
 }, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
 @ActiveProfiles("test")
@@ -89,7 +89,6 @@ class RefundDepositUseCaseKafkaIntegrationTest {
                 .balance(5000L)
                 .version(0)
                 .build());
-
         UUID paymentUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
         UUID refundUuid = UUID.randomUUID();

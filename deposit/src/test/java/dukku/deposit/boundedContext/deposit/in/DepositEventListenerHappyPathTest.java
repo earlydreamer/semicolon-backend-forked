@@ -1,6 +1,6 @@
 package dukku.deposit.boundedContext.deposit.in;
 
-import dukku.common.shared.payment.event.RefundCompletedEvent;
+import dukku.common.shared.payment.event.RefundRequestedEvent;
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,8 @@ class DepositEventListenerHappyPathTest {
     private DepositEventListener listener;
 
     @Test
-    @DisplayName("payment.refund-completed 이벤트를 받으면 예치금 환불 처리 파사드가 호출된다")
-    void handlesRefundCompletedEventByCallingRefundDeposit() {
+    @DisplayName("payment.refund-requested 이벤트를 받으면 예치금 환불 처리 파사드가 호출된다")
+    void handleRefundRequested() {
         // given: paymentId/order/payment의 환불 이벤트가 수신될 준비가 되어 있다.
         UUID refundUuid = UUID.randomUUID();
         UUID paymentUuid = UUID.randomUUID();
@@ -34,7 +34,7 @@ class DepositEventListenerHappyPathTest {
         Long refundAmount = 8000L;
         Long depositRefundAmount = 3000L;
 
-        RefundCompletedEvent event = new RefundCompletedEvent(
+        RefundRequestedEvent event = new RefundRequestedEvent(
                 refundUuid,
                 paymentUuid,
                 orderUuid,
@@ -44,7 +44,7 @@ class DepositEventListenerHappyPathTest {
                 LocalDateTime.now()
         );
 
-        // when: payment.refund-completed 토픽을 수신했을 때의 핸들러를 실행한다.
+        // when: payment.refund-requested 토픽을 수신했을 때의 핸들러를 실행한다.
         listener.handle(event);
 
         // then: paymentId를 기준으로 환불 처리 파사드가 정확한 인자로 호출된다.

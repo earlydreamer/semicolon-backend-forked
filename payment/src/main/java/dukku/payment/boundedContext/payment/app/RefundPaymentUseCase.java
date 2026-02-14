@@ -15,6 +15,7 @@ import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
 import dukku.common.shared.payment.event.RefundFailedEvent;
+import dukku.common.shared.payment.event.RefundRequestedEvent;
 import dukku.payment.boundedContext.payment.out.TossPaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -173,7 +174,8 @@ public class RefundPaymentUseCase {
                 : PaymentHistoryType.PARTIAL_REFUND_SUCCESS;
         support.createHistory(payment, historyType, originStatus, originAmountPg, originDeposit);
 
-        publishRefundCompletedIfNeeded(payment, refund);
+        publishRefundRequested(payment, refund);
+        publishRefundCompleted(payment, refund);
 
         // 12) 환불 완료 이벤트 조건부 발행 후 응답 반환
         return refund.toPaymentRefundResponse(allocation.pgRefundAmount(), payment.getTossOrderId());
@@ -272,7 +274,16 @@ public class RefundPaymentUseCase {
             }
 
             Long alreadyRefundedAmount = support.getRefundedAmountByPaymentOrderItem(paymentOrderItem.getId());
-            Long refundableAmount = paymentOrderItem.getPrice() - alreadyRefundedAmount;
+            long couponAmount = paymentOrderItem.getPaymentCoupon() == null ? 0L : paymentOrderItem.getPaymentCoupon();
+            long netPaidAmount = paymentOrderItem.getPrice() - couponAmount;
+            if (netPaidAmount < 0L) {
+                throw new InvalidRefundAmountException("상품 결제 금액 계산이 잘못되었습니다.");
+            }
+
+            Long refundableAmount = netPaidAmount - alreadyRefundedAmount;
+            if (refundableAmount < 0L) {
+                throw new InvalidRefundAmountException("요청 환불 금액이 상품 환불 가능 금액을 초과합니다.");
+            }
             if (requestedAmount > refundableAmount) {
                 throw new InvalidRefundAmountException("요청 환불 금액이 상품 환불 가능 금액을 초과합니다.");
             }
@@ -354,7 +365,23 @@ public class RefundPaymentUseCase {
         return String.valueOf(message);
     }
 
-    private void publishRefundCompletedIfNeeded(Payment payment, Refund refund) {
+    private void publishRefundRequested(Payment payment, Refund refund) {
+        // PENDING + 예치금 환불이 필요한 건만 사가 시작 이벤트 발행
+        if (refund.getRefundStatus() != RefundStatus.PENDING || refund.getRefundDepositTotal() <= 0L) {
+            return;
+        }
+
+        eventPublisher.publish(new RefundRequestedEvent(
+                refund.getUuid(),
+                payment.getUuid(),
+                payment.getOrderUuid(),
+                refund.getRefundAmountTotal(),
+                refund.getRefundDepositTotal(),
+                payment.getUserUuid(),
+                refund.getCreatedAt()));
+    }
+
+    private void publishRefundCompleted(Payment payment, Refund refund) {
         // COMPLETED 상태면 결제-주문 연동 후속 처리를 위해 이벤트 발행
         if (refund.getRefundStatus() != RefundStatus.COMPLETED) {
             return;

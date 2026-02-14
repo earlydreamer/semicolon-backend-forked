@@ -94,10 +94,14 @@ public class Refund extends BaseIdAndUUIDAndTime {
     // === DTO 변환 ===
 
     public PaymentRefundResponse toPaymentRefundResponse(Long pgRefundAmount, String tossOrderId) {
+        boolean completed = this.refundStatus == RefundStatus.COMPLETED;
+        String responseCode = completed ? "REFUND_COMPLETED" : "REFUND_PENDING";
+        String responseMessage = completed ? "환불이 완료되었습니다." : "환불 요청이 접수되었습니다.";
+
         return PaymentRefundResponse.builder()
                 .success(true)
-                .code("REFUND_COMPLETED")
-                .message("환불이 완료되었습니다.")
+                .code(responseCode)
+                .message(responseMessage)
                 .data(PaymentRefundResponse.RefundData.builder()
                         .refundId(this.getUuid())
                         .paymentId(this.payment.getUuid())

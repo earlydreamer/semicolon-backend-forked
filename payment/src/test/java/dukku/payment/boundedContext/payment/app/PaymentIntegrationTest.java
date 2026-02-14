@@ -5,15 +5,19 @@ import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
+import dukku.common.shared.payment.exception.InvalidRefundAmountException;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.common.shared.payment.type.PaymentType;
 import dukku.common.shared.payment.type.RefundStatus;
 import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.payment.boundedContext.payment.entity.PaymentHistory;
+import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
 import dukku.payment.boundedContext.payment.entity.Refund;
 import dukku.payment.boundedContext.payment.out.PaymentHistoryRepository;
+import dukku.payment.boundedContext.payment.out.PaymentOrderItemRepository;
 import dukku.payment.boundedContext.payment.out.PaymentRepository;
+import dukku.payment.boundedContext.payment.out.RefundItemRepository;
 import dukku.payment.boundedContext.payment.out.RefundRepository;
 import dukku.payment.boundedContext.payment.out.TossPaymentClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -67,6 +72,12 @@ class PaymentIntegrationTest {
     @Autowired
     private PaymentHistoryRepository paymentHistoryRepository;
 
+    @Autowired
+    private PaymentOrderItemRepository paymentOrderItemRepository;
+
+    @Autowired
+    private RefundItemRepository refundItemRepository;
+
     @MockitoBean
     private TossPaymentClient tossPaymentClient;
 
@@ -76,13 +87,15 @@ class PaymentIntegrationTest {
     @BeforeEach
     void cleanUp() {
         paymentHistoryRepository.deleteAll();
+        refundItemRepository.deleteAll();
         refundRepository.deleteAll();
+        paymentOrderItemRepository.deleteAll();
         paymentRepository.deleteAll();
     }
 
     @Test
     @DisplayName("PG 단독 결제 전체 환불 시 PG 취소/DB 상태/이벤트 발행이 모두 반영된다")
-    void fullRefundWithPgOnlyExecutesPgCancelAndPersistsFinalState() {
+    void fullRefundPgOnlyFlow() {
         // given: PG 단독 결제가 DONE 상태이고 전체 환불 요청을 준비한다.
         Payment payment = createDonePayment(
                 10000L,
@@ -146,7 +159,7 @@ class PaymentIntegrationTest {
 
     @Test
     @DisplayName("혼합 결제 전체 환불 시 PG는 PG 금액만 취소하고 예치금 환불은 이벤트에 포함된다")
-    void fullRefundWithMixedPaymentExecutesPgCancelWithPgPortionAndPublishesDepositRollbackAmount() {
+    void fullRefundMixedFlow() {
         // given: MIXED 결제가 DONE 상태이고 전체 환불 요청을 준비한다.
         Payment payment = createDonePayment(
                 20000L,
@@ -197,14 +210,42 @@ class PaymentIntegrationTest {
 
         ArgumentCaptor<DomainEvent> eventCaptor = ArgumentCaptor.forClass(DomainEvent.class);
         verify(eventPublisher).publish(eventCaptor.capture());
-        RefundCompletedEvent event = (RefundCompletedEvent) eventCaptor.getValue();
-        assertThat(event.refundAmount()).isEqualTo(20000L);
-        assertThat(event.refundDepositAmount()).isEqualTo(15000L);
+        DomainEvent event = eventCaptor.getValue();
+        assertThat(event.getTopic()).isEqualTo("payment.refund-requested");
+        assertThat(event.getKey()).isEqualTo(payment.getOrderUuid().toString());
+    }
+
+    @Test
+    @DisplayName("혼합 결제 환불은 요청 이벤트를 먼저 발행한다")
+    void mixedRefundStartsSaga() {
+        Payment payment = createDonePayment(
+                20000L,
+                15000L,
+                5000L,
+                PaymentType.MIXED,
+                "pg-key-mixed-requested-1",
+                "toss-order-mixed-requested-1");
+
+        PaymentRefundRequest request = PaymentRefundRequest.builder()
+                .paymentId(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .refundAmount(20000L)
+                .reason("customer_cancel_request")
+                .build();
+
+        when(tossPaymentClient.cancel(eq("pg-key-mixed-requested-1"), anyMap()))
+                .thenReturn(Map.of("statusCode", 200));
+
+        refundPaymentUseCase.execute(request, "idem-mixed-requested-1");
+
+        ArgumentCaptor<DomainEvent> eventCaptor = ArgumentCaptor.forClass(DomainEvent.class);
+        verify(eventPublisher).publish(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getTopic()).isEqualTo("payment.refund-requested");
     }
 
     @Test
     @DisplayName("동일 idempotency key로 재요청하면 기존 환불 결과를 재사용하고 PG 취소는 1회만 호출된다")
-    void duplicateIdempotencyRequestReusesExistingRefundAndDoesNotCallPgCancelTwice() {
+    void duplicateIdemReusesRefund() {
         // given: 동일 idempotency key로 같은 전체 환불 요청을 2회 수행할 입력을 준비한다.
         Payment payment = createDonePayment(
                 10000L,
@@ -237,6 +278,112 @@ class PaymentIntegrationTest {
                 .isEqualTo(first.getData().getAmounts().getRequestedRefundAmount());
     }
 
+    @Test
+    @DisplayName("쿠폰 적용 상품은 순결제금액을 넘겨 환불할 수 없다")
+    void couponItemRefundBound() {
+        Payment payment = createDonePayment(
+                17000L,
+                0L,
+                17000L,
+                PaymentType.NORMAL,
+                "pg-key-coupon-bound-1",
+                "toss-order-coupon-bound-1");
+
+        UUID couponItem = UUID.randomUUID();
+        createOrderItem(payment, couponItem, 10000L, 3000L, 0L);
+        createOrderItem(payment, UUID.randomUUID(), 10000L, 0L, 0L);
+
+        PaymentRefundRequest request = PaymentRefundRequest.builder()
+                .paymentId(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .refundAmount(8000L)
+                .reason("customer_cancel_request")
+                .items(List.of(PaymentRefundRequest.RefundItemInfo.builder()
+                        .orderItemUuid(couponItem)
+                        .refundAmount(8000L)
+                        .build()))
+                .build();
+
+        when(tossPaymentClient.cancel(eq("pg-key-coupon-bound-1"), anyMap()))
+                .thenReturn(Map.of("statusCode", 200));
+
+        assertThatThrownBy(() -> refundPaymentUseCase.execute(request, "idem-coupon-bound-1"))
+                .isInstanceOf(InvalidRefundAmountException.class);
+    }
+
+    @Test
+    @DisplayName("같은 상품 부분환불은 여러 번 누적 반영된다")
+    void sameItemTwoPartialFlow() {
+        Payment payment = createDonePayment(
+                10000L,
+                0L,
+                10000L,
+                PaymentType.NORMAL,
+                "pg-key-item-repeat-1",
+                "toss-order-item-repeat-1");
+
+        PaymentOrderItem item = createOrderItem(payment, UUID.randomUUID(), 10000L, 0L, 0L);
+
+        PaymentRefundRequest firstReq = PaymentRefundRequest.builder()
+                .paymentId(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .refundAmount(4000L)
+                .reason("customer_cancel_request")
+                .items(List.of(PaymentRefundRequest.RefundItemInfo.builder()
+                        .orderItemUuid(item.getOrderItemUuid())
+                        .refundAmount(4000L)
+                        .build()))
+                .build();
+
+        PaymentRefundRequest secondReq = PaymentRefundRequest.builder()
+                .paymentId(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .refundAmount(3000L)
+                .reason("customer_cancel_request")
+                .items(List.of(PaymentRefundRequest.RefundItemInfo.builder()
+                        .orderItemUuid(item.getOrderItemUuid())
+                        .refundAmount(3000L)
+                        .build()))
+                .build();
+
+        when(tossPaymentClient.cancel(eq("pg-key-item-repeat-1"), anyMap()))
+                .thenReturn(Map.of("statusCode", 200));
+
+        PaymentRefundResponse first = refundPaymentUseCase.execute(firstReq, "idem-item-repeat-1");
+        PaymentRefundResponse second = refundPaymentUseCase.execute(secondReq, "idem-item-repeat-2");
+
+        assertThat(first.isSuccess()).isTrue();
+        assertThat(second.isSuccess()).isTrue();
+        assertThat(refundItemRepository.findByPaymentOrderItemId(item.getId())).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("예치금 환불 대기 상태는 REFUND_PENDING 응답을 반환한다")
+    void pendingRefundCode() {
+        Payment payment = createDonePayment(
+                20000L,
+                15000L,
+                5000L,
+                PaymentType.MIXED,
+                "pg-key-pending-code-1",
+                "toss-order-pending-code-1");
+
+        PaymentRefundRequest request = PaymentRefundRequest.builder()
+                .paymentId(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .refundAmount(20000L)
+                .reason("customer_cancel_request")
+                .build();
+
+        when(tossPaymentClient.cancel(eq("pg-key-pending-code-1"), anyMap()))
+                .thenReturn(Map.of("statusCode", 200));
+
+        PaymentRefundResponse response = refundPaymentUseCase.execute(request, "idem-pending-code-1");
+
+        assertThat(response.isSuccess()).isTrue();
+        assertThat(response.getCode()).isEqualTo("REFUND_PENDING");
+    }
+
     private Payment createDonePayment(Long amount, Long depositAmount, Long pgAmount,
                                       PaymentType paymentType, String pgPaymentKey, String tossOrderId) {
         Payment payment = Payment.create(
@@ -250,5 +397,19 @@ class PaymentIntegrationTest {
                 tossOrderId);
         payment.approve(pgPaymentKey);
         return paymentRepository.save(payment);
+    }
+
+    private PaymentOrderItem createOrderItem(Payment payment, UUID orderItemUuid,
+                                             Long price, Long coupon, Long deposit) {
+        return paymentOrderItemRepository.save(PaymentOrderItem.create(
+                payment,
+                payment.getOrderUuid(),
+                orderItemUuid,
+                1,
+                "item-" + orderItemUuid.toString().substring(0, 8),
+                price,
+                coupon,
+                UUID.randomUUID(),
+                deposit));
     }
 }

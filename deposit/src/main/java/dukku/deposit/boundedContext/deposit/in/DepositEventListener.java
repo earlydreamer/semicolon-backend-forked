@@ -1,7 +1,7 @@
 package dukku.deposit.boundedContext.deposit.in;
 
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
-import dukku.common.shared.payment.event.RefundCompletedEvent;
+import dukku.common.shared.payment.event.RefundRequestedEvent;
 import dukku.common.shared.settlement.event.SettlementDepositChargeRequestedEvent;
 import dukku.deposit.boundedContext.deposit.app.ChargeDepositForSettlementUseCase;
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
@@ -37,14 +37,14 @@ public class DepositEventListener {
     }
 
     /**
-     * 환불 완료 시 예치금 복구 처리
+     * 환불 요청 시 예치금 복구 처리
      *
      * <p>
-     * RefundCompletedEvent 수신 시 예치금을 롤백(재적립)한다.
+     * RefundRequestedEvent 수신 시 예치금을 롤백(재적립)한다.
      * 복구 성공 시 DepositRefundedEvent 발행.
      */
-    @KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
-    public void handle(RefundCompletedEvent event) {
+    @KafkaListener(topics = "payment.refund-requested", groupId = "${spring.application.name}-group")
+    public void handle(RefundRequestedEvent event) {
         // paymentId 전달 (예치금 롤백 실패 연계)
         depositFacade.refundDeposit(
                 event.userUuid(),
