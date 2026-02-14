@@ -7,6 +7,7 @@ import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
 import dukku.deposit.boundedContext.deposit.out.DepositHistoryRepository;
 import dukku.deposit.boundedContext.deposit.out.DepositRepository;
+import dukku.deposit.global.SystemDepositInitData;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -80,13 +81,19 @@ class RefundDepositUseCaseKafkaIntegrationTest {
 
     @Test
     @DisplayName("?섎텋 濡ㅻ갚 ??Kafka??deposit.refunded ?대깽?멸? 諛쒗뻾?섍퀬 ?ъ슜???덉튂湲덉씠 利앷??쒕떎")
-    void publishesDepositRefundEventAndIncreasesBalance() throws Exception {
+    void refundMovesSysAndUser() throws Exception {
         // given: ?좎? ?덉튂湲?5,000???곹깭瑜?留뚮뱺??
         UUID userUuid = UUID.randomUUID();
         depositRepository.save(Deposit.builder()
                 .userUuid(userUuid)
                 .depositUuid(UUID.randomUUID())
                 .balance(5000L)
+                .version(0)
+                .build());
+        depositRepository.save(Deposit.builder()
+                .userUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                .depositUuid(UUID.randomUUID())
+                .balance(1_000_000L)
                 .version(0)
                 .build());
         UUID paymentUuid = UUID.randomUUID();
@@ -113,6 +120,8 @@ class RefundDepositUseCaseKafkaIntegrationTest {
             // then: 湲곗〈 ?덉튂湲?5,000?먯뿉 3,000?먯씠 媛?곕릺??8,000?먯씠 ?쒕떎.
             var after = depositRepository.findByUserUuid(userUuid).orElseThrow();
             assertThat(after.getBalance()).isEqualTo(8000L);
+            var systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow();
+            assertThat(systemAfter.getBalance()).isEqualTo(997000L);
 
             List<DepositHistory> histories = depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(userUuid);
             assertThat(histories).isNotEmpty();
@@ -120,6 +129,14 @@ class RefundDepositUseCaseKafkaIntegrationTest {
             assertThat(lastHistory.getType()).isEqualTo(DepositHistoryType.ROLLBACK);
             assertThat(lastHistory.getAmount()).isEqualTo(refundDepositAmount);
             assertThat(lastHistory.getOrderItemUuid()).isEqualTo(orderUuid);
+
+            List<DepositHistory> systemHistories = depositHistoryRepository
+                    .findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID);
+            assertThat(systemHistories).isNotEmpty();
+            DepositHistory systemLast = systemHistories.get(0);
+            assertThat(systemLast.getType()).isEqualTo(DepositHistoryType.ROLLBACK);
+            assertThat(systemLast.getAmount()).isEqualTo(refundDepositAmount);
+            assertThat(systemLast.getOrderItemUuid()).isEqualTo(orderUuid);
         } finally {
             consumer.close();
         }
