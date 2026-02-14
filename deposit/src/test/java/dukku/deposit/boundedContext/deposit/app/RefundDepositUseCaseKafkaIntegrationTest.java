@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
         "spring.application.name=deposit-it",
@@ -51,12 +52,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @EmbeddedKafka(partitions = 1, topics = {
         "payment.refund-requested",
-        "deposit.refunded"
+        "deposit.refunded",
+        "deposit.refund.failed"
 }, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
 @ActiveProfiles("test")
 class RefundDepositUseCaseKafkaIntegrationTest {
 
     private static final String DEPOSIT_REFUNDED_TOPIC = "deposit.refunded";
+    private static final String DEPOSIT_REFUND_FAILED_TOPIC = "deposit.refund.failed";
 
     @Autowired
     private RefundDepositUseCase refundDepositUseCase;
@@ -104,7 +107,7 @@ class RefundDepositUseCaseKafkaIntegrationTest {
         // when: refundDepositUseCase瑜??ㅽ뻾?댁꽌 refund ?좎뒪耳?댁뒪瑜?泥섎━?쒕떎.
         refundDepositUseCase.execute(userUuid, refundDepositAmount, orderUuid, paymentUuid, refundUuid);
 
-        Consumer<String, String> consumer = createConsumer();
+        Consumer<String, String> consumer = createConsumer(DEPOSIT_REFUNDED_TOPIC);
         try {
             // then: deposit.refunded ?대깽?멸? Kafka濡?諛쒗뻾?섍퀬 payload媛 湲곕? 媛믨낵 ?쇱튂?쒕떎.
             ConsumerRecord<String, String> record = waitForRecord(consumer, DEPOSIT_REFUNDED_TOPIC);
@@ -142,7 +145,56 @@ class RefundDepositUseCaseKafkaIntegrationTest {
         }
     }
 
-    private Consumer<String, String> createConsumer() {
+    @Test
+    @DisplayName("시스템 지갑 잔액 부족이면 환불 실패 이벤트가 Kafka로 발행된다")
+    void refundFailSendsEvent() throws Exception {
+        UUID userUuid = UUID.randomUUID();
+        depositRepository.save(Deposit.builder()
+                .userUuid(userUuid)
+                .depositUuid(UUID.randomUUID())
+                .balance(5000L)
+                .version(0)
+                .build());
+        depositRepository.save(Deposit.builder()
+                .userUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                .depositUuid(UUID.randomUUID())
+                .balance(1000L)
+                .version(0)
+                .build());
+
+        UUID paymentUuid = UUID.randomUUID();
+        UUID orderUuid = UUID.randomUUID();
+        UUID refundUuid = UUID.randomUUID();
+        Long refundAmount = 3000L;
+
+        assertThatCode(() -> refundDepositUseCase.execute(userUuid, refundAmount, orderUuid, paymentUuid, refundUuid))
+                .doesNotThrowAnyException();
+
+        Consumer<String, String> consumer = createConsumer(DEPOSIT_REFUND_FAILED_TOPIC);
+        try {
+            ConsumerRecord<String, String> record = waitForRecord(consumer, DEPOSIT_REFUND_FAILED_TOPIC);
+            JsonNode payload = objectMapper.readTree(record.value());
+
+            assertThat(record.key()).isEqualTo(paymentUuid.toString());
+            assertThat(payload.get("refundId").asText()).isEqualTo(refundUuid.toString());
+            assertThat(payload.get("paymentUuid").asText()).isEqualTo(paymentUuid.toString());
+            assertThat(payload.get("orderUuid").asText()).isEqualTo(orderUuid.toString());
+            assertThat(payload.get("userUuid").asText()).isEqualTo(userUuid.toString());
+            assertThat(payload.get("amount").asLong()).isEqualTo(refundAmount);
+            assertThat(payload.get("failureCode").asText()).isEqualTo("PERSISTENCE_ERROR");
+
+            assertThat(depositRepository.findByUserUuid(userUuid).orElseThrow().getBalance()).isEqualTo(5000L);
+            assertThat(depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow().getBalance())
+                    .isEqualTo(1000L);
+            assertThat(depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(userUuid)).isEmpty();
+            assertThat(depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID))
+                    .isEmpty();
+        } finally {
+            consumer.close();
+        }
+    }
+
+    private Consumer<String, String> createConsumer(String topic) {
         Map<String, Object> consumerProps = new HashMap<>();
         consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, embeddedKafkaBroker.getBrokersAsString());
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "deposit-kafka-it-" + UUID.randomUUID());
@@ -154,7 +206,7 @@ class RefundDepositUseCaseKafkaIntegrationTest {
                 new StringDeserializer(),
                 new StringDeserializer()).createConsumer();
 
-        List<TopicPartition> partitions = List.of(new TopicPartition(DEPOSIT_REFUNDED_TOPIC, 0));
+        List<TopicPartition> partitions = List.of(new TopicPartition(topic, 0));
         consumer.assign(partitions);
         consumer.seekToBeginning(partitions);
 
