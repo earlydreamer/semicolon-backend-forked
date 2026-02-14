@@ -10,15 +10,12 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiMemory;
+import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
 
 @Service
 public class MemoryRetrievalService {
-
-    private static final double MEMORY_SIMILARITY_THRESHOLD = 0.3;
-    private static final int PROFILE_LIMIT = 3;
-    private static final int SIMILAR_LIMIT = 5;
 
     private final AiMemoryRepository aiMemoryRepository;
     private final EmbeddingModel embeddingModel;
@@ -31,13 +28,13 @@ public class MemoryRetrievalService {
 
     public String retrieveMemoryContext(UUID userId, String userMessage) {
         List<AiMemory> profileMemories = aiMemoryRepository.findTopByUserIdAndMemoryType(
-                userId, MemoryType.PROFILE.name(), PROFILE_LIMIT);
+                userId, MemoryType.PROFILE.name(), AiSimilarityPolicy.MEMORY_PROFILE_LIMIT);
 
         float[] queryEmbedding = embeddingModel.embed(userMessage);
         String embeddingStr = toVectorString(queryEmbedding);
 
         List<AiMemory> similarMemories = aiMemoryRepository.findSimilarMemories(
-                userId, embeddingStr, MEMORY_SIMILARITY_THRESHOLD, SIMILAR_LIMIT);
+                userId, embeddingStr, AiSimilarityPolicy.MEMORY_SIMILARITY_THRESHOLD, AiSimilarityPolicy.MEMORY_SIMILAR_LIMIT);
 
         similarMemories.forEach(AiMemory::incrementAccessCount);
         if (!similarMemories.isEmpty()) {

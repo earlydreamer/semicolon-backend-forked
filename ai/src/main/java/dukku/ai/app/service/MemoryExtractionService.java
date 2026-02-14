@@ -14,6 +14,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dukku.ai.entity.AiMemory;
+import dukku.ai.global.policy.AiPromptPolicy;
+import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
@@ -22,32 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MemoryExtractionService {
-
-    private static final double DUPLICATE_THRESHOLD = 0.92;
-    private static final String EXTRACTION_PROMPT = """
-            다음 대화에서 사용자에 대해 기억할 만한 정보를 추출하세요.
-            각 항목을 JSON 배열로 반환하세요. 기억할 정보가 없으면 빈 배열 []을 반환하세요.
-
-            형식:
-            [
-              {
-                "memoryType": "PROFILE|PREFERENCE",
-                "subType": "TECH|SHOPPING|GENERAL",
-                "content": "기억할 내용",
-                "confidence": 0.0~1.0
-              }
-            ]
-
-            memoryType 기준:
-            - PROFILE: 이름, 나이, 직업 등 기본 정보
-            - PREFERENCE: 좋아하는 것, 싫어하는 것, 선호도
-
-            JSON 배열만 반환하고 다른 텍스트는 포함하지 마세요.
-
-            대화 내용:
-            사용자: %s
-            AI: %s
-            """;
 
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;
@@ -67,7 +43,7 @@ public class MemoryExtractionService {
     @Async
     public void extractAndStoreMemories(UUID userId, String userMessage, String aiResponse) {
         try {
-            String prompt = EXTRACTION_PROMPT.formatted(userMessage, aiResponse);
+            String prompt = AiPromptPolicy.MEMORY_EXTRACTION_PROMPT.formatted(userMessage, aiResponse);
             String result = chatModel.call(new Prompt(prompt))
                     .getResult()
                     .getOutput()
@@ -101,7 +77,7 @@ public class MemoryExtractionService {
         String embeddingStr = Arrays.toString(embedding);
 
         List<AiMemory> duplicates = aiMemoryRepository.findDuplicateMemory(
-                userId, embeddingStr, DUPLICATE_THRESHOLD);
+                userId, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
 
         if (!duplicates.isEmpty()) {
             AiMemory existing = duplicates.getFirst();
