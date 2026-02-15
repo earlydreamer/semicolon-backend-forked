@@ -2,7 +2,8 @@ package dukku.ai.global.advisor;
 
 import java.util.List;
 
-import dukku.common.shared.ai.exception.AiGuardException;
+import dukku.common.shared.ai.exception.AiForbiddenWordIncludedException;
+import dukku.common.shared.ai.exception.AiQuestionTooLongException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.ai.chat.client.ChatClientRequest;
@@ -31,14 +32,12 @@ public class GuardAdvisor implements BaseAdvisor {
         }
 
         if (userText.length() > maxLength) {
-            throw new AiGuardException(
-                    "질문이 너무 깁니다. 최대 " + maxLength + "자까지 입력 가능합니다.");
+            throw new AiQuestionTooLongException(maxLength);
         }
 
         for (String word : forbiddenWords) {
             if (userText.contains(word)) {
-                throw new AiGuardException(
-                        "금칙어가 포함되어 있습니다: " + word);
+                throw new AiForbiddenWordIncludedException(word);
             }
         }
 
