@@ -3,6 +3,7 @@ package dukku.common.shared.ai.docs;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -35,7 +36,7 @@ public final class AiApiDocs {
     @Operation(
             summary = "AI 채팅",
             description = "AI 모델과 대화합니다. 사용자 정보 기반 상품 추천을 받을 수 있습니다. 스트리밍(SSE) 방식으로 응답합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            requestBody = @RequestBody(
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
@@ -136,7 +137,7 @@ public final class AiApiDocs {
     @Operation(
             summary = "AI 메모리 생성",
             description = "새로운 AI 장기 기억을 생성합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            requestBody = @RequestBody(
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
@@ -169,7 +170,7 @@ public final class AiApiDocs {
     @Operation(
             summary = "AI 메모리 수정",
             description = "기존 AI 장기 기억의 중요도/신뢰도 점수를 수정합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            requestBody = @RequestBody(
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
