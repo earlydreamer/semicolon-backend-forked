@@ -1,9 +1,7 @@
 package dukku.ai.app;
 
-import java.util.List;
-import java.util.UUID;
-
 import dukku.ai.app.usecase.*;
+import dukku.ai.entity.AiMemory;
 import dukku.common.shared.ai.dto.AiMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
 import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
@@ -12,7 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
-import dukku.ai.entity.AiMemory;
+import java.util.List;
+import java.util.UUID;
 
 @Component
 @Transactional(readOnly = true)
@@ -85,7 +84,7 @@ public class AiFacade {
     private AiMemoryResponse toResponse(AiMemory memory) {
         return new AiMemoryResponse(
                 memory.getId(),
-                memory.getUserUUID(),
+                memory.getUserUuid(),
                 memory.getMemoryType(),
                 memory.getSubType(),
                 memory.getContent(),
