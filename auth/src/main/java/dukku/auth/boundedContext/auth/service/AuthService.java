@@ -17,6 +17,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private static final long REFRESH_REISSUE_BLOCK_BEFORE_ABSOLUTE_EXPIRY_MILLIS = Duration.ofDays(3).toMillis();
+
     private final UserClient userClient;
     private final AuthTokenIssuer authTokenIssuer;
     private final RefreshTokenStoreService refreshTokenStoreService;
@@ -44,8 +46,19 @@ public class AuthService {
             throw new InvalidRefreshTokenException();
         }
 
+        long absoluteExpiryMillis = authTokenIssuer.getRefreshTokenAbsoluteExpiryMillis(refreshToken);
+        long remainingAbsoluteTtlMillis = absoluteExpiryMillis - System.currentTimeMillis();
+        if (remainingAbsoluteTtlMillis <= 0) {
+            refreshTokenStoreService.delete(userUuid);
+            throw new InvalidRefreshTokenException();
+        }
+
         String accessToken = authTokenIssuer.createAccessToken(userUuid, role);
-        String newRefreshToken = authTokenIssuer.createRefreshToken(userUuid, role);
+        if (remainingAbsoluteTtlMillis <= REFRESH_REISSUE_BLOCK_BEFORE_ABSOLUTE_EXPIRY_MILLIS) {
+            return new TokenResponse(accessToken, refreshToken);
+        }
+
+        String newRefreshToken = authTokenIssuer.createRefreshToken(userUuid, role, absoluteExpiryMillis);
         long ttlMillis = authTokenIssuer.getRefreshTokenTtlMillis(newRefreshToken);
         refreshTokenStoreService.save(userUuid, newRefreshToken, Duration.ofMillis(ttlMillis));
 

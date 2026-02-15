@@ -22,7 +22,9 @@ public class AuthTokenIssuer {
 
     private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;
     private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;
+    private static final long REFRESH_TOKEN_ABSOLUTE_VALIDITY = 1000 * 60 * 60 * 24 * 14L;
     private static final String CLAIM_ROLE = "ROLE";
+    private static final String CLAIM_ABSOLUTE_EXP = "ABS_EXP";
 
     private final SecretKey accessKey;
     private final SecretKey refreshKey;
@@ -60,7 +62,30 @@ public class AuthTokenIssuer {
     }
 
     public String createRefreshToken(UUID userUuid, String role) {
-        return createToken(userUuid, role, REFRESH_TOKEN_VALIDITY, refreshKey);
+        long absoluteExpiryMillis = System.currentTimeMillis() + REFRESH_TOKEN_ABSOLUTE_VALIDITY;
+        return createRefreshToken(userUuid, role, absoluteExpiryMillis);
+    }
+
+    public String createRefreshToken(UUID userUuid, String role, long absoluteExpiryMillis) {
+        long nowMillis = System.currentTimeMillis();
+        long slidingExpiryMillis = nowMillis + REFRESH_TOKEN_VALIDITY;
+        long refreshExpiryMillis = Math.min(slidingExpiryMillis, absoluteExpiryMillis);
+
+        if (refreshExpiryMillis <= nowMillis) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        Date now = new Date(nowMillis);
+        Date expiry = new Date(refreshExpiryMillis);
+
+        return Jwts.builder()
+                .subject(userUuid.toString())
+                .claim(CLAIM_ROLE, role)
+                .claim(CLAIM_ABSOLUTE_EXP, absoluteExpiryMillis)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(refreshKey)
+                .compact();
     }
 
     public boolean validateRefreshToken(String token) {
@@ -94,6 +119,15 @@ public class AuthTokenIssuer {
         Date expiration = claims.getExpiration();
         long ttl = expiration.getTime() - System.currentTimeMillis();
         return Math.max(0, ttl);
+    }
+
+    public long getRefreshTokenAbsoluteExpiryMillis(String refreshToken) {
+        Claims claims = parseRefreshClaims(refreshToken);
+        Long absoluteExpiry = claims.get(CLAIM_ABSOLUTE_EXP, Long.class);
+        if (absoluteExpiry != null) {
+            return absoluteExpiry;
+        }
+        return claims.getExpiration().getTime();
     }
 
     public String refresh(String refreshToken) {
