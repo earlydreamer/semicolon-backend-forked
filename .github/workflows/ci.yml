@@ -110,7 +110,7 @@ jobs:
             payment) echo "TEST_CLASS=dukku.payment.ApplicationTests" >> $GITHUB_ENV ;;
             deposit) echo "TEST_CLASS=dukku.deposit.ApplicationTests" >> $GITHUB_ENV ;;
             settlement) echo "TEST_CLASS=dukku.settlement.ApplicationTests" >> $GITHUB_ENV ;;
-            ai) echo "TEST_CLASS=com.dev.common.ai.AiApplicationTests" >> $GITHUB_ENV ;;
+            ai) echo "TEST_CLASS=dukku.ai.ApplicationTests" >> $GITHUB_ENV ;;
             *) echo "Unknown module"; exit 1 ;;
           esac
 
