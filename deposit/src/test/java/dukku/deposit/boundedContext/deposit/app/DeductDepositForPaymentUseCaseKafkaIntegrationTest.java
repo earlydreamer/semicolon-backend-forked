@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
         "spring.application.name=deposit-it",
@@ -107,7 +108,8 @@ class DeductDepositForPaymentUseCaseKafkaIntegrationTest {
             assertThat(payload.get("retryable").asBoolean()).isFalse();
 
             assertThat(depositRepository.findByUserUuid(userUuid).orElseThrow().getBalance()).isEqualTo(1000L);
-            assertThat(depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow().getBalance())
+            assertThat(
+                    depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow().getBalance())
                     .isEqualTo(1_000_000L);
             assertThat(historyRepository.findByUserUuidOrderByCreatedAtDesc(userUuid)).isEmpty();
             assertThat(historyRepository.findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID))
@@ -156,6 +158,6 @@ class DeductDepositForPaymentUseCaseKafkaIntegrationTest {
             }
         }
 
-        throw new IllegalStateException("No record found for topic: " + topic);
+        return fail("No record found for topic: " + topic);
     }
 }
