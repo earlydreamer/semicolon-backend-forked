@@ -4,7 +4,7 @@ import dukku.common.global.exception.NotFoundException;
 
 public class AiMemoryNotFoundException extends NotFoundException {
 
-    public AiMemoryNotFoundException(Integer id) {
-        super("AI 메모리를 찾을 수 없습니다. id=" + id);
+    public AiMemoryNotFoundException(Integer aiMemoryId) {
+        super("AI 메모리를 찾을 수 없습니다. id=" + aiMemoryId);
     }
 }

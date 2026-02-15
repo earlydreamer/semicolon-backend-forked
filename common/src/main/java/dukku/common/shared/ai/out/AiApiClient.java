@@ -39,9 +39,9 @@ public class AiApiClient {
                 .body(new ParameterizedTypeReference<>() {});
     }
 
-    public AiMemoryResponse findMemoryById(Integer id) {
+    public AiMemoryResponse findMemoryById(Integer aiMemoryId) {
         return restClient.get()
-                .uri("/ai-memories/{id}", id)
+                .uri("/ai-memories/{id}", aiMemoryId)
                 .retrieve()
                 .body(AiMemoryResponse.class);
     }
@@ -55,18 +55,18 @@ public class AiApiClient {
                 .body(AiMemoryResponse.class);
     }
 
-    public AiMemoryResponse updateMemory(Integer id, UpdateAiMemoryRequest request) {
+    public AiMemoryResponse updateMemory(Integer aiMemoryId, UpdateAiMemoryRequest request) {
         return restClient.patch()
-                .uri("/ai-memories/{id}", id)
+                .uri("/ai-memories/{id}", aiMemoryId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
                 .body(AiMemoryResponse.class);
     }
 
-    public void deleteMemory(Integer id) {
+    public void deleteMemory(Integer aiMemoryId) {
         restClient.delete()
-                .uri("/ai-memories/{id}", id)
+                .uri("/ai-memories/{id}", aiMemoryId)
                 .retrieve()
                 .toBodilessEntity();
     }

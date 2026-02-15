@@ -21,8 +21,8 @@ public class FindAiMemoryUseCase {
         return aiMemoryRepository.findAll();
     }
 
-    public AiMemory findById(Integer id) {
-        return aiMemoryRepository.findById(id)
-                .orElseThrow(() -> new AiMemoryNotFoundException(id));
+    public AiMemory findById(Integer aiMemoryId) {
+        return aiMemoryRepository.findById(aiMemoryId)
+                .orElseThrow(() -> new AiMemoryNotFoundException(aiMemoryId));
     }
 }

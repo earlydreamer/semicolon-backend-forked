@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record AiMemoryResponse(
-        Integer id,
+        Integer aiMemoryId,
         UUID userUuid,
         MemoryType memoryType,
         MemorySubType subType,

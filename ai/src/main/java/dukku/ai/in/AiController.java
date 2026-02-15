@@ -46,8 +46,8 @@ public class AiController {
 
     @AiApiDocs.FindMemoryById
     @GetMapping("/ai-memories/{id}")
-    public ResponseEntity<AiMemoryResponse> findMemoryById(@PathVariable Integer id) {
-        return ResponseEntity.ok(aiFacade.findById(id));
+    public ResponseEntity<AiMemoryResponse> findMemoryById(@PathVariable("id") Integer aiMemoryId) {
+        return ResponseEntity.ok(aiFacade.findById(aiMemoryId));
     }
 
     @AiApiDocs.CreateMemory
@@ -59,15 +59,15 @@ public class AiController {
     @AiApiDocs.UpdateMemory
     @PatchMapping("/ai-memories/{id}")
     public ResponseEntity<AiMemoryResponse> updateMemory(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer aiMemoryId,
             @RequestBody UpdateAiMemoryRequest request) {
-        return ResponseEntity.ok(aiFacade.update(id, request));
+        return ResponseEntity.ok(aiFacade.update(aiMemoryId, request));
     }
 
     @AiApiDocs.DeleteMemory
     @DeleteMapping("/ai-memories/{id}")
-    public ResponseEntity<Void> deleteMemory(@PathVariable Integer id) {
-        aiFacade.delete(id);
+    public ResponseEntity<Void> deleteMemory(@PathVariable("id") Integer aiMemoryId) {
+        aiFacade.delete(aiMemoryId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -50,8 +50,8 @@ public class AiFacade {
                 .toList();
     }
 
-    public AiMemoryResponse findById(Integer id) {
-        return toResponse(findAiMemoryUseCase.findById(id));
+    public AiMemoryResponse findById(Integer aiMemoryId) {
+        return toResponse(findAiMemoryUseCase.findById(aiMemoryId));
     }
 
     @Transactional
@@ -68,9 +68,9 @@ public class AiFacade {
     }
 
     @Transactional
-    public AiMemoryResponse update(Integer id, UpdateAiMemoryRequest request) {
+    public AiMemoryResponse update(Integer aiMemoryId, UpdateAiMemoryRequest request) {
         AiMemory memory = updateAiMemoryUseCase.update(
-                id,
+                aiMemoryId,
                 request.importanceScore(),
                 request.confidenceScore()
         );
@@ -78,8 +78,8 @@ public class AiFacade {
     }
 
     @Transactional
-    public void delete(Integer id) {
-        deleteAiMemoryUseCase.delete(id);
+    public void delete(Integer aiMemoryId) {
+        deleteAiMemoryUseCase.delete(aiMemoryId);
     }
 
     private AiMemoryResponse toResponse(AiMemory memory) {
