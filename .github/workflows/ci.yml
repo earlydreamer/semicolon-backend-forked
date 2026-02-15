@@ -72,7 +72,7 @@ jobs:
                 - "6379:6379"
 
             postgres:
-              image: postgres:18.1
+              image: pgvector/pgvector:pg18
               environment:
                 POSTGRES_DB: semicolon
                 POSTGRES_USER: ${DB_USERNAME}
@@ -91,7 +91,7 @@ jobs:
           echo "Elasticsearch is up!"
 
           echo "Waiting for Postgres..."
-          timeout 60s bash -c 'until docker exec $(docker ps -qf "ancestor=postgres:18.1") pg_isready -U "${{ secrets.DB_USERNAME }}" >/dev/null 2>&1; do sleep 3; done'
+          timeout 60s bash -c 'until docker exec $(docker ps -qf "ancestor=pgvector/pgvector:pg18") pg_isready -U "${{ secrets.DB_USERNAME }}" >/dev/null 2>&1; do sleep 3; done'
           echo "Postgres is ready!"
 
       - name: Grant execute permission for gradlew
