@@ -56,7 +56,9 @@
         <topic>msa-logs</topic>
 
         <!-- Key Partitioning: 같은 서비스 로그는 같은 파티션으로 -->
-        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.ThreadNameKeyingStrategy"/>
+        <keyingStrategy class="dukku.common.global.logging.ServiceNameKeyingStrategy">
+            <serviceName>${SERVICE_NAME}</serviceName>
+        </keyingStrategy>
 
         <!-- 전송 실패 시 처리 (콘솔로 fallback) -->
         <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/>
@@ -104,8 +106,12 @@
     <springProfile name="dev">
         <root level="DEBUG">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_KAFKA"/>
         </root>
+
+        <!-- dukku 패키지 로그만 Kafka로 전송 -->
+        <logger name="dukku" level="INFO" additivity="true">
+            <appender-ref ref="ASYNC_KAFKA"/>
+        </logger>
 
         <!-- Kafka 클라이언트 내부 로그 억제 (피드백 루프 방지) -->
         <logger name="org.apache.kafka" level="WARN"/>
@@ -121,8 +127,12 @@
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
-            <appender-ref ref="ASYNC_KAFKA"/>
         </root>
+
+        <!-- dukku 패키지 로그만 Kafka로 전송 -->
+        <logger name="dukku" level="INFO" additivity="true">
+            <appender-ref ref="ASYNC_KAFKA"/>
+        </logger>
 
         <!-- Kafka 클라이언트 내부 로그 억제 (피드백 루프 방지) -->
         <logger name="org.apache.kafka" level="WARN"/>
