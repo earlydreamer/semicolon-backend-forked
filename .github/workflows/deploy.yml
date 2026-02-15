@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "*" ]
 
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [ auth, user, product, order, coupon, payment, deposit, settlement ]
+        module: [ auth, user, product, order, coupon, payment, deposit, settlement, ai ]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -92,6 +92,7 @@ jobs:
             SYSTEM_DEPOSIT_PASSWORD=${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
             SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
             CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             EOF
 
             # Docker Compose 실행 (v2 사용)

@@ -2,7 +2,7 @@ name: PR Build & Test
 
 on:
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "*" ]
 
 jobs:
   build-and-test:
@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [ auth, user, product, order, coupon, payment, deposit, settlement ]
+        module: [ auth, user, product, order, coupon, payment, deposit, settlement, ai ]
 
     env:
       SPRING_PROFILES_ACTIVE: release
@@ -110,6 +110,7 @@ jobs:
             payment) echo "TEST_CLASS=dukku.payment.ApplicationTests" >> $GITHUB_ENV ;;
             deposit) echo "TEST_CLASS=dukku.deposit.ApplicationTests" >> $GITHUB_ENV ;;
             settlement) echo "TEST_CLASS=dukku.settlement.ApplicationTests" >> $GITHUB_ENV ;;
+            ai) echo "TEST_CLASS=com.dev.common.ai.AiApplicationTests" >> $GITHUB_ENV ;;
             *) echo "Unknown module"; exit 1 ;;
           esac
 
