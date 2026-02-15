@@ -21,7 +21,7 @@ public class CreateAiMemoryUseCase {
     public AiMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
                            String content, Double importanceScore, Double confidenceScore) {
         AiMemory memory = AiMemory.builder()
-                .userUUID(userUuid)
+                .userUuid(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)
                 .content(content)

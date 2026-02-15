@@ -86,7 +86,7 @@ public class MemoryExtractionService {
             log.debug("기존 기억 업데이트: id={}", existing.getId());
         } else {
             AiMemory newMemory = AiMemory.builder()
-                    .userUUID(userUuid)
+                    .userUuid(userUuid)
                     .memoryType(MemoryType.valueOf(extraction.memoryType()))
                     .subType(MemorySubType.valueOf(extraction.subType()))
                     .content(extraction.content())

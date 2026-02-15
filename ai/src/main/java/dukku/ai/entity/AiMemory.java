@@ -31,7 +31,7 @@ public class AiMemory extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false)
-    private UUID userUUID;
+    private UUID userUuid;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
