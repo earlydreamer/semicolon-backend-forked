@@ -98,7 +98,7 @@ public class PaymentEventListener {
      */
     @KafkaListener(topics = "deposit.refunded", groupId = "${spring.application.name}-group")
     public void handle(DepositRefundedEvent event) {
-        paymentSupport.findRefundByUuid(event.refundId()).ifPresentOrElse(refund -> {
+        paymentSupport.findRefundByUuid(event.refundUuid()).ifPresentOrElse(refund -> {
             // 이미 완료된 환불이면 중복 이벤트로 보고 무시
             if (refund.getRefundStatus() == RefundStatus.COMPLETED) {
                 return;
@@ -114,9 +114,9 @@ public class PaymentEventListener {
                     refund.getRefundDepositTotal(),
                     event.userUuid(),
                     LocalDateTime.now()));
-            log.info("[환불 Saga] refundUuid={}, paymentUuid={}", event.refundId(), event.paymentUuid());
+            log.info("[환불 Saga] refundUuid={}, paymentUuid={}", event.refundUuid(), event.paymentUuid());
         }, () -> log.warn("[환불 Saga] refund 이벤트 조회 실패: refundUuid={}, paymentUuid={}",
-                event.refundId(), event.paymentUuid()));
+                event.refundUuid(), event.paymentUuid()));
     }
 
     /**
@@ -125,15 +125,15 @@ public class PaymentEventListener {
     @KafkaListener(topics = "deposit.refund.failed", groupId = "${spring.application.name}-group")
     public void handle(DepositRefundFailedEvent event) {
         // 환불 실패 시 refund 상태를 취소로 전환하고 주문 결제 상태도 장애로 반영
-        paymentSupport.findRefundByUuid(event.refundId()).ifPresentOrElse(refund -> {
+        paymentSupport.findRefundByUuid(event.refundUuid()).ifPresentOrElse(refund -> {
             if (refund.getRefundStatus() == RefundStatus.COMPLETED) {
-                log.warn("[환불 Saga 실패] 이미 완료된 환불입니다. refundUuid={}", event.refundId());
+                log.warn("[환불 Saga 실패] 이미 완료된 환불입니다. refundUuid={}", event.refundUuid());
                 return;
             }
             refund.cancel();
             paymentSupport.saveRefund(refund);
         }, () -> log.warn("[환불 Saga 실패] refund 이벤트 조회 실패: refundUuid={}, paymentUuid={}",
-                event.refundId(), event.paymentUuid()));
+                event.refundUuid(), event.paymentUuid()));
 
         paymentSupport.findPaymentByUuidOptional(event.paymentUuid()).ifPresentOrElse(payment -> {
             if (payment.getPaymentStatus() == PaymentStatus.ROLLBACK_FAILED) {

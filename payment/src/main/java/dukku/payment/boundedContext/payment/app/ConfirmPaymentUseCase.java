@@ -136,7 +136,6 @@ public class ConfirmPaymentUseCase {
         // 10. 결제 성공 이벤트 발행 (주문 상태 변경 및 예치금 차감 트리거)
         eventPublisher.publish(new PaymentSuccessEvent(
                 payment.getUuid(),
-                payment.getUuid(), // paymentUuid (2026-01-24 추가된 필드 대응)
                 payment.getOrderUuid(),
                 payment.getAmount(),
                 payment.getAmountPg(),
@@ -167,8 +166,8 @@ public class ConfirmPaymentUseCase {
     }
 
     private void handlePaymentFailure(Payment payment, PaymentStatus originStatus, Long originAmountPg,
-                                      Long originDeposit, PaymentFailureStage failureStage, PaymentFailureCode failureCode, boolean retryable,
-                                      String reason) {
+            Long originDeposit, PaymentFailureStage failureStage, PaymentFailureCode failureCode, boolean retryable,
+            String reason) {
         // PENDING 상태만 실패 처리 (중복 이벤트 방지)
         if (payment.getPaymentStatus() != PaymentStatus.PENDING) {
             return;

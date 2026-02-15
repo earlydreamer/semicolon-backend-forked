@@ -59,7 +59,7 @@ class RefundDepositUseCaseHappyPathTest {
 
         assertThat(eventCaptor.getValue()).isInstanceOf(DepositRefundedEvent.class);
         DepositRefundedEvent event = (DepositRefundedEvent) eventCaptor.getValue();
-        assertThat(event.refundId()).isEqualTo(refundUuid);
+        assertThat(event.refundUuid()).isEqualTo(refundUuid);
         assertThat(event.paymentUuid()).isEqualTo(paymentUuid);
         assertThat(event.orderUuid()).isEqualTo(orderUuid);
         assertThat(event.userUuid()).isEqualTo(userUuid);

@@ -37,8 +37,9 @@ public class OrderEventListener {
     // 환불 완료 이벤트 반영 실패 시 수동 개입 필요 로그
     @Recover
     public void recoverRefund(Exception e, RefundCompletedEvent event) {
-        log.error("[CRITICAL] Failed to apply refund-completed event. manual action required. orderUuid={}, refundId={}, refundAmount={}",
-                event.orderUuid(), event.refundId(), event.refundAmount(), e);
+        log.error(
+                "[CRITICAL] Failed to apply refund-completed event. manual action required. orderUuid={}, refundUuid={}, refundAmount={}",
+                event.orderUuid(), event.refundUuid(), event.refundAmount(), e);
     }
 
     // payment.success: 결제 완료 이벤트 수신 시 주문 결제 성공 반영
@@ -51,7 +52,8 @@ public class OrderEventListener {
     // payment.success 처리 실패 시 결제 롤백 요청 이벤트 발행
     @Recover
     public void recoverSuccess(Exception e, PaymentSuccessEvent event) {
-        log.error("[CRITICAL] Payment success event failed to update order. Triggering rollback. orderUuid={}, error={}",
+        log.error(
+                "[CRITICAL] Payment success event failed to update order. Triggering rollback. orderUuid={}, error={}",
                 event.orderUuid(), e.getMessage());
 
         eventPublisher.publish(
@@ -70,7 +72,8 @@ public class OrderEventListener {
     // payment.failed 처리 실패 시 수동 개입 필요 로그
     @Recover
     public void recoverFail(Exception e, PaymentFailedEvent event) {
-        log.error("[CRITICAL] Payment failed event could not be persisted to order. manual action required. orderUuid={}",
+        log.error(
+                "[CRITICAL] Payment failed event could not be persisted to order. manual action required. orderUuid={}",
                 event.orderUuid(), e);
     }
 }

@@ -152,7 +152,7 @@ class PaymentIntegrationTest {
 
         RefundCompletedEvent event = (RefundCompletedEvent) eventCaptor.getValue();
         assertThat(event.orderUuid()).isEqualTo(payment.getOrderUuid());
-        assertThat(event.paymentId()).isEqualTo(payment.getUuid());
+        assertThat(event.paymentUuid()).isEqualTo(payment.getUuid());
         assertThat(event.refundAmount()).isEqualTo(10000L);
         assertThat(event.refundDepositAmount()).isEqualTo(0L);
     }
