@@ -90,8 +90,8 @@ public class EmailVerificationService {
         String link = buildVerifyLink(token);
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("\uC138\uBBF8\uCF5C\uB860 \uC774\uBA54\uC77C \uC778\uC99D");
-        message.setText("\uC544\uB798 \uB9C1\uD06C\uB97C \uD074\uB9AD\uD574 \uC774\uBA54\uC77C \uC778\uC99D\uC744 \uC644\uB8CC\uD574 \uC8FC\uC138\uC694.\n" + link);
+        message.setSubject("세미콜론 이메일 인증");
+        message.setText("아래 링크를 클릭해 이메일 인증을 완료해 주세요.\n" + link);
         if (mailFrom != null && !mailFrom.isBlank()) {
             message.setFrom(mailFrom);
         }

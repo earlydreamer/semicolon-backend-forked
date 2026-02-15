@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends SourceUser {
-    @Column(length = 100, nullable = false, comment = "Protected password")
+    @Column(length = 100, nullable = false, comment = "암호화된 비밀번호")
     private String password;
 
     @Convert(converter = AesGcmConverter.class)

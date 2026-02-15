@@ -8,10 +8,10 @@ public class UserInvalidLookupRequestException extends BadRequestException {
     }
 
     public static UserInvalidLookupRequestException roleOrEmailOnly() {
-        return new UserInvalidLookupRequestException("role \uB610\uB294 email \uC911 \uD558\uB098\uB9CC \uC804\uB2EC\uD574\uC57C \uD569\uB2C8\uB2E4.");
+        return new UserInvalidLookupRequestException("role 또는 email 중 하나만 전달해야 합니다.");
     }
 
     public static UserInvalidLookupRequestException emailBlank() {
-        return new UserInvalidLookupRequestException("email \uAC12\uC740 \uBE44\uC5B4 \uC788\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.");
+        return new UserInvalidLookupRequestException("email 값은 비어 있을 수 없습니다.");
     }
 }

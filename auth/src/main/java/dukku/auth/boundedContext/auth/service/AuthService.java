@@ -2,6 +2,7 @@ package dukku.auth.boundedContext.auth.service;
 
 import dukku.auth.boundedContext.auth.dto.LoginRequest;
 import dukku.auth.boundedContext.auth.dto.TokenResponse;
+import dukku.auth.boundedContext.auth.exception.InvalidRefreshTokenException;
 import dukku.auth.boundedContext.auth.infra.UserClient;
 import dukku.auth.boundedContext.auth.jwt.AuthTokenIssuer;
 import dukku.common.global.exception.UnauthorizedException;
@@ -40,7 +41,7 @@ public class AuthService {
         String storedRefreshToken = refreshTokenStoreService.get(userUuid);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             refreshTokenStoreService.delete(userUuid);
-            throw new UnauthorizedException("Invalid refresh token.");
+            throw new InvalidRefreshTokenException();
         }
 
         String accessToken = authTokenIssuer.createAccessToken(userUuid, role);

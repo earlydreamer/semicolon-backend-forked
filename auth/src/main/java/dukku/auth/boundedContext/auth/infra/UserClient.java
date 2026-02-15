@@ -1,6 +1,6 @@
 package dukku.auth.boundedContext.auth.infra;
 
-import dukku.common.global.exception.UnauthorizedException;
+import dukku.auth.boundedContext.auth.exception.UserVerificationFailedException;
 import dukku.common.shared.user.dto.UserVerificationRequest;
 import dukku.common.shared.user.dto.UserVerificationResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class UserClient {
                     .body(UserVerificationResponse.class);
         } catch (Exception e) {
             log.error("User verification failed for email: {}", email, e);
-            throw new UnauthorizedException("Invalid credentials or user service unavailable");
+            throw new UserVerificationFailedException();
         }
     }
 }
