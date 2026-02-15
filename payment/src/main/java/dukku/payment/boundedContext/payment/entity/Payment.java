@@ -8,6 +8,7 @@ import dukku.common.shared.payment.dto.PaymentResponse;
 import dukku.common.shared.payment.dto.PaymentConfirmResponse;
 import dukku.common.shared.payment.dto.PaymentResultResponse;
 import dukku.common.shared.payment.dto.PaymentDto;
+import dukku.common.shared.payment.exception.InvalidRefundAmountException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -100,8 +101,8 @@ public class Payment extends BaseIdAndUUIDAndTime {
     // === 정적 팩토리 메서드 ===
 
     public static Payment create(UUID orderUuid, UUID userUuid, Long amount,
-                                 Long depositAmount, Long pgAmount, Long couponAmount,
-                                 PaymentType paymentType, String tossOrderId) {
+            Long depositAmount, Long pgAmount, Long couponAmount,
+            PaymentType paymentType, String tossOrderId) {
         return Payment.builder()
                 .orderUuid(orderUuid)
                 .userUuid(userUuid)
@@ -163,7 +164,7 @@ public class Payment extends BaseIdAndUUIDAndTime {
         // 환불 가능 잔액 검증: 현재 남은 PG 금액과 예치금의 합계 확인
         long availableTotal = this.amountPg + this.paymentDeposit;
         if (refundAmountTotal > availableTotal) {
-            throw new IllegalArgumentException("환불 요청 금액이 잔여 결제 금액보다 큽니다.");
+            throw new InvalidRefundAmountException("환불 요청 금액이 잔여 결제 금액보다 큽니다.");
         }
 
         // 예치금 우선 복구 로직: 현재 남은 예치금 내에서 최대한 복구
