@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 public record ChatRequest(
         String conversationId,
-        @NotNull UUID userId,
+        @NotNull UUID userUuid,
         @NotBlank @Size(max = 500) String message
 ) {
 }

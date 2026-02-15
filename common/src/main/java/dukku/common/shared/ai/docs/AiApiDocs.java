@@ -43,7 +43,7 @@ public final class AiApiDocs {
                                     value = """
                                             {
                                               "conversationId": "conv-123",
-                                              "userId": "550e8400-e29b-41d4-a716-446655440000",
+                                              "userUuid": "550e8400-e29b-41d4-a716-446655440000",
                                               "message": "가성비 좋은 노트북 추천해줘"
                                             }"""
                             )
@@ -86,7 +86,7 @@ public final class AiApiDocs {
                                                     [
                                                       {
                                                         "id": 1,
-                                                        "userId": "550e8400-e29b-41d4-a716-446655440000",
+                                                        "userUuid": "550e8400-e29b-41d4-a716-446655440000",
                                                         "memoryType": "PROFILE",
                                                         "subType": "GENERAL",
                                                         "content": "사용자는 백엔드 개발자입니다",
@@ -143,7 +143,7 @@ public final class AiApiDocs {
                                     name = "메모리 생성 요청",
                                     value = """
                                             {
-                                              "userId": "550e8400-e29b-41d4-a716-446655440000",
+                                              "userUuid": "550e8400-e29b-41d4-a716-446655440000",
                                               "memoryType": "PREFERENCE",
                                               "subType": "SHOPPING",
                                               "content": "가성비 제품을 선호합니다",

@@ -15,13 +15,13 @@ public class ChatUseCase {
         this.chatClient = chatClient;
     }
 
-    public Flux<String> chat(String conversationId, UUID userId, String userMessage) {
+    public Flux<String> chat(String conversationId, UUID userUuid, String userMessage) {
         return chatClient.prompt()
                 .user(userMessage)
                 .advisors(a -> {
                     a.param("chat_memory_conversation_id", conversationId);
-                    if (userId != null) {
-                        a.param("user_id", userId);
+                    if (userUuid != null) {
+                        a.param("user_id", userUuid);
                     }
                     if (userMessage != null) {
                         a.param("user_message", userMessage);

@@ -41,7 +41,7 @@ public class MemoryExtractionService {
     }
 
     @Async
-    public void extractAndStoreMemories(UUID userId, String userMessage, String aiResponse) {
+    public void extractAndStoreMemories(UUID userUuid, String userMessage, String aiResponse) {
         try {
             String prompt = AiPromptPolicy.MEMORY_EXTRACTION_PROMPT.formatted(userMessage, aiResponse);
             String result = chatModel.call(new Prompt(prompt))
@@ -52,7 +52,7 @@ public class MemoryExtractionService {
             List<MemoryExtraction> extractions = parseExtractions(result);
 
             for (MemoryExtraction extraction : extractions) {
-                processExtraction(userId, extraction);
+                processExtraction(userUuid, extraction);
             }
         } catch (Exception e) {
             log.warn("장기 기억 추출 실패: {}", e.getMessage(), e);
@@ -72,12 +72,12 @@ public class MemoryExtractionService {
         }
     }
 
-    private void processExtraction(UUID userId, MemoryExtraction extraction) {
+    private void processExtraction(UUID userUuid, MemoryExtraction extraction) {
         float[] embedding = embeddingModel.embed(extraction.content());
         String embeddingStr = Arrays.toString(embedding);
 
         List<AiMemory> duplicates = aiMemoryRepository.findDuplicateMemory(
-                userId, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
+                userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
 
         if (!duplicates.isEmpty()) {
             AiMemory existing = duplicates.getFirst();
@@ -86,7 +86,7 @@ public class MemoryExtractionService {
             log.debug("기존 기억 업데이트: id={}", existing.getId());
         } else {
             AiMemory newMemory = AiMemory.builder()
-                    .userId(userId)
+                    .userUUID(userUuid)
                     .memoryType(MemoryType.valueOf(extraction.memoryType()))
                     .subType(MemorySubType.valueOf(extraction.subType()))
                     .content(extraction.content())

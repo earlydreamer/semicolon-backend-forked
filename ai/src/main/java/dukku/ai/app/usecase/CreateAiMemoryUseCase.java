@@ -18,10 +18,10 @@ public class CreateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public AiMemory create(UUID userId, MemoryType memoryType, MemorySubType subType,
+    public AiMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
                            String content, Double importanceScore, Double confidenceScore) {
         AiMemory memory = AiMemory.builder()
-                .userId(userId)
+                .userUUID(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)
                 .content(content)

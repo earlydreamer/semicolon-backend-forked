@@ -26,15 +26,15 @@ public class MemoryRetrievalService {
         this.embeddingModel = embeddingModel;
     }
 
-    public String retrieveMemoryContext(UUID userId, String userMessage) {
+    public String retrieveMemoryContext(UUID userUuid, String userMessage) {
         List<AiMemory> profileMemories = aiMemoryRepository.findTopByUserIdAndMemoryType(
-                userId, MemoryType.PROFILE.name(), AiSimilarityPolicy.MEMORY_PROFILE_LIMIT);
+                userUuid, MemoryType.PROFILE.name(), AiSimilarityPolicy.MEMORY_PROFILE_LIMIT);
 
         float[] queryEmbedding = embeddingModel.embed(userMessage);
         String embeddingStr = toVectorString(queryEmbedding);
 
         List<AiMemory> similarMemories = aiMemoryRepository.findSimilarMemories(
-                userId, embeddingStr, AiSimilarityPolicy.MEMORY_SIMILARITY_THRESHOLD, AiSimilarityPolicy.MEMORY_SIMILAR_LIMIT);
+                userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_SIMILARITY_THRESHOLD, AiSimilarityPolicy.MEMORY_SIMILAR_LIMIT);
 
         similarMemories.forEach(AiMemory::incrementAccessCount);
         if (!similarMemories.isEmpty()) {

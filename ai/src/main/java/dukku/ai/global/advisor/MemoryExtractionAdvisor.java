@@ -27,12 +27,12 @@ public class MemoryExtractionAdvisor implements BaseAdvisor {
     @Override
     public ChatClientResponse after(ChatClientResponse response, AdvisorChain chain) {
         try {
-            Object userIdObj = response.context().get(MemoryRetrievalAdvisor.USER_ID_KEY);
-            if (userIdObj == null) {
+            Object userUuidObj = response.context().get(MemoryRetrievalAdvisor.USER_ID_KEY);
+            if (userUuidObj == null) {
                 return response;
             }
 
-            UUID userId = UUID.fromString(userIdObj.toString());
+            UUID userUuid = UUID.fromString(userUuidObj.toString());
 
             ChatResponse chatResponse = response.chatResponse();
             if (chatResponse == null || chatResponse.getResult() == null) {
@@ -44,8 +44,8 @@ public class MemoryExtractionAdvisor implements BaseAdvisor {
             String userText = userMessageObj != null ? userMessageObj.toString() : "";
 
             if (!userText.isEmpty() && aiText != null && !aiText.isEmpty()) {
-                memoryExtractionService.extractAndStoreMemories(userId, userText, aiText);
-                log.debug("장기 기억 추출 트리거: userId={}", userId);
+                memoryExtractionService.extractAndStoreMemories(userUuid, userText, aiText);
+                log.debug("장기 기억 추출 트리거: userUuid={}", userUuid);
             }
         } catch (Exception e) {
             log.warn("장기 기억 추출 어드바이저 오류: {}", e.getMessage());

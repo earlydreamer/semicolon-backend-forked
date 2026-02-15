@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateAiMemoryRequest(
-        @NotNull UUID userId,
+        @NotNull UUID userUuid,
         @NotNull MemoryType memoryType,
         @NotNull MemorySubType subType,
         @NotBlank String content,

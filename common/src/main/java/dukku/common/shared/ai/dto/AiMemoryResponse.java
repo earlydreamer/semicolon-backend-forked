@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record AiMemoryResponse(
         Integer id,
-        UUID userId,
+        UUID userUuid,
         MemoryType memoryType,
         MemorySubType subType,
         String content,

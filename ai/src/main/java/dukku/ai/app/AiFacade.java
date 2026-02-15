@@ -34,7 +34,7 @@ public class AiFacade {
 
     public Flux<String> chat(ChatRequest request) {
         String conversationId = resolveConversationId(request.conversationId());
-        return chatUseCase.chat(conversationId, request.userId(), request.message());
+        return chatUseCase.chat(conversationId, request.userUuid(), request.message());
     }
 
     private String resolveConversationId(String conversationId) {
@@ -57,7 +57,7 @@ public class AiFacade {
     @Transactional
     public AiMemoryResponse create(CreateAiMemoryRequest request) {
         AiMemory memory = createAiMemoryUseCase.create(
-                request.userId(),
+                request.userUuid(),
                 request.memoryType(),
                 request.subType(),
                 request.content(),
@@ -85,7 +85,7 @@ public class AiFacade {
     private AiMemoryResponse toResponse(AiMemory memory) {
         return new AiMemoryResponse(
                 memory.getId(),
-                memory.getUserId(),
+                memory.getUserUUID(),
                 memory.getMemoryType(),
                 memory.getSubType(),
                 memory.getContent(),
