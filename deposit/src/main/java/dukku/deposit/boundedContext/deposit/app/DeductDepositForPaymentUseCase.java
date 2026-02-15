@@ -7,12 +7,15 @@ import dukku.common.shared.deposit.type.DepositFailureCode;
 import dukku.common.shared.deposit.type.DepositHistoryType;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.deposit.boundedContext.deposit.exception.NotEnoughDepositException;
+import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,8 +25,8 @@ import java.util.UUID;
  * 결제에 따른 예치금 차감 UseCase (Saga 패턴 참여)
  *
  * <p>
- * 결제 성공 시 각 상품별로 할당된 예치금만큼 차감을 진행하고,
- * 전체 차감 결과를 이벤트를 통해 전파한다.
+ * 결제 성공 시 각 상품별로 할당된 예치금을 차감하고,
+ * 전체 차감 결과를 이벤트로 전파한다.
  */
 @Slf4j
 @Service
@@ -53,9 +56,12 @@ public class DeductDepositForPaymentUseCase {
         try {
             executeDeductions(userUuid, totalAmount, orderUuid, itemDepositUsages);
         } catch (Exception e) {
-            // 실패 시 부분 차감 커밋 방지: 현재 트랜잭션을 반드시 롤백시킨다.
+            // 부분 반영 방지를 위해 트랜잭션을 롤백으로 고정
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            handleDeductionError(userUuid, totalAmount, orderUuid, paymentUuid, e);
+
+            DepositDeductionFailedEvent failEvent = createFailEvent(
+                    userUuid, totalAmount, orderUuid, paymentUuid, e);
+            publishFailAfterRollback(failEvent);
         }
     }
 
@@ -67,36 +73,35 @@ public class DeductDepositForPaymentUseCase {
                     usage.orderItemUuid());
         }
 
-        // 전체 차감 완료 성공 이벤트 발행
-        // 시스템 지갑 예치금 증가
-//        increaseDepositUseCase.increase(
-//                SystemDepositInitData.SYSTEM_USER_UUID,
-//                totalAmount,
-//                DepositHistoryType.DEPOSIT_CHARGE,
-//                orderUuid);
+        // 사용자 차감만큼 시스템 지갑으로 입금
+        increaseDepositUseCase.increase(
+                SystemDepositInitData.SYSTEM_USER_UUID,
+                totalAmount,
+                DepositHistoryType.DEPOSIT_CHARGE,
+                orderUuid);
 
-        // 전체 차감 완료 성공 이벤트 발행
+        // 전체 차감 완료 이벤트 발행
         eventPublisher.publish(new DepositUsedEvent(orderUuid, userUuid, totalAmount));
     }
 
-    private void handleDeductionError(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid, Exception e) {
+    private DepositDeductionFailedEvent createFailEvent(
+            UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid, Exception e) {
         String errorMessage = "시스템 오류가 발생했습니다.";
         String logMessage = "[예치금 차감 실패 - 시스템 오류] userUuid={}, amount={}, orderUuid={}";
-        DepositFailureCode failureCode = DepositFailureCode.SYSTEM_ERROR; // 예치금 차감 시스템 오류
-        boolean retryable = true; // 시스템 오류는 재시도 가능
+        DepositFailureCode failureCode = DepositFailureCode.SYSTEM_ERROR;
+        boolean retryable = true;
 
         if (e instanceof NotEnoughDepositException) {
             errorMessage = e.getMessage();
             logMessage = "[예치금 차감 실패 - 잔액 부족] userUuid={}, amount={}, orderUuid={}";
-            failureCode = DepositFailureCode.BALANCE_SHORTAGE; // 잔액 부족으로 차감 실패
-            retryable = false; // 잔액 부족은 재시도 의미 없음
+            failureCode = DepositFailureCode.BALANCE_SHORTAGE;
+            retryable = false;
             log.warn(logMessage, userUuid, amount, orderUuid);
         } else {
             log.error(logMessage, userUuid, amount, orderUuid, e);
         }
 
-        // 결제 보상 트리거용 paymentUuid 전파
-        eventPublisher.publish(new DepositDeductionFailedEvent(
+        return new DepositDeductionFailedEvent(
                 orderUuid,
                 paymentUuid,
                 userUuid,
@@ -104,6 +109,26 @@ public class DeductDepositForPaymentUseCase {
                 failureCode,
                 retryable,
                 errorMessage,
-                LocalDateTime.now()));
+                LocalDateTime.now());
+    }
+
+    /**
+     * rollback-only 경로에서 실패 이벤트가 유실되지 않도록
+     * 롤백 완료 시점에 별도로 발행한다.
+     */
+    private void publishFailAfterRollback(DepositDeductionFailedEvent failEvent) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        eventPublisher.publish(failEvent);
+                    }
+                }
+            });
+            return;
+        }
+
+        eventPublisher.publish(failEvent);
     }
 }
