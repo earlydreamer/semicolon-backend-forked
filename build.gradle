@@ -10,6 +10,8 @@ ext {
     uuidCreatorVersion = '6.0.0'
     // QueryDSL 버전 관리 (필요 시 수정)
     queryDslVersion = '5.1.0:jakarta'
+    springAiVersion = '2.0.0-SNAPSHOT'
+
 }
 
 allprojects {
@@ -18,6 +20,12 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'https://repo.spring.io/snapshot' }
+    }
+
+    if (!tasks.names.contains('prepareKotlinBuildScriptModel')) {
+        tasks.register('prepareKotlinBuildScriptModel') {}
     }
 }
 
@@ -37,6 +45,7 @@ subprojects {
             extendsFrom annotationProcessor
         }
     }
+
 
     dependencies {
         // === 1. Lombok (기존 유지) ===

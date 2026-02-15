@@ -1,7 +1,6 @@
 package dukku.ai.app.service;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.ai.document.Document;
@@ -9,6 +8,8 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import dukku.ai.global.policy.AiPromptPolicy;
+import dukku.ai.global.policy.AiSimilarityPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,14 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class DocumentRetrievalService {
-
-    private static final int TOP_K = 5;
-    private static final double SIMILARITY_THRESHOLD = 0.7;
-
-    private static final Set<String> RETRIEVAL_KEYWORDS = Set.of(
-            "상품", "추천", "환불", "정책", "배송", "교환", "가격", "할인",
-            "쿠폰", "결제", "주문", "반품", "사이즈", "재고", "품절"
-    );
 
     private final VectorStore vectorStore;
 
@@ -35,8 +28,8 @@ public class DocumentRetrievalService {
 
         SearchRequest request = SearchRequest.builder()
                 .query(userMessage)
-                .topK(TOP_K)
-                .similarityThreshold(SIMILARITY_THRESHOLD)
+                .topK(AiSimilarityPolicy.DOCUMENT_TOP_K)
+                .similarityThreshold(AiSimilarityPolicy.DOCUMENT_SIMILARITY_THRESHOLD)
                 .build();
 
         List<Document> docs = vectorStore.similaritySearch(request);
@@ -54,7 +47,7 @@ public class DocumentRetrievalService {
         if (userMessage == null || userMessage.isBlank()) {
             return false;
         }
-        return RETRIEVAL_KEYWORDS.stream()
+        return AiPromptPolicy.DOCUMENT_RETRIEVAL_KEYWORDS.stream()
                 .anyMatch(userMessage::contains);
     }
 

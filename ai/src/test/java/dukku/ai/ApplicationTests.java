@@ -1,10 +1,10 @@
-package com.dev.common.ai;
+package dukku.ai;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AiApplicationTests {
+class ApplicationTests {
 
     @Test
     void contextLoads() {

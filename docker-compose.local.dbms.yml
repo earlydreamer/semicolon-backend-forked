@@ -1,6 +1,5 @@
 # 해당 파일은 로컬에서 실행하기위해 필요한 앱을 설치하는 파일입니다. Elasticsearch, Redis.
 # 개발용을 위해 만들어졌으며 배포시에는 사용을 안합니다.
-version: "3.8"
 
 services:
   elasticsearch:
@@ -27,11 +26,19 @@ services:
       - "6379:6379"
 
   postgresql:
-    image: postgres:18.1
+    build:
+      context: postgres
+      dockerfile: Dockerfile
     container_name: team05-postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=P@ssw0rd
-      - POSTGRES_DB=semicolon
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh
+    restart: unless-stopped
+
+volumes:
+  pgdata:

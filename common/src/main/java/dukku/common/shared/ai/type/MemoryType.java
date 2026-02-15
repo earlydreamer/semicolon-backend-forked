@@ -1,4 +1,4 @@
-package dukku.ai.entity.enums;
+package dukku.common.shared.ai.type;
 
 public enum MemoryType {
     PROFILE,

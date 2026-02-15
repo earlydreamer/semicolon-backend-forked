@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [ auth, user, product, order, coupon, payment, deposit, settlement ]
+        module: [ auth, user, product, order, coupon, payment, deposit, settlement, ai ]
 
     env:
       SPRING_PROFILES_ACTIVE: release
@@ -72,7 +72,7 @@ jobs:
                 - "6379:6379"
 
             postgres:
-              image: postgres:18.1
+              image: pgvector/pgvector:pg18
               environment:
                 POSTGRES_DB: semicolon
                 POSTGRES_USER: ${DB_USERNAME}
@@ -91,7 +91,7 @@ jobs:
           echo "Elasticsearch is up!"
 
           echo "Waiting for Postgres..."
-          timeout 60s bash -c 'until docker exec $(docker ps -qf "ancestor=postgres:18.1") pg_isready -U "${{ secrets.DB_USERNAME }}" >/dev/null 2>&1; do sleep 3; done'
+          timeout 60s bash -c 'until docker exec $(docker ps -qf "ancestor=pgvector/pgvector:pg18") pg_isready -U "${{ secrets.DB_USERNAME }}" >/dev/null 2>&1; do sleep 3; done'
           echo "Postgres is ready!"
 
       - name: Grant execute permission for gradlew
@@ -110,6 +110,7 @@ jobs:
             payment) echo "TEST_CLASS=dukku.payment.ApplicationTests" >> $GITHUB_ENV ;;
             deposit) echo "TEST_CLASS=dukku.deposit.ApplicationTests" >> $GITHUB_ENV ;;
             settlement) echo "TEST_CLASS=dukku.settlement.ApplicationTests" >> $GITHUB_ENV ;;
+            ai) echo "TEST_CLASS=dukku.ai.ApplicationTests" >> $GITHUB_ENV ;;
             *) echo "Unknown module"; exit 1 ;;
           esac
 
