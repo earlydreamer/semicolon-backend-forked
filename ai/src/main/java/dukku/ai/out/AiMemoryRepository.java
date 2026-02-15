@@ -13,7 +13,7 @@ public interface AiMemoryRepository extends JpaRepository<AiMemory, Integer> {
 
     @Query(value = """
             SELECT * FROM ai_memory
-            WHERE user_id = :userUuid
+            WHERE user_uuid = :userUuid
               AND memory_type = :memoryType
             ORDER BY importance_score DESC
             LIMIT :limit
@@ -25,7 +25,7 @@ public interface AiMemoryRepository extends JpaRepository<AiMemory, Integer> {
 
     @Query(value = """
             SELECT * FROM ai_memory
-            WHERE user_id = :userUuid
+            WHERE user_uuid = :userUuid
               AND memory_type != 'PROFILE'
               AND 1 - (embedding <=> cast(:embedding AS vector)) > :threshold
             ORDER BY 1 - (embedding <=> cast(:embedding AS vector)) DESC
@@ -39,7 +39,7 @@ public interface AiMemoryRepository extends JpaRepository<AiMemory, Integer> {
 
     @Query(value = """
             SELECT * FROM ai_memory
-            WHERE user_id = :userUuid
+            WHERE user_uuid = :userUuid
               AND 1 - (embedding <=> cast(:embedding AS vector)) > :threshold
             ORDER BY 1 - (embedding <=> cast(:embedding AS vector)) DESC
             LIMIT 1
