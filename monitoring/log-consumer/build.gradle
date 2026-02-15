@@ -1,0 +1,12 @@
+description = 'log-consumer'
+
+bootJar { enabled = true }
+
+dependencies {
+    implementation project(':common')
+
+    // MongoDB (common에 없는 의존성)
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
