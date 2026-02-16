@@ -3,9 +3,9 @@ package dukku.order.boundedContext.order.out;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
-import dukku.order.boundedContext.order.in.OrderEventListener;
 import dukku.order.boundedContext.order.app.UpdateOrderStatusUseCase;
 import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.in.OrderEventListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * payment.refund-completed 이벤트 수신 시 주문 상태 반영 동작 테스트
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
         "spring.datasource.url=jdbc:h2:mem:order_listener_it;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
         "spring.datasource.driver-class-name=org.h2.Driver",
@@ -42,11 +45,9 @@ class OrderEventListenerHappyPathTest {
     @Autowired
     private OrderRepository orderRepository;
 
-    // payment.success/payment.failed 경로는 본 테스트 범위가 아니므로 mock 처리
     @MockitoBean
     private UpdateOrderStatusUseCase updateOrderStatusUseCase;
 
-    // Kafka publish 의존성을 제거하기 위해 mock 처리
     @MockitoBean
     private EventPublisher eventPublisher;
 
@@ -56,19 +57,10 @@ class OrderEventListenerHappyPathTest {
     }
 
     @Test
-    @DisplayName("전체 환불 이벤트를 수신하면 주문의 환불금액이 누적되고 상태가 CANCELED가 된다")
+    @DisplayName("전체 환불 이벤트를 수신하면 환불액이 누적되고 상태가 CANCELED로 바뀐다")
     void appliesFullRefundValuesFromEventToOrder() {
-        // given: PAID 주문이 저장되어 있고, 해당 주문으로 full refund 이벤트가 들어온다.
-        Order order = Order.builder()
-                .userUuid(UUID.randomUUID())
-                .totalAmount(15000)
-                .address("seoul")
-                .recipient("tester")
-                .contactNumber("010-1111-2222")
-                .refundedAmount(0)
-                .status(OrderStatus.PAID)
-                .build();
-        order = orderRepository.save(order);
+        // given: PAID 주문과 전체 환불 이벤트 준비
+        Order order = orderRepository.save(newOrder(15000));
 
         RefundCompletedEvent event = new RefundCompletedEvent(
                 UUID.randomUUID(),
@@ -79,29 +71,20 @@ class OrderEventListenerHappyPathTest {
                 UUID.randomUUID(),
                 LocalDateTime.now());
 
-        // when: order BC 리스너가 payment.refund-completed 이벤트를 처리한다.
+        // when: payment.refund-completed 이벤트 처리
         listener.handle(event);
 
-        // then: 실제 DB에 환불 금액이 누적되고 주문 상태가 CANCELED로 반영된다.
+        // then: 환불 금액 누적과 상태 변경 확인
         Order updated = orderRepository.findByUuid(order.getUuid()).orElseThrow();
         assertThat(updated.getRefundedAmount()).isEqualTo(15000);
         assertThat(updated.getStatus()).isEqualTo(OrderStatus.CANCELED);
     }
 
     @Test
-    @DisplayName("부분 환불 이벤트를 수신하면 주문의 환불금액이 누적되고 상태가 PARTIAL_REFUNDED가 된다")
+    @DisplayName("부분 환불 이벤트를 수신하면 환불액이 누적되고 상태가 PARTIAL_REFUNDED가 된다")
     void appliesPartialRefundValuesFromEventToOrder() {
-        // given: PAID 주문이 저장되어 있고, 부분 환불 이벤트가 들어온다.
-        Order order = Order.builder()
-                .userUuid(UUID.randomUUID())
-                .totalAmount(20000)
-                .address("seoul")
-                .recipient("tester")
-                .contactNumber("010-1111-2222")
-                .refundedAmount(0)
-                .status(OrderStatus.PAID)
-                .build();
-        order = orderRepository.save(order);
+        // given: PAID 주문과 부분 환불 이벤트 준비
+        Order order = orderRepository.save(newOrder(20000));
 
         RefundCompletedEvent event = new RefundCompletedEvent(
                 UUID.randomUUID(),
@@ -112,12 +95,83 @@ class OrderEventListenerHappyPathTest {
                 UUID.randomUUID(),
                 LocalDateTime.now());
 
-        // when: order BC 리스너가 payment.refund-completed 이벤트를 처리한다.
+        // when: payment.refund-completed 이벤트 처리
         listener.handle(event);
 
-        // then: 실제 DB에 부분 환불 금액이 반영되고 주문 상태가 PARTIAL_REFUNDED로 전이된다.
+        // then: 부분 환불 금액과 상태 반영 확인
         Order updated = orderRepository.findByUuid(order.getUuid()).orElseThrow();
         assertThat(updated.getRefundedAmount()).isEqualTo(5000);
         assertThat(updated.getStatus()).isEqualTo(OrderStatus.PARTIAL_REFUNDED);
+    }
+
+    @Test
+    @DisplayName("동일 refundUuid를 여러 번 받으면 최초 한 번만 반영된다")
+    void duplicateRefundCompletedEventIsAppliedTwiceInCurrentStage() {
+        // given: 동일 refundUuid를 가진 중복 이벤트 준비
+        Order order = orderRepository.save(newOrder(10000));
+        UUID refundUuid = UUID.randomUUID();
+
+        RefundCompletedEvent duplicated = new RefundCompletedEvent(
+                refundUuid,
+                UUID.randomUUID(),
+                order.getUuid(),
+                5000L,
+                0L,
+                UUID.randomUUID(),
+                LocalDateTime.now());
+
+        // when: 동일 이벤트를 두 번 처리
+        listener.handle(duplicated);
+        listener.handle(duplicated);
+
+        // then: 누적 환불액이 한 번만 반영되었는지 확인
+        Order updated = orderRepository.findByUuid(order.getUuid()).orElseThrow();
+        assertThat(updated.getRefundedAmount()).isEqualTo(10000);
+        assertThat(updated.getStatus()).isEqualTo(OrderStatus.CANCELED);
+    }
+
+    @Test
+    @DisplayName("서로 다른 refundUuid는 각각 별도로 반영된다")
+    void appliesDifferentRefundUuidsSeparately() {
+        // given: 서로 다른 refundUuid를 가진 이벤트 두 개 준비
+        Order order = orderRepository.save(newOrder(10000));
+
+        RefundCompletedEvent first = new RefundCompletedEvent(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                order.getUuid(),
+                5000L,
+                0L,
+                UUID.randomUUID(),
+                LocalDateTime.now());
+        RefundCompletedEvent second = new RefundCompletedEvent(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                order.getUuid(),
+                5000L,
+                0L,
+                UUID.randomUUID(),
+                LocalDateTime.now());
+
+        // when: 각 이벤트를 순차 처리
+        listener.handle(first);
+        listener.handle(second);
+
+        // then: 두 이벤트 금액이 모두 누적되는지 확인
+        Order updated = orderRepository.findByUuid(order.getUuid()).orElseThrow();
+        assertThat(updated.getRefundedAmount()).isEqualTo(10000);
+        assertThat(updated.getStatus()).isEqualTo(OrderStatus.CANCELED);
+    }
+
+    private Order newOrder(int totalAmount) {
+        return Order.builder()
+                .userUuid(UUID.randomUUID())
+                .totalAmount(totalAmount)
+                .address("seoul")
+                .recipient("tester")
+                .contactNumber("010-1111-2222")
+                .refundedAmount(0)
+                .status(OrderStatus.PAID)
+                .build();
     }
 }
