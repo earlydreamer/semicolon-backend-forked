@@ -1,7 +1,5 @@
 # Prometheus + Grafana 모니터링 스택
 # 사용법: docker-compose up -d (monitoring 폴더에서 실행)
-version: "3.8"
-
 services:
   # Prometheus - 메트릭 수집 및 저장
   prometheus:
