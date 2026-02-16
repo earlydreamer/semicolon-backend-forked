@@ -1,4 +1,4 @@
-package dukku.settlement;
+package dukku.deposit;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,13 +10,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableResilientMethods
 @EnableJpaAuditing
 @SpringBootApplication(scanBasePackages = {
-        "dukku.settlement",
+        "dukku.deposit",
         "dukku.common"
 })
-public class Application {
+public class DepositApplication {
 
     static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(DepositApplication.class, args);
     }
 
 }

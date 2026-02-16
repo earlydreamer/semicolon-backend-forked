@@ -1,13 +1,13 @@
 package dukku.user.boundedContext.user.app.user;
 
+import dukku.common.global.UserUtil;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.user.dto.PasswordUpdateRequest;
-import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.event.UserModifiedEvent;
 import dukku.common.shared.user.exception.UserNotFoundException;
+import dukku.user.boundedContext.user.entity.User;
+import dukku.common.shared.user.exception.UserPasswordMismatchException;
 import dukku.user.boundedContext.user.out.UserRepository;
-import dukku.common.global.UserUtil;
-import dukku.common.global.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -31,7 +31,7 @@ public class ChangePasswordUseCase {
                 .orElseThrow(UserNotFoundException::new);
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new UnauthorizedException("비밀번호 불일치");
+            throw new UserPasswordMismatchException();
         }
 
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));

@@ -1,8 +1,8 @@
 package dukku.user.boundedContext.user.app.user;
 
-import dukku.common.global.exception.NotFoundException;
-import dukku.common.global.exception.UnauthorizedException;
+import dukku.common.shared.user.exception.UserNotFoundException;
 import dukku.user.boundedContext.user.entity.User;
+import dukku.common.shared.user.exception.UserInvalidCredentialsException;
 import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,10 +19,10 @@ public class VerifyUserCredentialsUseCase {
     @Transactional(readOnly = true)
     public User execute(String email, String rawPassword) {
         User user = userRepository.findByEmailAndDeletedAtIsNull(email)
-                .orElseThrow(() -> new NotFoundException("User not found or deleted"));
+                .orElseThrow(UserNotFoundException::new);
 
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new UnauthorizedException("Invalid credentials");
+            throw new UserInvalidCredentialsException();
         }
 
         return user;

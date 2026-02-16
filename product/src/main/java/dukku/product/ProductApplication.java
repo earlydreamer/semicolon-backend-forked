@@ -1,4 +1,4 @@
-package dukku.order;
+package dukku.product;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,13 +10,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableResilientMethods
 @EnableJpaAuditing
 @SpringBootApplication(scanBasePackages = {
-        "dukku.order",
+        "dukku.product",
         "dukku.common"
 })
-public class Application {
+public class ProductApplication {
 
     static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(ProductApplication.class, args);
     }
 
 }

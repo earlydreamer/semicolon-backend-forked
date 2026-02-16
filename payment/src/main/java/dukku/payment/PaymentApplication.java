@@ -1,4 +1,4 @@
-package dukku.product;
+package dukku.payment;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,13 +10,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableResilientMethods
 @EnableJpaAuditing
 @SpringBootApplication(scanBasePackages = {
-        "dukku.product",
+        "dukku.payment",
         "dukku.common"
 })
-public class Application {
+public class PaymentApplication {
 
     static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(PaymentApplication.class, args);
     }
 
 }

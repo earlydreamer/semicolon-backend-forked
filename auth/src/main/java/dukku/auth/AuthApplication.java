@@ -13,10 +13,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
         "dukku.auth",
         "dukku.common"
 })
-public class Application {
+public class AuthApplication {
 
     static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(AuthApplication.class, args);
     }
 
 }

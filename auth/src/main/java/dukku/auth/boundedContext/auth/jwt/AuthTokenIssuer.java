@@ -1,7 +1,7 @@
 package dukku.auth.boundedContext.auth.jwt;
 
+import dukku.auth.boundedContext.auth.exception.InvalidRefreshTokenException;
 import dukku.common.global.auth.jwt.JwtTokenUtil;
-import dukku.common.global.exception.UnauthorizedException;
 import dukku.common.shared.user.type.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -16,14 +16,15 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
-
 @Slf4j
 @Component
 public class AuthTokenIssuer {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;            // 5분
-    private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;  // 7일
+    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;
+    private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;
+    private static final long REFRESH_TOKEN_ABSOLUTE_VALIDITY = 1000 * 60 * 60 * 24 * 14L;
     private static final String CLAIM_ROLE = "ROLE";
+    private static final String CLAIM_ABSOLUTE_EXP = "ABS_EXP";
 
     private final SecretKey accessKey;
     private final SecretKey refreshKey;
@@ -32,7 +33,7 @@ public class AuthTokenIssuer {
     public AuthTokenIssuer(
             @Value("${jwt.access.secret.key}") String accessSecret,
             @Value("${jwt.refresh.secret.key}") String refreshSecret,
-            JwtTokenUtil jwtValidator // 생성자 주입
+            JwtTokenUtil jwtValidator
     ) {
         this.accessKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessSecret));
         this.refreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshSecret));
@@ -40,15 +41,9 @@ public class AuthTokenIssuer {
     }
 
     public String issue(UUID userUuid, Role role) {
-        return createToken(
-                userUuid,
-                role.name(),
-                ACCESS_TOKEN_VALIDITY,
-                accessKey
-        );
+        return createToken(userUuid, role.name(), ACCESS_TOKEN_VALIDITY, accessKey);
     }
 
-    // === 1. 토큰 생성 로직 (Auth 전용) ===
     private String createToken(UUID userUuid, String role, long validity, SecretKey key) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validity);
@@ -67,15 +62,36 @@ public class AuthTokenIssuer {
     }
 
     public String createRefreshToken(UUID userUuid, String role) {
-        return createToken(userUuid, role, REFRESH_TOKEN_VALIDITY, refreshKey);
+        long absoluteExpiryMillis = System.currentTimeMillis() + REFRESH_TOKEN_ABSOLUTE_VALIDITY;
+        return createRefreshToken(userUuid, role, absoluteExpiryMillis);
     }
 
-    // === 2. Refresh Token 검증 로직 (Auth 전용) ===
-    // Access Token 검증은 Common의 JwtTokenUtil에게 맡김
+    public String createRefreshToken(UUID userUuid, String role, long absoluteExpiryMillis) {
+        long nowMillis = System.currentTimeMillis();
+        long slidingExpiryMillis = nowMillis + REFRESH_TOKEN_VALIDITY;
+        long refreshExpiryMillis = Math.min(slidingExpiryMillis, absoluteExpiryMillis);
+
+        if (refreshExpiryMillis <= nowMillis) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        Date now = new Date(nowMillis);
+        Date expiry = new Date(refreshExpiryMillis);
+
+        return Jwts.builder()
+                .subject(userUuid.toString())
+                .claim(CLAIM_ROLE, role)
+                .claim(CLAIM_ABSOLUTE_EXP, absoluteExpiryMillis)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(refreshKey)
+                .compact();
+    }
+
     public boolean validateRefreshToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(refreshKey) // Refresh Key로 검증
+                    .verifyWith(refreshKey)
                     .build()
                     .parseSignedClaims(token);
             return true;
@@ -94,7 +110,7 @@ public class AuthTokenIssuer {
                     .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("Refresh Token 검증 실패: {}", e.getMessage());
-            throw new UnauthorizedException("유효하지 않은 Refresh Token입니다.");
+            throw new InvalidRefreshTokenException();
         }
     }
 
@@ -105,15 +121,21 @@ public class AuthTokenIssuer {
         return Math.max(0, ttl);
     }
 
-    // === 3. 토큰 재발급 로직 ===
+    public long getRefreshTokenAbsoluteExpiryMillis(String refreshToken) {
+        Claims claims = parseRefreshClaims(refreshToken);
+        Long absoluteExpiry = claims.get(CLAIM_ABSOLUTE_EXP, Long.class);
+        if (absoluteExpiry != null) {
+            return absoluteExpiry;
+        }
+        return claims.getExpiration().getTime();
+    }
+
     public String refresh(String refreshToken) {
-        // 1. 정보 추출 (Refresh Key 사용)
         Claims claims = parseRefreshClaims(refreshToken);
 
         UUID userUuid = UUID.fromString(claims.getSubject());
         String role = claims.get(CLAIM_ROLE, String.class);
 
-        // 3. 새 Access Token 발급
         return createAccessToken(userUuid, role);
     }
 }
