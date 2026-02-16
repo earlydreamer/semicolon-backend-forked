@@ -71,7 +71,7 @@ public class RefundPaymentUseCase {
         }
 
         // 2) 결제 조회
-        Payment payment = support.findPaymentByUuid(request.getPaymentId());
+        Payment payment = support.findPaymentByUuid(request.getPaymentUuid());
 
         // 3) 환불 대상 결제와 요청 주문 UUID 일치 여부 확인
         validateOrderMatch(payment, request.getOrderUuid());

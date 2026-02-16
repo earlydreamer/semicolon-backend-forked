@@ -106,7 +106,7 @@ class PaymentIntegrationTest {
                 "toss-order-full-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(10000L)
                 .reason("customer_cancel_request")
@@ -170,7 +170,7 @@ class PaymentIntegrationTest {
                 "toss-order-full-2");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(20000L)
                 .reason("customer_cancel_request")
@@ -227,7 +227,7 @@ class PaymentIntegrationTest {
                 "toss-order-mixed-requested-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(20000L)
                 .reason("customer_cancel_request")
@@ -256,7 +256,7 @@ class PaymentIntegrationTest {
                 "toss-order-full-3");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(10000L)
                 .reason("customer_cancel_request")
@@ -294,7 +294,7 @@ class PaymentIntegrationTest {
         createOrderItem(payment, UUID.randomUUID(), 10000L, 0L, 0L);
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(8000L)
                 .reason("customer_cancel_request")
@@ -325,7 +325,7 @@ class PaymentIntegrationTest {
         PaymentOrderItem item = createOrderItem(payment, UUID.randomUUID(), 10000L, 0L, 0L);
 
         PaymentRefundRequest firstReq = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(4000L)
                 .reason("customer_cancel_request")
@@ -336,7 +336,7 @@ class PaymentIntegrationTest {
                 .build();
 
         PaymentRefundRequest secondReq = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(3000L)
                 .reason("customer_cancel_request")
@@ -369,7 +369,7 @@ class PaymentIntegrationTest {
                 "toss-order-pending-code-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(20000L)
                 .reason("customer_cancel_request")
