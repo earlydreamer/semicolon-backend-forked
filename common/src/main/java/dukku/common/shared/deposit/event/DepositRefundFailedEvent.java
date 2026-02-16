@@ -12,7 +12,7 @@ import java.util.UUID;
  * 환불 후 예치금 롤백이 실패했을 때 발행.
  */
 public record DepositRefundFailedEvent(
-        UUID refundId,
+        UUID refundUuid,
         UUID orderUuid,
         UUID paymentUuid,
         UUID userUuid,

@@ -1,5 +1,6 @@
 package dukku.order.boundedContext.order.app;
 
+import dukku.common.global.exception.BadRequestException;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.common.shared.order.type.OrderStatus;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class UpdateOrderRefundStatusUseCase {
 
         // 환불금액 범위 방어
         if (refundAmount > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("Refund amount exceeds supported integer range.");
+            throw new BadRequestException("Refund amount exceeds supported integer range.");
         }
 
         // 누적 환불액 반영(총액 초과 방지)

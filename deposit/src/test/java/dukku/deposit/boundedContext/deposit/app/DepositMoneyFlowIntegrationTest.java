@@ -145,7 +145,7 @@ class DepositMoneyFlowIntegrationTest {
         verify(eventPublisher).publish(eventCaptor.capture());
         assertThat(eventCaptor.getValue()).isInstanceOf(DepositRefundFailedEvent.class);
         DepositRefundFailedEvent event = (DepositRefundFailedEvent) eventCaptor.getValue();
-        assertThat(event.refundId()).isEqualTo(refundUuid);
+        assertThat(event.refundUuid()).isEqualTo(refundUuid);
         assertThat(event.userUuid()).isEqualTo(userUuid);
         assertThat(event.amount()).isEqualTo(3000L);
     }

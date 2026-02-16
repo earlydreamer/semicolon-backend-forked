@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -141,13 +142,13 @@ class PaymentKafkaIntegrationTest {
                 .build();
 
         // when: 결제를 승인하고 같은 결제에 대해 전체 환불을 수행한다.
-        transactionTemplate.execute(status ->
-                confirmPaymentUseCase.execute(confirmRequest, "idem-confirm-kafka-1"));
+        transactionTemplate.execute(status -> confirmPaymentUseCase.execute(confirmRequest, "idem-confirm-kafka-1"));
         refundPaymentUseCase.execute(refundRequest, "idem-refund-kafka-1");
 
         Consumer<String, String> consumer = createConsumer();
         try {
-            // then: payment.success / payment.refund-completed 토픽 이벤트가 발행되고 payload 값이 일치한다.
+            // then: payment.success / payment.refund-completed 토픽 이벤트가 발행되고 payload 값이
+            // 일치한다.
             Map<String, ConsumerRecord<String, String>> recordsByTopic = waitForRecords(
                     consumer,
                     Set.of(PAYMENT_SUCCESS_TOPIC, REFUND_COMPLETED_TOPIC));
@@ -158,7 +159,6 @@ class PaymentKafkaIntegrationTest {
             assertThat(successRecord.key()).isEqualTo(pendingPayment.getOrderUuid().toString());
             assertThat(successJson.get("orderUuid").asText()).isEqualTo(pendingPayment.getOrderUuid().toString());
             assertThat(successJson.get("paymentUuid").asText()).isEqualTo(pendingPayment.getUuid().toString());
-            assertThat(successJson.get("paymentId").asText()).isEqualTo(pendingPayment.getUuid().toString());
             assertThat(successJson.get("amount").asLong()).isEqualTo(12000L);
             assertThat(successJson.get("pgAmount").asLong()).isEqualTo(12000L);
             assertThat(successJson.get("paymentDeposit").asLong()).isEqualTo(0L);
@@ -168,7 +168,7 @@ class PaymentKafkaIntegrationTest {
 
             assertThat(refundRecord.key()).isEqualTo(pendingPayment.getOrderUuid().toString());
             assertThat(refundJson.get("orderUuid").asText()).isEqualTo(pendingPayment.getOrderUuid().toString());
-            assertThat(refundJson.get("paymentId").asText()).isEqualTo(pendingPayment.getUuid().toString());
+            assertThat(refundJson.get("paymentUuid").asText()).isEqualTo(pendingPayment.getUuid().toString());
             assertThat(refundJson.get("refundAmount").asLong()).isEqualTo(12000L);
             assertThat(refundJson.get("refundDepositAmount").asLong()).isEqualTo(0L);
 
@@ -221,7 +221,7 @@ class PaymentKafkaIntegrationTest {
             }
         }
 
-        throw new IllegalStateException("No records found for topics: " + requiredTopics);
+        return fail("No records found for topics: " + requiredTopics);
     }
 
     private Payment createPendingPayment(Long amount, String tossOrderId) {
@@ -236,4 +236,3 @@ class PaymentKafkaIntegrationTest {
                 tossOrderId));
     }
 }
-

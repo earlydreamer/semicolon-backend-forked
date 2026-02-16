@@ -45,13 +45,13 @@ public class DepositEventListener {
      */
     @KafkaListener(topics = "payment.refund-requested", groupId = "${spring.application.name}-group")
     public void handle(RefundRequestedEvent event) {
-        // paymentId 전달 (예치금 롤백 실패 연계)
+        // paymentUuid 전달 (예치금 롤백 실패 연계)
         depositFacade.refundDeposit(
                 event.userUuid(),
                 event.refundDepositAmount(),
                 event.orderUuid(),
-                event.paymentId(),
-                event.refundId());
+                event.paymentUuid(),
+                event.refundUuid());
     }
 
     /**

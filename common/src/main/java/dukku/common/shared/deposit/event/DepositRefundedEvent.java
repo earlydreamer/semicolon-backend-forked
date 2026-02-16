@@ -11,7 +11,7 @@ import java.util.UUID;
  * 알림 서비스 등에서 사용.
  */
 public record DepositRefundedEvent(
-        UUID refundId,
+        UUID refundUuid,
         UUID paymentUuid,
         UUID orderUuid,
         UUID userUuid,

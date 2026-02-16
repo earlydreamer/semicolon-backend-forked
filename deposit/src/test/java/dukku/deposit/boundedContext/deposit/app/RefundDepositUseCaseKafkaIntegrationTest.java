@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
         "spring.application.name=deposit-it",
@@ -83,9 +84,9 @@ class RefundDepositUseCaseKafkaIntegrationTest {
     }
 
     @Test
-    @DisplayName("?섎텋 濡ㅻ갚 ??Kafka??deposit.refunded ?대깽?멸? 諛쒗뻾?섍퀬 ?ъ슜???덉튂湲덉씠 利앷??쒕떎")
+    @DisplayName("환불 롤백 시 Kafka에 deposit.refunded 이벤트가 발행되고 사용자 예치금이 증가한다")
     void refundMovesSysAndUser() throws Exception {
-        // given: ?좎? ?덉튂湲?5,000???곹깭瑜?留뚮뱺??
+        // given: 사용자 예치금이 5,000원인 상태를 만든다.
         UUID userUuid = UUID.randomUUID();
         depositRepository.save(Deposit.builder()
                 .userUuid(userUuid)
@@ -104,26 +105,27 @@ class RefundDepositUseCaseKafkaIntegrationTest {
         UUID refundUuid = UUID.randomUUID();
         Long refundDepositAmount = 3000L;
 
-        // when: refundDepositUseCase瑜??ㅽ뻾?댁꽌 refund ?좎뒪耳?댁뒪瑜?泥섎━?쒕떎.
+        // when: refundDepositUseCase를 실행해 환불 유스케이스를 처리한다.
         refundDepositUseCase.execute(userUuid, refundDepositAmount, orderUuid, paymentUuid, refundUuid);
 
         Consumer<String, String> consumer = createConsumer(DEPOSIT_REFUNDED_TOPIC);
         try {
-            // then: deposit.refunded ?대깽?멸? Kafka濡?諛쒗뻾?섍퀬 payload媛 湲곕? 媛믨낵 ?쇱튂?쒕떎.
+            // then: deposit.refunded 이벤트가 Kafka로 발행되고 payload가 기대 값과 일치한다.
             ConsumerRecord<String, String> record = waitForRecord(consumer, DEPOSIT_REFUNDED_TOPIC);
             JsonNode payload = objectMapper.readTree(record.value());
 
             assertThat(record.key()).isEqualTo(paymentUuid.toString());
-            assertThat(payload.get("refundId").asText()).isEqualTo(refundUuid.toString());
+            assertThat(payload.get("refundUuid").asText()).isEqualTo(refundUuid.toString());
             assertThat(payload.get("paymentUuid").asText()).isEqualTo(paymentUuid.toString());
             assertThat(payload.get("orderUuid").asText()).isEqualTo(orderUuid.toString());
             assertThat(payload.get("userUuid").asText()).isEqualTo(userUuid.toString());
             assertThat(payload.get("amount").asLong()).isEqualTo(refundDepositAmount);
 
-            // then: 湲곗〈 ?덉튂湲?5,000?먯뿉 3,000?먯씠 媛?곕릺??8,000?먯씠 ?쒕떎.
+            // then: 기존 예치금 5,000원에 3,000원이 더해져 8,000원이 된다.
             Deposit after = depositRepository.findByUserUuid(userUuid).orElseThrow();
             assertThat(after.getBalance()).isEqualTo(8000L);
-            Deposit systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow();
+            Deposit systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                    .orElseThrow();
             assertThat(systemAfter.getBalance()).isEqualTo(997000L);
 
             List<DepositHistory> histories = depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(userUuid);
@@ -176,7 +178,7 @@ class RefundDepositUseCaseKafkaIntegrationTest {
             JsonNode payload = objectMapper.readTree(record.value());
 
             assertThat(record.key()).isEqualTo(paymentUuid.toString());
-            assertThat(payload.get("refundId").asText()).isEqualTo(refundUuid.toString());
+            assertThat(payload.get("refundUuid").asText()).isEqualTo(refundUuid.toString());
             assertThat(payload.get("paymentUuid").asText()).isEqualTo(paymentUuid.toString());
             assertThat(payload.get("orderUuid").asText()).isEqualTo(orderUuid.toString());
             assertThat(payload.get("userUuid").asText()).isEqualTo(userUuid.toString());
@@ -184,10 +186,12 @@ class RefundDepositUseCaseKafkaIntegrationTest {
             assertThat(payload.get("failureCode").asText()).isEqualTo("PERSISTENCE_ERROR");
 
             assertThat(depositRepository.findByUserUuid(userUuid).orElseThrow().getBalance()).isEqualTo(5000L);
-            assertThat(depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow().getBalance())
+            assertThat(
+                    depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow().getBalance())
                     .isEqualTo(1000L);
             assertThat(depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(userUuid)).isEmpty();
-            assertThat(depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID))
+            assertThat(
+                    depositHistoryRepository.findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID))
                     .isEmpty();
         } finally {
             consumer.close();
@@ -224,6 +228,6 @@ class RefundDepositUseCaseKafkaIntegrationTest {
             }
         }
 
-        throw new IllegalStateException("No record found for topic: " + topic);
+        return fail("No record found for topic: " + topic);
     }
 }

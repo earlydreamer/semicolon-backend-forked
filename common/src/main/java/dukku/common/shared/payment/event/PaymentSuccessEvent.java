@@ -13,8 +13,7 @@ import java.util.UUID;
 import dukku.common.global.event.DomainEvent;
 
 public record PaymentSuccessEvent(
-        UUID paymentUuid, // 2026-01-24 추가
-        UUID paymentId, // 2026-01-24 추가
+        UUID paymentUuid,
         UUID orderUuid,
         Long amount,
         Long pgAmount, // pg 결제 금액

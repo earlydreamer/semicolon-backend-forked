@@ -12,14 +12,13 @@ import java.util.UUID;
  * 예치금 환불이 필요한 환불 건에 대해 사가를 시작할 때 발행된다.
  */
 public record RefundRequestedEvent(
-        UUID refundId,
-        UUID paymentId,
+        UUID refundUuid,
+        UUID paymentUuid,
         UUID orderUuid,
         Long refundAmount,
         Long refundDepositAmount,
         UUID userUuid,
-        LocalDateTime occurredAt
-) implements DomainEvent {
+        LocalDateTime occurredAt) implements DomainEvent {
 
     @Override
     public String getTopic() {
