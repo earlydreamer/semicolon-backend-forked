@@ -51,14 +51,6 @@ public class SecurityReleaseConfig {
                         .requestMatchers(SecurityWhitelist.COMMON_PUBLIC)
                                 .permitAll()
                         .requestMatchers(
-                                "/api/v1/categories", // GET: Public
-                                "/api/v1/products/featured", // GET: Public
-                                "/api/v1/products", // GET: Public
-                                "/api/v1/products/**", // GET: Public
-                                "/api/v1/shops/**", // GET: Public
-
-                                "/api/v1/users/email/**",
-                                "/api/v1/users/register",
                                 "/api/v1/auth/**"
                         )
                                 .permitAll() // 인증 필요없음 -> filter 미실행
