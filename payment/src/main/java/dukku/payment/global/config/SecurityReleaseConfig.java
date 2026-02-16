@@ -1,11 +1,12 @@
 package dukku.payment.global.config;
 
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
+import dukku.common.global.security.SecurityWhitelist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -47,22 +48,20 @@ public class SecurityReleaseConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SecurityWhitelist.COMMON_PUBLIC)
+                                .permitAll()
                         .requestMatchers(
-                                "/v3/api-docs/**",
                                 "/api/v1/categories", // GET: Public
                                 "/api/v1/products/featured", // GET: Public
                                 "/api/v1/products", // GET: Public
                                 "/api/v1/products/**", // GET: Public
                                 "/api/v1/shops/**", // GET: Public
-                                "/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-config",
+
                                 "/api/v1/users/email/**",
                                 "/api/v1/users/register",
                                 "/api/v1/auth/**"
                         )
-                        .permitAll() // 인증 필요없음 -> filter 미실행
+                                .permitAll() // 인증 필요없음 -> filter 미실행
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
 //                        .requestMatchers("/actuator/**")
 //                        .access((auth, ctx) ->
