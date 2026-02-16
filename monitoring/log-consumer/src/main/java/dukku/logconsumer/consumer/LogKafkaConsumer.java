@@ -21,14 +21,20 @@ public class LogKafkaConsumer {
 
     private final LogRepository logRepository;
     private final ObjectMapper objectMapper;
+    private final LogMetrics logMetrics;
 
     @KafkaListener(topics = "msa-logs", groupId = "log-consumer-group")
     public void consume(ConsumerRecord<String, String> record, Acknowledgment ack) {
         try {
             JsonNode node = objectMapper.readTree(record.value());
 
+            String traceId = textOrNull(node, "traceId");
+            if (traceId == null || traceId.isBlank()) {
+                return;
+            }
+
             LogDoc doc = LogDoc.builder()
-                    .traceId(textOrNull(node, "traceId"))
+                    .traceId(traceId)
                     .spanId(textOrNull(node, "spanId"))
                     .userId(textOrNull(node, "userId"))
                     .serviceName(textOrNull(node, "serviceName"))
@@ -44,6 +50,7 @@ public class LogKafkaConsumer {
                     .build();
 
             logRepository.save(doc);
+            logMetrics.incrementLogCount(doc.getServiceName(), doc.getLevel());
         } catch (Exception e) {
             log.error("로그 메시지 파싱/저장 실패 - offset: {}, value: {}", record.offset(), record.value(), e);
         } finally {

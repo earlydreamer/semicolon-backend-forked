@@ -7,7 +7,9 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/log_service
+      host: localhost
+      port: 27017
+      database: log_service
 
   kafka:
     bootstrap-servers: localhost:19092

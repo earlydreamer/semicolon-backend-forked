@@ -39,6 +39,8 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       # 시간대 설정
       - GF_DATE_FORMATS_DEFAULT_TIMEZONE=Asia/Seoul
+      # Infinity 플러그인 (Log API 연동용)
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -50,11 +52,32 @@ services:
       - team05-network
     depends_on:
       - prometheus
+      - mongodb
+  # 로그 데이터 저장
+  mongodb:
+    image: mongo:7
+    container_name: semicolon-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: log_service
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - team05-network
 
 # 영구 볼륨 정의
 volumes:
   prometheus_data:
   grafana_data:
+  mongodb_data:
+    driver: local
 
 # 네트워크 정의
 networks:

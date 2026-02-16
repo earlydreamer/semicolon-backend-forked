@@ -52,6 +52,14 @@
     <!-- 3. Kafka Appender (중앙 로그 수집)              -->
     <!-- ============================================ -->
     <appender name="KAFKA" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+        <!-- INFO 이상만 Kafka로 전송 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <!-- traceId가 있는 로그만 Kafka로 전송 (MDC 컨텍스트 필터) -->
+        <filter class="dukku.common.global.logging.MdcTraceFilter"/>
+
         <!-- Kafka Topic 이름 -->
         <topic>msa-logs</topic>
 
@@ -146,6 +154,19 @@
         <root level="WARN">
             <appender-ref ref="CONSOLE"/>
         </root>
+    </springProfile>
+
+    <!-- 프로파일 미지정 시 기본 설정: 콘솔 + Kafka -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+
+        <logger name="dukku" level="INFO" additivity="true">
+            <appender-ref ref="ASYNC_KAFKA"/>
+        </logger>
+
+        <logger name="org.apache.kafka" level="WARN"/>
     </springProfile>
 
 </configuration>

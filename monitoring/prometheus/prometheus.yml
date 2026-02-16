@@ -36,6 +36,17 @@ scrape_configs:
           application: 'semicolon'
           environment: 'local'
 
+  # Log Consumer 메트릭 수집
+  - job_name: 'log-consumer'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - 'host.docker.internal:8085'
+        labels:
+          application: 'log-consumer'
+          environment: 'local'
+
   # Prometheus 자체 모니터링
   - job_name: 'prometheus'
     static_configs:
