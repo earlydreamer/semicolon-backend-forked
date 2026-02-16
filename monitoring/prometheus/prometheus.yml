@@ -25,7 +25,13 @@ scrape_configs:
     static_configs:
       - targets:
           # Windows/Mac에서 로컬 Spring Boot 앱에 접근
-          - 'host.docker.internal:8080'
+          - 'host.docker.internal:8080'   # gateway
+          - 'host.docker.internal:8083'   # product
+          - 'host.docker.internal:8084'   # order
+          - 'host.docker.internal:8086'   # payment
+          - 'host.docker.internal:8087'   # deposit
+          - 'host.docker.internal:8088'   # settlement
+          - 'host.docker.internal:8089'   # ai
         labels:
           application: 'semicolon'
           environment: 'local'
