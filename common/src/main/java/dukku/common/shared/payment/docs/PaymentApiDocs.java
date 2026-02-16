@@ -113,7 +113,7 @@ public final class PaymentApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(summary = "결제 결과 조회", description = "결제 UUID로 결제 상세 정보를 조회", parameters = {
-            @Parameter(name = "paymentId", description = "결제 UUID", required = true, example = "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a")
+            @Parameter(name = "paymentUuid", description = "결제 UUID", required = true, example = "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a")
     }, responses = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "결제 이력 없음", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"code\": \"PAYMENT_NOT_FOUND\", \"message\": \"결제 이력을 찾을 수 없습니다\"}")))
@@ -127,7 +127,7 @@ public final class PaymentApiDocs {
     @Retention(RUNTIME)
     @Operation(summary = "환불 요청", description = "전체 또는 부분 환불을 요청", requestBody = @RequestBody(required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Refund Request", value = """
             {
-              "paymentId": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
+              "paymentUuid": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
               "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11",
               "refundAmount": 3750,
               "reason": "단순 변심",
