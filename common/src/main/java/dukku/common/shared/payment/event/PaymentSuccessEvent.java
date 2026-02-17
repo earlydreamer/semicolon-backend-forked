@@ -20,7 +20,20 @@ public record PaymentSuccessEvent(
         Long paymentDeposit, // 사용된 예치금
         UUID userUuid,
         LocalDateTime occurredAt,
-        List<ItemDepositUsage> itemDepositUsages) implements DomainEvent {
+        List<ItemDepositUsage> itemDepositUsages,
+        UUID couponUuid) implements DomainEvent {
+
+    public PaymentSuccessEvent(
+            UUID paymentUuid,
+            UUID orderUuid,
+            Long amount,
+            Long pgAmount,
+            Long paymentDeposit,
+            UUID userUuid,
+            LocalDateTime occurredAt,
+            List<ItemDepositUsage> itemDepositUsages) {
+        this(paymentUuid, orderUuid, amount, pgAmount, paymentDeposit, userUuid, occurredAt, itemDepositUsages, null);
+    }
 
     @Override
     public String getTopic() {
