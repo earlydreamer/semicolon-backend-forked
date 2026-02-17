@@ -186,7 +186,7 @@ public class RefundPaymentUseCase {
      */
     private void validateOrderMatch(Payment payment, UUID orderUuid) {
         if (orderUuid == null || !payment.getOrderUuid().equals(orderUuid)) {
-            throw new InvalidRefundAmountException("환불 요청 주문 UUID가 결제 주문과 일치하지 않습니다.");
+            throw InvalidRefundAmountException.orderMismatch();
         }
     }
 
@@ -205,12 +205,12 @@ public class RefundPaymentUseCase {
      */
     private void validateRefundAmount(Payment payment, Long refundAmount) {
         if (refundAmount == null || refundAmount <= 0L) {
-            throw new InvalidRefundAmountException("환불 금액은 1원 이상이어야 합니다.");
+            throw InvalidRefundAmountException.invalid();
         }
 
         Long refundableAmount = payment.getAmount() - payment.getRefundTotal();
         if (refundAmount > refundableAmount) {
-            throw new InvalidRefundAmountException("요청 금액이 환불 가능 금액을 초과했습니다: " + refundableAmount);
+            throw InvalidRefundAmountException.exceedsAvailable(refundAmount, refundableAmount);
         }
     }
 
@@ -234,7 +234,7 @@ public class RefundPaymentUseCase {
                 .sum();
 
         if (!totalItemRefundAmount.equals(request.getRefundAmount())) {
-            throw new InvalidRefundAmountException("요청 항목 금액 합계가 총 환불 금액과 일치하지 않습니다.");
+            throw InvalidRefundAmountException.itemTotalMismatch();
         }
 
         long totalPgRefund = itemRefundAllocations.stream()
@@ -257,41 +257,41 @@ public class RefundPaymentUseCase {
         List<ItemRefundAllocation> allocations = new ArrayList<>();
         for (PaymentRefundRequest.RefundItemInfo itemInfo : requestItems) {
             if (itemInfo == null || itemInfo.getOrderItemUuid() == null || itemInfo.getRefundAmount() == null) {
-                throw new InvalidRefundAmountException("환불 항목의 주문 상품 UUID/금액이 비어 있습니다.");
+                throw InvalidRefundAmountException.itemRequestInvalid();
             }
 
             UUID orderItemUuid = itemInfo.getOrderItemUuid();
             if (!duplicatedCheck.add(orderItemUuid)) {
-                throw new InvalidRefundAmountException("동일한 주문 상품이 중복 등록되었습니다.");
+                throw InvalidRefundAmountException.duplicateOrderItem();
             }
 
             PaymentOrderItem paymentOrderItem = support.findPaymentOrderItem(payment.getId(), orderItemUuid)
-                    .orElseThrow(() -> new InvalidRefundAmountException("환불 요청한 주문 상품을 찾을 수 없습니다."));
+                    .orElseThrow(InvalidRefundAmountException::orderItemNotFound);
 
             Long requestedAmount = itemInfo.getRefundAmount();
             if (requestedAmount <= 0L) {
-                throw new InvalidRefundAmountException("환불 금액은 1원 이상이어야 합니다.");
+                throw InvalidRefundAmountException.invalid();
             }
 
             Long alreadyRefundedAmount = support.getRefundedAmountByPaymentOrderItem(paymentOrderItem.getId());
             long couponAmount = paymentOrderItem.getPaymentCoupon() == null ? 0L : paymentOrderItem.getPaymentCoupon();
             long netPaidAmount = paymentOrderItem.getPrice() - couponAmount;
             if (netPaidAmount < 0L) {
-                throw new InvalidRefundAmountException("상품 결제 금액 계산이 잘못되었습니다.");
+                throw InvalidRefundAmountException.paymentAmountCorrupted();
             }
 
             Long refundableAmount = netPaidAmount - alreadyRefundedAmount;
             if (refundableAmount < 0L) {
-                throw new InvalidRefundAmountException("요청 환불 금액이 상품 환불 가능 금액을 초과합니다.");
+                throw InvalidRefundAmountException.itemExceedsAvailable(requestedAmount, refundableAmount);
             }
             if (requestedAmount > refundableAmount) {
-                throw new InvalidRefundAmountException("요청 환불 금액이 상품 환불 가능 금액을 초과합니다.");
+                throw InvalidRefundAmountException.itemExceedsAvailable(requestedAmount, refundableAmount);
             }
 
             Long alreadyRefundedDeposit = support.getRefundedDepositAmountByPaymentOrderItem(paymentOrderItem.getId());
             Long remainingDeposit = paymentOrderItem.getPaymentDeposit() - alreadyRefundedDeposit;
             if (remainingDeposit < 0L) {
-                throw new InvalidRefundAmountException("상품 환불된 예치금이 잘못되어 계산할 수 없습니다.");
+                throw InvalidRefundAmountException.itemDepositCorrupted();
             }
 
             Long depositAmount = Math.min(remainingDeposit, requestedAmount);
