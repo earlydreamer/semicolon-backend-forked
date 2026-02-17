@@ -1,8 +1,8 @@
 package dukku.order.boundedContext.order.app;
 
-import dukku.common.global.exception.BadRequestException;
-import dukku.order.boundedContext.order.entity.Order;
+import dukku.common.shared.order.exception.OrderRefundAmountOutOfRangeException;
 import dukku.common.shared.order.type.OrderStatus;
+import dukku.order.boundedContext.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,39 +15,48 @@ public class UpdateOrderRefundStatusUseCase {
     private final OrderSupport orderSupport;
 
     /**
-     * 결제/환불 이벤트의 환불금액 반영과 주문 상태 정리
-     * 총 결제금액 대비 누적 환불금액 기준으로 상태 분기
+     * 결제 환불 이벤트의 환불 금액을 주문에 반영하고 상태를 갱신
+     * 누적 환불 금액과 총 결제 금액을 비교해 상태를 분기
+     *
+     * @param refundUuid 환불 UUID
+     * @param orderUuid 주문 UUID
+     * @param refundAmount 누적 환불 금액
      */
     @Transactional
-    public void updateRefund(UUID orderUuid, Long refundAmount) {
-        // 입력값이 null 또는 0 이하면 즉시 종료
-        if (refundAmount == null || refundAmount <= 0) {
+    public void updateRefund(UUID refundUuid, UUID orderUuid, Long refundAmount) {
+        // 입력값이 없거나 0 이하이면 즉시 종료
+        if (refundUuid == null || orderUuid == null || refundAmount == null || refundAmount <= 0) {
             return;
         }
 
-        // 주문 조회 실패는 상위 트랜잭션에서 롤백/재시도 대상으로 이동
-        Order order = orderSupport.findOrderByUuid(orderUuid);
-
-        // 환불금액 범위 방어
-        if (refundAmount > Integer.MAX_VALUE) {
-            throw new BadRequestException("Refund amount exceeds supported integer range.");
+        // 이미 처리된 환불 이벤트면 중복 적용 방지
+        if (!orderSupport.tryMarkRefundCompleted(refundUuid, orderUuid, refundAmount)) {
+            return;
         }
 
-        // 누적 환불액 반영(총액 초과 방지)
+        // 주문 조회 실패는 상위 트랜잭션에서 롤백 또는 재시도로 처리
+        Order order = orderSupport.findOrderByUuid(orderUuid);
+
+        // 환불 금액 범위 방어
+        if (refundAmount > Integer.MAX_VALUE) {
+            throw new OrderRefundAmountOutOfRangeException();
+        }
+
+        // 누적 환불 금액 반영
         order.updateRefundedAmount(refundAmount.intValue());
 
-        // 주문 상태가 이미 취소면 추가 상태 변경 생략
+        // 이미 취소된 주문이면 추가 상태 변경 생략
         if (order.getStatus() == OrderStatus.CANCELED) {
             return;
         }
 
-        // 누적 환불액 >= 총액이면 주문 취소
+        // 누적 환불 금액이 총액 이상이면 주문 취소
         if (order.getRefundedAmount() >= order.getTotalAmount()) {
             order.updateOrderStatus(OrderStatus.CANCELED);
             return;
         }
 
-        // 누적 환불액 미만이면 부분환불
+        // 일부만 환불된 경우 부분 환불 상태 반영
         order.updateOrderStatus(OrderStatus.PARTIAL_REFUNDED);
     }
 }

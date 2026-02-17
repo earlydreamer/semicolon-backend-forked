@@ -5,8 +5,6 @@ import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
 import dukku.common.shared.deposit.event.DepositRefundFailedEvent;
 import dukku.common.shared.deposit.event.DepositRefundedEvent;
 import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
-import dukku.common.shared.payment.dto.PaymentRefundRequest;
-import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
@@ -20,13 +18,11 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * 결제 도메인 이벤트 리스너 (Inbound Adapter)
+ * 결제 도메인 이벤트 리스너
  *
- * <p>
- * 외부 시스템(주문, 예치금 등)에서 발생한 이벤트를 수신해 결제 도메인 로직 구동
+ * <p>주문과 예치금 도메인에서 전달된 이벤트를 수신해 결제 상태를 전이</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -38,101 +34,66 @@ public class PaymentEventListener {
     private final EventPublisher eventPublisher;
 
     /**
-     * 예치금 차감 실패 시 보상 트랜잭션(결제 취소) 처리
-     *
-     * <p>
-     * DepositDeductionFailedEvent 수신 시 이미 승인된 PG 결제를 취소해 데이터 일관성 유지
+     * 예치금 차감 실패 시 결제 보상 트랜잭션 처리
      */
     @KafkaListener(topics = "deposit.deduction-failed", groupId = "${spring.application.name}-group")
     public void handle(DepositDeductionFailedEvent event) {
-        // 예치금 차감 실패는 주문 보상 결제 프로세스 트리거
-        log.warn("[결제 보상] 예치금 차감 실패 수신: orderUuid={}, reason={}",
-                event.orderUuid(), event.reason());
-
+        // 예치금 차감 실패를 결제 보상 흐름으로 전환
         paymentFacade.compensatePayment(event.orderUuid(), event.reason());
     }
 
     /**
-     * 주문 처리 실패 시 결제 롤백(자동 환불) 처리
+     * 주문 처리 실패 시 결제 롤백 이벤트 처리
      */
     @KafkaListener(topics = "payment.rollback", groupId = "${spring.application.name}-group")
     public void handle(PaymentRollbackRequestEvent event) {
-        // 주문 롤백 이벤트는 주문 단위의 모든 결제 건을 순차 환불 처리
-        log.info("[결제 롤백] 주문 처리 실패로 인한 자동 환불 시작: orderUuid={}, reason={}",
-                event.orderUuid(), event.reason());
-
-        List<Payment> payments = paymentSupport.findPaymentsByOrderUuid(event.orderUuid());
-
-        for (Payment payment : payments) {
-            try {
-                // 단건 환불을 위한 request 구성
-                PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                        .paymentId(payment.getUuid())
-                        .orderUuid(event.orderUuid())
-                        .refundAmount(payment.getAmount() - payment.getRefundTotal())
-                        .reason(event.reason())
-                        .build();
-
-                // 부분 실패가 전체 루프를 막지 않도록 결제 건 단위로 try-catch 격리
-                PaymentRefundResponse response = paymentFacade.refundPayment(refundRequest,
-                        "rollback-" + payment.getUuid());
-                if (response.isSuccess()) {
-                    log.info("[결제 롤백] 환불 완료: paymentUuid={}", payment.getUuid());
-                } else {
-                    log.error("[결제 롤백] PG 환불 실패: paymentUuid={}, code={}, message={}",
-                            payment.getUuid(), response.getCode(), response.getMessage());
-                }
-            } catch (Exception e) {
-                // 자동 롤백 프로세스 중 발생하는 모든 예외를 잡아 로그를 남겨야 함
-                // 여기서 예외를 놓치면 결제는 성공했는데 주문은 실패한 상태로 남을 수 있음 (데이터 불일치)
-                // 상위로 전파하면 다른 결제 건의 롤백이 중단될 수 있으므로, 여기서 예외를 먹고 CRITICAL 로그를 남겨 수동 조치 유도
-                log.error("[결제 롤백] 환불 처리 중 예외: paymentUuid={}, error={}",
-                        payment.getUuid(), e.getMessage());
-                // 예외는 로그 후 다음 결제 건 처리로 넘어가 전체 롤백 중단 방지
-            }
-        }
+        // 주문 단위 롤백 요청을 받아 결제 보상 실행
+        paymentFacade.compensatePayment(event.orderUuid(), event.reason());
     }
 
     /**
-     * 예치금 환불(복구) 성공 시 환불 Saga 완료 처리
+     * 예치금 환불 완료 이벤트 처리
      */
     @KafkaListener(topics = "deposit.refunded", groupId = "${spring.application.name}-group")
     public void handle(DepositRefundedEvent event) {
         paymentSupport.findRefundByUuid(event.refundUuid()).ifPresentOrElse(refund -> {
-            // 이미 완료된 환불이면 중복 이벤트로 보고 무시
+            // 이미 완료된 환불은 중복 이벤트로 간주
             if (refund.getRefundStatus() == RefundStatus.COMPLETED) {
+                log.warn("[결제 Saga 중복] 이미 완료된 환불 이벤트는 무시 refundUuid={}", event.refundUuid());
                 return;
             }
 
             refund.complete();
             paymentSupport.saveRefund(refund);
+
+            Payment payment = refund.getPayment();
             eventPublisher.publish(new RefundCompletedEvent(
                     refund.getUuid(),
-                    event.paymentUuid(),
-                    event.orderUuid(),
+                    payment.getUuid(),
+                    payment.getOrderUuid(),
                     refund.getRefundAmountTotal(),
                     refund.getRefundDepositTotal(),
-                    event.userUuid(),
+                    payment.getUserUuid(),
                     LocalDateTime.now()));
-            log.info("[환불 Saga] refundUuid={}, paymentUuid={}", event.refundUuid(), event.paymentUuid());
-        }, () -> log.warn("[환불 Saga] refund 이벤트 조회 실패: refundUuid={}, paymentUuid={}",
+        }, () -> log.warn("[결제 Saga 실패] deposit.refunded 조회 실패 refundUuid={}, paymentUuid={}",
                 event.refundUuid(), event.paymentUuid()));
     }
 
     /**
-     * 예치금 환불(복구) 실패 시 결제/환불 상태를 장애 상태로 전환
+     * 예치금 환불 실패 이벤트 처리
      */
     @KafkaListener(topics = "deposit.refund.failed", groupId = "${spring.application.name}-group")
     public void handle(DepositRefundFailedEvent event) {
-        // 환불 실패 시 refund 상태를 취소로 전환하고 주문 결제 상태도 장애로 반영
+        // 환불 엔티티를 취소 상태로 전환
         paymentSupport.findRefundByUuid(event.refundUuid()).ifPresentOrElse(refund -> {
             if (refund.getRefundStatus() == RefundStatus.COMPLETED) {
-                log.warn("[환불 Saga 실패] 이미 완료된 환불입니다. refundUuid={}", event.refundUuid());
+                log.warn("[결제 Saga 실패] 이미 완료된 환불 refundUuid={}", event.refundUuid());
                 return;
             }
+
             refund.cancel();
             paymentSupport.saveRefund(refund);
-        }, () -> log.warn("[환불 Saga 실패] refund 이벤트 조회 실패: refundUuid={}, paymentUuid={}",
+        }, () -> log.warn("[결제 Saga 실패] deposit.refund.failed 조회 실패 refundUuid={}, paymentUuid={}",
                 event.refundUuid(), event.paymentUuid()));
 
         paymentSupport.findPaymentByUuidOptional(event.paymentUuid()).ifPresentOrElse(payment -> {
@@ -143,14 +104,31 @@ public class PaymentEventListener {
             PaymentStatus originStatus = payment.getPaymentStatus();
             Long originAmountPg = payment.getAmountPg();
             Long originDeposit = payment.getPaymentDeposit();
+            PaymentHistoryType historyType = resolveRefundFailureHistoryType(originStatus);
 
             payment.rollbackFailedStatus();
             paymentSupport.savePayment(payment);
-            paymentSupport.createHistory(payment, PaymentHistoryType.PAYMENT_ROLLBACK_FAILED,
+            paymentSupport.createHistory(payment, historyType,
                     originStatus, originAmountPg, originDeposit);
 
-            log.error("[환불 Saga 실패] deposit.refund 실패: paymentUuid={}, reason={}",
+            log.error("[결제 Saga 실패] deposit.refund.failed 처리 paymentUuid={}, reason={}",
                     event.paymentUuid(), event.reason());
-        }, () -> log.warn("[환불 Saga 실패] paymentUuid 조회 실패: paymentUuid={}", event.paymentUuid()));
+        }, () -> log.warn("[결제 Saga 실패] payment 조회 실패 paymentUuid={}", event.paymentUuid()));
+    }
+
+    /**
+     * 환불 실패 전 상태를 기준으로 이력 타입 계산
+     *
+     * @param originStatus 환불 실패 직전 결제 상태
+     * @return 실패 이력 타입
+     */
+    private PaymentHistoryType resolveRefundFailureHistoryType(PaymentStatus originStatus) {
+        if (originStatus == PaymentStatus.CANCELED) {
+            return PaymentHistoryType.FULL_REFUND_FAILED;
+        }
+        if (originStatus == PaymentStatus.PARTIAL_CANCELED) {
+            return PaymentHistoryType.PARTIAL_REFUND_FAILED;
+        }
+        return PaymentHistoryType.PAYMENT_ROLLBACK_FAILED;
     }
 }

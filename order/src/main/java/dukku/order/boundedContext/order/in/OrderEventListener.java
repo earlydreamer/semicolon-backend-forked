@@ -19,22 +19,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 /**
- * 결제 모듈 이벤트 수신으로 주문 상태를 동기화
- * 재시도/보상 라우팅은 동일 리스너에서 처리
+ * 결제 모듈 이벤트를 수신해 주문 상태를 갱신
+ * 재시도와 보상 흐름을 동일 리스너에서 처리
  */
 public class OrderEventListener {
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
     private final UpdateOrderRefundStatusUseCase updateOrderRefundStatusUseCase;
     private final EventPublisher eventPublisher;
 
-    // payment.refund-completed: 환불 완료 이벤트 수신 시 주문 환불액/상태 반영
+    // payment.refund-completed 이벤트 수신 후 주문 환불 상태 반영
     @Retryable(backoff = @Backoff(delay = 1000))
     @org.springframework.kafka.annotation.KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
     public void handle(RefundCompletedEvent event) {
-        updateOrderRefundStatusUseCase.updateRefund(event.orderUuid(), event.refundAmount());
+        updateOrderRefundStatusUseCase.updateRefund(event.refundUuid(), event.orderUuid(), event.refundAmount());
     }
 
-    // 환불 완료 이벤트 반영 실패 시 수동 개입 필요 로그
+    // 환불 완료 이벤트 반영 실패 시 수동 확인이 필요하다는 로그 기록
     @Recover
     public void recoverRefund(Exception e, RefundCompletedEvent event) {
         log.error(
@@ -42,7 +42,7 @@ public class OrderEventListener {
                 event.orderUuid(), event.refundUuid(), event.refundAmount(), e);
     }
 
-    // payment.success: 결제 완료 이벤트 수신 시 주문 결제 성공 반영
+    // payment.success 이벤트 수신 후 주문 결제 성공 반영
     @Retryable(backoff = @Backoff(delay = 1000))
     @KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
     public void handle(PaymentSuccessEvent event) {
@@ -62,18 +62,18 @@ public class OrderEventListener {
                         "Order processing failed after payment success; trigger rollback refund"));
     }
 
-    // payment.failed: 결제 실패 이벤트 수신 시 주문 실패 상태 반영
+    // payment.failed 이벤트 수신 후 주문 실패 상태 반영
     @Retryable(backoff = @Backoff(delay = 1000))
     @KafkaListener(topics = "payment.failed", groupId = "${spring.application.name}-group")
     public void handle(PaymentFailedEvent event) {
         updateOrderStatusUseCase.failPayment(event.orderUuid());
     }
 
-    // payment.failed 처리 실패 시 수동 개입 필요 로그
+    // payment.failed 처리 실패 시 수동 확인이 필요하다는 로그 기록
     @Recover
     public void recoverFail(Exception e, PaymentFailedEvent event) {
         log.error(
-                "[CRITICAL] Payment failed event could not be persisted to order. manual action required. orderUuid={}",
+                "[CRITICAL] Payment failed event could not be persisted to order. manual action required. orderUuid= {}",
                 event.orderUuid(), e);
     }
 }
