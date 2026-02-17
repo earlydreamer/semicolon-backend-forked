@@ -16,10 +16,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RefundDepositUseCaseHappyPathTest {
+
+    @Mock
+    private DepositSupport depositSupport;
 
     @Mock
     private IncreaseDepositUseCase increaseDepositUseCase;
@@ -43,6 +50,9 @@ class RefundDepositUseCaseHappyPathTest {
         UUID refundUuid = UUID.randomUUID();
         Long refundAmount = 2000L;
 
+        when(depositSupport.tryMarkRefundCompleted(eq(refundUuid), eq(orderUuid), eq(refundAmount)))
+                .thenReturn(true);
+
         // when: 환불 롤백 유스케이스를 실행한다.
         useCase.execute(userUuid, refundAmount, orderUuid, paymentUuid, refundUuid);
 
@@ -64,5 +74,27 @@ class RefundDepositUseCaseHappyPathTest {
         assertThat(event.orderUuid()).isEqualTo(orderUuid);
         assertThat(event.userUuid()).isEqualTo(userUuid);
         assertThat(event.amount()).isEqualTo(refundAmount);
+    }
+
+    @Test
+    @DisplayName("이미 처리된 refundUuid면 환불 로직을 실행하지 않는다")
+    void duplicateRefundIsIgnored() {
+        // given
+        UUID userUuid = UUID.randomUUID();
+        UUID orderUuid = UUID.randomUUID();
+        UUID paymentUuid = UUID.randomUUID();
+        UUID refundUuid = UUID.randomUUID();
+        Long refundAmount = 2000L;
+
+        when(depositSupport.tryMarkRefundCompleted(eq(refundUuid), eq(orderUuid), eq(refundAmount)))
+                .thenReturn(false);
+
+        // when
+        useCase.execute(userUuid, refundAmount, orderUuid, paymentUuid, refundUuid);
+
+        // then
+        verify(increaseDepositUseCase, never()).increase(any(), any(), any(), any());
+        verify(decreaseDepositUseCase, never()).decrease(any(), any(), any(), any());
+        verify(eventPublisher, never()).publish(any());
     }
 }
