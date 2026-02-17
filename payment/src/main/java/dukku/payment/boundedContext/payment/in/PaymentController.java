@@ -69,11 +69,11 @@ public class PaymentController {
      * 결제 상세 정보 조회
      */
     @PaymentApiDocs.GetPaymentResult
-    @GetMapping("/result/{paymentId}")
+    @GetMapping("/result/{paymentUuid}")
     public ResponseEntity<PaymentResultResponse> getPaymentResult(
-            @PathVariable UUID paymentId) {
+            @PathVariable UUID paymentUuid) {
 
-        PaymentResultResponse response = paymentFacade.findPaymentResult(paymentId);
+        PaymentResultResponse response = paymentFacade.findPaymentResult(paymentUuid);
         return ResponseEntity.ok(response);
     }
 
@@ -96,12 +96,11 @@ public class PaymentController {
     /**
      * UUID로 결제 정보 조회
      */
-    @GetMapping("/result/{paymentUuid}")
+    @Deprecated(since = "2026-02", forRemoval = false)
     public ResponseEntity<PaymentResultResponse> getPaymentByUuid(
             @PathVariable UUID paymentUuid) {
 
-        PaymentResultResponse response = paymentFacade.findPaymentResult(paymentUuid);
-        return ResponseEntity.ok(response);
+        return getPaymentResult(paymentUuid);
     }
 
 }

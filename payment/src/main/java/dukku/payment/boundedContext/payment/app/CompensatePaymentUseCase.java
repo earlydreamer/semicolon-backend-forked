@@ -3,6 +3,8 @@ package dukku.payment.boundedContext.payment.app;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.payment.event.PaymentCompensationFailedEvent;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
+import dukku.common.shared.payment.exception.PgCancelFailedException;
+import dukku.common.shared.payment.exception.TossPaymentException;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import dukku.common.shared.payment.type.PaymentFailureStage;
 import dukku.common.shared.payment.type.PaymentHistoryType;
@@ -117,29 +119,24 @@ public class CompensatePaymentUseCase {
         cancelBody.put("cancelReason", "COMPENSATION: " + reason);
         cancelBody.put("cancelAmount", payment.getAmountPg());
 
-        Map<String, Object> response;
-        try {
-            response = tossPaymentClient.cancel(payment.getPgPaymentKey(), cancelBody);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("TOSS_CANCEL_EXCEPTION: " + e.getMessage(), e);
-        }
+        Map<String, Object> response = tossPaymentClient.cancel(payment.getPgPaymentKey(), cancelBody);
         int statusCode = ((Number) response.getOrDefault("statusCode", 200)).intValue();
 
         if (HttpStatus.valueOf(statusCode).isError()) {
             log.error("[PG 취소 실패] status={}, body={}, paymentUuid={}", statusCode, response, payment.getUuid());
-            throw new RuntimeException("TOSS_CANCEL_FAILED: " + response.get("message"));
+            throw new PgCancelFailedException(
+                    String.valueOf(response.getOrDefault("code", statusCode)),
+                    String.valueOf(response.getOrDefault("message", "unknown"))
+            );
         }
     }
 
     private PaymentFailureCode resolveCompensationFailureCode(Exception e) {
-        String message = e.getMessage();
-        if (message != null) {
-            if (message.startsWith("TOSS_CANCEL_FAILED")) {
-                return PaymentFailureCode.PG_CANCEL_FAILED;
-            }
-            if (message.startsWith("TOSS_CANCEL_EXCEPTION")) {
-                return PaymentFailureCode.PG_CANCEL_EXCEPTION;
-            }
+        if (e instanceof PgCancelFailedException) {
+            return PaymentFailureCode.PG_CANCEL_FAILED;
+        }
+        if (e instanceof TossPaymentException) {
+            return PaymentFailureCode.PG_CANCEL_EXCEPTION;
         }
         return PaymentFailureCode.STATE_PERSIST_FAILED;
     }
