@@ -29,6 +29,11 @@ public class UpdateOrderRefundStatusUseCase {
             return;
         }
 
+        // 이미 처리된 환불 이벤트면 중복 적용 방지
+        if (!orderSupport.tryMarkRefundCompleted(refundUuid, orderUuid, refundAmount)) {
+            return;
+        }
+
         // 주문 조회 실패는 상위 트랜잭션에서 롤백 또는 재시도로 처리
         Order order = orderSupport.findOrderByUuid(orderUuid);
 

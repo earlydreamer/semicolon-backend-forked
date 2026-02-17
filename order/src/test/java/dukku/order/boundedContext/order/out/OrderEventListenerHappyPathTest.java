@@ -6,6 +6,7 @@ import dukku.common.shared.payment.event.RefundCompletedEvent;
 import dukku.order.boundedContext.order.app.UpdateOrderStatusUseCase;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.order.boundedContext.order.in.OrderEventListener;
+import dukku.order.boundedContext.order.out.ProcessedRefundEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,9 @@ class OrderEventListenerHappyPathTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private ProcessedRefundEventRepository processedRefundEventRepository;
+
     @MockitoBean
     private UpdateOrderStatusUseCase updateOrderStatusUseCase;
 
@@ -53,6 +57,7 @@ class OrderEventListenerHappyPathTest {
 
     @BeforeEach
     void cleanUp() {
+        processedRefundEventRepository.deleteAll();
         orderRepository.deleteAll();
     }
 
@@ -106,7 +111,7 @@ class OrderEventListenerHappyPathTest {
 
     @Test
     @DisplayName("동일 refundUuid를 여러 번 받으면 최초 한 번만 반영된다")
-    void duplicateRefundCompletedEventIsAppliedTwiceInCurrentStage() {
+    void duplicateRefundCompletedEventIsIgnored() {
         // given: 동일 refundUuid를 가진 중복 이벤트 준비
         Order order = orderRepository.save(newOrder(10000));
         UUID refundUuid = UUID.randomUUID();
@@ -124,10 +129,10 @@ class OrderEventListenerHappyPathTest {
         listener.handle(duplicated);
         listener.handle(duplicated);
 
-        // then: 누적 환불액이 한 번만 반영되었는지 확인
+        // then: 두 번째는 무시되어 5000만 반영
         Order updated = orderRepository.findByUuid(order.getUuid()).orElseThrow();
-        assertThat(updated.getRefundedAmount()).isEqualTo(10000);
-        assertThat(updated.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(updated.getRefundedAmount()).isEqualTo(5000);
+        assertThat(updated.getStatus()).isEqualTo(OrderStatus.PARTIAL_REFUNDED);
     }
 
     @Test
