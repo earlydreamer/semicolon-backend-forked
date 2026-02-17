@@ -29,6 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefundDepositUseCase {
 
+    private final DepositSupport depositSupport;
     private final IncreaseDepositUseCase increaseDepositUseCase;
     private final DecreaseDepositUseCase decreaseDepositUseCase;
     private final EventPublisher eventPublisher;
@@ -45,6 +46,10 @@ public class RefundDepositUseCase {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void execute(UUID userUuid, Long amount, UUID orderUuid, UUID paymentUuid, UUID refundUuid) {
         if (amount == null || amount <= 0) {
+            return;
+        }
+
+        if (!depositSupport.tryMarkRefundCompleted(refundUuid, orderUuid, amount)) {
             return;
         }
 

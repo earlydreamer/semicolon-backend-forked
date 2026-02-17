@@ -2,8 +2,10 @@ package dukku.deposit.boundedContext.deposit.app;
 
 import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
+import dukku.deposit.boundedContext.deposit.entity.ProcessedRefundEvent;
 import dukku.deposit.boundedContext.deposit.out.DepositHistoryRepository;
 import dukku.deposit.boundedContext.deposit.out.DepositRepository;
+import dukku.deposit.boundedContext.deposit.out.ProcessedRefundEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,7 @@ public class DepositSupport {
 
     private final DepositRepository depositRepository;
     private final DepositHistoryRepository depositHistoryRepository;
+    private final ProcessedRefundEventRepository processedRefundEventRepository;
 
     public Optional<Deposit> findByUserUuid(UUID userUuid) {
         return depositRepository.findByUserUuid(userUuid);
@@ -52,5 +55,14 @@ public class DepositSupport {
      */
     public boolean existsByOrderItemUuid(UUID orderItemUuid) {
         return depositHistoryRepository.existsByOrderItemUuid(orderItemUuid);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public boolean tryMarkRefundCompleted(UUID refundUuid, UUID orderUuid, Long refundAmount) {
+        if (processedRefundEventRepository.existsByRefundUuid(refundUuid)) {
+            return false;
+        }
+        processedRefundEventRepository.save(ProcessedRefundEvent.create(refundUuid, orderUuid, refundAmount));
+        return true;
     }
 }
