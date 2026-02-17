@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import dukku.common.shared.payment.exception.TossPaymentException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -64,7 +65,7 @@ public class TossPaymentClient {
      * @return 토스 API 응답
      */
     @Retryable(includes = {
-            RuntimeException.class }, maxRetries = 2, delay = 1000, multiplier = 2.0)
+            TossPaymentException.class }, maxRetries = 2, delay = 1000, multiplier = 2.0)
     public Map<String, Object> cancel(String paymentKey, Map<String, Object> cancelBody) {
         String url = "https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel";
         Map<String, Object> response = sendRequest(url, cancelBody);
@@ -72,7 +73,10 @@ public class TossPaymentClient {
         int statusCode = ((Number) response.getOrDefault("statusCode", 200)).intValue();
         if (statusCode >= 500) {
             log.warn("[Toss API Retry Scope] statusCode={} - retrying...", statusCode);
-            throw new RuntimeException("TOSS_SERVER_ERROR_" + statusCode);
+            throw new TossPaymentException(
+                    "TOSS_SERVER_ERROR",
+                    "Toss server error during cancel request",
+                    "statusCode=" + statusCode);
         }
 
         return response;
@@ -122,7 +126,10 @@ public class TossPaymentClient {
 
         } catch (IOException e) {
             log.error("[Toss API Call Failed]", e);
-            throw new RuntimeException("TOSS_CONNECTION_FAILED", e);
+            throw new TossPaymentException(
+                    "TOSS_CONNECTION_FAILED",
+                    "Toss API connection failed",
+                    e.getMessage());
         }
     }
 }

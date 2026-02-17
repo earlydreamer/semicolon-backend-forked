@@ -135,7 +135,7 @@ class PaymentKafkaIntegrationTest {
                 .build();
 
         PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                .paymentId(pendingPayment.getUuid())
+                .paymentUuid(pendingPayment.getUuid())
                 .orderUuid(pendingPayment.getOrderUuid())
                 .refundAmount(12000L)
                 .reason("customer_cancel_request")

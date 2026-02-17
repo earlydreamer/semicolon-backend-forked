@@ -67,7 +67,7 @@ class RefundPaymentUseCaseHappyPathTest {
         payment.approve("pg-key-100");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(orderUuid)
                 .refundAmount(10000L)
                 .reason("customer_cancel_request")

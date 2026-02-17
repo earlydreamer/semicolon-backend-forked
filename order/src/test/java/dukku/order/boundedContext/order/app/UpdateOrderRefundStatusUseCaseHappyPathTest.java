@@ -1,6 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.exception.OrderRefundAmountOutOfRangeException;
+import dukku.common.shared.order.exception.OrderRefundRequestInvalidException;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
 import org.junit.jupiter.api.DisplayName;
@@ -110,5 +111,12 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
         // when/then: 예외 발생 확인
         assertThatThrownBy(() -> useCase.updateRefund(refundUuid, orderUuid, (long) Integer.MAX_VALUE + 1))
                 .isInstanceOf(OrderRefundAmountOutOfRangeException.class);
+    }
+
+    @Test
+    @DisplayName("환불 이벤트 입력값이 비어 있으면 OrderRefundRequestInvalidException이 발생한다")
+    void throwsWhenRefundRequestInvalid() {
+        assertThatThrownBy(() -> useCase.updateRefund(null, UUID.randomUUID(), 1000L))
+                .isInstanceOf(OrderRefundRequestInvalidException.class);
     }
 }
