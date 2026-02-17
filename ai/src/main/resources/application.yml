@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8089
 
 spring:
   config:
@@ -57,6 +57,3 @@ management:
         spring.ai: true
         gen_ai: true
         db.vector: true
-
-
-
