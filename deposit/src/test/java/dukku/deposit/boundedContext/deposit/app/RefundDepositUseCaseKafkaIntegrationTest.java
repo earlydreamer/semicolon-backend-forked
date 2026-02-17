@@ -7,6 +7,7 @@ import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import dukku.deposit.boundedContext.deposit.entity.DepositHistory;
 import dukku.deposit.boundedContext.deposit.out.DepositHistoryRepository;
 import dukku.deposit.boundedContext.deposit.out.DepositRepository;
+import dukku.deposit.boundedContext.deposit.out.ProcessedRefundEventRepository;
 import dukku.deposit.global.SystemDepositInitData;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -72,6 +73,9 @@ class RefundDepositUseCaseKafkaIntegrationTest {
     private DepositHistoryRepository depositHistoryRepository;
 
     @Autowired
+    private ProcessedRefundEventRepository processedRefundEventRepository;
+
+    @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
 
     @Autowired
@@ -79,6 +83,7 @@ class RefundDepositUseCaseKafkaIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
+        processedRefundEventRepository.deleteAll();
         depositHistoryRepository.deleteAll();
         depositRepository.deleteAll();
     }
@@ -196,6 +201,74 @@ class RefundDepositUseCaseKafkaIntegrationTest {
         } finally {
             consumer.close();
         }
+    }
+
+    @Test
+    @DisplayName("서로 다른 refundUuid는 각각 별도로 반영된다")
+    void differentRefundUuidsAppliedSeparately() {
+        // given
+        UUID userUuid = UUID.randomUUID();
+        depositRepository.save(Deposit.builder()
+                .userUuid(userUuid)
+                .depositUuid(UUID.randomUUID())
+                .balance(5000L)
+                .version(0)
+                .build());
+        depositRepository.save(Deposit.builder()
+                .userUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                .depositUuid(UUID.randomUUID())
+                .balance(1_000_000L)
+                .version(0)
+                .build());
+
+        UUID orderUuid = UUID.randomUUID();
+        UUID paymentUuid = UUID.randomUUID();
+
+        // when: 서로 다른 refundUuid로 각각 실행
+        refundDepositUseCase.execute(userUuid, 2000L, orderUuid, paymentUuid, UUID.randomUUID());
+        refundDepositUseCase.execute(userUuid, 1000L, orderUuid, paymentUuid, UUID.randomUUID());
+
+        // then: 둘 다 반영되어 5000 + 2000 + 1000 = 8000
+        Deposit after = depositRepository.findByUserUuid(userUuid).orElseThrow();
+        assertThat(after.getBalance()).isEqualTo(8000L);
+
+        Deposit systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow();
+        assertThat(systemAfter.getBalance()).isEqualTo(997000L);
+    }
+
+    @Test
+    @DisplayName("동일 refundUuid로 두 번 실행하면 두 번째는 무시되어 예치금이 한 번만 복구된다")
+    void duplicateRefundIsIgnored() {
+        // given
+        UUID userUuid = UUID.randomUUID();
+        depositRepository.save(Deposit.builder()
+                .userUuid(userUuid)
+                .depositUuid(UUID.randomUUID())
+                .balance(5000L)
+                .version(0)
+                .build());
+        depositRepository.save(Deposit.builder()
+                .userUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                .depositUuid(UUID.randomUUID())
+                .balance(1_000_000L)
+                .version(0)
+                .build());
+
+        UUID paymentUuid = UUID.randomUUID();
+        UUID orderUuid = UUID.randomUUID();
+        UUID refundUuid = UUID.randomUUID();
+        Long refundAmount = 3000L;
+
+        // when: 동일 refundUuid로 두 번 실행
+        refundDepositUseCase.execute(userUuid, refundAmount, orderUuid, paymentUuid, refundUuid);
+        refundDepositUseCase.execute(userUuid, refundAmount, orderUuid, paymentUuid, refundUuid);
+
+        // then: 한 번만 반영되어 8000원
+        Deposit after = depositRepository.findByUserUuid(userUuid).orElseThrow();
+        assertThat(after.getBalance()).isEqualTo(8000L);
+
+        Deposit systemAfter = depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow();
+        assertThat(systemAfter.getBalance()).isEqualTo(997000L);
     }
 
     private Consumer<String, String> createConsumer(String topic) {
