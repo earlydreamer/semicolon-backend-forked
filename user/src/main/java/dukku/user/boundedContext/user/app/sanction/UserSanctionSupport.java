@@ -45,7 +45,7 @@ public class UserSanctionSupport {
             throw UserSanctionBadRequestException.invalidPeriod();
         }
 
-        // 제재 타입별 기간 규칙을 강제해 잘못된 입력을 사전에 차단한다.
+        // 제재 타입별 기간 규칙을 강제해 잘못된 입력을 사전에 차단
         switch (sanctionType) {
             case WARNING -> {
                 if (endAt != null) {
@@ -78,7 +78,7 @@ public class UserSanctionSupport {
     }
 
     public void refreshUserStatus(User user, LocalDateTime now) {
-        // 탈퇴 계정은 제재 상태 계산 대상에서 제외한다.
+        // 탈퇴 계정은 제재 상태로 되돌리지 않음
         if (user.getStatus() == UserStatus.WITHDRAWN_PENDING
                 || user.getStatus() == UserStatus.WITHDRAWN_FINAL
                 || user.getStatus() == UserStatus.DELETED) {

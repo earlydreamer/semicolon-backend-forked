@@ -29,7 +29,7 @@ public class CreateUserSanctionUseCase {
             LocalDateTime endAt,
             UUID actor
     ) {
-        // 시작일이 없으면 "즉시 제재"로 해석한다.
+        // 시작일이 없으면 지금부터 제재를 적용
         LocalDateTime effectiveStartAt = startAt == null ? LocalDateTime.now() : startAt;
         userSanctionSupport.validatePeriod(sanctionType, effectiveStartAt, endAt);
 
@@ -46,7 +46,7 @@ public class CreateUserSanctionUseCase {
         );
 
         UserSanction saved = userSanctionSupport.save(sanction);
-        // 제재를 저장한 직후 회원 상태를 동기화한다.
+        // 제재 저장 후 회원 상태를 바로 갱신
         userSanctionSupport.refreshUserStatus(user, LocalDateTime.now());
         userSanctionSupport.writeAudit(saved, UserSanctionAuditAction.APPLIED, actor, memo);
         return saved;

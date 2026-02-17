@@ -27,7 +27,7 @@ public class VerifyUserCredentialsUseCase {
             throw new UserInvalidCredentialsException();
         }
 
-        // 블랙리스트 상태(정지/영구정지) 계정은 로그인 단계에서 즉시 차단한다.
+        // 브랡리스트 상태(정지/영구정지) 계정은 로그인 단계에서 즉시 차단
         if (user.getStatus() == UserStatus.SUSPENDED
                 || user.getStatus() == UserStatus.BANNED
                 || user.getStatus() == UserStatus.BLOCKED) {

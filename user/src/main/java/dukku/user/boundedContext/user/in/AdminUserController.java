@@ -46,7 +46,7 @@ public class AdminUserController {
             @PathVariable UUID userUuid,
             @RequestBody @Validated AdminUserSanctionCreateRequest request
     ) {
-        // 감사 로그에서 제재 수행 주체를 추적할 수 있도록 관리자 UUID를 함께 저장한다.
+        // 누가 제재했는지 남기기 위해 관리자 UUID를 함께 저장
         UUID actor = UserUtil.getUserId();
         return ResponseEntity.ok(userSanctionFacade.create(userUuid, request, actor));
     }
