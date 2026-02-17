@@ -1,17 +1,23 @@
 package dukku.user.boundedContext.user.in;
 
 import dukku.common.global.UserUtil;
-import dukku.user.boundedContext.user.app.user.UserFacade;
-import dukku.user.boundedContext.user.app.sanction.UserSanctionFacade;
 import dukku.common.shared.user.docs.UserApiDocs;
 import dukku.common.shared.user.dto.UserWithdrawalRestoreRequest;
+import dukku.user.boundedContext.user.app.sanction.UserSanctionFacade;
+import dukku.user.boundedContext.user.app.user.UserFacade;
 import dukku.user.boundedContext.user.in.dto.AdminUserSanctionCreateRequest;
 import dukku.user.boundedContext.user.in.dto.AdminUserSanctionResponse;
 import dukku.user.boundedContext.user.in.dto.AdminUserSanctionRevokeRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,7 +46,7 @@ public class AdminUserController {
             @PathVariable UUID userUuid,
             @RequestBody @Validated AdminUserSanctionCreateRequest request
     ) {
-        // 관리자 행위자 UUID를 저장해 제재 감사 로그와 운영 추적성을 맞춘다.
+        // 감사 로그에서 제재 수행 주체를 추적할 수 있도록 관리자 UUID를 함께 저장한다.
         UUID actor = UserUtil.getUserId();
         return ResponseEntity.ok(userSanctionFacade.create(userUuid, request, actor));
     }

@@ -45,6 +45,7 @@ public class UserSanctionSupport {
             throw UserSanctionBadRequestException.invalidPeriod();
         }
 
+        // 제재 타입별 기간 규칙을 강제해 잘못된 입력을 사전에 차단한다.
         switch (sanctionType) {
             case WARNING -> {
                 if (endAt != null) {
@@ -77,7 +78,7 @@ public class UserSanctionSupport {
     }
 
     public void refreshUserStatus(User user, LocalDateTime now) {
-        // 탈퇴 계정은 제재 상태로 되돌리지 않는다.
+        // 탈퇴 계정은 제재 상태 계산 대상에서 제외한다.
         if (user.getStatus() == UserStatus.WITHDRAWN_PENDING
                 || user.getStatus() == UserStatus.WITHDRAWN_FINAL
                 || user.getStatus() == UserStatus.DELETED) {
@@ -86,6 +87,7 @@ public class UserSanctionSupport {
 
         List<UserSanction> activeSanctions = userSanctionRepository.findByUserAndStatus(user, UserSanctionStatus.ACTIVE);
 
+        // 상태 우선순위: 영구정지 > 일시정지 > 활성
         boolean hasPermanentBan = activeSanctions.stream()
                 .anyMatch(sanction -> sanction.getSanctionType() == UserSanctionType.PERMANENT_BAN && sanction.isEffectiveAt(now));
         if (hasPermanentBan) {
