@@ -115,6 +115,7 @@ public class User extends SourceUser {
                 user.getNickname(),
                 user.getRole(),
                 user.getStatus(),
+                user.getStatus().getLabel(),
                 user.getCreatedAt()
         );
     }
