@@ -1,6 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.exception.OrderRefundAmountOutOfRangeException;
+import dukku.common.shared.order.exception.OrderRefundRequestInvalidException;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,9 @@ public class UpdateOrderRefundStatusUseCase {
      */
     @Transactional
     public void updateRefund(UUID refundUuid, UUID orderUuid, Long refundAmount) {
-        // 입력값이 없거나 0 이하이면 즉시 종료
+        // 입력값이 없거나 0 이하이면 예외 처리
         if (refundUuid == null || orderUuid == null || refundAmount == null || refundAmount <= 0) {
-            return;
+            throw new OrderRefundRequestInvalidException();
         }
 
         // 이미 처리된 환불 이벤트면 중복 적용 방지

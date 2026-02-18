@@ -102,7 +102,7 @@ public class Refund extends BaseIdAndUUIDAndTime {
                 .message(responseMessage)
                 .data(PaymentRefundResponse.RefundData.builder()
                         .refundUuid(this.getUuid())
-                        .paymentId(this.payment.getUuid())
+                        .paymentUuid(this.payment.getUuid())
                         .orderUuid(this.payment.getOrderUuid())
                         .status(this.payment.getPaymentStatus())
                         .amounts(PaymentRefundResponse.RefundAmountInfo.builder()

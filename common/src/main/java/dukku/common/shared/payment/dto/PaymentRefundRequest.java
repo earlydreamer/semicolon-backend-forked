@@ -28,7 +28,7 @@ public class PaymentRefundRequest {
      * 결제 UUID
      */
     @NotNull(message = "결제 UUID는 필수입니다.")
-    private UUID paymentId;
+    private UUID paymentUuid;
 
     /**
      * 주문 UUID

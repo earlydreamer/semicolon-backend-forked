@@ -30,7 +30,7 @@ public class PaymentRefundResponse {
     @NoArgsConstructor
     public static class RefundData {
         private UUID refundUuid;
-        private UUID paymentId;
+        private UUID paymentUuid;
         private UUID orderUuid;
         private PaymentStatus status;
         private RefundAmountInfo amounts;
