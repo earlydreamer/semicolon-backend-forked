@@ -99,7 +99,7 @@ class RefundPaymentFailureHistoryIntegrationTest {
                 "toss-order-fail-full-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(20000L)
                 .reason("customer_cancel_request")
@@ -136,7 +136,7 @@ class RefundPaymentFailureHistoryIntegrationTest {
                 "toss-order-fail-partial-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(7000L)
                 .reason("customer_cancel_request")
