@@ -142,7 +142,8 @@ public class ConfirmPaymentUseCase {
                 payment.getPaymentDeposit(),
                 payment.getUserUuid(),
                 payment.getApprovedAt(),
-                itemDepositUsages));
+                itemDepositUsages,
+                payment.getCouponUuid()));
 
         return payment.toPaymentConfirmResponse(true, "결제가 승인되었습니다.");
     }
@@ -183,7 +184,8 @@ public class ConfirmPaymentUseCase {
                 failureCode,
                 retryable,
                 reason,
-                LocalDateTime.now()));
+                LocalDateTime.now(),
+                payment.getCouponUuid()));
     }
 
     private PaymentFailureCode resolveValidationFailureCode(RuntimeException e) {

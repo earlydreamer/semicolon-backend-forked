@@ -106,7 +106,8 @@ public class CompensatePaymentUseCase {
                     PaymentFailureCode.DEPOSIT_DEDUCTION_FAILED,
                     false,
                     failureReason,
-                    LocalDateTime.now()));
+                    LocalDateTime.now(),
+                    payment.getCouponUuid()));
         }
     }
 

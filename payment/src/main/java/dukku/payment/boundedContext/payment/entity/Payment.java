@@ -48,6 +48,10 @@ public class Payment extends BaseIdAndUUIDAndTime {
     private UUID orderUuid;
 
     @JdbcTypeCode(SqlTypes.UUID)
+    @Column(columnDefinition = "uuid", comment = "coupon uuid")
+    private UUID couponUuid;
+
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false, columnDefinition = "uuid", comment = "결제 유저 UUID")
     private UUID userUuid;
 
@@ -103,8 +107,16 @@ public class Payment extends BaseIdAndUUIDAndTime {
     public static Payment create(UUID orderUuid, UUID userUuid, Long amount,
             Long depositAmount, Long pgAmount, Long couponAmount,
             PaymentType paymentType, String tossOrderId) {
+        return create(orderUuid, userUuid, amount, depositAmount, pgAmount, couponAmount, paymentType, tossOrderId,
+                null);
+    }
+
+    public static Payment create(UUID orderUuid, UUID userUuid, Long amount,
+            Long depositAmount, Long pgAmount, Long couponAmount,
+            PaymentType paymentType, String tossOrderId, UUID couponUuid) {
         return Payment.builder()
                 .orderUuid(orderUuid)
+                .couponUuid(couponUuid)
                 .userUuid(userUuid)
                 .amount(amount)
                 .paymentDepositOrigin(depositAmount)
@@ -307,6 +319,7 @@ public class Payment extends BaseIdAndUUIDAndTime {
                 .id(this.getId())
                 .uuid(this.getUuid())
                 .orderUuid(this.orderUuid)
+                .couponUuid(this.couponUuid)
                 .userUuid(this.userUuid)
                 .tossOrderId(this.tossOrderId)
                 .amount(this.amount)

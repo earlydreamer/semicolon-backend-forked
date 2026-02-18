@@ -21,4 +21,12 @@ public class UseCouponUseCase {
 
         couponUser.use();
     }
+
+    // 결제 실패 보상: 사용 처리된 쿠폰을 AVAILABLE로 복구한다
+    public void rollbackForPayment(UUID userUuid, UUID couponUuid) {
+        CouponUser couponUser = couponUserRepository.findByUserUuidAndCoupon_Uuid(userUuid, couponUuid)
+                .orElseThrow(CouponUserNotFoundException::new);
+
+        couponUser.rollbackUseForPayment();
+    }
 }
