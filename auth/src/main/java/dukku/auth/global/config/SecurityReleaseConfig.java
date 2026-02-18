@@ -1,5 +1,7 @@
 package dukku.auth.global.config;
 
+import dukku.auth.boundedContext.auth.infra.GoogleOAuth2FailureHandler;
+import dukku.auth.boundedContext.auth.infra.GoogleOAuth2SuccessHandler;
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
 import dukku.common.global.security.SecurityWhitelist;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ public class SecurityReleaseConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
+    private final GoogleOAuth2FailureHandler googleOAuth2FailureHandler;
 
     /**
      * CSRF는 서버가 브라우저의 세션/쿠키를 신뢰할 때 공격 위험이 생김.
@@ -46,12 +50,14 @@ public class SecurityReleaseConfig {
                   그러므로 세션은 필요없음
                  */
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SecurityWhitelist.COMMON_PUBLIC)
                                 .permitAll()
                         .requestMatchers(
-                                "/api/v1/auth/**"
+                                "/api/v1/auth/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**"
                         )
                                 .permitAll() // 인증 필요없음 -> filter 미실행
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
@@ -64,6 +70,9 @@ public class SecurityReleaseConfig {
 
                         .anyRequest().authenticated() // 그 외는 인증 필요
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(googleOAuth2SuccessHandler)
+                        .failureHandler(googleOAuth2FailureHandler))
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
                     corsConfig.setAllowedOrigins(
