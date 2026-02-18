@@ -2,6 +2,7 @@ package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.dto.*;
 import dukku.common.shared.order.type.OrderItemStatus;
+import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ public class OrderFacade {
     private final UpdateOrderItemDeliveryInfoUseCase updateOrderItemDeliveryInfo;
     private final UpdateOrderItemStatusUseCase updateOrderItemStatus;
     private final FindConfirmedItemsUseCase findConfirmedItems;
+    private final FindOrderListByOrderStatusUseCase findOrderListByOrderStatus;
 
     public OrderResponse createOrder(OrderCreateRequest req) {
         return Order.toOrderResponse(createOrder.execute(req));
@@ -43,13 +45,13 @@ public class OrderFacade {
 
     // 사용자가 주문내역을 조회하고 싶을 때
     @Transactional(readOnly = true)
-    public Page<dukku.common.shared.order.dto.OrderListResponse> findAdminOrderList(AdminOrderSearchCondition condition, Pageable pageable) {
+    public Page<OrderListResponse> findAdminOrderList(AdminOrderSearchCondition condition, Pageable pageable) {
         return findAdminOrderList.execute(condition, pageable);
     }
 
     // 사용자가 본인의 주문내역을 조회하고 싶을 때
     @Transactional(readOnly = true)
-    public Page<dukku.common.shared.order.dto.OrderListResponse> findMyOrderList(Pageable pageable) {
+    public Page<OrderListResponse> findMyOrderList(Pageable pageable) {
         return findMyOrderList.execute(pageable);
     }
 
@@ -66,5 +68,9 @@ public class OrderFacade {
     // 주문 확정 조회
     public List<ConfirmedOrderItemResponse> findConfirmedItems(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return findConfirmedItems.execute(startDateTime, endDateTime);
+    }
+
+    public List<OrderListResponse> findOrderListByOrderStatus(UUID userUuid, OrderStatus status, int limit) {
+        return findOrderListByOrderStatus.execute(userUuid, status, limit);
     }
 }

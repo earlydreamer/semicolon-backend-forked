@@ -1,9 +1,6 @@
 package dukku.order.boundedContext.order.in;
 
-import dukku.common.shared.order.dto.AdminOrderSearchCondition;
-import dukku.common.shared.order.dto.DeliveryInfoRequest;
-import dukku.common.shared.order.dto.OrderCreateRequest;
-import dukku.common.shared.order.dto.OrderResponse;
+import dukku.common.shared.order.dto.*;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.order.boundedContext.order.app.OrderFacade;
 import dukku.common.shared.order.docs.OrderApiDocs;
@@ -44,7 +41,7 @@ public class OrderController {
     @OrderApiDocs.UpdateShippingInfo
     public ResponseEntity<Void> updateShippingInfo(
             @PathVariable UUID orderUuid,
-            @RequestBody @Validated dukku.common.shared.order.dto.OrderUpdateRequest.ShippingInfo req
+            @RequestBody @Validated OrderUpdateRequest.ShippingInfo req
     ) {
         orderFacade.updateShippingInfo(orderUuid, req);
 
@@ -53,15 +50,15 @@ public class OrderController {
 
     @GetMapping("/admin")
     @OrderApiDocs.FindAdminOrderList
-    public ResponseEntity<Page<dukku.common.shared.order.dto.OrderListResponse>> findAdminOrderList(AdminOrderSearchCondition condition, Pageable pageable) {
-        Page<dukku.common.shared.order.dto.OrderListResponse> response = orderFacade.findAdminOrderList(condition, pageable);
+    public ResponseEntity<Page<OrderListResponse>> findAdminOrderList(AdminOrderSearchCondition condition, Pageable pageable) {
+        Page<OrderListResponse> response = orderFacade.findAdminOrderList(condition, pageable);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
     @OrderApiDocs.FindMyOrderList
-    public ResponseEntity<Page<dukku.common.shared.order.dto.OrderListResponse>> findMyOrderList(Pageable pageable) {
-        Page<dukku.common.shared.order.dto.OrderListResponse> response = orderFacade.findMyOrderList(pageable);
+    public ResponseEntity<Page<OrderListResponse>> findMyOrderList(Pageable pageable) {
+        Page<OrderListResponse> response = orderFacade.findMyOrderList(pageable);
 
         return ResponseEntity.ok(response);
     }

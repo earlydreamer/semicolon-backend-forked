@@ -1,18 +1,18 @@
 package dukku.order.boundedContext.order.in;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
+import dukku.common.shared.order.dto.OrderListResponse;
+import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.app.OrderFacade;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/internal/orders")
+@RequestMapping("/api/v1/orders/internal/")
 @RequiredArgsConstructor
 public class OrderInternalController {
     private final OrderFacade orderFacade;
@@ -23,5 +23,14 @@ public class OrderInternalController {
             @RequestParam LocalDateTime endDateTime
     ) {
         return orderFacade.findConfirmedItems(startDateTime, endDateTime);
+    }
+
+    @GetMapping("/internal/{userUuid}")
+    public List<OrderListResponse> findOrders(
+            @PathVariable UUID userUuid,
+            @RequestParam OrderStatus status,
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        return orderFacade.findOrderListByOrderStatus(userUuid, status, limit);
     }
 }
