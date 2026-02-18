@@ -1,0 +1,12 @@
+apiVersion: 1
+
+datasources:
+  - name: Log-API
+    type: yesoreyeram-infinity-datasource
+    uid: PCA84556805E1F3AF
+    access: proxy
+    url: http://host.docker.internal:8085
+    isDefault: false
+    editable: true
+    jsonData:
+      url: http://host.docker.internal:8085

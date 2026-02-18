@@ -1,11 +1,9 @@
 package dukku.product.boundedContext.product.app.facade;
 
 import dukku.common.global.UserUtil;
-import dukku.product.boundedContext.product.app.usecase.cart.CreateCartUseCase;
-import dukku.product.boundedContext.product.app.usecase.cart.DeleteAllCartItemUseCase;
-import dukku.product.boundedContext.product.app.usecase.cart.DeleteCartUseCase;
-import dukku.product.boundedContext.product.app.usecase.cart.FindMyCartListUseCase;
+import dukku.common.shared.product.dto.cart.CartInternalResponse;
 import dukku.common.shared.product.dto.cart.CartListResponse;
+import dukku.product.boundedContext.product.app.usecase.cart.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +17,7 @@ public class CartFacade {
     private final CreateCartUseCase createCartUseCase;
     private final DeleteCartUseCase deleteCartUseCase;
     private final FindMyCartListUseCase findMyCartListUseCase;
+    private final FindCartInternalListUseCase findCartInternalListUseCase;
     private final DeleteAllCartItemUseCase deleteAllCartItemUseCase;
 
     // 장바구니 담기
@@ -35,6 +34,12 @@ public class CartFacade {
     @Transactional(readOnly = true)
     public CartListResponse findMyCartList() {
         return findMyCartListUseCase.execute(UserUtil.getUserId());
+    }
+
+    // 특정 유저의 장바구니 조회 (페이징 없음)
+    @Transactional(readOnly = true)
+    public CartInternalResponse findCartListByUserUuid(UUID userUuid) {
+        return findCartInternalListUseCase.execute(userUuid);
     }
 
     // 장바구니 비우기
