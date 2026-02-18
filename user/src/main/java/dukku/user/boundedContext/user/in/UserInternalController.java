@@ -92,6 +92,7 @@ public class UserInternalController {
                 .nickname(user.getNickname())
                 .role(user.getRole())
                 .status(user.getStatus())
+                .statusLabel(user.getStatus().getLabel())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .deletedAt(user.getDeletedAt())
