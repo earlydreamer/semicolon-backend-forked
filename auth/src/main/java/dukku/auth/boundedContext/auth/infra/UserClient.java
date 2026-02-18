@@ -1,8 +1,10 @@
 package dukku.auth.boundedContext.auth.infra;
 
 import dukku.auth.boundedContext.auth.exception.UserVerificationFailedException;
+import dukku.common.shared.user.dto.SocialUserUpsertRequest;
 import dukku.common.shared.user.dto.UserVerificationRequest;
 import dukku.common.shared.user.dto.UserVerificationResponse;
+import dukku.common.shared.user.type.SocialProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +30,19 @@ public class UserClient {
                     .body(UserVerificationResponse.class);
         } catch (Exception e) {
             log.error("User verification failed for email: {}", email, e);
+            throw new UserVerificationFailedException();
+        }
+    }
+
+    public UserVerificationResponse upsertSocialUser(SocialProvider provider, String email, String nickname) {
+        try {
+            return restClient.post()
+                    .uri(userServiceUrl + "/api/v1/internal/users/social")
+                    .body(new SocialUserUpsertRequest(provider, email, nickname))
+                    .retrieve()
+                    .body(UserVerificationResponse.class);
+        } catch (Exception e) {
+            log.error("Social user upsert failed. provider={}, email={}", provider, email, e);
             throw new UserVerificationFailedException();
         }
     }

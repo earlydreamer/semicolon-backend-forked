@@ -2,6 +2,7 @@ package dukku.user.boundedContext.user.in;
 
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.dto.UserProfileResponse;
+import dukku.common.shared.user.dto.SocialUserUpsertRequest;
 import dukku.common.shared.user.dto.UserUuidResponse;
 import dukku.common.shared.user.dto.UserVerificationRequest;
 import dukku.common.shared.user.dto.UserVerificationResponse;
@@ -9,6 +10,7 @@ import dukku.common.shared.user.type.Role;
 import dukku.user.boundedContext.user.app.user.FindUserByEmailUseCase;
 import dukku.user.boundedContext.user.app.user.FindUserByRoleUseCase;
 import dukku.user.boundedContext.user.app.user.FindUserUseCase;
+import dukku.user.boundedContext.user.app.user.UpsertSocialUserUseCase;
 import dukku.user.boundedContext.user.app.user.VerifyUserCredentialsUseCase;
 import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.exception.UserInvalidLookupRequestException;
@@ -16,6 +18,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +40,7 @@ public class UserInternalController {
     private final FindUserByEmailUseCase findUserByEmail;
     private final FindUserUseCase findUser;
     private final VerifyUserCredentialsUseCase verifyUserCredentialsUseCase;
+    private final UpsertSocialUserUseCase upsertSocialUserUseCase;
 
     @GetMapping("/uuid")
     public ResponseEntity<UserUuidResponse> getUserUuid(
@@ -106,6 +110,21 @@ public class UserInternalController {
         User user = verifyUserCredentialsUseCase.execute(request.getEmail(), request.getPassword());
 
         log.info("[Internal API] User credentials verified. email={}", request.getEmail());
+
+        return ResponseEntity.ok(UserVerificationResponse.builder()
+                .userUuid(user.getUuid())
+                .role(user.getRole())
+                .nickname(user.getNickname())
+                .build());
+    }
+
+    @PostMapping("/social")
+    public ResponseEntity<UserVerificationResponse> upsertSocialUser(
+            @RequestBody @Validated SocialUserUpsertRequest request
+    ) {
+        User user = upsertSocialUserUseCase.execute(request);
+
+        log.info("[Internal API] Social user upserted. provider={}, email={}", request.getProvider(), request.getEmail());
 
         return ResponseEntity.ok(UserVerificationResponse.builder()
                 .userUuid(user.getUuid())
