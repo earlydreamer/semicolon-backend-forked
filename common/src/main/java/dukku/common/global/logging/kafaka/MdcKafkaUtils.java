@@ -1,5 +1,6 @@
-package dukku.common.global.logging;
+package dukku.common.global.logging.kafaka;
 
+import dukku.common.global.logging.mdc.MdcLoggingFilter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.slf4j.MDC;

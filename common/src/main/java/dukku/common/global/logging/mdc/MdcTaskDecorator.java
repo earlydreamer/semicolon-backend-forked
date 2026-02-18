@@ -1,4 +1,4 @@
-package dukku.common.global.logging;
+package dukku.common.global.logging.mdc;
 
 import org.slf4j.MDC;
 import org.springframework.core.task.TaskDecorator;

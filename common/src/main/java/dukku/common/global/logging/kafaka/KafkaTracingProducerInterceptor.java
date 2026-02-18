@@ -1,5 +1,6 @@
-package dukku.common.global.logging;
+package dukku.common.global.logging.kafaka;
 
+import dukku.common.global.logging.mdc.MdcLoggingFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;

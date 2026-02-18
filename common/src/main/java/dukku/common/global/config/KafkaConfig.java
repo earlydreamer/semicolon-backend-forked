@@ -1,5 +1,7 @@
 package dukku.common.global.config;
 
+import dukku.common.global.logging.kafaka.KafkaTracingBatchInterceptor;
+import dukku.common.global.logging.kafaka.KafkaTracingRecordInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -45,13 +47,13 @@ public class KafkaConfig {
     }
 
     @Bean
-    public dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor() {
-        return new dukku.common.global.logging.KafkaTracingRecordInterceptor();
+    public KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor() {
+        return new KafkaTracingRecordInterceptor();
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-            dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor) {
+            KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setRecordInterceptor(kafkaTracingRecordInterceptor);
@@ -59,13 +61,13 @@ public class KafkaConfig {
     }
 
     @Bean
-    public dukku.common.global.logging.KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor() {
-        return new dukku.common.global.logging.KafkaTracingBatchInterceptor();
+    public KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor() {
+        return new KafkaTracingBatchInterceptor();
     }
 
     @Bean("batchKafkaListenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, String> batchKafkaListenerContainerFactory(
-            dukku.common.global.logging.KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor) {
+            KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setBatchListener(true);

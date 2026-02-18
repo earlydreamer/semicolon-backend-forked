@@ -3,6 +3,7 @@ package dukku.coupon.boundedContext.coupon.in;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dukku.common.global.logging.kafaka.KafkaTracingRecordInterceptor;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.coupon.type.CouponUserStatus;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
@@ -269,7 +270,7 @@ class CouponSagaKafkaIntegrationTest {
         @Bean(name = "kafkaListenerContainerFactory")
         ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
                 ConsumerFactory<String, String> consumerFactory,
-                dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor,
+                KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor,
                 ObjectMapper objectMapper) {
             ConcurrentKafkaListenerContainerFactory<String, String> factory =
                     new ConcurrentKafkaListenerContainerFactory<>();

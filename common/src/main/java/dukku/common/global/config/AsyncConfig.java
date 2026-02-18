@@ -1,6 +1,6 @@
 package dukku.common.global.config;
 
-import dukku.common.global.logging.MdcTaskDecorator;
+import dukku.common.global.logging.mdc.MdcTaskDecorator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;

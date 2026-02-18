@@ -49,11 +49,11 @@
             <level>INFO</level>
         </filter>
 
-        <filter class="dukku.common.global.logging.MdcTraceFilter"/>
+        <filter class="dukku.common.global.logging.logback.MdcTraceFilter"/>
 
         <topic>msa-logs</topic>
 
-        <keyingStrategy class="dukku.common.global.logging.ServiceNameKeyingStrategy">
+        <keyingStrategy class="dukku.common.global.logging.logback.ServiceNameKeyingStrategy">
             <serviceName>${SERVICE_NAME}</serviceName>
         </keyingStrategy>
 
