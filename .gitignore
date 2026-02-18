@@ -38,7 +38,7 @@ out/
 
 # Secrets / Env
 .env
-.env.*
+!.env.example
 *.pem
 *.key
 *.crt

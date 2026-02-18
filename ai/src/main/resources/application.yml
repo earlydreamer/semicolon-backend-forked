@@ -2,10 +2,11 @@ server:
   port: 8089
 
 spring:
-  config:
-    import: classpath:application-common.yml
   application:
     name: ai
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ai_service}?sslmode=${DB_SSLMODE:disable}
