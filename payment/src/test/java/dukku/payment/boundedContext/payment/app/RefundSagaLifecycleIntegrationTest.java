@@ -109,7 +109,7 @@ class RefundSagaLifecycleIntegrationTest {
                 "toss-order-saga-complete-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(20000L)
                 .reason("customer_cancel_request")
@@ -159,7 +159,7 @@ class RefundSagaLifecycleIntegrationTest {
                 "toss-order-saga-partial-complete-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(7000L)
                 .reason("customer_partial_cancel")
@@ -210,7 +210,7 @@ class RefundSagaLifecycleIntegrationTest {
                 "toss-order-saga-fail-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(20000L)
                 .reason("customer_cancel_request")
@@ -259,7 +259,7 @@ class RefundSagaLifecycleIntegrationTest {
                 "toss-order-saga-partial-fail-1");
 
         PaymentRefundRequest request = PaymentRefundRequest.builder()
-                .paymentId(payment.getUuid())
+                .paymentUuid(payment.getUuid())
                 .orderUuid(payment.getOrderUuid())
                 .refundAmount(7000L)
                 .reason("customer_partial_cancel")

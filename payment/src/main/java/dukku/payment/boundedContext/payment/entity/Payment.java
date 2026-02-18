@@ -176,7 +176,7 @@ public class Payment extends BaseIdAndUUIDAndTime {
         // 환불 가능 잔액 검증: 현재 남은 PG 금액과 예치금의 합계 확인
         long availableTotal = this.amountPg + this.paymentDeposit;
         if (refundAmountTotal > availableTotal) {
-            throw new InvalidRefundAmountException(refundAmountTotal, availableTotal);
+            throw InvalidRefundAmountException.exceedsAvailable(refundAmountTotal, availableTotal);
         }
 
         // 예치금 우선 복구 로직: 현재 남은 예치금 내에서 최대한 복구
