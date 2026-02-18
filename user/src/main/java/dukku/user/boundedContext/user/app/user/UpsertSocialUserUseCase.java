@@ -1,8 +1,10 @@
 package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.dto.SocialUserUpsertRequest;
+import dukku.common.global.exception.BadRequestException;
 import dukku.common.shared.user.exception.UserInactiveException;
 import dukku.common.shared.user.type.Role;
+import dukku.common.shared.user.type.SocialProvider;
 import dukku.common.shared.user.type.UserStatus;
 import dukku.user.boundedContext.user.entity.User;
 import dukku.user.boundedContext.user.out.UserRepository;
@@ -25,6 +27,10 @@ public class UpsertSocialUserUseCase {
 
     @Transactional
     public User execute(SocialUserUpsertRequest request) {
+        if (request.getProvider() != SocialProvider.GOOGLE) {
+            throw new BadRequestException("Unsupported social provider: " + request.getProvider());
+        }
+
         String email = request.getEmail().trim();
 
         return userRepository.findByEmailAndDeletedAtIsNull(email)
