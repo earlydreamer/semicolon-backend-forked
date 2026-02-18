@@ -19,6 +19,7 @@ import java.util.UUID;
 public class RetrySettlementUseCase {
 
     private final SettlementSupport settlementSupport;
+    private final SettlementMetrics settlementMetrics;
 
     @Transactional
     public Settlement execute(UUID settlementUuid) {
@@ -27,6 +28,8 @@ public class RetrySettlementUseCase {
         Settlement settlement = settlementSupport.findByUuid(settlementUuid);
         settlement.retry();
         settlementSupport.save(settlement);
+
+        settlementMetrics.incrementRetry();
 
         log.info("[정산 재처리 완료] settlementUuid={}, newStatus={}",
                 settlementUuid, settlement.getSettlementStatus());

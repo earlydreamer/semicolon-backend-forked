@@ -52,11 +52,21 @@
     <!-- 3. Kafka Appender (중앙 로그 수집)              -->
     <!-- ============================================ -->
     <appender name="KAFKA" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+        <!-- INFO 이상만 Kafka로 전송 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <!-- traceId가 있는 로그만 Kafka로 전송 (MDC 컨텍스트 필터) -->
+        <filter class="dukku.common.global.logging.MdcTraceFilter"/>
+
         <!-- Kafka Topic 이름 -->
         <topic>msa-logs</topic>
 
         <!-- Key Partitioning: 같은 서비스 로그는 같은 파티션으로 -->
-        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.ThreadNameKeyingStrategy"/>
+        <keyingStrategy class="dukku.common.global.logging.ServiceNameKeyingStrategy">
+            <serviceName>${SERVICE_NAME}</serviceName>
+        </keyingStrategy>
 
         <!-- 전송 실패 시 처리 (콘솔로 fallback) -->
         <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/>
@@ -104,8 +114,12 @@
     <springProfile name="dev">
         <root level="DEBUG">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_KAFKA"/>
         </root>
+
+        <!-- dukku 패키지 로그만 Kafka로 전송 -->
+        <logger name="dukku" level="INFO" additivity="true">
+            <appender-ref ref="ASYNC_KAFKA"/>
+        </logger>
 
         <!-- Kafka 클라이언트 내부 로그 억제 (피드백 루프 방지) -->
         <logger name="org.apache.kafka" level="WARN"/>
@@ -121,8 +135,12 @@
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
-            <appender-ref ref="ASYNC_KAFKA"/>
         </root>
+
+        <!-- dukku 패키지 로그만 Kafka로 전송 -->
+        <logger name="dukku" level="INFO" additivity="true">
+            <appender-ref ref="ASYNC_KAFKA"/>
+        </logger>
 
         <!-- Kafka 클라이언트 내부 로그 억제 (피드백 루프 방지) -->
         <logger name="org.apache.kafka" level="WARN"/>
@@ -136,6 +154,19 @@
         <root level="WARN">
             <appender-ref ref="CONSOLE"/>
         </root>
+    </springProfile>
+
+    <!-- 프로파일 미지정 시 기본 설정: 콘솔 + Kafka -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+
+        <logger name="dukku" level="INFO" additivity="true">
+            <appender-ref ref="ASYNC_KAFKA"/>
+        </logger>
+
+        <logger name="org.apache.kafka" level="WARN"/>
     </springProfile>
 
 </configuration>
