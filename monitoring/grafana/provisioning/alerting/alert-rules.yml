@@ -1,0 +1,66 @@
+# Grafana Alert Rules Provisioning
+# ERROR 로그 발생 시 Slack 알림
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: "Error Log Alerts"
+    folder: "Logs"
+    interval: "1m"
+    rules:
+      - uid: "error-log-detected"
+        title: "ERROR 로그 발생"
+        condition: "C"
+        data:
+          # A: Prometheus에서 최근 5분간 ERROR 로그 증가량 조회
+          - refId: "A"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "PBFA97CFB590B2093"
+            model:
+              refId: "A"
+              expr: 'sum(increase(log_messages_total{level="ERROR"}[5m])) by (service)'
+              intervalMs: 60000
+              maxDataPoints: 43200
+          # B: A의 마지막 값 추출 (Reduce)
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              refId: "B"
+              type: "reduce"
+              expression: "A"
+              reducer: "last"
+              conditions:
+                - type: "query"
+                  evaluator:
+                    type: "gt"
+                    params: [0]
+          # C: 임계값 조건 (0보다 크면 발동)
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              refId: "C"
+              type: "threshold"
+              expression: "B"
+              conditions:
+                - type: "query"
+                  evaluator:
+                    type: "gt"
+                    params:
+                      - 0
+        for: "0s"
+        noDataState: "OK"
+        execErrState: "OK"
+        labels:
+          severity: "critical"
+        annotations:
+          summary: "ERROR 로그가 감지되었습니다."
+          description: "최근 5분간 ERROR 레벨 로그가 발생했습니다. Grafana Log Dashboard에서 상세 내용을 확인하세요."
+          dashboard_url: "/d/log-overview/log-overview?var-level=ERROR"
