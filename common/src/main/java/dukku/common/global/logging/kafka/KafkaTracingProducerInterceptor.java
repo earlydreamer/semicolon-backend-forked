@@ -1,4 +1,4 @@
-package dukku.common.global.logging.kafaka;
+package dukku.common.global.logging.kafka;
 
 import dukku.common.global.logging.mdc.MdcLoggingFilter;
 import lombok.extern.slf4j.Slf4j;

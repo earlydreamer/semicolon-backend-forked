@@ -3,7 +3,7 @@ package dukku.coupon.boundedContext.coupon.in;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dukku.common.global.logging.kafaka.KafkaTracingRecordInterceptor;
+import dukku.common.global.logging.kafka.KafkaTracingRecordInterceptor;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.coupon.type.CouponUserStatus;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
