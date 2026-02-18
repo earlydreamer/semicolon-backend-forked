@@ -57,4 +57,19 @@ public class KafkaConfig {
         factory.setRecordInterceptor(kafkaTracingRecordInterceptor);
         return factory;
     }
+
+    @Bean
+    public dukku.common.global.logging.KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor() {
+        return new dukku.common.global.logging.KafkaTracingBatchInterceptor();
+    }
+
+    @Bean("batchKafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> batchKafkaListenerContainerFactory(
+            dukku.common.global.logging.KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(true);
+        factory.setBatchInterceptor(kafkaTracingBatchInterceptor);
+        return factory;
+    }
 }

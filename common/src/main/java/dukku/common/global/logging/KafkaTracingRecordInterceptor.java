@@ -49,4 +49,15 @@ public class KafkaTracingRecordInterceptor implements RecordInterceptor<String, 
                             Consumer<String, String> consumer) {
         MDC.clear();
     }
+
+    /**
+     * 리스너 처리 실패 시 호출 - MDC 정리 보장
+     */
+    @Override
+    public void failure(ConsumerRecord<String, String> record, Exception exception,
+                        Consumer<String, String> consumer) {
+        log.error("Kafka listener failed: topic={}, partition={}, offset={}",
+                record.topic(), record.partition(), record.offset(), exception);
+        MDC.clear();
+    }
 }
