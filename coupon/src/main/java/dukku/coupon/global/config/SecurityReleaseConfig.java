@@ -48,13 +48,8 @@ public class SecurityReleaseConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(
-                                        "/api/v3/api-docs/**",
-                                        "/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html"
-                                )
-                                .permitAll() // 인증 필요없음 -> filter 미실행
+                                .requestMatchers(SecurityWhitelist.COMMON_PUBLIC)
+                                        .permitAll()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
 //                        .requestMatchers("/actuator/**")
 //                        .access((auth, ctx) ->

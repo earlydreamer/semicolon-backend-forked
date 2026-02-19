@@ -1,0 +1,98 @@
+package dukku.ai.app;
+
+import dukku.ai.app.usecase.*;
+import dukku.ai.entity.AiMemory;
+import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.common.shared.ai.dto.ChatRequest;
+import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+
+import java.util.List;
+import java.util.UUID;
+
+@Component
+@Transactional(readOnly = true)
+public class AiFacade {
+
+    private final ChatUseCase chatUseCase;
+    private final FindAiMemoryUseCase findAiMemoryUseCase;
+    private final CreateAiMemoryUseCase createAiMemoryUseCase;
+    private final UpdateAiMemoryUseCase updateAiMemoryUseCase;
+    private final DeleteAiMemoryUseCase deleteAiMemoryUseCase;
+
+    public AiFacade(ChatUseCase chatUseCase, FindAiMemoryUseCase findAiMemoryUseCase, CreateAiMemoryUseCase createAiMemoryUseCase, UpdateAiMemoryUseCase updateAiMemoryUseCase, DeleteAiMemoryUseCase deleteAiMemoryUseCase) {
+        this.chatUseCase = chatUseCase;
+        this.findAiMemoryUseCase = findAiMemoryUseCase;
+        this.createAiMemoryUseCase = createAiMemoryUseCase;
+        this.updateAiMemoryUseCase = updateAiMemoryUseCase;
+        this.deleteAiMemoryUseCase = deleteAiMemoryUseCase;
+    }
+
+    public Flux<String> chat(ChatRequest request) {
+        String conversationId = resolveConversationId(request.conversationId());
+        return chatUseCase.chat(conversationId, request.userUuid(), request.message());
+    }
+
+    private String resolveConversationId(String conversationId) {
+        if (conversationId == null || conversationId.isBlank()) {
+            return UUID.randomUUID().toString();
+        }
+        return conversationId;
+    }
+
+    public List<AiMemoryResponse> findAll() {
+        return findAiMemoryUseCase.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public AiMemoryResponse findById(Integer aiMemoryId) {
+        return toResponse(findAiMemoryUseCase.findById(aiMemoryId));
+    }
+
+    @Transactional
+    public AiMemoryResponse create(CreateAiMemoryRequest request) {
+        AiMemory memory = createAiMemoryUseCase.create(
+                request.userUuid(),
+                request.memoryType(),
+                request.subType(),
+                request.content(),
+                request.importanceScore(),
+                request.confidenceScore()
+        );
+        return toResponse(memory);
+    }
+
+    @Transactional
+    public AiMemoryResponse update(Integer aiMemoryId, UpdateAiMemoryRequest request) {
+        AiMemory memory = updateAiMemoryUseCase.update(
+                aiMemoryId,
+                request.importanceScore(),
+                request.confidenceScore()
+        );
+        return toResponse(memory);
+    }
+
+    @Transactional
+    public void delete(Integer aiMemoryId) {
+        deleteAiMemoryUseCase.delete(aiMemoryId);
+    }
+
+    private AiMemoryResponse toResponse(AiMemory memory) {
+        return new AiMemoryResponse(
+                memory.getId(),
+                memory.getUserUuid(),
+                memory.getMemoryType(),
+                memory.getSubType(),
+                memory.getContent(),
+                memory.getImportanceScore(),
+                memory.getConfidenceScore(),
+                memory.getAccessCount(),
+                memory.getCreatedAt(),
+                memory.getUpdatedAt()
+        );
+    }
+}
