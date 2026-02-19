@@ -122,14 +122,10 @@ public class UserInternalController {
     public ResponseEntity<UserVerificationResponse> upsertSocialUser(
             @RequestBody @Validated SocialUserUpsertRequest request
     ) {
-        User user = upsertSocialUserUseCase.execute(request);
+        UserVerificationResponse response = upsertSocialUserUseCase.execute(request);
 
         log.info("[Internal API] Social user upserted. provider={}, email={}", request.getProvider(), request.getEmail());
 
-        return ResponseEntity.ok(UserVerificationResponse.builder()
-                .userUuid(user.getUuid())
-                .role(user.getRole())
-                .nickname(user.getNickname())
-                .build());
+        return ResponseEntity.ok(response);
     }
 }

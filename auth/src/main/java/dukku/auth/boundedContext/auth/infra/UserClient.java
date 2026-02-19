@@ -29,7 +29,7 @@ public class UserClient {
                     .retrieve()
                     .body(UserVerificationResponse.class);
         } catch (Exception e) {
-            log.error("User verification failed for email: {}", email, e);
+            log.error("사용자 인증에 실패했습니다. email={}", email, e);
             throw new UserVerificationFailedException();
         }
     }
@@ -42,7 +42,7 @@ public class UserClient {
                     .retrieve()
                     .body(UserVerificationResponse.class);
         } catch (Exception e) {
-            log.error("Social user upsert failed. provider={}, email={}", provider, email, e);
+            log.error("소셜 사용자 생성/조회에 실패했습니다. provider={}, email={}", provider, email, e);
             throw new UserVerificationFailedException();
         }
     }

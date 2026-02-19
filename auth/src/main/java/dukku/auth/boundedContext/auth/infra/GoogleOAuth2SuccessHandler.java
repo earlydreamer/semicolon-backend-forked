@@ -37,7 +37,7 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         String name = oAuth2User.getAttribute("name");
 
         if (email == null || email.isBlank()) {
-            log.error("Google OAuth2 login failed: email claim not found");
+            log.error("구글 OAuth2 로그인에 실패했습니다. 이메일 클레임이 없습니다.");
             response.sendRedirect(buildFailureRedirect("missing_email"));
             return;
         }
@@ -46,7 +46,7 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         try {
             tokenResponse = authService.loginWithGoogle(email, name);
         } catch (Exception e) {
-            log.error("Google OAuth2 login failed for email: {}", email, e);
+            log.error("구글 OAuth2 로그인 처리에 실패했습니다. email={}", email, e);
             response.sendRedirect(buildFailureRedirect("social_login_failed"));
             return;
         }

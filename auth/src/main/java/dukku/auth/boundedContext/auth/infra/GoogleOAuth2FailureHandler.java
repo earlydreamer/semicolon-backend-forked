@@ -25,7 +25,7 @@ public class GoogleOAuth2FailureHandler extends SimpleUrlAuthenticationFailureHa
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException, ServletException {
-        log.error("Google OAuth2 authentication failed", exception);
+        log.error("구글 OAuth2 인증에 실패했습니다.", exception);
 
         String redirectUrl = UriComponentsBuilder.fromUriString(successRedirectUrl)
                 .queryParam("error", "oauth2_authentication_failed")

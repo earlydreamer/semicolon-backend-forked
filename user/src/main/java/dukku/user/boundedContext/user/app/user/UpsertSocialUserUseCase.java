@@ -1,6 +1,7 @@
 package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.dto.SocialUserUpsertRequest;
+import dukku.common.shared.user.dto.UserVerificationResponse;
 import dukku.common.shared.user.exception.UserInactiveException;
 import dukku.common.shared.user.exception.UserInvalidSocialProviderException;
 import dukku.common.shared.user.type.Role;
@@ -26,16 +27,22 @@ public class UpsertSocialUserUseCase {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User execute(SocialUserUpsertRequest request) {
+    public UserVerificationResponse execute(SocialUserUpsertRequest request) {
         if (request.getProvider() != SocialProvider.GOOGLE) {
             throw UserInvalidSocialProviderException.unsupported(request.getProvider());
         }
 
         String email = request.getEmail().trim();
 
-        return userRepository.findByEmailAndDeletedAtIsNull(email)
+        User user = userRepository.findByEmailAndDeletedAtIsNull(email)
                 .map(this::validateActive)
                 .orElseGet(() -> createUser(email, request.getNickname()));
+
+        return UserVerificationResponse.builder()
+                .userUuid(user.getUuid())
+                .role(user.getRole())
+                .nickname(user.getNickname())
+                .build();
     }
 
     private User validateActive(User user) {
