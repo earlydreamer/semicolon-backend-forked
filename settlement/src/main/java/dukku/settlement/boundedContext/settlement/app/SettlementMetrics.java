@@ -40,4 +40,13 @@ public class SettlementMetrics {
     public void incrementRetry() {
         retryCounter.increment();
     }
+
+    public void incrementAnomalyDetected(String anomalyType, String severity) {
+        Counter.builder("settlement_anomaly_detected_total")
+                .tag("type", anomalyType)
+                .tag("severity", severity)
+                .description("이상거래 탐지 건수")
+                .register(meterRegistry)
+                .increment();
+    }
 }
