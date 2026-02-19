@@ -3,7 +3,6 @@ package dukku.product.boundedContext.product.app.usecase.cart;
 import dukku.common.global.exception.BadRequestException;
 import dukku.common.global.exception.ConflictException;
 import dukku.common.global.exception.NotFoundException;
-import dukku.common.shared.product.type.AccountStatus;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.product.boundedContext.product.entity.Cart;
 import dukku.product.boundedContext.product.entity.Product;
@@ -21,6 +20,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class CreateCartUseCase {
+    private static final int UUID_PREFIX_LENGTH = 8;
+
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final ProductUserRepository productUserRepository;
@@ -33,7 +34,7 @@ public class CreateCartUseCase {
                 .findById(userUuid)
                 .orElseGet(() ->
                         productUserRepository.save(
-                                new ProductUser(userUuid, "asd", AccountStatus.ACTIVE)
+                                ProductUser.create(userUuid, "user-" + userUuid.toString().substring(0, UUID_PREFIX_LENGTH))
                         )
                 );
 
