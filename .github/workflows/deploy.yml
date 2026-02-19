@@ -75,6 +75,9 @@ jobs:
               $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
             done
 
+            REPO="${{ github.repository }}"
+            RUN_ID="${{ github.run_id }}"
+            
             echo "[2-1] annotate pod template with git metadata (revision tracking)"
             for m in auth user product order coupon payment deposit settlement; do
               $K -n "$NS" patch deploy/${m} -p "{
@@ -83,7 +86,8 @@ jobs:
                     \"metadata\": {
                       \"annotations\": {
                         \"deploy.git.sha\": \"${SHA}\",
-                        \"deploy.git.run\": \"https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"
+                        \"deploy.git.repo\": \"${REPO}\",
+                        \"deploy.git.run\": \"https://github.com/${REPO}/actions/runs/${RUN_ID}\"
                       }
                     }
                   }
