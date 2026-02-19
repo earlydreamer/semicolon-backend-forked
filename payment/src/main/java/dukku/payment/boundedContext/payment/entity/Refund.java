@@ -19,14 +19,12 @@ import java.util.List;
 /**
  * 환불 정보 엔티티
  *
- * <p>
- * 특정 {@code Payment}에 대한 환불 처리를 기록한다.
- * 총 환불 금액과 예치금으로 환불된 금액을 나누어 관리한다.
- *
+ * <p>특정 {@code Payment}에 대한 환불 처리 내역을 관리</p>
+ * <p>총 환불 금액과 예치금 환불 금액을 분리해 저장</p>
  * <h3>금액 필드 설명</h3>
  * <ul>
- * <li>{@code refundAmountTotal} - 총 환불 금액 (PG 취소액 + 예치금 환불액)</li>
- * <li>{@code refundDepositTotal} - 이 중 예치금으로 복구된 금액</li>
+ * <li>{@code refundAmountTotal} - 총 환불 금액</li>
+ * <li>{@code refundDepositTotal} - 예치금으로 환불한 금액</li>
  * </ul>
  */
 @Entity
@@ -44,24 +42,24 @@ public class Refund extends BaseIdAndUUIDAndTime {
     @Column(nullable = false, comment = "총 환불 금액")
     private Long refundAmountTotal;
 
-    @Column(nullable = false, comment = "예치금으로 복구된 금액")
+    @Column(nullable = false, comment = "예치금으로 환불한 금액")
     private Long refundDepositTotal;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, comment = "환불 상태")
     private RefundStatus refundStatus;
 
-    @Column(comment = "환불 승인일")
+    @Column(comment = "환불 확정 시각")
     private LocalDateTime approvedAt;
 
-    @Column(unique = true, length = 100, comment = "멱등성 키 (중복 환불 방지)")
+    @Column(unique = true, length = 100, comment = "멱등성 키")
     private String idempotencyKey;
 
     @Builder.Default
     @OneToMany(mappedBy = "refund", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RefundItem> items = new ArrayList<>();
 
-    // === 정적 팩토리 메서드 ===
+    // 정적 팩토리 메서드
 
     public static Refund create(Payment payment, Long amount, Long depositAmount, String idempotencyKey) {
         return Refund.builder()
@@ -73,27 +71,38 @@ public class Refund extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
-    // === 도메인 로직 ===
+    // 도메인 상태 전이
 
     public void complete() {
+        if (this.refundStatus == RefundStatus.COMPLETED) {
+            return;
+        }
         this.refundStatus = RefundStatus.COMPLETED;
         this.approvedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        this.refundStatus = RefundStatus.CANCELED;
     }
 
     public void addRefundItem(RefundItem item) {
         this.items.add(item);
     }
 
-    // === DTO 변환 ===
+    // DTO 변환
 
     public PaymentRefundResponse toPaymentRefundResponse(Long pgRefundAmount, String tossOrderId) {
+        boolean completed = this.refundStatus == RefundStatus.COMPLETED;
+        String responseCode = completed ? "REFUND_COMPLETED" : "REFUND_PENDING";
+        String responseMessage = completed ? "환불이 완료되었습니다" : "환불 요청이 접수되었습니다";
+
         return PaymentRefundResponse.builder()
                 .success(true)
-                .code("REFUND_COMPLETED")
-                .message("환불이 완료되었습니다.")
+                .code(responseCode)
+                .message(responseMessage)
                 .data(PaymentRefundResponse.RefundData.builder()
-                        .refundId(this.getUuid())
-                        .paymentId(this.payment.getUuid())
+                        .refundUuid(this.getUuid())
+                        .paymentUuid(this.payment.getUuid())
                         .orderUuid(this.payment.getOrderUuid())
                         .status(this.payment.getPaymentStatus())
                         .amounts(PaymentRefundResponse.RefundAmountInfo.builder()

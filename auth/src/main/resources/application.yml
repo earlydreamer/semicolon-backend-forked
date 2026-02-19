@@ -2,6 +2,9 @@ server:
   port: 8081
 
 spring:
+  profiles:
+    active: dev
+
   config:
     import: classpath:application-common.yml
   application:
@@ -15,6 +18,18 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+            client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET:}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:http://localhost:8081/login/oauth2/code/google}
 
 management:
   endpoints:
@@ -27,3 +42,8 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+custom:
+  auth:
+    oauth2:
+      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:http://localhost:3000/oauth/google/callback}

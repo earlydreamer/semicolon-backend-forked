@@ -13,15 +13,27 @@ import java.util.UUID;
 import dukku.common.global.event.DomainEvent;
 
 public record PaymentSuccessEvent(
-        UUID paymentUuid, // 2026-01-24 추가
-        UUID paymentId, // 2026-01-24 추가
+        UUID paymentUuid,
         UUID orderUuid,
         Long amount,
         Long pgAmount, // pg 결제 금액
         Long paymentDeposit, // 사용된 예치금
         UUID userUuid,
         LocalDateTime occurredAt,
-        List<ItemDepositUsage> itemDepositUsages) implements DomainEvent {
+        List<ItemDepositUsage> itemDepositUsages,
+        UUID couponUuid) implements DomainEvent {
+
+    public PaymentSuccessEvent(
+            UUID paymentUuid,
+            UUID orderUuid,
+            Long amount,
+            Long pgAmount,
+            Long paymentDeposit,
+            UUID userUuid,
+            LocalDateTime occurredAt,
+            List<ItemDepositUsage> itemDepositUsages) {
+        this(paymentUuid, orderUuid, amount, pgAmount, paymentDeposit, userUuid, occurredAt, itemDepositUsages, null);
+    }
 
     @Override
     public String getTopic() {

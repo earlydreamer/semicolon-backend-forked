@@ -20,6 +20,7 @@ public class UserAdminProfileResponse {
     private String nickname;
     private Role role;
     private UserStatus status;
+    private String statusLabel;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;

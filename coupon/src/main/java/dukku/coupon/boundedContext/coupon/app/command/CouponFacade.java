@@ -42,4 +42,9 @@ public class CouponFacade {
         useCouponUseCase.execute(userUuid, couponUuid);
     }
 
+    // 결제 실패 시 사용했던 쿠폰을 복구한다.
+    public void rollbackCouponUseForPayment(UUID userUuid, UUID couponUuid) {
+        useCouponUseCase.rollbackForPayment(userUuid, couponUuid);
+    }
+
 }

@@ -1,6 +1,7 @@
 package dukku.coupon.global.config;
 
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
+import dukku.common.global.security.SecurityWhitelist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,21 +48,8 @@ public class SecurityReleaseConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(
-                                        "/api/v3/api-docs/**",
-                                        "/api/v1/categories", // GET: Public
-                                        "/api/v1/products/featured", // GET: Public
-                                        "/api/v1/products", // GET: Public
-                                        "/api/v1/products/**", // GET: Public
-                                        "/api/v1/shops/**", // GET: Public
-                                        "/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html",
-                                        "/api/v1/users/email/**",
-                                        "/api/v1/users/register",
-                                        "/api/v1/auth/login"
-                                )
-                                .permitAll() // 인증 필요없음 -> filter 미실행
+                                .requestMatchers(SecurityWhitelist.COMMON_PUBLIC)
+                                        .permitAll()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
 //                        .requestMatchers("/actuator/**")
 //                        .access((auth, ctx) ->
@@ -77,8 +65,8 @@ public class SecurityReleaseConfig {
                     corsConfig.setAllowedOrigins(
                             Arrays.asList(allowedOrigins)
                     );
-                    corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Idempotency-Key"));
+                    corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))

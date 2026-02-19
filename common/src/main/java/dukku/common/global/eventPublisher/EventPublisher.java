@@ -17,16 +17,25 @@ public class EventPublisher {
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public void publish(DomainEvent event) {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    send(event);
-                }
-            });
-        } else {
-            send(event);
+        boolean txActive = TransactionSynchronizationManager.isActualTransactionActive();
+        boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
+
+        if (txActive && syncActive) {
+            try {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        send(event);
+                    }
+                });
+                return;
+            } catch (IllegalStateException e) {
+                log.debug("Synchronization registration skipped. send now. topic={}, reason={}",
+                        event.getTopic(), e.getMessage());
+            }
         }
+
+        send(event);
     }
 
     private void send(DomainEvent event) {

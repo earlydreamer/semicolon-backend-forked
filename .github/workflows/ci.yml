@@ -2,58 +2,58 @@ name: PR Build & Test
 
 on:
   pull_request:
-    branches: [ dev ]
+    branches: [ "dev" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-    
-    # ✅ 환경 변수 주입 (Secrets 및 Localhost 설정)
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [ auth, user, product, order, coupon, payment, deposit, settlement, ai ]
+
     env:
       SPRING_PROFILES_ACTIVE: release
       SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
-      
-      # 1. Database & Cache (CI 환경이므로 무조건 localhost)
-      # 실제 운영/개발 서버의 Host(Secrets)를 쓰면 안 되고, 밑에서 띄울 컨테이너에 붙어야 합니다.
+
       DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: semicolon
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_SSLMODE: disable
-      
+
       SPRING_DATA_REDIS_HOST: localhost
       SPRING_DATA_REDIS_PORT: 6379
-      
+
       SPRING_ELASTICSEARCH_URIS: http://localhost:9200
-      
-      # 2. Security & API Keys (GitHub Secrets에서 주입)
-      # 이 값들이 없으면 JWT Provider나 외부 API 연동 Bean 생성 시 에러가 납니다.
+
       JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
       CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
       TOSS_API_SECRET_KEY: ${{ secrets.TOSS_API_SECRET_KEY }}
       CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
-      SLACK_WEBHOOK_URL: ${{secrets.SLACK_WEBHOOK_URL}}
-      OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: 25
 
-      # 3. 통합 테스트용 docker-compose 파일 생성
       - name: Create docker-compose.ci.yml
         run: |
-          cat <<EOF > docker-compose.ci.yml
+          cat <<'EOF' > docker-compose.ci.yml
           version: "3.8"
           services:
             elasticsearch:
               image: docker.elastic.co/elasticsearch/elasticsearch:9.2.2
-              container_name: semicolon-elasticsearch
               environment:
                 - discovery.type=single-node
                 - xpack.security.enabled=false
@@ -67,47 +67,58 @@ jobs:
                   fi;
                   /usr/local/bin/docker-entrypoint.sh elasticsearch
                 "
-            
+
             redis:
               image: redis:7.2
-              container_name: semicolon-redis
               ports:
                 - "6379:6379"
 
             postgres:
-              image: postgres:18.1
-              container_name: semicolon-postgres
+              image: pgvector/pgvector:pg18
               environment:
-                POSTGRES_DB: ${{ env.DB_NAME }}
-                POSTGRES_USER: ${{ env.DB_USERNAME }}
-                POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+                POSTGRES_DB: semicolon
+                POSTGRES_USER: ${DB_USERNAME}
+                POSTGRES_PASSWORD: ${DB_PASSWORD}
               ports:
                 - "5432:5432"
           EOF
 
-      # 4. Docker Compose 실행 (docker compose v2 사용)
       - name: Start Containers (ES, Redis, Postgres)
         run: docker compose -f docker-compose.ci.yml up -d
 
-      # 5. 컨테이너 헬스체크 및 대기
       - name: Wait for services to be ready
         run: |
           echo "Waiting for Elasticsearch..."
-          timeout 60s bash -c 'until curl -s http://localhost:9200 > /dev/null; do sleep 5; done' || echo "ES didn't start in time"
+          timeout 90s bash -c 'until curl -s http://localhost:9200 >/dev/null; do sleep 5; done'
           echo "Elasticsearch is up!"
-          
+
           echo "Waiting for Postgres..."
-          sleep 10 
+          timeout 60s bash -c 'until docker exec $(docker ps -qf "ancestor=pgvector/pgvector:pg18") pg_isready -U "${{ secrets.DB_USERNAME }}" >/dev/null 2>&1; do sleep 3; done'
+          echo "Postgres is ready!"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 6. 빌드 및 ApplicationTests(컨텍스트 로드)만 수행
-      - name: Build and Test Application Startup Only
-        # --tests 옵션을 사용하여 특정 테스트 클래스만 지정
-        run: ./gradlew clean :semicolon:test --tests "dukku.semicolon.ApplicationTests" --no-daemon --info
-        
-      # 7. 실패 시 로그 확인
+      # ✅ 모듈별 ApplicationTests 경로를 매핑
+      - name: Set test class for module
+        id: testclass
+        run: |
+          case "${{ matrix.module }}" in
+            auth) echo "TEST_CLASS=dukku.auth.ApplicationTests" >> $GITHUB_ENV ;;
+            user) echo "TEST_CLASS=dukku.user.ApplicationTests" >> $GITHUB_ENV ;;
+            product) echo "TEST_CLASS=dukku.product.ApplicationTests" >> $GITHUB_ENV ;;
+            order) echo "TEST_CLASS=dukku.order.ApplicationTests" >> $GITHUB_ENV ;;
+            coupon) echo "TEST_CLASS=dukku.coupon.ApplicationTests" >> $GITHUB_ENV ;;
+            payment) echo "TEST_CLASS=dukku.payment.ApplicationTests" >> $GITHUB_ENV ;;
+            deposit) echo "TEST_CLASS=dukku.deposit.ApplicationTests" >> $GITHUB_ENV ;;
+            settlement) echo "TEST_CLASS=dukku.settlement.ApplicationTests" >> $GITHUB_ENV ;;
+            ai) echo "TEST_CLASS=dukku.ai.ApplicationTests" >> $GITHUB_ENV ;;
+            *) echo "Unknown module"; exit 1 ;;
+          esac
+
+      - name: Build and Test (Application Startup Only)
+        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info
+
       - name: Print Container Logs on Failure
         if: failure()
         run: docker compose -f docker-compose.ci.yml logs

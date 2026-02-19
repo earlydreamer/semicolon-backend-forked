@@ -3,7 +3,6 @@ package dukku.product.boundedContext.product.app.usecase.cart;
 import dukku.common.shared.product.dto.cart.CartDto;
 import dukku.common.shared.product.dto.cart.CartListResponse;
 import dukku.product.boundedContext.product.entity.Cart;
-import dukku.product.boundedContext.product.out.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,26 +10,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+// /me 응답 조립 전용
 @Component
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FindMyCartListUseCase {
-    private final CartRepository cartRepository;
+    private final FindCartListUseCase findCartListUseCase;
 
     public CartListResponse execute(UUID userUuid) {
-        // Fetch Join 쿼리로 조회 (Cart + Product + Images)
-        List<Cart> carts = cartRepository.findAllWithProductByUserUuid(userUuid);
-
-        List<CartDto> cartDtos = carts.stream()
+        List<CartDto> items = findCartListUseCase.execute(userUuid).stream()
                 .map(Cart::toDto)
                 .toList();
 
-        int totalCount = cartDtos.size();
+        int totalCount = items.size();
+        long expectedTotalPrice = items.stream().mapToLong(CartDto::price).sum();
 
-        long expectedTotalPrice = cartDtos.stream()
-                .mapToLong(CartDto::price)
-                .sum();
-
-        return new CartListResponse(cartDtos, totalCount, expectedTotalPrice);
+        return new CartListResponse(items, totalCount, expectedTotalPrice);
     }
 }

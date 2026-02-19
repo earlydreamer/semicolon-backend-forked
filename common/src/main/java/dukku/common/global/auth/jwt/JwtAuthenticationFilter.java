@@ -1,7 +1,7 @@
 package dukku.common.global.auth.jwt;
 
 import dukku.common.global.auth.detail.CustomUserDetails;
-import dukku.common.global.logging.MdcLoggingFilter;
+import dukku.common.global.logging.mdc.MdcLoggingFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

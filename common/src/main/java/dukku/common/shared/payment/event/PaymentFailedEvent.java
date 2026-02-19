@@ -21,7 +21,8 @@ public record PaymentFailedEvent(
         PaymentFailureCode failureCode,
         boolean retryable,
         String reason,
-        LocalDateTime occurredAt) implements DomainEvent {
+        LocalDateTime occurredAt,
+        UUID couponUuid) implements DomainEvent {
 
     @Override
     public String getTopic() {
@@ -35,7 +36,19 @@ public record PaymentFailedEvent(
 
     public PaymentFailedEvent(UUID orderUuid, UUID paymentUuid, String reason) {
         this(orderUuid, paymentUuid, null, PaymentFailureStage.SYSTEM, PaymentFailureCode.UNKNOWN, true, reason,
-                LocalDateTime.now());
+                LocalDateTime.now(), null);
+    }
+
+    public PaymentFailedEvent(
+            UUID orderUuid,
+            UUID paymentUuid,
+            UUID userUuid,
+            PaymentFailureStage failureStage,
+            PaymentFailureCode failureCode,
+            boolean retryable,
+            String reason,
+            LocalDateTime occurredAt) {
+        this(orderUuid, paymentUuid, userUuid, failureStage, failureCode, retryable, reason, occurredAt, null);
     }
 
     public PaymentFailedEvent {

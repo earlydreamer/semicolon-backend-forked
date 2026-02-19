@@ -8,6 +8,7 @@ import dukku.common.shared.payment.dto.PaymentResponse;
 import dukku.common.shared.payment.dto.PaymentConfirmResponse;
 import dukku.common.shared.payment.dto.PaymentResultResponse;
 import dukku.common.shared.payment.dto.PaymentDto;
+import dukku.common.shared.payment.exception.InvalidRefundAmountException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,10 @@ public class Payment extends BaseIdAndUUIDAndTime {
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false, columnDefinition = "uuid", comment = "주문 UUID")
     private UUID orderUuid;
+
+    @JdbcTypeCode(SqlTypes.UUID)
+    @Column(columnDefinition = "uuid", comment = "coupon uuid")
+    private UUID couponUuid;
 
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false, columnDefinition = "uuid", comment = "결제 유저 UUID")
@@ -100,10 +105,18 @@ public class Payment extends BaseIdAndUUIDAndTime {
     // === 정적 팩토리 메서드 ===
 
     public static Payment create(UUID orderUuid, UUID userUuid, Long amount,
-                                 Long depositAmount, Long pgAmount, Long couponAmount,
-                                 PaymentType paymentType, String tossOrderId) {
+            Long depositAmount, Long pgAmount, Long couponAmount,
+            PaymentType paymentType, String tossOrderId) {
+        return create(orderUuid, userUuid, amount, depositAmount, pgAmount, couponAmount, paymentType, tossOrderId,
+                null);
+    }
+
+    public static Payment create(UUID orderUuid, UUID userUuid, Long amount,
+            Long depositAmount, Long pgAmount, Long couponAmount,
+            PaymentType paymentType, String tossOrderId, UUID couponUuid) {
         return Payment.builder()
                 .orderUuid(orderUuid)
+                .couponUuid(couponUuid)
                 .userUuid(userUuid)
                 .amount(amount)
                 .paymentDepositOrigin(depositAmount)
@@ -163,7 +176,7 @@ public class Payment extends BaseIdAndUUIDAndTime {
         // 환불 가능 잔액 검증: 현재 남은 PG 금액과 예치금의 합계 확인
         long availableTotal = this.amountPg + this.paymentDeposit;
         if (refundAmountTotal > availableTotal) {
-            throw new IllegalArgumentException("환불 요청 금액이 잔여 결제 금액보다 큽니다.");
+            throw InvalidRefundAmountException.exceedsAvailable(refundAmountTotal, availableTotal);
         }
 
         // 예치금 우선 복구 로직: 현재 남은 예치금 내에서 최대한 복구
@@ -306,6 +319,7 @@ public class Payment extends BaseIdAndUUIDAndTime {
                 .id(this.getId())
                 .uuid(this.getUuid())
                 .orderUuid(this.orderUuid)
+                .couponUuid(this.couponUuid)
                 .userUuid(this.userUuid)
                 .tossOrderId(this.tossOrderId)
                 .amount(this.amount)
