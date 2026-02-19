@@ -2,7 +2,7 @@ package dukku.user.boundedContext.user.listener;
 
 import dukku.common.shared.user.event.UserDepositInitializationFailedEvent;
 import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
-import dukku.user.boundedContext.user.app.user.WithdrawUserUseCase;
+import dukku.user.boundedContext.user.app.user.CompensateUserRegistrationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserEventListener {
 
-    private final WithdrawUserUseCase withdrawUserUseCase;
+    private final CompensateUserRegistrationUseCase compensateUserRegistrationUseCase;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @KafkaListener(topics = "user.deposit-initialization-failed", groupId = "${spring.application.name}-group")
@@ -42,10 +42,10 @@ public class UserEventListener {
 
     private void rollbackUser(UUID userUuid, String reason) {
         try {
-            withdrawUserUseCase.withdraw(userUuid);
-            log.warn("[UserRegistrationCompensation] 유저 롤백(탈퇴) 완료. userUuid={}, reason={}", userUuid, reason);
+            compensateUserRegistrationUseCase.hardDelete(userUuid);
+            log.warn("[UserRegistrationCompensation] 유저 롤백(hard delete) 완료. userUuid={}, reason={}", userUuid, reason);
         } catch (Exception e) {
-            log.error("[UserRegistrationCompensation] 유저 롤백(탈퇴) 실패. userUuid={}, reason={}", userUuid, reason, e);
+            log.error("[UserRegistrationCompensation] 유저 롤백(hard delete) 실패. userUuid={}, reason={}", userUuid, reason, e);
         }
     }
 }

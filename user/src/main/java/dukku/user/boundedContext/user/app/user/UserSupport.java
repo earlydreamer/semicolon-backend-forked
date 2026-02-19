@@ -42,4 +42,8 @@ public class UserSupport {
     public boolean isActiveEmailInUse(String email, Integer excludeUserId) {
         return repository.existsByEmailAndDeletedAtIsNullAndIdNot(email, excludeUserId);
     }
+
+    public void hardDeleteByUuid(UUID userUuid) {
+        repository.deleteByUuid(userUuid);
+    }
 }
