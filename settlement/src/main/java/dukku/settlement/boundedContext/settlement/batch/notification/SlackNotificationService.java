@@ -14,7 +14,6 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,9 +28,12 @@ public class SlackNotificationService {
     private String webhookUrl;
 
     private final RestTemplate restTemplate;
+    private final BatchFailureDiagnoser failureDiagnoser;
 
-    public SlackNotificationService(@Qualifier("slackRestTemplate") RestTemplate restTemplate) {
+    public SlackNotificationService(@Qualifier("slackRestTemplate") RestTemplate restTemplate,
+                                    BatchFailureDiagnoser failureDiagnoser) {
         this.restTemplate = restTemplate;
+        this.failureDiagnoser = failureDiagnoser;
     }
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -60,27 +62,28 @@ public class SlackNotificationService {
         sb.append("*Start Time:* ").append(formatTime(jobExecution.getStartTime())).append("\n");
         sb.append("*End Time:* ").append(formatTime(jobExecution.getEndTime())).append("\n\n");
 
-        // 실패한 예외 목록
-        List<Throwable> exceptions = jobExecution.getAllFailureExceptions();
-        if (!exceptions.isEmpty()) {
-            sb.append(":warning: *실패한 예외 목록:*\n");
-            for (Throwable exception : exceptions) {
-                sb.append("  - `").append(exception.getClass().getSimpleName())
-                        .append("`: ").append(exception.getMessage()).append("\n");
+        // 실패 원인 진단
+        if (!"COMPLETED".equals(status)) {
+            String diagnosis = failureDiagnoser.diagnose(jobExecution);
+            if (diagnosis != null) {
+                sb.append(diagnosis).append("\n");
             }
-            sb.append("\n");
         }
 
         // Step별 통계
         sb.append("*Step별 통계:*\n");
         for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
             sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+            long readCount = stepExecution.getReadCount();
+            long processCount = readCount - stepExecution.getFilterCount();
+            long writeCount = stepExecution.getWriteCount();
+
             sb.append(":arrow_forward: *Step:* `").append(stepExecution.getStepName()).append("`\n");
-            sb.append("  • Read Count: ").append(stepExecution.getReadCount()).append("\n");
-            sb.append("  • Write Count: ").append(stepExecution.getWriteCount()).append("\n");
-            sb.append("  • Skip Count: ").append(stepExecution.getSkipCount()).append("\n");
-            sb.append("  • Commit Count: ").append(stepExecution.getCommitCount()).append("\n");
-            sb.append("  • Rollback Count: ").append(stepExecution.getRollbackCount()).append("\n");
+            sb.append("  • Read: ").append(readCount)
+                    .append(" → Process: ").append(processCount)
+                    .append(" → Write: ").append(writeCount).append("\n");
+            sb.append("  • Skip: ").append(stepExecution.getSkipCount())
+                    .append(" / Rollback: ").append(stepExecution.getRollbackCount()).append("\n");
         }
 
         return sb.toString();
