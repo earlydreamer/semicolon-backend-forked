@@ -28,7 +28,10 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: settlement-db
-          image: hwangslater/semicolon-settlement:latest
+          # Baseline image (used for manual apply / initial bootstrap)
+          # Production rollout is done by GitHub Actions with immutable tag:
+          #   dukku/semicolon-<service>:<git_sha>
+          image: dukku/semicolon-settlement:latest
           imagePullPolicy: Always
           name: settlement
           ports:

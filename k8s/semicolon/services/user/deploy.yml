@@ -30,7 +30,10 @@ spec:
                 name: user-db
             - secretRef:
                 name: user-db
-          image: hwangslater/semicolon-user:latest
+          # Baseline image (used for manual apply / initial bootstrap)
+          # Production rollout is done by GitHub Actions with immutable tag:
+          #   dukku/semicolon-<service>:<git_sha>
+          image: dukku/semicolon-user:latest
           imagePullPolicy: Always
           name: user
           ports:

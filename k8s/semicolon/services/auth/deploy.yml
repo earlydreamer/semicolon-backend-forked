@@ -28,7 +28,10 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: auth-db
-          image: hwangslater/semicolon-auth:latest
+          # Baseline image (used for manual apply / initial bootstrap)
+          # Production rollout is done by GitHub Actions with immutable tag:
+          #   dukku/semicolon-<service>:<git_sha>
+          image: dukku/semicolon-auth:latest
           imagePullPolicy: Always
           name: auth
           ports:
