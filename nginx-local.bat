@@ -75,15 +75,23 @@ for /f "usebackq delims=" %%I in (`docker ps --filter "name=semicolon-nginx" --f
 goto :eof
 
 :ensure_certs
-rem PEM 인증서가 없으면 self-signed 인증서 생성
+rem PEM 인증서가 없으면 mkcert(우선) 또는 openssl(fallback)로 생성
 if not exist "%CERTS_DIR%" (
     mkdir "%CERTS_DIR%" >nul 2>&1
 )
 
 if exist "%CERT_FULLCHAIN%" if exist "%CERT_PRIVKEY%" goto :eof
 
-echo [nginx-local] TLS cert not found. Generating self-signed certs...
-docker run --rm -v "%CERTS_DIR%:/out" alpine:3.20 sh -c "apk add --no-cache openssl >/dev/null && openssl req -x509 -nodes -newkey rsa:2048 -keyout /out/privkey.pem -out /out/fullchain.pem -days 365 -subj '/CN=api.dukku.shop' -addext 'subjectAltName=DNS:api.dukku.shop,DNS:localhost,IP:127.0.0.1'"
+echo [nginx-local] TLS cert not found. Generating certs...
+
+where mkcert >nul 2>&1
+if not errorlevel 1 (
+    echo [nginx-local] Using mkcert ^(browser-trusted^)...
+    mkcert -key-file "%CERT_PRIVKEY%" -cert-file "%CERT_FULLCHAIN%" api.dukku.shop localhost 127.0.0.1
+) else (
+    echo [nginx-local] mkcert not found. Falling back to openssl ^(self-signed, not browser-trusted^)...
+    docker run --rm -v "%CERTS_DIR%:/out" alpine:3.20 sh -c "apk add --no-cache openssl >/dev/null && openssl req -x509 -nodes -newkey rsa:2048 -keyout /out/privkey.pem -out /out/fullchain.pem -days 365 -subj '/CN=localhost' -addext 'subjectAltName=DNS:api.dukku.shop,DNS:localhost,IP:127.0.0.1'"
+)
 if errorlevel 1 exit /b 1
 
 if not exist "%CERT_FULLCHAIN%" exit /b 1
