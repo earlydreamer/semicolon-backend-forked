@@ -1,6 +1,8 @@
 package dukku.product.boundedContext.product.in;
 
-import dukku.common.shared.user.event.UserJoinedEvent;
+import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.user.event.UserDepositInitializedEvent;
+import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
 import dukku.product.boundedContext.product.entity.ProductUser;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,25 +20,35 @@ public class ProductUserEventListener {
     private static final int NICKNAME_MAX_LENGTH = 50;
 
     private final ProductUserRepository productUserRepository;
+    private final EventPublisher eventPublisher;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
-    public void handleUserJoined(String eventJson) {
+    @KafkaListener(topics = "user.deposit-initialized", groupId = "${spring.application.name}-group")
+    public void handleDepositInitialized(String eventJson) {
         try {
-            UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
-            UUID userUuid = event.member().userUuid();
+            UserDepositInitializedEvent event = objectMapper.readValue(eventJson, UserDepositInitializedEvent.class);
+            UUID userUuid = event.userUuid();
 
             if (productUserRepository.existsById(userUuid)) {
                 return;
             }
 
-            String nickname = normalizeNickname(event.member().nickname(), userUuid);
-            productUserRepository.save(ProductUser.create(userUuid, nickname));
-            log.info("[UserJoinedEvent] ìƒí’ˆ ë„ë©”ì¸ ìœ ì € ë™ê¸°í™” ì™„ë£Œ. userUuid={}", userUuid);
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.warn("[UserJoinedEvent] ìƒí’ˆ ë„ë©”ì¸ ìœ ì € ë™ê¸°í™” ì¤‘ ë‹‰ë„¤ì„ ì¶©ëŒ ë°œìƒ", e);
+            String nickname = fallbackNickname(userUuid);
+            productUserRepository.save(ProductUser.create(userUuid, normalizeNickname(nickname, userUuid)));
+            log.info("[UserDepositInitializedEvent] »óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ ¿Ï·á. userUuid={}", userUuid);
         } catch (Exception e) {
-            log.error("[UserJoinedEvent] user.joined ì´ë²¤íŠ¸ ì²˜ë¦¬ ì‹¤íŒ¨", e);
+            publishProductInitFailed(eventJson, e);
+        }
+    }
+
+    private void publishProductInitFailed(String eventJson, Exception cause) {
+        try {
+            UserDepositInitializedEvent event = objectMapper.readValue(eventJson, UserDepositInitializedEvent.class);
+            String reason = cause.getMessage() == null ? "»óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ Áß ¿¹¿Ü ¹ß»ı" : cause.getMessage();
+            eventPublisher.publish(new UserProductInitializationFailedEvent(event.userUuid(), reason));
+            log.error("[UserDepositInitializedEvent] »óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ ½ÇÆĞ. userUuid={}", event.userUuid(), cause);
+        } catch (Exception parseException) {
+            log.error("[UserDepositInitializedEvent] ½ÇÆĞ ÀÌº¥Æ® ¹ßÇàÀ» À§ÇÑ ÆÄ½Ì¿¡ ½ÇÆĞÇß½À´Ï´Ù.", parseException);
         }
     }
 

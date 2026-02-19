@@ -1,9 +1,13 @@
 package dukku.deposit.boundedContext.deposit.in;
 
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.common.shared.payment.event.RefundRequestedEvent;
 import dukku.common.shared.settlement.event.SettlementDepositChargeRequestedEvent;
+import dukku.common.shared.user.event.UserDepositInitializationFailedEvent;
+import dukku.common.shared.user.event.UserDepositInitializedEvent;
 import dukku.common.shared.user.event.UserJoinedEvent;
+import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
 import dukku.deposit.boundedContext.deposit.app.ChargeDepositForSettlementUseCase;
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import lombok.RequiredArgsConstructor;
@@ -17,18 +21,11 @@ import org.springframework.stereotype.Component;
 public class DepositEventListener {
 
     private final DepositFacade depositFacade;
+    private final EventPublisher eventPublisher;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-    /**
-     * 결제 완료 시 예치금 차감 라이프사이클 처리
-     *
-     * <p>
-     * 결제 트랜잭션이 최종 커밋된 후(AFTER_COMMIT), 비동기적으로 예치금 차감 프로세스를 시작한다.
-     * 상품별 사용 상세 내역(itemDepositUsages)을 포함하여 파사드에 위임한다.
-     */
     @KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
     public void handle(PaymentSuccessEvent event) {
-        // paymentUuid 전달 (보상 트랜잭션 식별)
         depositFacade.deductDepositForPayment(
                 event.userUuid(),
                 event.paymentDeposit(),
@@ -38,16 +35,8 @@ public class DepositEventListener {
         depositFacade.increaseSystemDepositForPg(event.orderUuid(), event.pgAmount());
     }
 
-    /**
-     * 환불 요청 시 예치금 복구 처리
-     *
-     * <p>
-     * RefundRequestedEvent 수신 시 예치금을 롤백(재적립)한다.
-     * 복구 성공 시 DepositRefundedEvent 발행.
-     */
     @KafkaListener(topics = "payment.refund-requested", groupId = "${spring.application.name}-group")
     public void handle(RefundRequestedEvent event) {
-        // paymentUuid 전달 (예치금 롤백 실패 연계)
         depositFacade.refundDeposit(
                 event.userUuid(),
                 event.refundDepositAmount(),
@@ -56,36 +45,48 @@ public class DepositEventListener {
                 event.refundUuid());
     }
 
-    /**
-     * 정산 지급 요청 시 예치금 충전 처리
-     *
-     * <p>
-     * SettlementPayoutRequestedEvent 수신 시 예치금을 충전한다.
-     * 충전 성공 시 DepositChargeSucceededEvent 발행.
-     * 충전 실패 시 DepositChargeFailedEvent 발행.
-     *
-     * @deprecated 정산 예치금 충전은 이제 Internal API 호출을 통한
-     *             {@link ChargeDepositForSettlementUseCase} 사용을 권장합니다.
-     *             이벤트 기반 방식은 하위 호환성을 위해 유지되나, 향후 제거될 예정입니다.
-     */
     @Deprecated
     @KafkaListener(topics = "settlement.deposit-charge", groupId = "${spring.application.name}-group")
     public void handle(SettlementDepositChargeRequestedEvent command) {
-        log.warn("[DEPRECATED] 이벤트 기반 정산 충전 요청이 수신되었습니다. API 방식으로의 전환이 필요합니다. settlementUuid={}",
-                command.settlementUuid());
+        log.warn("[DEPRECATED] �̺�Ʈ ��� ���� ���� ��û�� �����߽��ϴ�. settlementUuid={}", command.settlementUuid());
         depositFacade.chargeDepositForSettlement(
                 command.userUuid(),
                 command.amount(),
                 command.settlementUuid());
     }
+
     @KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
     public void handleUserJoined(String eventJson) {
         try {
             UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
             depositFacade.findDeposit(event.member().userUuid());
-            log.info("[UserJoinedEvent] 예치금 계정 초기화 완료. userUuid={}", event.member().userUuid());
+            eventPublisher.publish(new UserDepositInitializedEvent(event.member().userUuid()));
+            log.info("[UserJoinedEvent] ��ġ�� ���� �ʱ�ȭ �Ϸ�. userUuid={}", event.member().userUuid());
         } catch (Exception e) {
-            log.error("[UserJoinedEvent] user.joined 이벤트 처리 실패", e);
+            publishDepositInitFailed(eventJson, e);
+        }
+    }
+
+    @KafkaListener(topics = "user.product-initialization-failed", groupId = "${spring.application.name}-group")
+    public void handleProductInitializationFailed(String eventJson) {
+        try {
+            UserProductInitializationFailedEvent event =
+                    objectMapper.readValue(eventJson, UserProductInitializationFailedEvent.class);
+            depositFacade.compensateUserRegistration(event.userUuid());
+            log.info("[UserProductInitializationFailedEvent] ��ġ�� ����(����) �Ϸ�. userUuid={}", event.userUuid());
+        } catch (Exception e) {
+            log.error("[UserProductInitializationFailedEvent] ��ġ�� ����(����) ó�� ����", e);
+        }
+    }
+
+    private void publishDepositInitFailed(String eventJson, Exception cause) {
+        try {
+            UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
+            String reason = cause.getMessage() == null ? "��ġ�� ���� �ʱ�ȭ �� ���� �߻�" : cause.getMessage();
+            eventPublisher.publish(new UserDepositInitializationFailedEvent(event.member().userUuid(), reason));
+            log.error("[UserJoinedEvent] ��ġ�� ���� �ʱ�ȭ ����. userUuid={}", event.member().userUuid(), cause);
+        } catch (Exception parseException) {
+            log.error("[UserJoinedEvent] ���� �̺�Ʈ ������ ���� �Ľ̿� �����߽��ϴ�.", parseException);
         }
     }
 }
