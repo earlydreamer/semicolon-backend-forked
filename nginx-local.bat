@@ -2,46 +2,53 @@
 setlocal enabledelayedexpansion
 
 rem =========================================================
-rem [개요]
-rem - 로컬 nginx Docker Compose 제어 스크립트
-rem - 인자 없이 실행하면 toggle 동작 (running이면 down, 아니면 up)
-rem - up 실행 시 PEM 인증서가 없으면 self-signed 인증서 자동 생성
+rem Local nginx helper for Windows.
+rem Usage: nginx-local.bat [up^|down^|restart^|reload^|logs^|ps^|toggle] [pause^-p] [-y^|--yes]
 rem =========================================================
 
-rem [기본 경로]
 set "SCRIPT_DIR=%~dp0"
 set "COMPOSE_FILE=%SCRIPT_DIR%docker-compose.local.nginx.yml"
 set "CERTS_DIR=%SCRIPT_DIR%nginx-conf\certs"
 set "CERT_FULLCHAIN=%CERTS_DIR%\fullchain.pem"
 set "CERT_PRIVKEY=%CERTS_DIR%\privkey.pem"
+set "COMPOSE_CMD="
 
-rem [네트워크 이름]
-rem BACKEND_DOCKER_NETWORK가 있으면 해당 값을, 없으면 기본값 사용
 if "%BACKEND_DOCKER_NETWORK%"=="" (
     set "NETWORK_NAME=beadv4_4_semicolon_be_default"
 ) else (
     set "NETWORK_NAME=%BACKEND_DOCKER_NETWORK%"
 )
 
-rem [액션]
-rem 첫 번째 인자를 액션으로 사용, 없으면 toggle
 set "ACTION=%~1"
 if "%ACTION%"=="" set "ACTION=toggle"
 
-rem [옵션]
-rem - pause / -p: 종료 전 창 유지
-rem - -y / --yes: down 확인 프롬프트 생략
 set "PAUSE_AFTER=0"
 set "FORCE_DOWN=0"
+set "SKIP_PAUSE=0"
 if "%~1"=="" set "PAUSE_AFTER=1"
 for %%A in (%*) do (
     if /I "%%~A"=="pause" set "PAUSE_AFTER=1"
     if /I "%%~A"=="-p" set "PAUSE_AFTER=1"
     if /I "%%~A"=="-y" set "FORCE_DOWN=1"
     if /I "%%~A"=="--yes" set "FORCE_DOWN=1"
+    if /I "%%~A"=="--no-pause" set "SKIP_PAUSE=1"
+)
+if "%SKIP_PAUSE%"=="1" set "PAUSE_AFTER=0"
+
+docker compose version >nul 2>&1
+if not errorlevel 1 (
+    set "COMPOSE_CMD=docker compose"
+) else (
+    where docker-compose >nul 2>&1
+    if not errorlevel 1 (
+        set "COMPOSE_CMD=docker-compose"
+    ) else (
+        echo [nginx-local] Docker compose command not found. Install Docker Compose plugin or docker-compose.
+        set "EXIT_CODE=1"
+        goto :finish
+    )
 )
 
-rem [액션 분기]
 if /I "%ACTION%"=="up" goto :up
 if /I "%ACTION%"=="down" goto :down
 if /I "%ACTION%"=="restart" goto :restart
@@ -51,31 +58,11 @@ if /I "%ACTION%"=="ps" goto :ps
 if /I "%ACTION%"=="toggle" goto :toggle
 
 echo [nginx-local] Unknown action: %ACTION%
-echo Usage: nginx-local.bat [up^|down^|restart^|reload^|logs^|ps^|toggle] [pause^-p] [-y^|--yes]
+echo Usage: nginx-local.bat [up^|down^|restart^|reload^|logs^|ps^|toggle] [pause^-p] [-y^|--yes] [--no-pause]
 set "EXIT_CODE=1"
 goto :finish
 
-:ensure_network
-rem 외부 네트워크가 없으면 자동 생성
-docker network inspect "%NETWORK_NAME%" >nul 2>&1
-if errorlevel 1 (
-    echo [nginx-local] Docker network "%NETWORK_NAME%" not found. Creating...
-    docker network create "%NETWORK_NAME%" >nul
-    if errorlevel 1 exit /b 1
-)
-goto :eof
-
-:is_running
-rem semicolon-nginx가 running 상태인지 확인
-set "RUNNING_ID="
-for /f "usebackq delims=" %%I in (`docker ps --filter "name=semicolon-nginx" --filter "status=running" -q`) do (
-    set "RUNNING_ID=%%I"
-    goto :eof
-)
-goto :eof
-
 :ensure_certs
-rem PEM 인증서가 없으면 mkcert(우선) 또는 openssl(fallback)로 생성
 if not exist "%CERTS_DIR%" (
     mkdir "%CERTS_DIR%" >nul 2>&1
 )
@@ -86,24 +73,70 @@ echo [nginx-local] TLS cert not found. Generating certs...
 
 where mkcert >nul 2>&1
 if not errorlevel 1 (
-    echo [nginx-local] Using mkcert ^(browser-trusted^)...
-    mkcert -key-file "%CERT_PRIVKEY%" -cert-file "%CERT_FULLCHAIN%" api.dukku.shop localhost 127.0.0.1
+    echo [nginx-local] Using mkcert (browser-trusted)...
+    mkcert -cert-file "%CERT_FULLCHAIN%" -key-file "%CERT_PRIVKEY%" api.dukku.shop localhost 127.0.0.1
 ) else (
-    echo [nginx-local] mkcert not found. Falling back to openssl ^(self-signed, not browser-trusted^)...
-    docker run --rm -v "%CERTS_DIR%:/out" alpine:3.20 sh -c "apk add --no-cache openssl >/dev/null && openssl req -x509 -nodes -newkey rsa:2048 -keyout /out/privkey.pem -out /out/fullchain.pem -days 365 -subj '/CN=localhost' -addext 'subjectAltName=DNS:api.dukku.shop,DNS:localhost,IP:127.0.0.1'"
+    where openssl >nul 2>&1
+    if not errorlevel 1 (
+        echo [nginx-local] mkcert not found. Using local openssl fallback (self-signed, not browser-trusted)...
+        openssl req -x509 -nodes -newkey rsa:2048 -keyout "%CERT_PRIVKEY%" -out "%CERT_FULLCHAIN%" -days 365 -subj /CN=localhost
+    ) else (
+        echo [nginx-local] mkcert not found. Using dockerized openssl fallback (self-signed, not browser-trusted)...
+        docker run --rm -v "%CERTS_DIR%:/out" alpine:3.20 sh -lc "apk add --no-cache openssl > /dev/null ; openssl req -x509 -nodes -newkey rsa:2048 -keyout /out/privkey.pem -out /out/fullchain.pem -days 365 -subj /CN=localhost"
+    )
 )
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    echo [nginx-local] Failed to generate certs.
+    set "EXIT_CODE=1"
+    set "PAUSE_AFTER=1"
+    goto :finish
+)
 
-if not exist "%CERT_FULLCHAIN%" exit /b 1
-if not exist "%CERT_PRIVKEY%" exit /b 1
+if not exist "%CERT_FULLCHAIN%" (
+    echo [nginx-local] Cert generation finished but fullchain.pem was not created.
+    echo [nginx-local] Checked: "%CERT_FULLCHAIN%"
+    dir /b "%CERTS_DIR%" | findstr /i "fullchain.pem privkey.pem"
+    set "EXIT_CODE=1"
+    set "PAUSE_AFTER=1"
+    goto :finish
+)
+
+if not exist "%CERT_PRIVKEY%" (
+    echo [nginx-local] Cert generation finished but privkey.pem was not created.
+    echo [nginx-local] Checked: "%CERT_PRIVKEY%"
+    dir /b "%CERTS_DIR%" | findstr /i "fullchain.pem privkey.pem"
+    set "EXIT_CODE=1"
+    set "PAUSE_AFTER=1"
+    goto :finish
+)
 goto :eof
 
+:detect_compose
+docker compose version >nul 2>&1
+if not errorlevel 1 (
+    set "COMPOSE_CMD=docker compose"
+    goto :eof
+)
+
+where docker-compose >nul 2>&1
+if not errorlevel 1 (
+    set "COMPOSE_CMD=docker-compose"
+    goto :eof
+)
+
+echo [nginx-local] Docker compose command not found. Install Docker Compose plugin or docker-compose.
+set "EXIT_CODE=1"
+goto :finish
+
 :up
-rem 네트워크/인증서 준비 후 nginx 기동
-call :ensure_network
+docker network inspect "%NETWORK_NAME%" >nul 2>&1
 if errorlevel 1 (
-    set "EXIT_CODE=1"
-    goto :finish
+    echo [nginx-local] Docker network "%NETWORK_NAME%" not found. Creating...
+    docker network create "%NETWORK_NAME%" >nul
+    if errorlevel 1 (
+        set "EXIT_CODE=1"
+        goto :finish
+    )
 )
 
 call :ensure_certs
@@ -113,13 +146,17 @@ if errorlevel 1 (
     goto :finish
 )
 
-docker compose -f "%COMPOSE_FILE%" up -d nginx
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" up -d nginx
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :down
-rem running 상태면 사용자 확인 후 down
-call :is_running
+set "RUNNING_ID="
+for /f "usebackq delims=" %%I in (`docker ps --filter "name=semicolon-nginx" --filter "status=running" -q`) do (
+    set "RUNNING_ID=%%I"
+    goto :down_exec_check
+)
+:down_exec_check
 if defined RUNNING_ID goto :down_detected
 goto :down_execute
 
@@ -135,16 +172,20 @@ if not "%FORCE_DOWN%"=="1" (
 )
 
 :down_execute
-docker compose -f "%COMPOSE_FILE%" down
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" down
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :toggle
-rem running이면 down, 아니면 up
-call :is_running
+set "RUNNING_ID="
+for /f "usebackq delims=" %%I in (`docker ps --filter "name=semicolon-nginx" --filter "status=running" -q`) do (
+    set "RUNNING_ID=%%I"
+    goto :toggle_exec_check
+)
+:toggle_exec_check
 if defined RUNNING_ID (
     echo [nginx-local] semicolon-nginx is running. Stopping...
-    docker compose -f "%COMPOSE_FILE%" down
+    %COMPOSE_CMD% -f "%COMPOSE_FILE%" down
     set "EXIT_CODE=%errorlevel%"
     goto :finish
 )
@@ -153,7 +194,7 @@ echo [nginx-local] semicolon-nginx is not running. Starting...
 goto :up
 
 :restart
-docker compose -f "%COMPOSE_FILE%" restart nginx
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" restart nginx
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
@@ -167,20 +208,22 @@ set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :logs
-docker compose -f "%COMPOSE_FILE%" logs -f nginx
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" logs -f nginx
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :ps
-docker compose -f "%COMPOSE_FILE%" ps
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" ps
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :finish
-if not "%~1"=="" set "EXIT_CODE=%~1"
-if "%EXIT_CODE%"=="" set "EXIT_CODE=0"
+if not defined EXIT_CODE set "EXIT_CODE=0"
+if not "%EXIT_CODE%"=="0" set "PAUSE_AFTER=1"
 if "%PAUSE_AFTER%"=="1" (
+    if "%SKIP_PAUSE%"=="1" goto :_nginx_finish_end
     echo.
     pause
 )
+:_nginx_finish_end
 exit /b %EXIT_CODE%
