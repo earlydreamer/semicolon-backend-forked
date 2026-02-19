@@ -20,6 +20,7 @@ COPY deposit deposit
 COPY settlement settlement
 COPY coupon coupon
 COPY ai ai
+COPY monitoring monitoring
 
 # 3. 빌드 실행 (MODULE_NAME을 인자로 받음)
 ARG MODULE_NAME
