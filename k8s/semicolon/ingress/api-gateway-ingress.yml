@@ -16,11 +16,27 @@ spec:
     - host: api.dukku.shop
       http:
         paths:
-
           # =====================
           # AUTH / USER
           # =====================
           - path: /api/v1/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+
+          # Social Login callback paths (Spring Security OAuth2)
+          - path: /oauth2/
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+
+          - path: /login/oauth2/
             pathType: Prefix
             backend:
               service:
@@ -35,7 +51,6 @@ spec:
                 name: user-service
                 port:
                   number: 80
-
 
           # =====================
           # PRODUCT DOMAIN
@@ -88,7 +103,6 @@ spec:
                 port:
                   number: 80
 
-
           # =====================
           # ORDER / PAYMENT / COUPON / DEPOSIT / SETTLEMENT
           # =====================
@@ -131,7 +145,6 @@ spec:
                 name: settlement-service
                 port:
                   number: 80
-
 
           # =====================
           # ADMIN — 서비스별 분기
