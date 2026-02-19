@@ -2,11 +2,11 @@ package dukku.coupon.boundedContext.coupon.app.command;
 
 import dukku.common.shared.coupon.dto.IssueLogDto;
 import dukku.common.shared.coupon.type.IssueResult;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,35 +18,62 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CouponIssueLogManager {
+
     private final JdbcTemplate jdbcTemplate;
-    private final ConcurrentLinkedQueue<IssueLogDto> logQueue = new ConcurrentLinkedQueue<>();
+
+    // 1. [OOM 방지] 무제한 큐 대신 최대 용량을 설정 (예: 10만 건)
+    // 메모리 계산: 객체당 약 100~200byte * 100,000 ≈ 20MB (안전함)
+    private final LinkedBlockingQueue<IssueLogDto> logQueue = new LinkedBlockingQueue<>(100_000);
+
     private static final int BATCH_SIZE = 1000;
 
-    // 중복 플러시 방지를 위한 플래그
+    // 동시 실행 방지 Lock (synchronized보다 가벼움)
     private final AtomicBoolean isFlushing = new AtomicBoolean(false);
 
-    @Async("logTaskExecutor")
+    /**
+     * 로그 적재 (Non-Blocking)
+     * 큐가 가득 찼을 때 대기하지 않고 즉시 false를 반환하여 메인 비즈니스 로직에 영향을 주지 않음.
+     */
     public void record(UUID couponUuid, UUID userUuid, IssueResult result, LocalDateTime requestedAt) {
-        logQueue.add(new IssueLogDto(couponUuid, userUuid, result, requestedAt));
+        IssueLogDto logDto = new IssueLogDto(couponUuid, userUuid, result, requestedAt);
 
-        // 큐가 가득 차면 즉시 플러시 트리거
-        if (logQueue.size() >= BATCH_SIZE) {
-            flushLogs();
+        // offer: 큐에 공간이 있으면 true, 꽉 차면 false 반환 (예외 발생 X)
+        boolean isSuccess = logQueue.offer(logDto);
+
+        if (!isSuccess) {
+            // [중요] 로그 큐가 터지면 그냥 로그를 버립니다. (비즈니스가 우선)
+            // 대신 에러 로그를 남겨 모니터링 알림이 가도록 합니다.
+            log.error("[LOG_DROP] Log Queue is Full! Dropping log for User: {}", userUuid);
         }
     }
 
-    @Scheduled(fixedDelay = 1000)
+    /**
+     * 주기적 플러시 (1초 주기)
+     */
+    @Scheduled(fixedDelay = 10000)
     public void scheduledFlush() {
         flushLogs();
     }
 
+    /**
+     * [우아한 종료] 서버가 내려갈 때 큐에 남은 잔여 로그를 모두 저장
+     */
+    @PreDestroy
+    public void onShutdown() {
+        log.info("Closing application.. flushing remaining {} logs.", logQueue.size());
+        flushLogs();
+    }
+
+    /**
+     * 실제 DB 저장 로직
+     */
     public void flushLogs() {
         // 이미 플러시 중이거나 큐가 비었으면 스킵
         if (logQueue.isEmpty() || !isFlushing.compareAndSet(false, true)) {
@@ -55,35 +82,35 @@ public class CouponIssueLogManager {
 
         try {
             while (!logQueue.isEmpty()) {
-                List<IssueLogDto> logsToSave = new ArrayList<>(BATCH_SIZE);
+                List<IssueLogDto> batchList = new ArrayList<>(BATCH_SIZE);
 
-                for (int i = 0; i < BATCH_SIZE; i++) {
-                    IssueLogDto log = logQueue.poll();
-                    if (log == null) break;
-                    logsToSave.add(log);
+                // 2. [성능 최적화] drainTo 사용
+                // poll()로 루프 도는 것보다 훨씬 빠름 (락 획득 횟수 감소)
+                // 큐에서 최대 BATCH_SIZE만큼 꺼내서 batchList에 담음
+                int drainedCount = logQueue.drainTo(batchList, BATCH_SIZE);
+
+                if (drainedCount > 0) {
+                    batchInsert(batchList);
                 }
-
-                if (logsToSave.isEmpty()) break;
-
-                batchInsert(logsToSave);
             }
+        } catch (Exception e) {
+            log.error("Error occurred during log flushing", e);
         } finally {
             isFlushing.set(false);
         }
     }
 
     private void batchInsert(List<IssueLogDto> logsToSave) {
-        try {
-            String sql = "INSERT INTO coupon_issue_logs (coupon_uuid, user_uuid, result, requested_at, processed_at, elapsed_ms) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO coupon_issue_logs (coupon_uuid, user_uuid, result, requested_at, processed_at, elapsed_ms) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
+        try {
             LocalDateTime now = LocalDateTime.now();
 
             jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
                     IssueLogDto item = logsToSave.get(i);
-                    // item이 null일 가능성은 없으므로 바로 접근
                     long elapsed = Duration.between(item.requestedAt(), now).toMillis();
 
                     ps.setObject(1, item.couponUuid());
@@ -100,7 +127,9 @@ public class CouponIssueLogManager {
                 }
             });
         } catch (Exception e) {
-            log.error("Failed to flush {} logs to DB", logsToSave.size(), e);
+            // DB 연결 에러 등으로 배치가 실패하면, 이 로그들은 유실됩니다.
+            // 재시도 로직을 넣을 수도 있지만, 로그 시스템 특성상 다음 배치를 위해 포기하는 게 일반적입니다.
+            log.error("Failed to batch insert {} logs. Discarding.", logsToSave.size(), e);
         }
     }
 }
