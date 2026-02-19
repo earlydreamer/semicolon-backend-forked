@@ -19,9 +19,6 @@ spring:
         format_sql: false
         use_sql_comments: false
 
-        hbm2ddl:
-          auto: create
-
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 100
 

@@ -3,6 +3,16 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 jwt:
   access:
     secret:
@@ -14,14 +24,13 @@ jwt:
 crypto:
   key: ${CRYPTO_KEY}
 
+slack:
+  webhook:
+    url: ${SLACK_WEBHOOK_URL}
+
 custom:
   global:
-    internalBackUrl: http://localhost:${server.port:8080}
+    internalBackUrl: ${INTERNAL_BACK_URL}
   security:
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}
-
-# 시스템 예치금 계정 설정
-system:
-  admin-deposit:
-    password: ${SYSTEM_DEPOSIT_PASSWORD}
