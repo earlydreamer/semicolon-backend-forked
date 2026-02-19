@@ -3,6 +3,7 @@ package dukku.deposit.boundedContext.deposit.in;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.common.shared.payment.event.RefundRequestedEvent;
 import dukku.common.shared.settlement.event.SettlementDepositChargeRequestedEvent;
+import dukku.common.shared.user.event.UserJoinedEvent;
 import dukku.deposit.boundedContext.deposit.app.ChargeDepositForSettlementUseCase;
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class DepositEventListener {
 
     private final DepositFacade depositFacade;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     /**
      * 결제 완료 시 예치금 차감 라이프사이클 처리
@@ -75,5 +77,15 @@ public class DepositEventListener {
                 command.userUuid(),
                 command.amount(),
                 command.settlementUuid());
+    }
+    @KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
+    public void handleUserJoined(String eventJson) {
+        try {
+            UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
+            depositFacade.findDeposit(event.member().userUuid());
+            log.info("[UserJoinedEvent] deposit account initialized. userUuid={}", event.member().userUuid());
+        } catch (Exception e) {
+            log.error("Failed to process user.joined event", e);
+        }
     }
 }
