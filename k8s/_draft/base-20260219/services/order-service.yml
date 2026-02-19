@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"order-service","namespace":"semicolon"},"spec":{"ports":[{"name":"http","port":80,"targetPort":8084}],"selector":{"app":"order"},"type":"ClusterIP"}}
+  creationTimestamp: "2026-02-18T10:38:33Z"
+  name: order-service
+  namespace: semicolon
+  resourceVersion: "161051"
+  uid: 74b1c7e1-13bf-4825-bffd-1c0df97f3f1a
+spec:
+  clusterIP: 10.43.213.16
+  clusterIPs:
+  - 10.43.213.16
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8084
+  selector:
+    app: order
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"coupon-service","namespace":"semicolon"},"spec":{"ports":[{"name":"http","port":80,"targetPort":8085}],"selector":{"app":"coupon"},"type":"ClusterIP"}}
+  creationTimestamp: "2026-02-18T10:38:33Z"
+  name: coupon-service
+  namespace: semicolon
+  resourceVersion: "161055"
+  uid: ee0b4c74-67c8-4d8b-ad6e-79a4eb39a4d1
+spec:
+  clusterIP: 10.43.164.101
+  clusterIPs:
+  - 10.43.164.101
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8085
+  selector:
+    app: coupon
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
