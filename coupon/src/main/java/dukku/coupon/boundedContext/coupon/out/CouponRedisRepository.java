@@ -6,12 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
-@Repository // Component -> Repository 권장
+@Repository
 @RequiredArgsConstructor
 public class CouponRedisRepository {
     private final RedisTemplate<String, String> redisTemplate;
-
-    // Lua Script 관련 코드 삭제됨
 
     /**
      * 1. 발급 시도 (Lua Script 없이 순수 Redis 명령어 사용)

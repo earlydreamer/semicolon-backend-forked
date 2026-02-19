@@ -47,11 +47,8 @@ public class IssueCouponUseCase {
 
     private void issueCoupon(UUID userUuid, Coupon coupon, LocalDateTime requestedAt) {
         try {
-            // 3-1. DB에 발급 내역 저장 (가장 중요한 데이터)
+            // 3-1. DB에 발급 내역 저장
             couponIssueService.saveIssueResult(userUuid, coupon, requestedAt);
-
-            // 3-2. 성공 로그 기록 (비동기 큐에 적재)
-            couponIssueLogManager.record(coupon.getUuid(), userUuid, IssueResult.SUCCESS, requestedAt);
 
         } catch (Exception e) {
             // [CRITICAL] DB 저장이 실패했다면? Redis 재고를 다시 원복해야 함!
