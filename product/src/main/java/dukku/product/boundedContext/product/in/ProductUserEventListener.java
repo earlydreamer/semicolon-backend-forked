@@ -1,4 +1,4 @@
-package dukku.product.boundedContext.product.in;
+ï»¿package dukku.product.boundedContext.product.in;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.user.event.UserDepositInitializedEvent;
@@ -17,8 +17,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductUserEventListener {
 
-    private static final int NICKNAME_MAX_LENGTH = 50;
-
     private final ProductUserRepository productUserRepository;
     private final EventPublisher eventPublisher;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
@@ -33,9 +31,8 @@ public class ProductUserEventListener {
                 return;
             }
 
-            String nickname = fallbackNickname(userUuid);
-            productUserRepository.save(ProductUser.create(userUuid, normalizeNickname(nickname, userUuid)));
-            log.info("[UserDepositInitializedEvent] »óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ ¿Ï·á. userUuid={}", userUuid);
+            productUserRepository.save(ProductUser.create(userUuid, fallbackNickname(userUuid)));
+            log.info("[UserDepositInitializedEvent] ìƒí’ˆ ë„ë©”ì¸ ìœ ì € ì´ˆê¸°í™” ì™„ë£Œ. userUuid={}", userUuid);
         } catch (Exception e) {
             publishProductInitFailed(eventJson, e);
         }
@@ -44,24 +41,12 @@ public class ProductUserEventListener {
     private void publishProductInitFailed(String eventJson, Exception cause) {
         try {
             UserDepositInitializedEvent event = objectMapper.readValue(eventJson, UserDepositInitializedEvent.class);
-            String reason = cause.getMessage() == null ? "»óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ Áß ¿¹¿Ü ¹ß»ı" : cause.getMessage();
+            String reason = cause.getMessage() == null ? "ìƒí’ˆ ë„ë©”ì¸ ìœ ì € ì´ˆê¸°í™” ì¤‘ ì˜ˆì™¸ ë°œìƒ" : cause.getMessage();
             eventPublisher.publish(new UserProductInitializationFailedEvent(event.userUuid(), reason));
-            log.error("[UserDepositInitializedEvent] »óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ ½ÇÆĞ. userUuid={}", event.userUuid(), cause);
+            log.error("[UserDepositInitializedEvent] ìƒí’ˆ ë„ë©”ì¸ ìœ ì € ì´ˆê¸°í™” ì‹¤íŒ¨. userUuid={}", event.userUuid(), cause);
         } catch (Exception parseException) {
-            log.error("[UserDepositInitializedEvent] ½ÇÆĞ ÀÌº¥Æ® ¹ßÇàÀ» À§ÇÑ ÆÄ½Ì¿¡ ½ÇÆĞÇß½À´Ï´Ù.", parseException);
+            log.error("[UserDepositInitializedEvent] ì‹¤íŒ¨ ì´ë²¤íŠ¸ ë°œí–‰ì„ ìœ„í•œ íŒŒì‹±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.", parseException);
         }
-    }
-
-    private String normalizeNickname(String nickname, UUID userUuid) {
-        if (nickname == null || nickname.isBlank()) {
-            return fallbackNickname(userUuid);
-        }
-
-        String trimmed = nickname.trim();
-        if (trimmed.length() <= NICKNAME_MAX_LENGTH) {
-            return trimmed;
-        }
-        return trimmed.substring(0, NICKNAME_MAX_LENGTH);
     }
 
     private String fallbackNickname(UUID userUuid) {
