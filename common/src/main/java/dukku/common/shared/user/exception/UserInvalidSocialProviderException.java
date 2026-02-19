@@ -9,6 +9,6 @@ public class UserInvalidSocialProviderException extends BadRequestException {
     }
 
     public static UserInvalidSocialProviderException unsupported(SocialProvider provider) {
-        return new UserInvalidSocialProviderException("Unsupported social provider: " + provider);
+        return new UserInvalidSocialProviderException("지원하지 않는 소셜 로그인 제공자입니다: " + provider);
     }
 }

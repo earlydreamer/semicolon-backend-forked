@@ -124,7 +124,7 @@ public class UserInternalController {
     ) {
         UserVerificationResponse response = upsertSocialUserUseCase.execute(request);
 
-        log.info("[Internal API] Social user upserted. provider={}, email={}", request.getProvider(), request.getEmail());
+        log.info("[내부 API] 소셜 사용자 저장(생성/갱신) 완료. provider={}, email={}", request.getProvider(), request.getEmail());
 
         return ResponseEntity.ok(response);
     }
