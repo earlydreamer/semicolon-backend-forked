@@ -40,7 +40,7 @@ spring:
       properties:
         linger.ms: 100
         batch.size: 16384
-        interceptor.classes: dukku.common.global.logging.kafaka.KafkaTracingProducerInterceptor
+        interceptor.classes: dukku.common.global.logging.kafka.KafkaTracingProducerInterceptor
     consumer:
       group-id: ${spring.application.name}-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
