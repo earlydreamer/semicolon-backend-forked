@@ -2,7 +2,7 @@
 set -e
 
 # 도메인별 데이터베이스 목록
-DATABASES="ai_service auth_service user_service product_service order_service payment_service deposit_service coupon_service"
+DATABASES="ai_service auth_service user_service product_service order_service payment_service deposit_service coupon_service settlement_service"
 
 for DB in $DATABASES; do
     echo "Creating database: $DB"
