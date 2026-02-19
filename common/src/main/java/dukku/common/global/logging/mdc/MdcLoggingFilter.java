@@ -1,4 +1,4 @@
-package dukku.common.global.logging;
+package dukku.common.global.logging.mdc;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
