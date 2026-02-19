@@ -34,6 +34,7 @@ public class UserSupport {
                 .orElseThrow(UserNotFoundException::new);
     }
 
+
     public User getActiveUserByUuid(UUID userUuid) {
         return repository.findByUuidAndDeletedAtIsNull(userUuid)
                 .orElseThrow(UserInactiveException::new);
