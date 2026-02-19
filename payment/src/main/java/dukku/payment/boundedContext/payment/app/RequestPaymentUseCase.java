@@ -146,7 +146,8 @@ public class RequestPaymentUseCase {
                 amounts.getPgPayAmount(),
                 amounts.getCouponDiscountAmount(),
                 paymentType,
-                tossOrderId);
+                tossOrderId,
+                request.getCouponUuid());
 
         // [상품별 예치금 분배 로직]
         // 1. productId ASC 정렬을 통해 배치 순서가 바뀌어도 항상 동일한 분배 결과 보장

@@ -18,7 +18,7 @@ public interface SellerFollowRepository extends JpaRepository<SellerFollow, Inte
 
     // 내가 팔로우한 상점 목록 카드
     @Query("""
-                select new dukku.semicolon.shared.product.dto.follow.FollowedSellerCardResponse(
+                select new dukku.common.shared.product.dto.follow.FollowedSellerCardResponse(
                     sf.sellerUuid,
                     pu.nickname,
                     ps.intro,
@@ -37,7 +37,7 @@ public interface SellerFollowRepository extends JpaRepository<SellerFollow, Inte
 
     // 특정 상점의 팔로워 목록 카드
     @Query("""
-                select new dukku.semicolon.shared.product.dto.follow.FollowerUserCardResponse(
+                select new dukku.common.shared.product.dto.follow.FollowerUserCardResponse(
                     sf.userUuid,
                     pu.nickname
                 )

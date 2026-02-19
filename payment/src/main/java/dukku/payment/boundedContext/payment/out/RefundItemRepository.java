@@ -15,4 +15,6 @@ public interface RefundItemRepository extends JpaRepository<RefundItem, Integer>
     Optional<RefundItem> findByUuid(UUID uuid);
 
     List<RefundItem> findByRefundId(int refundId);
+
+    List<RefundItem> findByPaymentOrderItemId(int paymentOrderItemId);
 }

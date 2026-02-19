@@ -1,6 +1,6 @@
 package dukku.coupon.boundedContext.coupon.entity;
 
-import dukku.common.global.exception.ConflictException;
+import dukku.common.shared.coupon.exception.CouponUseNotAllowedException;
 import dukku.common.shared.coupon.type.CouponUserStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -65,10 +65,19 @@ public class CouponUser {
     /* 사용 */
     public void use() {
         if (status != CouponUserStatus.AVAILABLE) {
-            throw new ConflictException("사용할 수 없는 쿠폰");
+            throw new CouponUseNotAllowedException();
         }
         this.status = CouponUserStatus.USED;
         this.usedAt = LocalDateTime.now();
+    }
+
+    /* 결제 실패 시 쿠폰 복구 */
+    public void rollbackUseForPayment() {
+        if (status != CouponUserStatus.USED) {
+            return;
+        }
+        this.status = CouponUserStatus.AVAILABLE;
+        this.usedAt = null;
     }
 
     /* 만료 */

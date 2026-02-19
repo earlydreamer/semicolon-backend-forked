@@ -43,13 +43,13 @@ public class OrderFacade {
 
     // 사용자가 주문내역을 조회하고 싶을 때
     @Transactional(readOnly = true)
-    public Page<dukku.common.shared.order.dto.OrderListResponse> findAdminOrderList(AdminOrderSearchCondition condition, Pageable pageable) {
+    public Page<OrderListResponse> findAdminOrderList(AdminOrderSearchCondition condition, Pageable pageable) {
         return findAdminOrderList.execute(condition, pageable);
     }
 
     // 사용자가 본인의 주문내역을 조회하고 싶을 때
     @Transactional(readOnly = true)
-    public Page<dukku.common.shared.order.dto.OrderListResponse> findMyOrderList(Pageable pageable) {
+    public Page<OrderListResponse> findMyOrderList(Pageable pageable) {
         return findMyOrderList.execute(pageable);
     }
 

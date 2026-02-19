@@ -1,5 +1,7 @@
 package dukku.deposit.boundedContext.deposit.app;
 
+import dukku.common.shared.deposit.type.DepositHistoryType;
+import dukku.deposit.global.SystemDepositInitData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +20,13 @@ public class IncreaseSystemDepositForPgUseCase {
     @Transactional
     public void execute(UUID orderUuid, Long pgAmount) {
         if (pgAmount == null || pgAmount <= 0) {
+            return;
         }
 
-//        increaseDepositUseCase.increase(
-//                SystemDepositInitData.SYSTEM_USER_UUID,
-//                pgAmount,
-//                DepositHistoryType.PG_CHARGE,
-//                orderUuid);
+        increaseDepositUseCase.increase(
+                SystemDepositInitData.SYSTEM_USER_UUID,
+                pgAmount,
+                DepositHistoryType.PG_CHARGE,
+                orderUuid);
     }
 }

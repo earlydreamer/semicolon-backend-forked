@@ -1,10 +1,9 @@
 package dukku.common.shared.user.exception;
 
-
 import dukku.common.global.exception.NotFoundException;
 
 public class UserNotFoundException extends NotFoundException {
     public UserNotFoundException() {
-        super("존재하지 않는 유저입니다.");
+        super("사용자를 찾을 수 없습니다.");
     }
 }

@@ -1,17 +1,23 @@
 package dukku.user.boundedContext.user.entity;
 
 import dukku.common.global.auth.crypto.converter.AesGcmConverter;
-import dukku.user.boundedContext.user.exception.AlreadyWithdrawUserException;
-import dukku.user.boundedContext.user.exception.WithdrawRestoreNotAllowedException;
+import dukku.common.shared.user.domain.SourceUser;
+import dukku.common.shared.user.dto.UserDto;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.dto.UserResponse;
 import dukku.common.shared.user.dto.UserUpdateRequest;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.type.UserStatus;
-import dukku.common.shared.user.domain.SourceUser;
-import dukku.common.shared.user.dto.UserDto;
-import jakarta.persistence.*;
-import lombok.*;
+import dukku.common.shared.user.exception.UserAlreadyWithdrawException;
+import dukku.common.shared.user.exception.UserWithdrawRestoreNotAllowedException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
@@ -58,7 +64,7 @@ public class User extends SourceUser {
 
     public void withdraw(String maskedEmail, String maskedNickname, String encodedPassword) {
         if (isWithdrawnStatus()) {
-            throw new AlreadyWithdrawUserException();
+            throw new UserAlreadyWithdrawException();
         }
         this.withdrawalEmailBackup = this.getEmail();
         this.withdrawalNicknameBackup = this.getNickname();
@@ -71,10 +77,10 @@ public class User extends SourceUser {
 
     public void restoreFromWithdrawal(String encodedPassword) {
         if (this.getStatus() != UserStatus.WITHDRAWN_PENDING && this.getStatus() != UserStatus.DELETED) {
-            throw new WithdrawRestoreNotAllowedException("User is not restorable.");
+            throw UserWithdrawRestoreNotAllowedException.userIsNotRestorable();
         }
         if (this.withdrawalEmailBackup == null) {
-            throw new WithdrawRestoreNotAllowedException("Missing withdrawal backup.");
+            throw UserWithdrawRestoreNotAllowedException.missingWithdrawalBackup();
         }
         this.setEmail(this.withdrawalEmailBackup);
         this.setNickname(this.withdrawalNicknameBackup);
@@ -109,6 +115,7 @@ public class User extends SourceUser {
                 user.getNickname(),
                 user.getRole(),
                 user.getStatus(),
+                user.getStatus().getLabel(),
                 user.getCreatedAt()
         );
     }

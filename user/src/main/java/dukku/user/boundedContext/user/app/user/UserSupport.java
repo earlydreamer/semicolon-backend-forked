@@ -1,8 +1,8 @@
 package dukku.user.boundedContext.user.app.user;
 
-import dukku.common.global.exception.NotFoundException;
-import dukku.common.global.exception.UnauthorizedException;
+import dukku.common.shared.user.exception.UserNotFoundException;
 import dukku.user.boundedContext.user.entity.User;
+import dukku.common.shared.user.exception.UserInactiveException;
 import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,12 +31,12 @@ public class UserSupport {
 
     public User getUserByUuid(UUID userUuid) {
         return repository.findByUuid(userUuid)
-                .orElseThrow(() -> new NotFoundException("User not found."));
+                .orElseThrow(UserNotFoundException::new);
     }
 
     public User getActiveUserByUuid(UUID userUuid) {
         return repository.findByUuidAndDeletedAtIsNull(userUuid)
-                .orElseThrow(() -> new UnauthorizedException("이미 탈퇴한 사용자입니다."));
+                .orElseThrow(UserInactiveException::new);
     }
 
     public boolean isActiveEmailInUse(String email, Integer excludeUserId) {

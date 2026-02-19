@@ -22,6 +22,7 @@ public class PaymentDto {
     private Integer id;
     private UUID uuid;
     private UUID orderUuid;
+    private UUID couponUuid;
     private UUID userUuid;
     private String tossOrderId;
     private Long amount;

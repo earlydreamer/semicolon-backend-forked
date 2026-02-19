@@ -9,3 +9,6 @@ include 'deposit'
 include 'order'
 include 'payment'
 include 'coupon'
+include 'ai'
+include 'log-consumer'
+project(':log-consumer').projectDir = file('monitoring/log-consumer')

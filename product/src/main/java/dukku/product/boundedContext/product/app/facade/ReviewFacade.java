@@ -1,9 +1,6 @@
 package dukku.product.boundedContext.product.app.facade;
 
-import dukku.common.shared.product.dto.review.SellerReviewCreateRequest;
-import dukku.common.shared.product.dto.review.SellerReviewListResponse;
-import dukku.common.shared.product.dto.review.SellerReviewSummaryResponse;
-import dukku.common.shared.product.dto.review.SellerReviewUpdateRequest;
+import dukku.common.shared.product.dto.review.*;
 import dukku.product.boundedContext.product.app.usecase.review.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +19,11 @@ public class ReviewFacade {
     private final FindSellerReviewListUseCase findSellerReviewListUseCase;
     private final FindSellerReviewSummaryUseCase findSellerReviewSummaryUseCase;
 
-    public dukku.common.shared.product.dto.review.SellerReviewResponse createSellerReview(UUID userUuid, @Valid SellerReviewCreateRequest request) {
+    public SellerReviewResponse createSellerReview(UUID userUuid, @Valid SellerReviewCreateRequest request) {
         return createSellerReviewUseCase.execute(userUuid, request);
     }
 
-    public dukku.common.shared.product.dto.review.SellerReviewResponse updateSellerReview(UUID userUuid, UUID reviewUuid, @Valid SellerReviewUpdateRequest request) {
+    public SellerReviewResponse updateSellerReview(UUID userUuid, UUID reviewUuid, @Valid SellerReviewUpdateRequest request) {
         return updateSellerReviewUseCase.execute(userUuid, reviewUuid, request);
     }
 

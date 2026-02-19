@@ -1,23 +1,19 @@
 package dukku.payment.boundedContext.payment.in;
 
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
+import dukku.common.shared.deposit.event.DepositRefundFailedEvent;
+import dukku.common.shared.deposit.event.DepositRefundedEvent;
 import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
 import dukku.payment.boundedContext.payment.app.PaymentFacade;
-import dukku.payment.boundedContext.payment.app.PaymentSupport;
-import dukku.payment.boundedContext.payment.entity.Payment;
-import dukku.common.shared.payment.dto.PaymentRefundRequest;
-import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 /**
- * 결제 도메인 이벤트 리스너 (Inbound Adapter)
+ * 결제 도메인 이벤트 리스너
  *
- * <p>
- * 외부 시스템(주문, 예치금 등)에서 발생한 이벤트를 수신하여 결제 도메인 로직을 구동한다.
+ * <p>주문과 예치금 도메인에서 전달된 이벤트를 수신해 결제 상태를 전이</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -25,57 +21,36 @@ import java.util.List;
 public class PaymentEventListener {
 
     private final PaymentFacade paymentFacade;
-    private final PaymentSupport paymentSupport;
 
     /**
-     * 예치금 차감 실패 시 보상 트랜잭션(결제 취소) 처리
-     *
-     * <p>
-     * DepositDeductionFailedEvent 수신 시 이미 승인된 PG 결제를 취소하여 데이터 일관성을 유지함.
+     * 예치금 차감 실패 시 결제 보상 트랜잭션 처리
      */
-    @org.springframework.kafka.annotation.KafkaListener(topics = "deposit.deduction-failed", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "deposit.deduction-failed", groupId = "${spring.application.name}-group")
     public void handle(DepositDeductionFailedEvent event) {
-        log.warn("[결제 보상 트랜잭션 시작] 예치금 차감 실패 감지: orderUuid={}, reason={}",
-                event.orderUuid(), event.reason());
-
         paymentFacade.compensatePayment(event.orderUuid(), event.reason());
     }
 
     /**
-     * 주문 처리 실패 시 결제 롤백(자동 환불) 처리
+     * 주문 처리 실패 시 결제 롤백 이벤트 처리
      */
-    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.rollback", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "payment.rollback", groupId = "${spring.application.name}-group")
     public void handle(PaymentRollbackRequestEvent event) {
-        log.info("[결제 롤백] 주문 처리 실패로 인한 자동 환불 시작. orderUuid={}, reason={}",
-                event.orderUuid(), event.reason());
+        paymentFacade.compensatePayment(event.orderUuid(), event.reason());
+    }
 
-        // 해당 주문에 대한 완료된 결제 조회
-        List<Payment> payments = paymentSupport.findPaymentsByOrderUuid(event.orderUuid());
+    /**
+     * 예치금 환불 완료 이벤트 처리
+     */
+    @KafkaListener(topics = "deposit.refunded", groupId = "${spring.application.name}-group")
+    public void handle(DepositRefundedEvent event) {
+        paymentFacade.completeRefund(event.refundUuid(), event.paymentUuid());
+    }
 
-        for (Payment payment : payments) {
-            try {
-                PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                        .paymentId(payment.getUuid())
-                        .refundAmount(payment.getAmount() - payment.getRefundTotal())
-                        .reason(event.reason())
-                        .build();
-
-                // Idempotency Key는 내부 롤백이므로 Prefix 사용
-                PaymentRefundResponse response = paymentFacade.refundPayment(refundRequest,
-                        "rollback-" + payment.getUuid());
-                if (response.isSuccess()) {
-                    log.info("[결제 롤백] 환불 성공. paymentUuid={}", payment.getUuid());
-                } else {
-                    log.error("[결제 롤백] PG 환불 실패. 수동 조치 필요. paymentUuid={}, code={}, message={}",
-                            payment.getUuid(), response.getCode(), response.getMessage());
-                }
-            } catch (Exception e) {
-                // 자동 롤백 프로세스 중 발생하는 모든 예외를 잡아서 로그를 남겨야 함.
-                // 여기서 예외를 놓치면 결제는 성공했는데 주문은 실패한 상태로 남을 수 있음 (데이터 불일치)
-                // 상위로 전파하면 다른 결제 건의 롤백이 중단될 수 있으므로, 여기서 예외를 먹고 CRITICAL 로그를 남겨 수동 조치 유도
-                log.error("[결제 롤백] 환불 실패! 수동 조치 필요. paymentUuid={}, error={}",
-                        payment.getUuid(), e.getMessage());
-            }
-        }
+    /**
+     * 예치금 환불 실패 이벤트 처리
+     */
+    @KafkaListener(topics = "deposit.refund.failed", groupId = "${spring.application.name}-group")
+    public void handle(DepositRefundFailedEvent event) {
+        paymentFacade.handleRefundFailure(event);
     }
 }

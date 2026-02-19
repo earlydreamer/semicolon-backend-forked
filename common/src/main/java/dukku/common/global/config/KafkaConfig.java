@@ -1,5 +1,7 @@
 package dukku.common.global.config;
 
+import dukku.common.global.logging.kafka.KafkaTracingBatchInterceptor;
+import dukku.common.global.logging.kafka.KafkaTracingRecordInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -45,16 +47,31 @@ public class KafkaConfig {
     }
 
     @Bean
-    public dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor() {
-        return new dukku.common.global.logging.KafkaTracingRecordInterceptor();
+    public KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor() {
+        return new KafkaTracingRecordInterceptor();
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-            dukku.common.global.logging.KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor) {
+            KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setRecordInterceptor(kafkaTracingRecordInterceptor);
+        return factory;
+    }
+
+    @Bean
+    public KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor() {
+        return new KafkaTracingBatchInterceptor();
+    }
+
+    @Bean("batchKafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> batchKafkaListenerContainerFactory(
+            KafkaTracingBatchInterceptor kafkaTracingBatchInterceptor) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(true);
+        factory.setBatchInterceptor(kafkaTracingBatchInterceptor);
         return factory;
     }
 }

@@ -15,7 +15,6 @@ import java.util.UUID;
 /**
  * 환불 요청 DTO
  *
- * <p>
  * 결제 취소/환불 요청 시 사용.
  * items가 있으면 부분 환불, 없으면 전체 환불로 처리.
  */
@@ -29,7 +28,7 @@ public class PaymentRefundRequest {
      * 결제 UUID
      */
     @NotNull(message = "결제 UUID는 필수입니다.")
-    private UUID paymentId;
+    private UUID paymentUuid;
 
     /**
      * 주문 UUID

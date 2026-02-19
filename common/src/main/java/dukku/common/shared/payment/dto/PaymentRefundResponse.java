@@ -29,8 +29,8 @@ public class PaymentRefundResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class RefundData {
-        private UUID refundId;
-        private UUID paymentId;
+        private UUID refundUuid;
+        private UUID paymentUuid;
         private UUID orderUuid;
         private PaymentStatus status;
         private RefundAmountInfo amounts;

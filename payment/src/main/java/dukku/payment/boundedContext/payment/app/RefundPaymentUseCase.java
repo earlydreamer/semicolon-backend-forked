@@ -2,40 +2,51 @@ package dukku.payment.boundedContext.payment.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.payment.boundedContext.payment.entity.Payment;
+import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
 import dukku.payment.boundedContext.payment.entity.Refund;
+import dukku.payment.boundedContext.payment.entity.RefundItem;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentFailureCode;
 import dukku.common.shared.payment.type.PaymentStatus;
+import dukku.common.shared.payment.type.RefundStatus;
+import dukku.common.shared.payment.exception.InvalidRefundAmountException;
+import dukku.common.shared.payment.exception.PaymentNotRefundableException;
 import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.dto.PaymentRefundResponse;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
 import dukku.common.shared.payment.event.RefundFailedEvent;
-import dukku.common.shared.payment.exception.InvalidRefundAmountException;
-import dukku.common.shared.payment.exception.PaymentNotRefundableException;
+import dukku.common.shared.payment.event.RefundRequestedEvent;
 import dukku.payment.boundedContext.payment.out.TossPaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * 환불 처리 UseCase
  *
  * <p>
- * 결제 완료된 건에 대해 사용자 요청 또는 시스템 이벤트에 의해 환불을 수행한다.
- * 외부 자산(PG) 취소 성공 후 내부 결제 데이터(상태/이력)를 업데이트한다.
- * 예치금 복구는 RefundCompletedEvent를 통해 Deposit BC에서 처리한다.
+ * 결제 완료된 건에 대해 사용자 요청 또는 시스템 이벤트로 환불 수행
+ * 외부 자산(PG) 취소 성공 후 내부 결제 데이터(상태/이력) 업데이트
+ * 예치금 복구 완료 후 RefundCompletedEvent로 결제-주문 후속 처리 진행
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class RefundPaymentUseCase {
+
+    private static final String MESSAGE_NOT_FOUND_IN_RESPONSE = "응답 본문에 메시지가 없습니다.";
 
     private final PaymentSupport support;
     private final EventPublisher eventPublisher;
@@ -50,143 +61,360 @@ public class RefundPaymentUseCase {
      */
     @Transactional
     public PaymentRefundResponse execute(PaymentRefundRequest request, String idempotencyKey) {
-        // 1. 멱등성 검증 - 동일 idempotencyKey로 이미 처리된 환불이 있는지 확인
+        // 1) 멱등성 키로 기존 환불 이력 조회 후 있으면 즉시 응답 재사용
         Optional<Refund> existingRefund = support.findRefundByIdempotencyKey(idempotencyKey);
         if (existingRefund.isPresent()) {
             Refund refund = existingRefund.get();
             Payment payment = refund.getPayment();
-            log.info("[환불 멱등성] 이미 처리된 환불 요청입니다. idempotencyKey={}, refundUuid={}",
-                    idempotencyKey, refund.getUuid());
-
-            // 기존 환불 결과 반환 (PG 환불액 = 총 환불액 - 예치금 환불액)
             Long pgRefundAmount = refund.getRefundAmountTotal() - refund.getRefundDepositTotal();
             return refund.toPaymentRefundResponse(pgRefundAmount, payment.getTossOrderId());
         }
 
-        // 2. 결제 조회
-        Payment payment = support.findPaymentByUuid(request.getPaymentId());
+        // 2) 결제 조회
+        Payment payment = support.findPaymentByUuid(request.getPaymentUuid());
 
-        // 3. 환불 가능 상태 검증
+        // 3) 환불 대상 결제와 요청 주문 UUID 일치 여부 확인
+        validateOrderMatch(payment, request.getOrderUuid());
+
+        // 4) 환불 가능 상태 검증
         validateRefundable(payment);
 
-        // 4. 환불 금액 검증
+        // 5) 환불 가능 금액 검증
         validateRefundAmount(payment, request.getRefundAmount());
 
-        // 5. 상태 변경 전 값 저장 (이력용)
+        // 6) 상태 변경 전 값 저장 (이력 기록용)
         PaymentStatus originStatus = payment.getPaymentStatus();
         Long originAmountPg = payment.getAmountPg();
         Long originDeposit = payment.getPaymentDeposit();
 
-        // 6. 환불 금액 배분 산정
-        // 정책에 따라 예치금 복구액과 PG 취소액을 계산 (엔티티 도메인 로직 활용)
-        Payment.RefundAllocation allocation = payment.calculateRefundAllocation(request.getRefundAmount());
+        // 7) 환불 금액 배분 산정
+        RefundAllocation allocation = resolveRefundAllocation(payment, request);
 
-        // 7. PG 취소 수행 (외부 시스템 확정 먼저)
-        // PG 확정 후 내부 금액 반영
+        // 8) PG 취소 수행 (외부 시스템 확정 먼저)
         if (allocation.pgRefundAmount() > 0) {
             Map<String, Object> cancelBody = new HashMap<>();
             cancelBody.put("cancelReason", request.getReason());
             cancelBody.put("cancelAmount", allocation.pgRefundAmount());
 
-            // PG 취소 호출 (5xx → @Retryable 재시도 → 소진 시 RuntimeException)
             Map<String, Object> response;
             try {
                 response = tossClient.cancel(payment.getPgPaymentKey(), cancelBody);
             } catch (RuntimeException e) {
-                log.error("[CRITICAL][취소 오류] PG 취소 중 예외 발생: {}. 관리자 확인 필요! paymentUuid={}",
+                log.error("[CRITICAL][환불 실패] PG 환불 요청 예외: {}. paymentUuid={}",
                         e.getMessage(), payment.getUuid());
                 handleFailure(payment, originStatus, originAmountPg, originDeposit,
                         "PG_CANCEL_EXCEPTION: " + e.getMessage());
-                publishRefundFailed(payment, allocation, request,
-                        PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, true,
-                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, e.getMessage()));
+                publishRefundFailed(
+                        payment,
+                        allocation,
+                        request,
+                        PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION,
+                        true,
+                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, e.getMessage())
+                );
                 return PaymentRefundResponse.builder()
                         .success(false).code("PG_CANCEL_EXCEPTION")
-                        .message("PG 취소 중 예외 발생: " + e.getMessage()).build();
+                        .message("PG 환불 요청 예외 발생: " + e.getMessage())
+                        .build();
             }
 
-            // PG 취소 응답 상태 확인 (여기 도달 시 2xx or 4xx만 가능)
-            int statusCode = ((Number) response.getOrDefault("statusCode", 200)).intValue();
-            if (HttpStatus.valueOf(statusCode).isError()) {
-                log.error("[CRITICAL][취소 오류] PG 취소 실패: status={}, body={}. 관리자 확인 필요! paymentUuid={}",
+            Integer statusCode = extractStatusCode(response);
+            String responseMessage = resolveResponseMessage(response);
+            if (statusCode == null || isErrorStatus(statusCode)) {
+                log.error("[CRITICAL][환불 실패] PG 환불 응답 오류: status={}, body={}, paymentUuid={}",
                         statusCode, response, payment.getUuid());
                 handleFailure(payment, originStatus, originAmountPg, originDeposit,
-                        "PG_CANCEL_FAILED: " + response.get("message"));
-                publishRefundFailed(payment, allocation, request,
-                        PaymentFailureCode.REFUND_PG_CANCEL_FAILED, false,
-                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_FAILED,
-                                String.valueOf(response.get("message"))));
+                        "PG_CANCEL_FAILED: " + responseMessage);
+                publishRefundFailed(
+                        payment,
+                        allocation,
+                        request,
+                        PaymentFailureCode.REFUND_PG_CANCEL_FAILED,
+                        false,
+                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_FAILED, responseMessage)
+                );
                 return PaymentRefundResponse.builder()
                         .success(false).code("PG_CANCEL_FAILED")
-                        .message("PG 취소 실패: " + response.get("message")).build();
+                        .message("PG 환불 처리 실패: " + responseMessage)
+                        .build();
             }
         }
 
-        // 8. Refund 엔티티 및 이력 생성 (idempotencyKey 포함)
-        // 환불 스냅샷 영속화
-        // 환불 스냅샷 생성
-        Refund refund = payment.createRefund(request.getRefundAmount(), allocation.depositRefundAmount(), idempotencyKey);
-        // 환불 완료 상태로 마킹
-        refund.complete();
-        // 환불 이력 저장
+        // 9) Refund 엔티티 및 항목 환불 내역 생성
+        Refund refund = payment.createRefund(
+                request.getRefundAmount(),
+                allocation.depositRefundAmount(),
+                idempotencyKey);
+
+        for (ItemRefundAllocation itemAllocation : allocation.itemRefundAllocations()) {
+            refund.addRefundItem(RefundItem.create(
+                    refund,
+                    itemAllocation.paymentOrderItem(),
+                    itemAllocation.refundAmount(),
+                    itemAllocation.depositAmount(),
+                    itemAllocation.pgAmount()));
+        }
+
+        // 10) 예치금 환불이 없으면 즉시 완료 상태 전환
+        if (allocation.depositRefundAmount() == 0L) {
+            refund.complete();
+        }
+
         support.saveRefund(refund);
 
-        // 9. 결제 상태 및 잔액 업데이트
-        // 환불 결과를 결제 상태/금액에 반영
-        payment.partialCancel(request.getRefundAmount(), allocation.pgRefundAmount(), allocation.depositRefundAmount());
-        // 결제 상태 저장
+        // 11) 결제 상태 및 금액 반영 후 저장
+        payment.partialCancel(
+                request.getRefundAmount(),
+                allocation.pgRefundAmount(),
+                allocation.depositRefundAmount());
         support.savePayment(payment);
 
-        // 10. 이력 생성
-        // 결제 상태 히스토리 생성
         PaymentHistoryType historyType = (payment.getPaymentStatus() == PaymentStatus.CANCELED)
                 ? PaymentHistoryType.FULL_REFUND_SUCCESS
                 : PaymentHistoryType.PARTIAL_REFUND_SUCCESS;
         support.createHistory(payment, historyType, originStatus, originAmountPg, originDeposit);
 
-        // 11. 이벤트 발행
-        // 후속 처리 리스너용 이벤트 발행 (예치금 복구, 주문 취소 확정 등)
-        eventPublisher.publish(new RefundCompletedEvent(
-                refund.getUuid(),
-                payment.getUuid(),
-                payment.getOrderUuid(),
-                request.getRefundAmount(),
-                allocation.depositRefundAmount(),
-                payment.getUserUuid(),
-                refund.getCreatedAt()));
+        publishRefundRequested(payment, refund);
+        publishRefundCompleted(payment, refund);
 
+        // 12) 환불 완료 이벤트 조건부 발행 후 응답 반환
         return refund.toPaymentRefundResponse(allocation.pgRefundAmount(), payment.getTossOrderId());
     }
 
-    // 환불 가능 상태 체크
+    /**
+     * 환불 대상 결제와 주문 UUID 일치 여부 확인
+     */
+    private void validateOrderMatch(Payment payment, UUID orderUuid) {
+        if (orderUuid == null || !payment.getOrderUuid().equals(orderUuid)) {
+            throw InvalidRefundAmountException.orderMismatch();
+        }
+    }
+
+    /**
+     * 환불 가능한 결제 상태 확인
+     */
     private void validateRefundable(Payment payment) {
         PaymentStatus status = payment.getPaymentStatus();
-        // DONE, PARTIAL_CANCELED 상태만 환불 가능
         if (status != PaymentStatus.DONE && status != PaymentStatus.PARTIAL_CANCELED) {
             throw new PaymentNotRefundableException();
         }
     }
 
-    // 환불 가능 금액 체크
+    /**
+     * 환불 가능 금액 범위 확인
+     */
     private void validateRefundAmount(Payment payment, Long refundAmount) {
-        // 환불 가능 금액 = 현재 결제 금액 - 이미 환불된 금액
+        if (refundAmount == null || refundAmount <= 0L) {
+            throw InvalidRefundAmountException.invalid();
+        }
+
         Long refundableAmount = payment.getAmount() - payment.getRefundTotal();
         if (refundAmount > refundableAmount) {
-            throw new InvalidRefundAmountException("환불 가능 금액 초과: " + refundableAmount);
+            throw InvalidRefundAmountException.exceedsAvailable(refundAmount, refundableAmount);
         }
     }
 
-    // 환불 실패 처리
+    /**
+     * 환불 할당 정책 계산
+     *
+     * <p>
+     * 부분 환불 요청 시 상품 기준 PG/예치금 분배 적용
+     */
+    private RefundAllocation resolveRefundAllocation(Payment payment, PaymentRefundRequest request) {
+        // 전체 금액 환불이면 도메인 기본 분배 로직 사용
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            Payment.RefundAllocation allocation = payment.calculateRefundAllocation(request.getRefundAmount());
+            return new RefundAllocation(allocation.pgRefundAmount(), allocation.depositRefundAmount(), List.of());
+        }
+
+        // 항목별 환불 요청이 있으면 항목별 금액 분배와 중복/기존환불 검증 수행
+        List<ItemRefundAllocation> itemRefundAllocations = resolveItemAllocations(payment, request.getItems());
+        Long totalItemRefundAmount = itemRefundAllocations.stream()
+                .mapToLong(ItemRefundAllocation::refundAmount)
+                .sum();
+
+        if (!totalItemRefundAmount.equals(request.getRefundAmount())) {
+            throw InvalidRefundAmountException.itemTotalMismatch();
+        }
+
+        long totalPgRefund = itemRefundAllocations.stream()
+                .mapToLong(ItemRefundAllocation::pgAmount)
+                .sum();
+        long totalDepositRefund = itemRefundAllocations.stream()
+                .mapToLong(ItemRefundAllocation::depositAmount)
+                .sum();
+
+        return new RefundAllocation(totalPgRefund, totalDepositRefund, itemRefundAllocations);
+    }
+
+    /**
+     * 상품별 환불 항목 PG/예치금 분배 계산
+     */
+    private List<ItemRefundAllocation> resolveItemAllocations(Payment payment,
+                                                              List<PaymentRefundRequest.RefundItemInfo> requestItems) {
+        // 중복 항목 등록, 존재 여부, 환불 가능 금액 초과 등을 검증하며 항목별 환불 배분
+        Set<UUID> duplicatedCheck = new HashSet<>();
+        List<ItemRefundAllocation> allocations = new ArrayList<>();
+        for (PaymentRefundRequest.RefundItemInfo itemInfo : requestItems) {
+            if (itemInfo == null || itemInfo.getOrderItemUuid() == null || itemInfo.getRefundAmount() == null) {
+                throw InvalidRefundAmountException.itemRequestInvalid();
+            }
+
+            UUID orderItemUuid = itemInfo.getOrderItemUuid();
+            if (!duplicatedCheck.add(orderItemUuid)) {
+                throw InvalidRefundAmountException.duplicateOrderItem();
+            }
+
+            PaymentOrderItem paymentOrderItem = support.findPaymentOrderItem(payment.getId(), orderItemUuid)
+                    .orElseThrow(InvalidRefundAmountException::orderItemNotFound);
+
+            Long requestedAmount = itemInfo.getRefundAmount();
+            if (requestedAmount <= 0L) {
+                throw InvalidRefundAmountException.invalid();
+            }
+
+            Long alreadyRefundedAmount = support.getRefundedAmountByPaymentOrderItem(paymentOrderItem.getId());
+            long couponAmount = paymentOrderItem.getPaymentCoupon() == null ? 0L : paymentOrderItem.getPaymentCoupon();
+            long netPaidAmount = paymentOrderItem.getPrice() - couponAmount;
+            if (netPaidAmount < 0L) {
+                throw InvalidRefundAmountException.paymentAmountCorrupted();
+            }
+
+            Long refundableAmount = netPaidAmount - alreadyRefundedAmount;
+            if (refundableAmount < 0L) {
+                throw InvalidRefundAmountException.itemExceedsAvailable(requestedAmount, refundableAmount);
+            }
+            if (requestedAmount > refundableAmount) {
+                throw InvalidRefundAmountException.itemExceedsAvailable(requestedAmount, refundableAmount);
+            }
+
+            Long alreadyRefundedDeposit = support.getRefundedDepositAmountByPaymentOrderItem(paymentOrderItem.getId());
+            Long remainingDeposit = paymentOrderItem.getPaymentDeposit() - alreadyRefundedDeposit;
+            if (remainingDeposit < 0L) {
+                throw InvalidRefundAmountException.itemDepositCorrupted();
+            }
+
+            Long depositAmount = Math.min(remainingDeposit, requestedAmount);
+            Long pgAmount = requestedAmount - depositAmount;
+
+            allocations.add(new ItemRefundAllocation(paymentOrderItem, requestedAmount, depositAmount, pgAmount));
+        }
+
+        return allocations;
+    }
+
+    /**
+     * PG 응답 상태코드 추출
+     */
+    private Integer extractStatusCode(Map<String, Object> response) {
+        // PG 응답에서 statusCode 추출
+        if (response == null) {
+            return null;
+        }
+
+        Object statusCode = response.get("statusCode");
+        if (statusCode == null) {
+            return null;
+        }
+
+        if (statusCode instanceof Number number) {
+            return number.intValue();
+        }
+
+        if (statusCode instanceof String string) {
+            try {
+                return Integer.parseInt(string);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 상태코드 에러 여부 판별
+     */
+    private boolean isErrorStatus(int statusCode) {
+        // HTTP 상태코드 규칙으로 에러 여부 판정
+        try {
+            return HttpStatus.valueOf(statusCode).isError();
+        } catch (IllegalArgumentException e) {
+            return statusCode >= 400;
+        }
+    }
+
+    /**
+     * PG 응답 메시지 필드 추출
+     */
+    private String resolveResponseMessage(Map<String, Object> response) {
+        // PG 응답 메시지 필드(message/errorMessage) 우선 조회
+        if (response == null) {
+            return MESSAGE_NOT_FOUND_IN_RESPONSE;
+        }
+
+        Object message = response.get("message");
+        if (message == null) {
+            message = response.get("errorMessage");
+        }
+
+        if (message == null) {
+            return MESSAGE_NOT_FOUND_IN_RESPONSE;
+        }
+
+        return String.valueOf(message);
+    }
+
+    private void publishRefundRequested(Payment payment, Refund refund) {
+        // PENDING + 예치금 환불이 필요한 건만 사가 시작 이벤트 발행
+        if (refund.getRefundStatus() != RefundStatus.PENDING || refund.getRefundDepositTotal() <= 0L) {
+            return;
+        }
+
+        eventPublisher.publish(new RefundRequestedEvent(
+                refund.getUuid(),
+                payment.getUuid(),
+                payment.getOrderUuid(),
+                refund.getRefundAmountTotal(),
+                refund.getRefundDepositTotal(),
+                payment.getUserUuid(),
+                refund.getCreatedAt()));
+    }
+
+    private void publishRefundCompleted(Payment payment, Refund refund) {
+        // COMPLETED 상태면 결제-주문 연동 후속 처리를 위해 이벤트 발행
+        if (refund.getRefundStatus() != RefundStatus.COMPLETED) {
+            return;
+        }
+
+        eventPublisher.publish(new RefundCompletedEvent(
+                refund.getUuid(),
+                payment.getUuid(),
+                payment.getOrderUuid(),
+                refund.getRefundAmountTotal(),
+                refund.getRefundDepositTotal(),
+                payment.getUserUuid(),
+                refund.getCreatedAt()));
+    }
+
+    /**
+     * PG 취소 실패 시 결제 상태 롤백 실패로 전환, 이력 기록
+     */
     private void handleFailure(Payment payment, PaymentStatus originStatus, Long originAmountPg, Long originDeposit,
                                String reason) {
+        // PG 실패 시 결제 상태를 롤백 실패로 전환하고 이력 기록
         payment.rollbackFailedStatus();
         support.savePayment(payment);
         support.createHistory(payment, PaymentHistoryType.PAYMENT_ROLLBACK_FAILED, originStatus, originAmountPg,
                 originDeposit);
     }
 
-    private void publishRefundFailed(Payment payment, Payment.RefundAllocation allocation, PaymentRefundRequest request,
-                                     PaymentFailureCode failureCode, boolean retryable, String reason) {
+    /**
+     * 환불 실패 이벤트 발행
+     */
+    private void publishRefundFailed(Payment payment, RefundAllocation allocation, PaymentRefundRequest request,
+                                    PaymentFailureCode failureCode, boolean retryable, String reason) {
+        // 보상 워크플로우가 이어질 수 있도록 실패 이벤트 비동기 발행
         eventPublisher.publish(new RefundFailedEvent(
                 payment.getOrderUuid(),
                 payment.getUuid(),
@@ -207,4 +435,11 @@ public class RefundPaymentUseCase {
         return code.name() + ": " + detail;
     }
 
+    private record RefundAllocation(long pgRefundAmount, long depositRefundAmount,
+                                   List<ItemRefundAllocation> itemRefundAllocations) {
+    }
+
+    private record ItemRefundAllocation(PaymentOrderItem paymentOrderItem, long refundAmount, long depositAmount,
+                                       long pgAmount) {
+    }
 }

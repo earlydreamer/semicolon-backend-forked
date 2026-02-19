@@ -1,5 +1,7 @@
 package dukku.auth.global.config;
 
+import dukku.auth.boundedContext.auth.infra.GoogleOAuth2FailureHandler;
+import dukku.auth.boundedContext.auth.infra.GoogleOAuth2SuccessHandler;
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +30,8 @@ public class SecurityDevConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
+    private final GoogleOAuth2FailureHandler googleOAuth2FailureHandler;
 
     /**
      * CSRF는 서버가 브라우저의 세션/쿠키를 신뢰할 때 공격 위험이 생김.
@@ -45,10 +49,13 @@ public class SecurityDevConfig {
                   그러므로 세션은 필요없음
                  */
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll() // 개발 환경: 모든 요청 허용
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(googleOAuth2SuccessHandler)
+                        .failureHandler(googleOAuth2FailureHandler))
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
                     corsConfig.setAllowedOrigins(

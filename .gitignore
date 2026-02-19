@@ -38,7 +38,7 @@ out/
 
 # Secrets / Env
 .env
-.env.*
+!.env.example
 *.pem
 *.key
 *.crt
@@ -53,3 +53,7 @@ logs/
 
 ## Assistant
 codex_preset_dukku
+
+# Local docker compose overrides (personal only)
+docker-compose.local.elasticsearch.override.yml
+ai/docker-compose.local.db.override.yml

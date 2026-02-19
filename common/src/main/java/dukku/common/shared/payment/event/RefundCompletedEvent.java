@@ -12,14 +12,13 @@ import java.util.UUID;
 import dukku.common.global.event.DomainEvent;
 
 public record RefundCompletedEvent(
-        UUID refundId,
-        UUID paymentId,
+        UUID refundUuid,
+        UUID paymentUuid,
         UUID orderUuid,
         Long refundAmount,
         Long refundDepositAmount, // 환불된 예치금
         UUID userUuid,
-        LocalDateTime occurredAt
-) implements DomainEvent {
+        LocalDateTime occurredAt) implements DomainEvent {
     @Override
     public String getTopic() {
         return "payment.refund-completed";

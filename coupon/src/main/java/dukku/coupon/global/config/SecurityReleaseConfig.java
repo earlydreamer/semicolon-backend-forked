@@ -1,6 +1,7 @@
 package dukku.coupon.global.config;
 
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
+import dukku.common.global.security.SecurityWhitelist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -69,8 +70,8 @@ public class SecurityReleaseConfig {
                     corsConfig.setAllowedOrigins(
                             Arrays.asList(allowedOrigins)
                     );
-                    corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Idempotency-Key"));
+                    corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
