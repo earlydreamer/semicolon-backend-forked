@@ -1,8 +1,9 @@
-package dukku.product.boundedContext.product.app.usecase.cart;
+﻿package dukku.product.boundedContext.product.app.usecase.cart;
 
-import dukku.common.global.exception.BadRequestException;
-import dukku.common.global.exception.ConflictException;
-import dukku.common.global.exception.NotFoundException;
+import dukku.common.shared.product.exception.CartProductAlreadyExistsException;
+import dukku.common.shared.product.exception.CartSelfProductNotAllowedException;
+import dukku.common.shared.product.exception.CartSoldOutProductNotAllowedException;
+import dukku.common.shared.product.exception.ProductNotFoundException;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.product.boundedContext.product.entity.Cart;
 import dukku.product.boundedContext.product.entity.Product;
@@ -28,7 +29,7 @@ public class CreateCartUseCase {
 
     public void execute(UUID userUuid, UUID productUuid) {
         Product product = productRepository.findByUuid(productUuid)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 상품입니다."));
+                .orElseThrow(ProductNotFoundException::new);
 
         ProductUser user = productUserRepository
                 .findById(userUuid)
@@ -41,7 +42,7 @@ public class CreateCartUseCase {
         validateCart(user, product);
 
         if (cartRepository.existsByUserAndProduct(user, product)) {
-            throw new ConflictException("이미 장바구니에 담긴 상품입니다.");
+            throw new CartProductAlreadyExistsException();
         }
 
         Cart cart = Cart.createCart(user, product);
@@ -50,11 +51,11 @@ public class CreateCartUseCase {
 
     private void validateCart(ProductUser user, Product product) {
         if (product.getSellerUuid().equals(user.getUserUuid())) {
-            throw new BadRequestException("자신의 상품은 담을 수 없습니다.");
+            throw new CartSelfProductNotAllowedException();
         }
 
         if (product.getSaleStatus() == SaleStatus.SOLD_OUT) {
-            throw new BadRequestException("판매 완료된 상품은 담을 수 없습니다.");
+            throw new CartSoldOutProductNotAllowedException();
         }
     }
 }
