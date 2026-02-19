@@ -96,7 +96,7 @@ public class AuthTokenIssuer {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("Refresh Token Í≤ÄÏ¶ù Ïã§Ìå®: {}", e.getMessage());
+            log.warn("∏Æ«¡∑πΩ√ ≈‰≈´ ∞À¡ıø° Ω«∆–«ﬂΩ¿¥œ¥Ÿ: {}", e.getMessage());
             return false;
         }
     }
@@ -109,7 +109,7 @@ public class AuthTokenIssuer {
                     .parseSignedClaims(refreshToken)
                     .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("Refresh Token Í≤ÄÏ¶ù Ïã§Ìå®: {}", e.getMessage());
+            log.warn("∏Æ«¡∑πΩ√ ≈‰≈´ ∞À¡ıø° Ω«∆–«ﬂΩ¿¥œ¥Ÿ: {}", e.getMessage());
             throw new InvalidRefreshTokenException();
         }
     }
@@ -139,3 +139,4 @@ public class AuthTokenIssuer {
         return createAccessToken(userUuid, role);
     }
 }
+
