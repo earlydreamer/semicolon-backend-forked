@@ -32,7 +32,7 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push (sha)
+      - name: Build and Push (sha + latest)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -63,12 +63,7 @@ jobs:
             NS="${{ env.K8S_NAMESPACE }}"
             SHA="${{ github.sha }}"
             DOCKER_USERNAME="${{ env.DOCKER_USERNAME }}"
-
-            # k3s 환경이면 sudo가 필요할 수 있음
-            K="kubectl"
-            if ! kubectl version --client >/dev/null 2>&1; then
-              K="sudo kubectl"
-            fi
+            K="sudo kubectl"
 
             echo "[1] cluster check"
             $K -n "$NS" get deploy
@@ -77,7 +72,28 @@ jobs:
             for m in auth user product order coupon payment deposit settlement; do
               img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
               echo " - deploy/${m} -> ${img}"
-              $K -n "$NS" set image "deploy/${m}" "${m}=${img}" --record=true
+              $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
+            done
+
+            echo "[2-1] annotate pod template with git metadata (revision tracking)"
+            for m in auth user product order coupon payment deposit settlement; do
+              $K -n "$NS" patch deploy/${m} -p "{
+                \"spec\": {
+                  \"template\": {
+                    \"metadata\": {
+                      \"annotations\": {
+                        \"deploy.git.sha\": \"${SHA}\",
+                        \"deploy.git.run\": \"https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"
+                      }
+                    }
+                  }
+                }
+              }"
+            done
+
+            echo "[2-2] current images (sanity check)"
+            for m in auth user product order coupon payment deposit settlement; do
+              $K -n "$NS" get deploy "${m}" -o jsonpath='{.metadata.name}{" -> "}{.spec.template.spec.containers[0].image}{"\n"}'
             done
 
             echo "[3] wait rollout status"
@@ -87,3 +103,9 @@ jobs:
 
             echo "[4] result"
             $K -n "$NS" get deploy -o wide
+
+            echo "[4-1] rollout history"
+            for m in auth user product order coupon payment deposit settlement; do
+              echo "=== ${m} ==="
+              $K -n "$NS" rollout history "deploy/${m}" || true
+            done
