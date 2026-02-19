@@ -32,11 +32,11 @@ public class ProductUserEventListener {
 
             String nickname = normalizeNickname(event.member().nickname(), userUuid);
             productUserRepository.save(ProductUser.create(userUuid, nickname));
-            log.info("[UserJoinedEvent] product user initialized. userUuid={}", userUuid);
+            log.info("[UserJoinedEvent] 상품 도메인 유저 동기화 완료. userUuid={}", userUuid);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.warn("Nickname conflict while syncing product user from user.joined", e);
+            log.warn("[UserJoinedEvent] 상품 도메인 유저 동기화 중 닉네임 충돌 발생", e);
         } catch (Exception e) {
-            log.error("Failed to process user.joined event", e);
+            log.error("[UserJoinedEvent] user.joined 이벤트 처리 실패", e);
         }
     }
 

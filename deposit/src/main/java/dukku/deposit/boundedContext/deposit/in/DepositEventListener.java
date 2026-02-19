@@ -83,9 +83,9 @@ public class DepositEventListener {
         try {
             UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
             depositFacade.findDeposit(event.member().userUuid());
-            log.info("[UserJoinedEvent] deposit account initialized. userUuid={}", event.member().userUuid());
+            log.info("[UserJoinedEvent] 예치금 계정 초기화 완료. userUuid={}", event.member().userUuid());
         } catch (Exception e) {
-            log.error("Failed to process user.joined event", e);
+            log.error("[UserJoinedEvent] user.joined 이벤트 처리 실패", e);
         }
     }
 }
