@@ -1,0 +1,193 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-ingress
+  namespace: semicolon
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - api.dukku.shop
+      secretName: api-dukku-shop-tls
+
+  rules:
+    - host: api.dukku.shop
+      http:
+        paths:
+
+          # =====================
+          # AUTH / USER
+          # =====================
+          - path: /api/v1/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+
+          - path: /api/v1/users
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 80
+
+
+          # =====================
+          # PRODUCT DOMAIN
+          # =====================
+          - path: /api/v1/products
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+          - path: /api/v1/categories
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+          - path: /api/v1/carts
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+          - path: /api/v1/sellers
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+          - path: /api/v1/shops
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+          - path: /api/v1/seller-reviews
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+
+          # =====================
+          # ORDER / PAYMENT / COUPON / DEPOSIT / SETTLEMENT
+          # =====================
+          - path: /api/v1/orders
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 80
+
+          - path: /api/v1/payments
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-service
+                port:
+                  number: 80
+
+          - path: /api/v1/coupons
+            pathType: Prefix
+            backend:
+              service:
+                name: coupon-service
+                port:
+                  number: 80
+
+          - path: /api/v1/deposits
+            pathType: Prefix
+            backend:
+              service:
+                name: deposit-service
+                port:
+                  number: 80
+
+          - path: /api/v1/settlements
+            pathType: Prefix
+            backend:
+              service:
+                name: settlement-service
+                port:
+                  number: 80
+
+
+          # =====================
+          # ADMIN — 서비스별 분기
+          # =====================
+          - path: /api/v1/admin/users
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 80
+
+          - path: /api/v1/admin/products
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
+          - path: /api/v1/admin/orders
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 80
+
+          - path: /api/v1/admin/payments
+            pathType: Prefix
+            backend:
+              service:
+                name: payment-service
+                port:
+                  number: 80
+
+          - path: /api/v1/admin/coupons
+            pathType: Prefix
+            backend:
+              service:
+                name: coupon-service
+                port:
+                  number: 80
+
+          - path: /api/v1/admin/deposits
+            pathType: Prefix
+            backend:
+              service:
+                name: deposit-service
+                port:
+                  number: 80
+
+          - path: /api/v1/admin/settlement
+            pathType: Prefix
+            backend:
+              service:
+                name: settlement-service
+                port:
+                  number: 80
