@@ -20,7 +20,7 @@ import java.util.UUID;
 @Component
 public class AuthTokenIssuer {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 5L;
+    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60L * 24;
     private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;
     private static final long REFRESH_TOKEN_ABSOLUTE_VALIDITY = 1000 * 60 * 60 * 24 * 14L;
     private static final String CLAIM_ROLE = "ROLE";
@@ -96,7 +96,7 @@ public class AuthTokenIssuer {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("¸®ÇÁ·¹½Ã ÅäÅ« °ËÁõ¿¡ ½ÇÆÐÇß½À´Ï´Ù: {}", e.getMessage());
+            log.warn("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å« ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½: {}", e.getMessage());
             return false;
         }
     }
@@ -109,7 +109,7 @@ public class AuthTokenIssuer {
                     .parseSignedClaims(refreshToken)
                     .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("¸®ÇÁ·¹½Ã ÅäÅ« °ËÁõ¿¡ ½ÇÆÐÇß½À´Ï´Ù: {}", e.getMessage());
+            log.warn("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å« ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½: {}", e.getMessage());
             throw new InvalidRefreshTokenException();
         }
     }
