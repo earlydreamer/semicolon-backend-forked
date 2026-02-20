@@ -1,5 +1,13 @@
 package dukku.product.boundedContext.product.app.usecase.cart;
 
+import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.global.exception.BadRequestException;
+import dukku.common.global.exception.ConflictException;
+import dukku.common.global.exception.NotFoundException;
+import dukku.common.shared.product.dto.cart.CartPayload;
+import dukku.common.shared.product.event.CartSyncEvent;
+import dukku.common.shared.product.type.AccountStatus;
+import dukku.common.shared.product.type.CartEventType;
 import dukku.common.shared.product.exception.CartProductAlreadyExistsException;
 import dukku.common.shared.product.exception.CartSelfProductNotAllowedException;
 import dukku.common.shared.product.exception.CartSoldOutProductNotAllowedException;
@@ -17,15 +25,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static dukku.product.boundedContext.product.entity.Cart.toCartPayload;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CreateCartUseCase {
+    private static final CartEventType CART_EVENT_TYPE = CartEventType.ITEM_ADDED;
     private static final int UUID_PREFIX_LENGTH = 8;
 
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final ProductUserRepository productUserRepository;
+    private final EventPublisher eventPublisher;
 
     public void execute(UUID userUuid, UUID productUuid) {
         Product product = productRepository.findByUuid(productUuid)
@@ -47,6 +59,10 @@ public class CreateCartUseCase {
 
         Cart cart = Cart.createCart(user, product);
         cartRepository.save(cart);
+
+        CartPayload payload = toCartPayload(cart, CART_EVENT_TYPE);
+        // 트랜잭션 커밋된 후 이벤트 발행
+        eventPublisher.publishAfterCommit(new CartSyncEvent(payload));
     }
 
     private void validateCart(ProductUser user, Product product) {

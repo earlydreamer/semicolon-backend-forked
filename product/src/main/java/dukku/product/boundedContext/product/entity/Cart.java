@@ -1,15 +1,21 @@
 package dukku.product.boundedContext.product.entity;
 
-import dukku.common.global.jpa.entity.BaseIdAndTime;
 import dukku.common.shared.product.dto.cart.CartDto;
+import dukku.common.shared.product.dto.cart.CartPayload;
+import dukku.common.shared.product.type.CartEventType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
+
+import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(
@@ -28,9 +34,18 @@ import java.util.Comparator;
 )
 @Getter
 @SuperBuilder
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Cart extends BaseIdAndTime {
+public class Cart {
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Integer id;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false, comment = "생성일")
+    private LocalDateTime createdAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_uuid", nullable = false, comment = "구매 희망자 (ProductUser 참조)")
     private ProductUser user;
@@ -73,6 +88,17 @@ public class Cart extends BaseIdAndTime {
                 product.getPrice(),
                 product.getSaleStatus(),
                 thumbnailUrl,
+                cart.getCreatedAt()
+        );
+    }
+
+    public static CartPayload toCartPayload(Cart cart, CartEventType eventType) {
+        return new CartPayload(
+                eventType,
+                cart.user.getUserUuid(),
+                cart.product.getUuid(),
+                cart.product.getTitle(),
+                cart.product.getCategory().getId(),
                 cart.getCreatedAt()
         );
     }
