@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/coupons/admin")
+@RequestMapping("/api/v1/admin/coupons")
 public class AdminCouponController {
     private final CouponQueryFacade couponQueryFacade;
     private final CouponFacade couponFacade;

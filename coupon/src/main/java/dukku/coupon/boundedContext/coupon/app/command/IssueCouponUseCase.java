@@ -24,51 +24,44 @@ public class IssueCouponUseCase {
     private final CouponIssueLogManager couponIssueLogManager;
     private final CouponRepository couponRepository;
 
-    // 쿠폰 메타데이터 캐싱 (재고 수량은 캐싱하지 않고 Redis/DB를 믿어야 함)
     private final Map<UUID, Coupon> couponMetadataCache = new ConcurrentHashMap<>();
 
+    // 쿠폰 메타데이터를 조회하고 Redis를 통해 선착순 검증을 수행합니다.
     public void execute(UUID userUuid, UUID couponUuid) {
         LocalDateTime requestedAt = LocalDateTime.now();
 
-        // 1. 쿠폰 메타데이터 조회
         Coupon coupon = getCachedCoupon(couponUuid);
 
-        // 2. Redis를 통한 검증 및 수량 차감 (변경된 Repository 호출)
-        // 내부적으로 Lua 대신 DECR/SADD를 사용하지만, 호출하는 쪽은 모름 (추상화)
-        Long result = couponRedisRepository.tryIssue(couponUuid, userUuid);
+        IssueResult result = couponRedisRepository.tryIssue(couponUuid, userUuid);
 
-        // 3. 결과 처리
-        if (result == 1) {
+        if (result == IssueResult.SUCCESS) {
             issueCoupon(userUuid, coupon, requestedAt);
         } else {
             handleFailure(result, userUuid, couponUuid, requestedAt);
         }
     }
 
+    // 검증을 통과한 요청에 한해 DB에 발급 이력을 저장하며, 실패 시 Redis 데이터를 롤백합니다.
     private void issueCoupon(UUID userUuid, Coupon coupon, LocalDateTime requestedAt) {
         try {
-            // 3-1. DB에 발급 내역 저장
             couponIssueService.saveIssueResult(userUuid, coupon, requestedAt);
-
         } catch (Exception e) {
-            // [CRITICAL] DB 저장이 실패했다면? Redis 재고를 다시 원복해야 함!
             log.error("DB 저장 실패로 인한 Redis 롤백 수행. User: {}, Coupon: {}", userUuid, coupon.getUuid());
             couponRedisRepository.rollback(coupon.getUuid(), userUuid);
+
             throw e;
         }
     }
 
-    private void handleFailure(Long result, UUID userUuid, UUID couponUuid, LocalDateTime requestedAt) {
-        IssueResult failResult = (result == -2) ? IssueResult.DUPLICATE : IssueResult.SOLD_OUT;
+    // 발급 실패 사유를 비동기로 로깅하고 클라이언트에게 명확한 예외를 반환합니다.
+    private void handleFailure(IssueResult result, UUID userUuid, UUID couponUuid, LocalDateTime requestedAt) {
+        couponIssueLogManager.record(couponUuid, userUuid, result, requestedAt);
 
-        // 실패 로그 기록 (비동기)
-        couponIssueLogManager.record(couponUuid, userUuid, failResult, requestedAt);
-
-        // 클라이언트에게 명확한 에러 반환
-        String message = (failResult == IssueResult.DUPLICATE) ? "이미 발급된 쿠폰입니다." : "선착순 마감되었습니다.";
+        String message = (result == IssueResult.DUPLICATE) ? "이미 발급된 쿠폰입니다." : "선착순 마감되었습니다.";
         throw new ConflictException(message);
     }
 
+    // 쿠폰 메타데이터를 로컬 캐시에 저장하여 DB 조회 부하를 최소화합니다.
     private Coupon getCachedCoupon(UUID couponUuid) {
         return couponMetadataCache.computeIfAbsent(couponUuid, k ->
                 couponRepository.findByUuid(k)

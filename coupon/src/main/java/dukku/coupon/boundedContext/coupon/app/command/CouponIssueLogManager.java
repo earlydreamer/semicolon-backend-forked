@@ -48,9 +48,9 @@ public class CouponIssueLogManager {
         boolean isSuccess = logQueue.offer(logDto);
 
         if (!isSuccess) {
-            // [중요] 로그 큐가 터지면 그냥 로그를 버립니다. (비즈니스가 우선)
+            // [중요] 로그 큐가 가득 차면 로그는 유실됩니다. (비즈니스 로직이 우선)
             // 대신 에러 로그를 남겨 모니터링 알림이 가도록 합니다.
-            log.error("[LOG_DROP] Log Queue is Full! Dropping log for User: {}", userUuid);
+            log.error("[로그 유실] 로그 큐가 가득 찼습니다. 사용자 UUID: {}", userUuid);
         }
     }
 
@@ -67,7 +67,7 @@ public class CouponIssueLogManager {
      */
     @PreDestroy
     public void onShutdown() {
-        log.info("Closing application.. flushing remaining {} logs.", logQueue.size());
+        log.info("애플리케이션 종료 중... 남은 {}건의 로그를 저장합니다.", logQueue.size());
         flushLogs();
     }
 
@@ -94,7 +94,7 @@ public class CouponIssueLogManager {
                 }
             }
         } catch (Exception e) {
-            log.error("Error occurred during log flushing", e);
+            log.error("로그 플러시 중 오류가 발생했습니다.", e);
         } finally {
             isFlushing.set(false);
         }
@@ -127,9 +127,9 @@ public class CouponIssueLogManager {
                 }
             });
         } catch (Exception e) {
-            // DB 연결 에러 등으로 배치가 실패하면, 이 로그들은 유실됩니다.
-            // 재시도 로직을 넣을 수도 있지만, 로그 시스템 특성상 다음 배치를 위해 포기하는 게 일반적입니다.
-            log.error("Failed to batch insert {} logs. Discarding.", logsToSave.size(), e);
+            // DB 연결 오류 등으로 배치가 실패하면, 해당 로그들은 유실됩니다.
+            // 재시도 로직을 넣을 수도 있지만, 로그 시스템 특성상 다음 배치를 위해 포기하는 전략을 사용합니다.
+            log.error("배치 로그 저장에 실패했습니다. {}건의 로그가 유실됩니다.", logsToSave.size(), e);
         }
     }
 }
