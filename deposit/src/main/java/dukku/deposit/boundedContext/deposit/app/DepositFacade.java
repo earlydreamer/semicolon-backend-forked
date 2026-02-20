@@ -36,6 +36,7 @@ public class DepositFacade {
     private final RefundDepositUseCase refundDepositUseCase;
     private final ChargeDepositUseCase chargeDepositUseCase;
     private final ChargeDepositForSettlementUseCase chargeDepositForSettlementUseCase;
+    private final DepositSupport depositSupport;
 
     /**
      * 사용자 예치금 조회
@@ -156,5 +157,11 @@ public class DepositFacade {
     public void injectSystemCapital(UUID userUuid, Long amount) {
         // orderItemUuid는 시스템 자본금 주입이므로 null 처리 (상품이 존재하지 않음)
         increaseDepositUseCase.increase(userUuid, amount, DepositHistoryType.ADJUST, null);
+    }
+    public void compensateUserRegistration(UUID userUuid) {
+        if (depositSupport.findByUserUuid(userUuid).isEmpty()) {
+            return;
+        }
+        depositSupport.deleteAllByUserUuid(userUuid);
     }
 }

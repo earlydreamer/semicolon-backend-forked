@@ -1,5 +1,6 @@
 package dukku.user.boundedContext.user.app.user;
 
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.user.boundedContext.user.app.email.EmailVerificationService;
 import dukku.user.boundedContext.user.entity.User;
@@ -8,7 +9,6 @@ import dukku.common.shared.user.exception.UserConflictException;
 import dukku.common.shared.user.event.UserJoinedEvent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class RegisterUserUseCase {
 
     private final UserSupport support;
-    private final ApplicationEventPublisher springEventPublisher;
+    private final EventPublisher eventPublisher;
     private final EmailVerificationService emailVerificationService;
 
     @Transactional
@@ -28,7 +28,7 @@ public class RegisterUserUseCase {
 
         User saved = support.save(userCandidate);
         // 회원가입 완료 스프링 이벤트 발행
-        springEventPublisher.publishEvent(new UserJoinedEvent(User.toUserDto(saved)));
+        eventPublisher.publish(new UserJoinedEvent(User.toUserDto(saved)));
         return saved;
     }
 

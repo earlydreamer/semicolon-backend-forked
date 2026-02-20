@@ -34,6 +34,11 @@ public class DepositSupport {
         return depositRepository.save(deposit);
     }
 
+    public void deleteAllByUserUuid(UUID userUuid) {
+        depositHistoryRepository.deleteByUserUuid(userUuid);
+        depositRepository.deleteById(userUuid);
+    }
+
     public DepositHistory saveHistory(DepositHistory history) {
         return depositHistoryRepository.save(history);
     }
