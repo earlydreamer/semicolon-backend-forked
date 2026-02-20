@@ -1,8 +1,9 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
+import dukku.common.shared.product.dto.product.ProductReserveRequest;
+import dukku.common.shared.product.exception.PartialProductsNotFoundException;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.ProductRepository;
-import dukku.common.shared.product.dto.product.ProductReserveRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class ReserveProductUseCase {
         if (products.size() != request.productUuids().size()) {
             log.error("ReserveProducUseCase Error. Product Size: {}", products.size());
 
-            throw new IllegalArgumentException("일부 상품을 찾을 수 없습니다.");
+            throw new PartialProductsNotFoundException();
         }
 
         // 2. 상태 변경 (Dirty Checking으로 자동 저장)

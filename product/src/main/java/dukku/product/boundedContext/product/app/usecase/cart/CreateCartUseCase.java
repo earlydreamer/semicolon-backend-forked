@@ -1,9 +1,6 @@
 package dukku.product.boundedContext.product.app.usecase.cart;
 
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.global.exception.BadRequestException;
-import dukku.common.global.exception.ConflictException;
-import dukku.common.global.exception.NotFoundException;
 import dukku.common.shared.product.dto.cart.CartItemAddedPayload;
 import dukku.common.shared.product.event.CartSyncEvent;
 import dukku.common.shared.product.type.AccountStatus;

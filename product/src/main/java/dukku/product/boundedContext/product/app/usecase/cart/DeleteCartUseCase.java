@@ -1,9 +1,9 @@
 package dukku.product.boundedContext.product.app.usecase.cart;
 
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.global.exception.NotFoundException;
 import dukku.common.shared.product.dto.cart.CartItemsRemovedPayload;
 import dukku.common.shared.product.event.CartSyncEvent;
+import dukku.common.shared.product.exception.CartItemNotFoundException;
 import dukku.common.shared.product.type.CartEventType;
 import dukku.product.boundedContext.product.entity.Cart;
 import dukku.product.boundedContext.product.out.CartRepository;
@@ -32,7 +32,7 @@ public class DeleteCartUseCase {
     public void execute(UUID userUuid, List<Integer> cartIds) {
         List<Cart> carts = cartRepository.findAllByIdInAndUser_UserUuid(cartIds, userUuid);
         if (carts == null || carts.isEmpty()) {
-            throw new NotFoundException("삭제할 장바구니 항목을 찾을 수 없습니다.");
+            throw new CartItemNotFoundException();
         }
 
         List<UUID> productUuids = carts.stream()
