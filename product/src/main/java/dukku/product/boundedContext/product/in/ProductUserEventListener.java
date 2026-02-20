@@ -42,7 +42,4 @@ public class ProductUserEventListener {
         log.error("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 실패. userUuid={}", event.userUuid(), cause);
     }
 
-    private String fallbackNickname(UUID userUuid) {
-        return "user-" + userUuid.toString().substring(0, 8);
-    }
 }
