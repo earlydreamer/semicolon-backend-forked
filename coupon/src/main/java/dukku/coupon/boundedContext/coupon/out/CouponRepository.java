@@ -33,6 +33,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
 
     List<Coupon> findByStatus(CouponStatus status);
 
+    // DB 원자성 보장시 사용
 //    @Modifying
 //    @Query("UPDATE Coupon c SET c.issuedQuantity = c.issuedQuantity + 1 " +
 //            "WHERE c.uuid = :uuid AND c.issuedQuantity < c.totalQuantity")

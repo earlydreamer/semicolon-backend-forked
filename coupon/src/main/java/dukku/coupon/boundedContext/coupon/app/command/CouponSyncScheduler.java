@@ -21,7 +21,7 @@ public class CouponSyncScheduler {
     private final CouponUserRepository couponUserRepository;
 
     // 1초마다 실행하여 DB 상태를 최신화 (부하에 따라 조절 가능)
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 60000 * 10)
     @Transactional
     public void syncCouponQuantities() {
         // 1. 현재 진행 중인(ACTIVE) 쿠폰만 조회
