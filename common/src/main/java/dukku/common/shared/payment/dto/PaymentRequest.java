@@ -126,8 +126,5 @@ public class PaymentRequest {
 
         @NotNull(message = "판매자 UUID는 필수입니다.")
         private UUID sellerUuid;
-
-        @Min(value = 0, message = "쿠폰 할인액은 0 이상이어야 합니다.")
-        private Long paymentCoupon;
     }
 }
