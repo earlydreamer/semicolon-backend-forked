@@ -3,7 +3,6 @@ package dukku.coupon.boundedContext.coupon.in;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dukku.common.global.logging.kafka.KafkaTracingRecordInterceptor;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.coupon.type.CouponUserStatus;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
@@ -25,17 +24,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.kafka.support.converter.StringJsonMessageConverter;
-import org.springframework.context.annotation.Bean;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -265,19 +259,4 @@ class CouponSagaKafkaIntegrationTest {
         }
     }
 
-    @TestConfiguration
-    static class KafkaListenerConverterConfig {
-        @Bean(name = "kafkaListenerContainerFactory")
-        ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-                ConsumerFactory<String, String> consumerFactory,
-                KafkaTracingRecordInterceptor kafkaTracingRecordInterceptor,
-                ObjectMapper objectMapper) {
-            ConcurrentKafkaListenerContainerFactory<String, String> factory =
-                    new ConcurrentKafkaListenerContainerFactory<>();
-            factory.setConsumerFactory(consumerFactory);
-            factory.setRecordInterceptor(kafkaTracingRecordInterceptor);
-            factory.setRecordMessageConverter(new StringJsonMessageConverter(objectMapper));
-            return factory;
-        }
-    }
 }

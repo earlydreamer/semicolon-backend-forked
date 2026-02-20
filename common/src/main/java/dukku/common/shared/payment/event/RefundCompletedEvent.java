@@ -18,7 +18,8 @@ public record RefundCompletedEvent(
         Long refundAmount,
         Long refundDepositAmount, // 환불된 예치금
         UUID userUuid,
-        LocalDateTime occurredAt) implements DomainEvent {
+        LocalDateTime occurredAt,
+        java.util.List<UUID> refundedItemUuids) implements DomainEvent {
     @Override
     public String getTopic() {
         return "payment.refund-completed";
