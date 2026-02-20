@@ -2,8 +2,11 @@ package dukku.product.boundedContext.product.app.usecase.product;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
+import dukku.common.shared.product.dto.product.ProductPayload;
 import dukku.common.shared.product.dto.product.ProductUpdateRequest;
+import dukku.common.shared.product.event.ProductSyncEvent;
 import dukku.common.shared.product.exception.ProductCategoryNotFoundException;
+import dukku.common.shared.product.type.ProductEventType;
 import dukku.product.boundedContext.product.app.support.ProductMapper;
 import dukku.product.boundedContext.product.app.support.ProductSupport;
 import dukku.product.boundedContext.product.entity.Category;
@@ -16,10 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static dukku.product.boundedContext.product.entity.Product.toProductPayload;
+
 // 판매자가 바꿀 경우
 @Component
 @RequiredArgsConstructor
 public class UpdateProductUseCase {
+    private static final ProductEventType PRODUCT_EVENT_TYPE = ProductEventType.UPDATED;
+
     private final ProductSupport productSupport;
     private final CategoryRepository categoryRepository;
     private final EventPublisher eventPublisher;
@@ -59,6 +66,9 @@ public class UpdateProductUseCase {
 
         // 3. 이벤트 발행 (변경 플래그 포함)
         eventPublisher.publish(new ProductUpdatedEvent(product.getId(), isCategoryChanged));
+
+        ProductPayload payload = toProductPayload(product, PRODUCT_EVENT_TYPE);
+        eventPublisher.publish(new ProductSyncEvent(payload));
 
         return ProductMapper.toDetail(product);
     }
