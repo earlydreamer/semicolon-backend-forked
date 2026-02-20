@@ -63,4 +63,13 @@ public class PaymentEventListener {
     public void handle(dukku.common.shared.order.event.PartialRefundRequestedEvent event) {
         paymentFacade.handlePartialRefund(event);
     }
+
+    /**
+     * 주문 상품 취소 이벤트 처리 (배송 전 취소)
+     */
+    @KafkaListener(topics = "order.item.canceled", groupId = "${spring.application.name}-group")
+    public void handle(dukku.common.shared.order.event.OrderItemCanceledEvent event) {
+        log.info("주문 상품 취소 이벤트 수신: orderItemUuid={}", event.orderItemUuid());
+        paymentFacade.handleOrderItemCanceled(event);
+    }
 }

@@ -84,4 +84,32 @@ public class UpdateOrderRefundStatusUseCase {
         // 일부만 환불된 경우 부분 환불 상태 반영
         order.updateOrderStatus(OrderStatus.PARTIAL_REFUNDED);
     }
+
+    /**
+     * PG 결제 취소 실패 등으로 인한 환불 실패 시 보상 트랜잭션 수행
+     *
+     * @param orderUuid 주문 UUID
+     */
+    @Transactional
+    public void failRefund(UUID orderUuid) {
+        if (orderUuid == null) {
+            return;
+        }
+
+        // 환불 실패 시 반품 승인 대기 중이던 ReturnRequest를 거절(실패) 상태로 변경하고,
+        // 연관된 OrderItem 상태를 이전(DELIVERED) 상태로 변경
+        returnRequestRepository.findByOrderUuid(orderUuid).forEach(req -> {
+            if (req.getStatus() == dukku.common.shared.order.type.ReturnStatus.RETURN_APPROVED) {
+                req.reject(); // RETURN_REJECTED 상태로 변경
+
+                req.getReturnItems().forEach(ri -> {
+                    dukku.common.shared.order.type.OrderItemStatus currentStatus = ri.getOrderItem().getStatus();
+                    if (currentStatus == dukku.common.shared.order.type.OrderItemStatus.REFUND_REQUESTED
+                            || currentStatus == dukku.common.shared.order.type.OrderItemStatus.REFUND_IN_PROGRESS) {
+                        ri.getOrderItem().updateOrderStatus(dukku.common.shared.order.type.OrderItemStatus.DELIVERED);
+                    }
+                });
+            }
+        });
+    }
 }

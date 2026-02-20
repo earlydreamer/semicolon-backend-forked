@@ -40,6 +40,7 @@ public class PaymentFacade {
     private final CompleteRefundUseCase completeRefund;
     private final HandleRefundFailureUseCase handleRefundFailure;
     private final HandlePartialRefundEventUseCase handlePartialRefundEvent;
+    private final HandleOrderItemCanceledEventUseCase handleOrderItemCanceledEvent;
 
     /**
      * 결제 요청 (준비)
@@ -127,5 +128,14 @@ public class PaymentFacade {
      */
     public void handlePartialRefund(dukku.common.shared.order.event.PartialRefundRequestedEvent event) {
         handlePartialRefundEvent.execute(event);
+    }
+
+    /**
+     * 주문 상품 취소 이벤트 처리 (SAGA)
+     *
+     * @param event 주문 상품 취소 이벤트
+     */
+    public void handleOrderItemCanceled(dukku.common.shared.order.event.OrderItemCanceledEvent event) {
+        handleOrderItemCanceledEvent.execute(event);
     }
 }
