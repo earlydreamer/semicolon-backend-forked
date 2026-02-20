@@ -1,4 +1,4 @@
-package dukku.deposit.boundedContext.deposit.in;
+ï»¿package dukku.deposit.boundedContext.deposit.in;
 
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
@@ -22,7 +22,6 @@ public class DepositEventListener {
 
     private final DepositFacade depositFacade;
     private final EventPublisher eventPublisher;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
     public void handle(PaymentSuccessEvent event) {
@@ -48,7 +47,7 @@ public class DepositEventListener {
     @Deprecated
     @KafkaListener(topics = "settlement.deposit-charge", groupId = "${spring.application.name}-group")
     public void handle(SettlementDepositChargeRequestedEvent command) {
-        log.warn("[DEPRECATED] ÀÌº¥Æ® ±â¹İ Á¤»ê ÃæÀü ¿äÃ»À» ¼ö½ÅÇß½À´Ï´Ù. settlementUuid={}", command.settlementUuid());
+        log.warn("[DEPRECATED] ì´ë²¤íŠ¸ ê¸°ë°˜ ì •ì‚° ì¶©ì „ ìš”ì²­ì„ ìˆ˜ì‹ í–ˆìŠµë‹ˆë‹¤. settlementUuid={}", command.settlementUuid());
         depositFacade.chargeDepositForSettlement(
                 command.userUuid(),
                 command.amount(),
@@ -56,37 +55,29 @@ public class DepositEventListener {
     }
 
     @KafkaListener(topics = "user.joined", groupId = "${spring.application.name}-group")
-    public void handleUserJoined(String eventJson) {
+    public void handleUserJoined(UserJoinedEvent event) {
         try {
-            UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
             depositFacade.findDeposit(event.member().userUuid());
             eventPublisher.publish(new UserDepositInitializedEvent(event.member().userUuid()));
-            log.info("[UserJoinedEvent] ¿¹Ä¡±İ °èÁ¤ ÃÊ±âÈ­ ¿Ï·á. userUuid={}", event.member().userUuid());
+            log.info("[UserJoinedEvent] ì˜ˆì¹˜ê¸ˆ ê³„ì • ì´ˆê¸°í™” ì™„ë£Œ. userUuid={}", event.member().userUuid());
         } catch (Exception e) {
-            publishDepositInitFailed(eventJson, e);
+            publishDepositInitFailed(event, e);
         }
     }
 
     @KafkaListener(topics = "user.product-initialization-failed", groupId = "${spring.application.name}-group")
-    public void handleProductInitializationFailed(String eventJson) {
+    public void handleProductInitializationFailed(UserProductInitializationFailedEvent event) {
         try {
-            UserProductInitializationFailedEvent event =
-                    objectMapper.readValue(eventJson, UserProductInitializationFailedEvent.class);
             depositFacade.compensateUserRegistration(event.userUuid());
-            log.info("[UserProductInitializationFailedEvent] ¿¹Ä¡±İ º¸»ó(»èÁ¦) ¿Ï·á. userUuid={}", event.userUuid());
+            log.info("[UserProductInitializationFailedEvent] ì˜ˆì¹˜ê¸ˆ ë³´ìƒ(ì‚­ì œ) ì™„ë£Œ. userUuid={}", event.userUuid());
         } catch (Exception e) {
-            log.error("[UserProductInitializationFailedEvent] ¿¹Ä¡±İ º¸»ó(»èÁ¦) Ã³¸® ½ÇÆĞ", e);
+            log.error("[UserProductInitializationFailedEvent] ì˜ˆì¹˜ê¸ˆ ë³´ìƒ(ì‚­ì œ) ì²˜ë¦¬ ì‹¤íŒ¨", e);
         }
     }
 
-    private void publishDepositInitFailed(String eventJson, Exception cause) {
-        try {
-            UserJoinedEvent event = objectMapper.readValue(eventJson, UserJoinedEvent.class);
-            String reason = cause.getMessage() == null ? "¿¹Ä¡±İ °èÁ¤ ÃÊ±âÈ­ Áß ¿¹¿Ü ¹ß»ı" : cause.getMessage();
-            eventPublisher.publish(new UserDepositInitializationFailedEvent(event.member().userUuid(), reason));
-            log.error("[UserJoinedEvent] ¿¹Ä¡±İ °èÁ¤ ÃÊ±âÈ­ ½ÇÆĞ. userUuid={}", event.member().userUuid(), cause);
-        } catch (Exception parseException) {
-            log.error("[UserJoinedEvent] ½ÇÆĞ ÀÌº¥Æ® ¹ßÇàÀ» À§ÇÑ ÆÄ½Ì¿¡ ½ÇÆĞÇß½À´Ï´Ù.", parseException);
-        }
+    private void publishDepositInitFailed(UserJoinedEvent event, Exception cause) {
+        String reason = cause.getMessage() == null ? "ì˜ˆì¹˜ê¸ˆ ê³„ì • ì´ˆê¸°í™” ì¤‘ ì˜ˆì™¸ ë°œìƒ" : cause.getMessage();
+        eventPublisher.publish(new UserDepositInitializationFailedEvent(event.member().userUuid(), reason));
+        log.error("[UserJoinedEvent] ì˜ˆì¹˜ê¸ˆ ê³„ì • ì´ˆê¸°í™” ì‹¤íŒ¨. userUuid={}", event.member().userUuid(), cause);
     }
 }

@@ -1,4 +1,4 @@
-package dukku.user.boundedContext.user.listener;
+ï»¿package dukku.user.boundedContext.user.listener;
 
 import dukku.common.shared.user.event.UserDepositInitializationFailedEvent;
 import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
@@ -16,36 +16,23 @@ import java.util.UUID;
 public class UserEventListener {
 
     private final CompensateUserRegistrationUseCase compensateUserRegistrationUseCase;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @KafkaListener(topics = "user.deposit-initialization-failed", groupId = "${spring.application.name}-group")
-    public void handleDepositInitializationFailed(String eventJson) {
-        try {
-            UserDepositInitializationFailedEvent event =
-                    objectMapper.readValue(eventJson, UserDepositInitializationFailedEvent.class);
-            rollbackUser(event.userUuid(), "¿¹Ä¡±İ ÃÊ±âÈ­ ½ÇÆĞ");
-        } catch (Exception e) {
-            log.error("[UserDepositInitializationFailedEvent] ÀÌº¥Æ® Ã³¸® ½ÇÆĞ", e);
-        }
+    public void handleDepositInitializationFailed(UserDepositInitializationFailedEvent event) {
+        rollbackUser(event.userUuid(), "ì˜ˆì¹˜ê¸ˆ ì´ˆê¸°í™” ì‹¤íŒ¨");
     }
 
     @KafkaListener(topics = "user.product-initialization-failed", groupId = "${spring.application.name}-group")
-    public void handleProductInitializationFailed(String eventJson) {
-        try {
-            UserProductInitializationFailedEvent event =
-                    objectMapper.readValue(eventJson, UserProductInitializationFailedEvent.class);
-            rollbackUser(event.userUuid(), "»óÇ° µµ¸ŞÀÎ À¯Àú ÃÊ±âÈ­ ½ÇÆĞ");
-        } catch (Exception e) {
-            log.error("[UserProductInitializationFailedEvent] ÀÌº¥Æ® Ã³¸® ½ÇÆĞ", e);
-        }
+    public void handleProductInitializationFailed(UserProductInitializationFailedEvent event) {
+        rollbackUser(event.userUuid(), "ìƒí’ˆ ë„ë©”ì¸ ìœ ì € ì´ˆê¸°í™” ì‹¤íŒ¨");
     }
 
     private void rollbackUser(UUID userUuid, String reason) {
         try {
             compensateUserRegistrationUseCase.hardDelete(userUuid);
-            log.warn("[UserRegistrationCompensation] À¯Àú ·Ñ¹é(hard delete) ¿Ï·á. userUuid={}, reason={}", userUuid, reason);
+            log.warn("[UserRegistrationCompensation] ìœ ì € ë¡¤ë°±(hard delete) ì™„ë£Œ. userUuid={}, reason={}", userUuid, reason);
         } catch (Exception e) {
-            log.error("[UserRegistrationCompensation] À¯Àú ·Ñ¹é(hard delete) ½ÇÆĞ. userUuid={}, reason={}", userUuid, reason, e);
+            log.error("[UserRegistrationCompensation] ìœ ì € ë¡¤ë°±(hard delete) ì‹¤íŒ¨. userUuid={}, reason={}", userUuid, reason, e);
         }
     }
 }

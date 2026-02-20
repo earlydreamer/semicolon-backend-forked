@@ -19,12 +19,10 @@ public class ProductUserEventListener {
 
     private final ProductUserRepository productUserRepository;
     private final EventPublisher eventPublisher;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @KafkaListener(topics = "user.deposit-initialized", groupId = "${spring.application.name}-group")
-    public void handleDepositInitialized(String eventJson) {
+    public void handleDepositInitialized(UserDepositInitializedEvent event) {
         try {
-            UserDepositInitializedEvent event = objectMapper.readValue(eventJson, UserDepositInitializedEvent.class);
             UUID userUuid = event.userUuid();
 
             if (productUserRepository.existsById(userUuid)) {
@@ -34,19 +32,14 @@ public class ProductUserEventListener {
             productUserRepository.save(ProductUser.create(userUuid, fallbackNickname(userUuid)));
             log.info("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 완료. userUuid={}", userUuid);
         } catch (Exception e) {
-            publishProductInitFailed(eventJson, e);
+            publishProductInitFailed(event, e);
         }
     }
 
-    private void publishProductInitFailed(String eventJson, Exception cause) {
-        try {
-            UserDepositInitializedEvent event = objectMapper.readValue(eventJson, UserDepositInitializedEvent.class);
-            String reason = cause.getMessage() == null ? "상품 도메인 유저 초기화 중 예외 발생" : cause.getMessage();
-            eventPublisher.publish(new UserProductInitializationFailedEvent(event.userUuid(), reason));
-            log.error("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 실패. userUuid={}", event.userUuid(), cause);
-        } catch (Exception parseException) {
-            log.error("[UserDepositInitializedEvent] 실패 이벤트 발행을 위한 파싱에 실패했습니다.", parseException);
-        }
+    private void publishProductInitFailed(UserDepositInitializedEvent event, Exception cause) {
+        String reason = cause.getMessage() == null ? "상품 도메인 유저 초기화 중 예외 발생" : cause.getMessage();
+        eventPublisher.publish(new UserProductInitializationFailedEvent(event.userUuid(), reason));
+        log.error("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 실패. userUuid={}", event.userUuid(), cause);
     }
 
     private String fallbackNickname(UUID userUuid) {
