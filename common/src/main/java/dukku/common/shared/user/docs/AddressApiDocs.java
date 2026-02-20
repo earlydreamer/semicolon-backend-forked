@@ -78,4 +78,32 @@ public final class AddressApiDocs {
     )
     public @interface AddAddress {
     }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "배송지 수정")
+    public @interface UpdateAddress {
+    }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "배송지 삭제")
+    public @interface DeleteAddress {
+    }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "기본 배송지 변경")
+    public @interface SetDefaultAddress {
+    }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(summary = "기본 배송지 조회")
+    public @interface GetMyDefaultAddress {
+    }
 }
