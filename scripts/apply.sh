@@ -8,7 +8,7 @@ $K apply -f k8s/semicolon/00-namespace.yml
 $K apply -f k8s/semicolon/ingress/clusterissuer-letsencrypt-prod.yml
 
 $K -n "$NS" apply --recursive -f k8s/semicolon/services
-$K -n "$NS" apply --recursive -f k8s/semicolon/ingress
+$K -n "$NS" apply -f k8s/semicolon/ingress/api-gateway-ingress.yml
 
 $K -n "$NS" get deploy -o wide
 $K -n "$NS" get svc -o wide
