@@ -58,6 +58,18 @@ public class DepositEventListener {
                 event.refundUuid());
     }
 
+    /**
+     * 정산 지급 요청 시 예치금 충전 처리
+     *
+     * <p>
+     * SettlementPayoutRequestedEvent 수신 시 예치금을 충전한다.
+     * 충전 성공 시 DepositChargeSucceededEvent 발행.
+     * 충전 실패 시 DepositChargeFailedEvent 발행.
+     *
+     * @deprecated 정산 예치금 충전은 이제 Internal API 호출을 통한
+     *             {@link ChargeDepositForSettlementUseCase} 사용을 권장합니다.
+     *             이벤트 기반 방식은 하위 호환성을 위해 유지되나, 향후 제거될 예정입니다.
+     */
     @Deprecated
     @KafkaListener(topics = "settlement.deposit-charge", groupId = "${spring.application.name}-group")
     public void handle(SettlementDepositChargeRequestedEvent command) {
