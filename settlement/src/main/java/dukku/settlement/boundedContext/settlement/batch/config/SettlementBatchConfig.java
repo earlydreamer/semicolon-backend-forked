@@ -2,6 +2,7 @@ package dukku.settlement.boundedContext.settlement.batch.config;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.batch.listener.CreateSettlementSkipListener;
 import dukku.settlement.boundedContext.settlement.batch.listener.DepositChargeSkipListener;
 import dukku.settlement.boundedContext.settlement.batch.listener.SettlementBatchListener;
 import dukku.settlement.boundedContext.settlement.batch.processor.CreateSettlementProcessor;
@@ -60,6 +61,7 @@ public class SettlementBatchConfig {
 
     // Listeners
     private final SettlementBatchListener batchListener;
+    private final CreateSettlementSkipListener createSettlementSkipListener;
     private final DepositChargeSkipListener depositChargeSkipListener;
 
     // Step 1: 정산 대상 생성
@@ -140,6 +142,7 @@ public class SettlementBatchConfig {
                 .retry(DataAccessException.class)
                 .retryLimit(batchProperties.getRetryLimit())
                 // Listener
+                .skipListener(createSettlementSkipListener)
                 .listener(batchListener)
                 .build();
     }
@@ -171,8 +174,8 @@ public class SettlementBatchConfig {
                 .retry(DataAccessException.class)
                 .retryLimit(batchProperties.getRetryLimit())
                 // Listener
+                .skipListener(depositChargeSkipListener)
                 .listener(batchListener)
-                .listener(depositChargeSkipListener)
                 .build();
     }
 
@@ -207,8 +210,8 @@ public class SettlementBatchConfig {
                 .retry(DataAccessException.class)
                 .retryLimit(batchProperties.getRetryLimit())
                 // Listener
+                .skipListener(depositChargeSkipListener)
                 .listener(batchListener)
-                .listener(depositChargeSkipListener)
                 .build();
     }
 

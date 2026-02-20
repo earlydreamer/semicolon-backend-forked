@@ -29,11 +29,14 @@ public class SlackNotificationService {
 
     private final RestTemplate restTemplate;
     private final BatchFailureDiagnoser failureDiagnoser;
+    private final SkipReasonTracker skipReasonTracker;
 
     public SlackNotificationService(@Qualifier("slackRestTemplate") RestTemplate restTemplate,
-                                    BatchFailureDiagnoser failureDiagnoser) {
+                                    BatchFailureDiagnoser failureDiagnoser,
+                                    SkipReasonTracker skipReasonTracker) {
         this.restTemplate = restTemplate;
         this.failureDiagnoser = failureDiagnoser;
+        this.skipReasonTracker = skipReasonTracker;
     }
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -84,7 +87,23 @@ public class SlackNotificationService {
                     .append(" → Write: ").append(writeCount).append("\n");
             sb.append("  • Skip: ").append(stepExecution.getSkipCount())
                     .append(" / Rollback: ").append(stepExecution.getRollbackCount()).append("\n");
+
+            // Skip 사유별 통계
+            if (stepExecution.getSkipCount() > 0) {
+                Map<SkipReasonType, Integer> skipReasons = skipReasonTracker.getStepSkipReasons(
+                        jobExecution.getId(), stepExecution.getStepName());
+                if (!skipReasons.isEmpty()) {
+                    sb.append("  • *Skip 사유:*\n");
+                    for (Map.Entry<SkipReasonType, Integer> entry : skipReasons.entrySet()) {
+                        sb.append("    - ").append(entry.getKey().getDescription())
+                                .append(": ").append(entry.getValue()).append("건\n");
+                    }
+                }
+            }
         }
+
+        // 추적 데이터 정리
+        skipReasonTracker.clear(jobExecution.getId());
 
         return sb.toString();
     }
