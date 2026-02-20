@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 /**
  * 결제 도메인 이벤트 리스너
  *
- * <p>주문과 예치금 도메인에서 전달된 이벤트를 수신해 결제 상태를 전이</p>
+ * <p>
+ * 주문과 예치금 도메인에서 전달된 이벤트를 수신해 결제 상태를 전이
+ * </p>
  */
 @Component
 @RequiredArgsConstructor
@@ -52,5 +54,13 @@ public class PaymentEventListener {
     @KafkaListener(topics = "deposit.refund.failed", groupId = "${spring.application.name}-group")
     public void handle(DepositRefundFailedEvent event) {
         paymentFacade.handleRefundFailure(event);
+    }
+
+    /**
+     * 부분 환불 요청 이벤트 처리 (반품 승인 후)
+     */
+    @KafkaListener(topics = "order.partial_refund_requested", groupId = "${spring.application.name}-group")
+    public void handle(dukku.common.shared.order.event.PartialRefundRequestedEvent event) {
+        paymentFacade.handlePartialRefund(event);
     }
 }
