@@ -1,8 +1,6 @@
 package dukku.product.boundedContext.product.entity;
 
 import dukku.common.shared.product.dto.cart.CartDto;
-import dukku.common.shared.product.dto.cart.CartPayload;
-import dukku.common.shared.product.type.CartEventType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -88,17 +86,6 @@ public class Cart {
                 product.getPrice(),
                 product.getSaleStatus(),
                 thumbnailUrl,
-                cart.getCreatedAt()
-        );
-    }
-
-    public static CartPayload toCartPayload(Cart cart, CartEventType eventType) {
-        return new CartPayload(
-                eventType,
-                cart.user.getUserUuid(),
-                cart.product.getUuid(),
-                cart.product.getTitle(),
-                cart.product.getCategory().getId(),
                 cart.getCreatedAt()
         );
     }
