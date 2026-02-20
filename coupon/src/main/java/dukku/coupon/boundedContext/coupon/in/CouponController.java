@@ -4,6 +4,7 @@ import dukku.common.global.UserUtil;
 import dukku.common.shared.coupon.dto.CouponResponse;
 import dukku.coupon.boundedContext.coupon.app.command.CouponFacade;
 import dukku.coupon.boundedContext.coupon.app.query.CouponQueryFacade;
+import dukku.common.shared.coupon.docs.CouponApiDocs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/coupons")
+@CouponApiDocs.CouponTag
 public class CouponController {
     private final CouponQueryFacade couponQueryFacade;
     private final CouponFacade couponFacade;
@@ -21,6 +23,7 @@ public class CouponController {
     // 쿠폰 발급 (유저)
     @PostMapping("/{couponUuid}/issue")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @CouponApiDocs.IssueCoupon
     public void issueCoupon(@PathVariable UUID couponUuid) {
         couponFacade.issueCoupon(UserUtil.getUserId(), couponUuid);
     }
@@ -28,18 +31,21 @@ public class CouponController {
     // 쿠폰 사용 (유저)
     @PostMapping("/{couponUuid}/use")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @CouponApiDocs.UseCoupon
     public void useCoupon(@PathVariable UUID couponUuid) {
         couponFacade.useCoupon(UserUtil.getUserId(), couponUuid);
     }
 
     // 발급 가능한 쿠폰 리스트 (유저)
     @GetMapping("/issuable")
+    @CouponApiDocs.FindIssuableCoupons
     public List<CouponResponse> findIssuableCoupons() {
         return couponQueryFacade.findIssuableCoupons(UserUtil.getUserId());
     }
 
     // 내가 보유한 쿠폰 리스트 (유저)
     @GetMapping("/me")
+    @CouponApiDocs.FindMyCoupons
     public List<CouponResponse> findMyCoupons() {
         return couponQueryFacade.findMyCoupons(UserUtil.getUserId());
     }

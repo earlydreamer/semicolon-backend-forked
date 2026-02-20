@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -17,8 +18,9 @@ import java.util.UUID;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@Order(4)
+@Order(1)
 public class CouponInitData {
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Bean
     public CommandLineRunner initCoupons(CouponRepository couponRepository) {
@@ -32,6 +34,15 @@ public class CouponInitData {
                     log.info("테스트 쿠폰이 이미 존재하여 초기화를 건너뜁니다.");
                     return;
                 }
+
+                String redisKey = "coupon:count:" + couponUuid;
+
+                // DB에서 실제 수량 조회 (서버 뜰 때 딱 한 번 실행됨)
+                int totalQuantity = 100; // 또는 couponRepository에서 조회 가능
+
+                // Redis에 수량 초기화
+                redisTemplate.opsForValue().set(redisKey, String.valueOf(totalQuantity));
+                System.out.println("✅ Redis Warm-up 완료: " + redisKey + " = " + totalQuantity);
 
                 Coupon coupon = Coupon.builder()
                         .uuid(couponUuid)
