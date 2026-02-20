@@ -1,4 +1,4 @@
-﻿package dukku.user.boundedContext.user.listener;
+package dukku.user.boundedContext.user.listener;
 
 import dukku.common.shared.user.event.UserDepositInitializationFailedEvent;
 import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
