@@ -23,6 +23,13 @@ public class DepositEventListener {
     private final DepositFacade depositFacade;
     private final EventPublisher eventPublisher;
 
+    /**
+     * 결제 완료 시 예치금 차감 라이프사이클 처리
+     *
+     * <p>
+     * 결제 트랜잭션이 최종 커밋된 후(AFTER_COMMIT), 비동기적으로 예치금 차감 프로세스를 시작한다.
+     * 상품별 사용 상세 내역(itemDepositUsages)을 포함하여 파사드에 위임한다.
+     */
     @KafkaListener(topics = "payment.success", groupId = "${spring.application.name}-group")
     public void handle(PaymentSuccessEvent event) {
         depositFacade.deductDepositForPayment(
@@ -34,6 +41,13 @@ public class DepositEventListener {
         depositFacade.increaseSystemDepositForPg(event.orderUuid(), event.pgAmount());
     }
 
+    /**
+     * 환불 요청 시 예치금 복구 처리
+     *
+     * <p>
+     * RefundRequestedEvent 수신 시 예치금을 롤백(재적립)한다.
+     * 복구 성공 시 DepositRefundedEvent가 발행된다.
+     */
     @KafkaListener(topics = "payment.refund-requested", groupId = "${spring.application.name}-group")
     public void handle(RefundRequestedEvent event) {
         depositFacade.refundDeposit(
