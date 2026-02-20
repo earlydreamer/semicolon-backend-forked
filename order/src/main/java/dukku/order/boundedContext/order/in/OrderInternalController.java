@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/orders/internal/")
+@RequestMapping("/api/v1/internal/orders")
 @RequiredArgsConstructor
 public class OrderInternalController {
     private final OrderFacade orderFacade;
@@ -25,7 +25,7 @@ public class OrderInternalController {
         return orderFacade.findConfirmedItems(startDateTime, endDateTime);
     }
 
-    @GetMapping("/internal/{userUuid}")
+    @GetMapping("/{userUuid}")
     public List<OrderListResponse> findOrders(
             @PathVariable UUID userUuid,
             @RequestParam OrderStatus status,
