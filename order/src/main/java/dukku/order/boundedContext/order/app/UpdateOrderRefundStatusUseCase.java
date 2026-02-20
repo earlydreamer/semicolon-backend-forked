@@ -4,27 +4,31 @@ import dukku.common.shared.order.exception.OrderRefundAmountOutOfRangeException;
 import dukku.common.shared.order.exception.OrderRefundRequestInvalidException;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
+import dukku.order.boundedContext.order.out.ReturnRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class UpdateOrderRefundStatusUseCase {
     private final OrderSupport orderSupport;
+    private final ReturnRequestRepository returnRequestRepository;
 
     /**
      * 결제 환불 이벤트의 환불 금액을 주문에 반영하고 상태를 갱신
      * 누적 환불 금액과 총 결제 금액을 비교해 상태를 분기
      *
-     * @param refundUuid 환불 UUID
-     * @param orderUuid 주문 UUID
-     * @param refundAmount 누적 환불 금액
+     * @param refundUuid        환불 UUID
+     * @param orderUuid         주문 UUID
+     * @param refundAmount      누적 환불 금액
+     * @param refundedItemUuids 환불 처리된 아이템의 UUID 목록
      */
     @Transactional
-    public void updateRefund(UUID refundUuid, UUID orderUuid, Long refundAmount) {
+    public void updateRefund(UUID refundUuid, UUID orderUuid, Long refundAmount, List<UUID> refundedItemUuids) {
         // 입력값이 없거나 0 이하이면 예외 처리
         if (refundUuid == null || orderUuid == null || refundAmount == null || refundAmount <= 0) {
             throw new OrderRefundRequestInvalidException();
@@ -45,6 +49,26 @@ public class UpdateOrderRefundStatusUseCase {
 
         // 누적 환불 금액 반영
         order.updateRefundedAmount(refundAmount.intValue());
+
+        // 개별 상품 환불 상태 처리 및 반품 묶음(ReturnRequest) 상태 갱신
+        if (refundedItemUuids != null && !refundedItemUuids.isEmpty()) {
+            order.getOrderItems().forEach(item -> {
+                if (refundedItemUuids.contains(item.getUuid())) {
+                    item.updateOrderStatus(dukku.common.shared.order.type.OrderItemStatus.REFUND_COMPLETED);
+                }
+            });
+
+            returnRequestRepository.findByOrderUuid(orderUuid).forEach(req -> {
+                if (req.getStatus() == dukku.common.shared.order.type.ReturnStatus.RETURN_APPROVED) {
+                    boolean allRefunded = req.getReturnItems().stream()
+                            .allMatch(ri -> ri.getOrderItem()
+                                    .getStatus() == dukku.common.shared.order.type.OrderItemStatus.REFUND_COMPLETED);
+                    if (allRefunded) {
+                        req.complete();
+                    }
+                }
+            });
+        }
 
         // 이미 취소된 주문이면 추가 상태 변경 생략
         if (order.getStatus() == OrderStatus.CANCELED) {

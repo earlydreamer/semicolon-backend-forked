@@ -31,7 +31,8 @@ public class OrderEventListener {
     @Retryable(backoff = @Backoff(delay = 1000))
     @org.springframework.kafka.annotation.KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
     public void handle(RefundCompletedEvent event) {
-        updateOrderRefundStatusUseCase.updateRefund(event.refundUuid(), event.orderUuid(), event.refundAmount());
+        updateOrderRefundStatusUseCase.updateRefund(event.refundUuid(), event.orderUuid(), event.refundAmount(),
+                event.refundedItemUuids());
     }
 
     // 환불 완료 이벤트 반영 실패 시 수동 확인이 필요하다는 로그 기록
