@@ -4,7 +4,7 @@ import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.global.exception.BadRequestException;
 import dukku.common.global.exception.ConflictException;
 import dukku.common.global.exception.NotFoundException;
-import dukku.common.shared.product.dto.cart.CartPayload;
+import dukku.common.shared.product.dto.cart.CartItemAddedPayload;
 import dukku.common.shared.product.event.CartSyncEvent;
 import dukku.common.shared.product.type.AccountStatus;
 import dukku.common.shared.product.type.CartEventType;
@@ -23,9 +23,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
-
-import static dukku.product.boundedContext.product.entity.Cart.toCartPayload;
 
 @Service
 @RequiredArgsConstructor
@@ -60,9 +59,16 @@ public class CreateCartUseCase {
         Cart cart = Cart.createCart(user, product);
         cartRepository.save(cart);
 
-        CartPayload payload = toCartPayload(cart, CART_EVENT_TYPE);
+        CartItemAddedPayload payload = new CartItemAddedPayload(
+                userUuid,
+                product.getUuid(),
+                product.getTitle(),
+                product.getCategory().getId(),
+                LocalDateTime.now()
+        );
+
         // 트랜잭션 커밋된 후 이벤트 발행
-        eventPublisher.publishAfterCommit(new CartSyncEvent(payload));
+        eventPublisher.publishAfterCommit(new CartSyncEvent(CART_EVENT_TYPE, payload));
     }
 
     private void validateCart(ProductUser user, Product product) {
