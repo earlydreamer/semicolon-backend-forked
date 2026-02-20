@@ -2,7 +2,6 @@ package dukku.common.global.config;
 
 import dukku.common.global.logging.kafka.KafkaTracingBatchInterceptor;
 import dukku.common.global.logging.kafka.KafkaTracingRecordInterceptor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -13,8 +12,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
-import org.springframework.kafka.support.converter.JsonMessageConverter;
+import org.springframework.kafka.support.converter.JacksonJsonMessageConverter;
 import org.springframework.kafka.support.converter.RecordMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,14 +59,15 @@ public class KafkaConfig {
         return new KafkaTracingRecordInterceptor();
     }
 
+
     /**
      * JSON 메시지 변환기 빈 등록
      * 객체(DTO)와 Kafka 메시지(JSON String) 사이의 변환 담당
      * 빈 등록 시 @KafkaListener 파라미터로 DTO 타입 직접 사용 가능
      */
     @Bean
-    public JsonMessageConverter jsonMessageConverter(ObjectMapper objectMapper) {
-        return new JsonMessageConverter(objectMapper);
+    public JacksonJsonMessageConverter jacksonJsonMessageConverter(JsonMapper jsonMapper) {
+        return new JacksonJsonMessageConverter(jsonMapper);
     }
 
     /**
