@@ -5,6 +5,7 @@ import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
 import dukku.common.shared.payment.event.PaymentFailedEvent;
 import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.common.shared.payment.event.RefundCompletedEvent;
+import dukku.common.shared.payment.event.RefundFailedEvent;
 import dukku.order.boundedContext.order.app.UpdateOrderRefundStatusUseCase;
 import dukku.order.boundedContext.order.app.UpdateOrderStatusUseCase;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,8 @@ public class OrderEventListener {
     @Retryable(backoff = @Backoff(delay = 1000))
     @org.springframework.kafka.annotation.KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
     public void handle(RefundCompletedEvent event) {
-        updateOrderRefundStatusUseCase.updateRefund(event.refundUuid(), event.orderUuid(), event.refundAmount());
+        updateOrderRefundStatusUseCase.updateRefund(event.refundUuid(), event.orderUuid(), event.refundAmount(),
+                event.refundedItemUuids());
     }
 
     // 환불 완료 이벤트 반영 실패 시 수동 확인이 필요하다는 로그 기록
@@ -40,6 +42,22 @@ public class OrderEventListener {
         log.error(
                 "[CRITICAL] Failed to apply refund-completed event. manual action required. orderUuid={}, refundUuid={}, refundAmount={}",
                 event.orderUuid(), event.refundUuid(), event.refundAmount(), e);
+    }
+
+    // payment.refund.failed 이벤트 수신 시 반품 거절(실패) 보상 트랜잭션 수행
+    @Retryable(backoff = @Backoff(delay = 1000))
+    @KafkaListener(topics = "payment.refund.failed", groupId = "${spring.application.name}-group")
+    public void handle(RefundFailedEvent event) {
+        log.warn("부분 환불 실패 이벤트 수신, 보상 트랜잭션(반품 거절) 처리 시작. orderUuid={}", event.orderUuid());
+        updateOrderRefundStatusUseCase.failRefund(event.orderUuid());
+    }
+
+    // 환불 실패 보상 트랜잭션 반영 실패 시 로그
+    @Recover
+    public void recoverRefundFailed(Exception e, RefundFailedEvent event) {
+        log.error(
+                "[CRITICAL] Failed to apply refund-failed event. manual action required. orderUuid={}",
+                event.orderUuid(), e);
     }
 
     // payment.success 이벤트 수신 후 주문 결제 성공 반영

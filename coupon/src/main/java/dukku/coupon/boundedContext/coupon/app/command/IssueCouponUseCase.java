@@ -1,63 +1,71 @@
 package dukku.coupon.boundedContext.coupon.app.command;
 
 import dukku.common.global.exception.ConflictException;
-import dukku.common.shared.coupon.exception.CouponAlreadyExistsException;
 import dukku.common.shared.coupon.exception.CouponNotFoundException;
-import dukku.common.shared.coupon.exception.CouponSoldOutException;
 import dukku.common.shared.coupon.type.IssueResult;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
-import dukku.coupon.boundedContext.coupon.entity.CouponUser;
+import dukku.coupon.boundedContext.coupon.out.CouponRedisRepository;
 import dukku.coupon.boundedContext.coupon.out.CouponRepository;
-import dukku.coupon.boundedContext.coupon.out.CouponUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Transactional
 public class IssueCouponUseCase {
-    private final CouponRepository couponRepository;
-    private final CouponUserRepository couponUserRepository;
+    private final CouponRedisRepository couponRedisRepository;
+    private final CouponIssueService couponIssueService;
     private final CouponIssueLogManager couponIssueLogManager;
+    private final CouponRepository couponRepository;
 
+    private final Map<UUID, Coupon> couponMetadataCache = new ConcurrentHashMap<>();
+
+    // 쿠폰 메타데이터를 조회하고 Redis를 통해 선착순 검증을 수행합니다.
     public void execute(UUID userUuid, UUID couponUuid) {
         LocalDateTime requestedAt = LocalDateTime.now();
 
+        Coupon coupon = getCachedCoupon(couponUuid);
+
+        IssueResult result = couponRedisRepository.tryIssue(couponUuid, userUuid);
+
+        if (result == IssueResult.SUCCESS) {
+            issueCoupon(userUuid, coupon, requestedAt);
+        } else {
+            handleFailure(result, userUuid, couponUuid, requestedAt);
+        }
+    }
+
+    // 검증을 통과한 요청에 한해 DB에 발급 이력을 저장하며, 실패 시 Redis 데이터를 롤백합니다.
+    private void issueCoupon(UUID userUuid, Coupon coupon, LocalDateTime requestedAt) {
         try {
-            // 1. 중복 체크
-            if (couponUserRepository.existsByUserUuidAndCoupon_Uuid(userUuid, couponUuid)) {
-                throw new CouponAlreadyExistsException();
-            }
+            couponIssueService.saveIssueResult(userUuid, coupon, requestedAt);
+        } catch (Exception e) {
+            log.error("DB 저장 실패로 인한 Redis 롤백 수행. User: {}, Coupon: {}", userUuid, coupon.getUuid());
+            couponRedisRepository.rollback(coupon.getUuid(), userUuid);
 
-            // 2. DB 원자적 업데이트 (여기서 100개까지 순차적으로 성공함)
-            int result = couponRepository.decreaseQuantity(couponUuid);
-            if (result == 0) {
-                throw new CouponSoldOutException();
-            }
-
-            // 3. Coupon 엔티티는 단순 정보 참조용으로만 사용 (수정 X)
-            Coupon coupon = couponRepository.findByUuid(couponUuid)
-                    .orElseThrow(CouponNotFoundException::new);
-
-            // 4. 이력 저장 (내부에서 coupon.issue() 호출 금지)
-            CouponUser couponUser = CouponUser.create(userUuid, coupon);
-            couponUserRepository.save(couponUser);
-
-            couponIssueLogManager.record(couponUuid, userUuid, IssueResult.SUCCESS, requestedAt);
-
-        } catch (ConflictException e) {
-            couponIssueLogManager.record(couponUuid, userUuid, mapResult(e), requestedAt);
             throw e;
         }
     }
 
-    private IssueResult mapResult(ConflictException e) {
-        if (e.getMessage().contains("이미")) return IssueResult.DUPLICATE;
-        if (e.getMessage().contains("소진")) return IssueResult.SOLD_OUT;
-        return IssueResult.ERROR;
+    // 발급 실패 사유를 비동기로 로깅하고 클라이언트에게 명확한 예외를 반환합니다.
+    private void handleFailure(IssueResult result, UUID userUuid, UUID couponUuid, LocalDateTime requestedAt) {
+        couponIssueLogManager.record(couponUuid, userUuid, result, requestedAt);
+
+        String message = (result == IssueResult.DUPLICATE) ? "이미 발급된 쿠폰입니다." : "선착순 마감되었습니다.";
+        throw new ConflictException(message);
+    }
+
+    // 쿠폰 메타데이터를 로컬 캐시에 저장하여 DB 조회 부하를 최소화합니다.
+    private Coupon getCachedCoupon(UUID couponUuid) {
+        return couponMetadataCache.computeIfAbsent(couponUuid, k ->
+                couponRepository.findByUuid(k)
+                        .orElseThrow(CouponNotFoundException::new)
+        );
     }
 }

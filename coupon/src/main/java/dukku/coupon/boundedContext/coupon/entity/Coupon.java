@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "coupons")
+@Table(
+        name = "coupons",
+        indexes = @Index(name = "idx_coupon_uuid", columnList = "uuid")
+)
 @EntityListeners(AuditingEntityListener.class)
 @Builder
 @Getter
@@ -107,6 +110,13 @@ public class Coupon {
             throw new CouponSoldOutException();
         }
         this.issuedQuantity++;
+    }
+
+    /**
+     * 스케줄러에 의해 호출되어 실제 DB 데이터(CouponUser count)와 동기화합니다.
+     */
+    public void syncIssuedQuantity(int realQuantity) {
+        this.issuedQuantity = realQuantity;
     }
 
     public static CouponResponse from(Coupon coupon) {

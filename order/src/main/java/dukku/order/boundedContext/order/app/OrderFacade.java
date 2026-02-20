@@ -2,6 +2,7 @@ package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.dto.*;
 import dukku.common.shared.order.type.OrderItemStatus;
+import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ public class OrderFacade {
     private final UpdateOrderItemDeliveryInfoUseCase updateOrderItemDeliveryInfo;
     private final UpdateOrderItemStatusUseCase updateOrderItemStatus;
     private final FindConfirmedItemsUseCase findConfirmedItems;
+    private final FindOrderListByOrderStatusUseCase findOrderListByOrderStatus;
 
     public OrderResponse createOrder(OrderCreateRequest req) {
         return Order.toOrderResponse(createOrder.execute(req));
@@ -66,5 +68,9 @@ public class OrderFacade {
     // 주문 확정 조회
     public List<ConfirmedOrderItemResponse> findConfirmedItems(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return findConfirmedItems.execute(startDateTime, endDateTime);
+    }
+
+    public List<OrderListResponse> findOrderListByOrderStatus(UUID userUuid, OrderStatus status, int limit) {
+        return findOrderListByOrderStatus.execute(userUuid, status, limit);
     }
 }

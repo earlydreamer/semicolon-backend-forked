@@ -16,8 +16,10 @@ import java.util.UUID;
 /**
  * 예치금 환불 완료 처리 UseCase
  *
- * <p>예치금 도메인에서 환불 완료 이벤트를 수신한 뒤
- * Refund 상태를 COMPLETED로 전이하고 후속 이벤트를 발행한다.</p>
+ * <p>
+ * 예치금 도메인에서 환불 완료 이벤트를 수신한 뒤
+ * Refund 상태를 COMPLETED로 전이하고 후속 이벤트를 발행한다.
+ * </p>
  */
 @Slf4j
 @Component
@@ -52,7 +54,10 @@ public class CompleteRefundUseCase {
                     refund.getRefundAmountTotal(),
                     refund.getRefundDepositTotal(),
                     payment.getUserUuid(),
-                    LocalDateTime.now()));
+                    LocalDateTime.now(),
+                    refund.getItems().stream()
+                            .map(i -> i.getPaymentOrderItem().getOrderItemUuid())
+                            .toList()));
         }, () -> log.warn("[결제 Saga 실패] deposit.refunded 조회 실패 refundUuid={}, paymentUuid={}",
                 refundUuid, paymentUuid));
     }

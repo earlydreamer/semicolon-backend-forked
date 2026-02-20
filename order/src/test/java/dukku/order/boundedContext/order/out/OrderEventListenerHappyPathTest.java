@@ -74,7 +74,8 @@ class OrderEventListenerHappyPathTest {
                 15000L,
                 0L,
                 UUID.randomUUID(),
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                java.util.List.of());
 
         // when: payment.refund-completed 이벤트 처리
         listener.handle(event);
@@ -98,7 +99,8 @@ class OrderEventListenerHappyPathTest {
                 5000L,
                 0L,
                 UUID.randomUUID(),
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                java.util.List.of());
 
         // when: payment.refund-completed 이벤트 처리
         listener.handle(event);
@@ -123,7 +125,8 @@ class OrderEventListenerHappyPathTest {
                 5000L,
                 0L,
                 UUID.randomUUID(),
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                java.util.List.of());
 
         // when: 동일 이벤트를 두 번 처리
         listener.handle(duplicated);
@@ -148,7 +151,8 @@ class OrderEventListenerHappyPathTest {
                 5000L,
                 0L,
                 UUID.randomUUID(),
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                java.util.List.of());
         RefundCompletedEvent second = new RefundCompletedEvent(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -156,7 +160,8 @@ class OrderEventListenerHappyPathTest {
                 5000L,
                 0L,
                 UUID.randomUUID(),
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                java.util.List.of());
 
         // when: 각 이벤트를 순차 처리
         listener.handle(first);
