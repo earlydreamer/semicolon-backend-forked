@@ -24,7 +24,7 @@ public class ReserveProductUseCase {
 
         // 검증: 요청한 상품 수와 조회된 상품 수가 같은지 (유효하지 않은 UUID 체크)
         if (products.size() != request.productUuids().size()) {
-            log.error("ReserveProducUseCase Error. Product Size: {}", products.size());
+            log.error("ReserveProductUseCase 오류: 조회된 상품 수가 요청과 일치하지 않음. 조회수={}", products.size());
 
             throw new PartialProductsNotFoundException();
         }

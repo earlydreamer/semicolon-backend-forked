@@ -32,6 +32,6 @@ public class ReleaseProductReservationUseCase {
             eventPublisher.publish(new ProductUpdatedEvent(product.getId(), false));
         }
 
-        log.info("Reservation Released for products: {}", productUuids);
+        log.info("예약 해제 처리 완료: 제품들={}", productUuids);
     }
 }

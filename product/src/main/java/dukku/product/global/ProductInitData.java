@@ -58,14 +58,14 @@ public class ProductInitData {
             @Override
             @Transactional
             public void run(String... args) throws Exception {
-                log.info("🚀 [InitData] Data Initialization Started (JPA: create mode)");
+                log.info("🚀 [InitData] 데이터 초기화 시작 (JPA: create 모드)");
 
                 // 1. ES 데이터 초기화
                 try {
                     productSearchRepository.deleteAll();
-                    log.info("🗑️ Elasticsearch index cleared.");
+                    log.info("🗑️ Elasticsearch 인덱스 초기화 완료.");
                 } catch (Exception e) {
-                    log.warn("⚠️ Failed to clear Elasticsearch index: {}", e.getMessage());
+                    log.warn("⚠️ Elasticsearch 인덱스 초기화 실패: {}", e.getMessage());
                 }
 
                 // 2. 메모리 맵 초기화
@@ -83,7 +83,7 @@ public class ProductInitData {
                 Map<String, String> catNameMap = getCategoryNameMap();
                 createProducts(catNameMap);
 
-                log.info("✅ [InitData] Initialization Completed.");
+                log.info("✅ [InitData] 초기화 완료.");
             }
         };
     }
@@ -187,7 +187,7 @@ public class ProductInitData {
         categoryRepository.save(Category.createChild("포토카드", goodsCommon));
         categoryRepository.save(Category.createChild("콘서트티켓", goodsCommon));
 
-        log.info("📂 [InitData] Category Hierarchy Created.");
+        log.info("📂 [InitData] 카테고리 계층 생성 완료.");
     }
 
     private void initUsersAndSellers() {
@@ -375,7 +375,7 @@ public class ProductInitData {
         List<Integer> path = new ArrayList<>();
         Category current = category;
         while (current != null) {
-            path.add(current.getId().intValue());
+            path.add(current.getId());
             current = current.getParent();
         }
         return path;

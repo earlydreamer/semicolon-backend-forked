@@ -40,7 +40,7 @@ public class ProductEventListener {
                     .orElseThrow(); // Or handle gracefully
             saveToElasticSearchUseCase.execute(product, true);
         } catch (Exception e) {
-            log.error("Failed to process product.created event", e);
+            log.error("product.created 이벤트 처리 실패", e);
         }
     }
 
@@ -49,13 +49,13 @@ public class ProductEventListener {
     public void syncUpdate(String eventJson) {
         try {
             ProductUpdatedEvent event = objectMapper.readValue(eventJson, ProductUpdatedEvent.class);
-            log.info("Sync Update Product: {}", event.productId());
+            log.info("상품 업데이트 동기화: id={}", event.productId());
 
             Product product = productRepository.findById(event.productId())
                     .orElseThrow();
             saveToElasticSearchUseCase.execute(product, event.isCategoryChanged());
         } catch (Exception e) {
-            log.error("Failed to process product.updated event", e);
+            log.error("product.updated 이벤트 처리 실패", e);
         }
     }
 
@@ -66,7 +66,7 @@ public class ProductEventListener {
             ProductDeletedEvent event = objectMapper.readValue(eventJson, ProductDeletedEvent.class);
             productSyncFacade.syncProductToElasticsearch(event.productId().longValue());
         } catch (Exception e) {
-            log.error("Failed to process product.deleted event", e);
+            log.error("product.deleted 이벤트 처리 실패", e);
         }
     }
 
@@ -77,7 +77,7 @@ public class ProductEventListener {
             ProductStatsBulkUpdatedEvent event = objectMapper.readValue(eventJson, ProductStatsBulkUpdatedEvent.class);
             syncSearchProductStatsUseCase.execute(event.getStats());
         } catch (Exception e) {
-            log.error("Failed to process product.stats-updated event", e);
+            log.error("product.stats-updated 이벤트 처리 실패", e);
         }
     }
 
@@ -88,11 +88,11 @@ public class ProductEventListener {
     public void handleOrderConfirmed(String eventJson) {
         try {
             OrderProductSaleConfirmedEvent event = objectMapper.readValue(eventJson, OrderProductSaleConfirmedEvent.class);
-            log.info("Trigger Confirm Sale: orderUuid={}", event.orderUuid());
+            log.info("판매 확정 처리 트리거: orderUuid={}", event.orderUuid());
 
             confirmProductSaleUseCase.execute(event.orderUuid(), event.productUuids());
         } catch (Exception e) {
-            log.error("Failed to process order.product-sale-confirmed event", e);
+            log.error("order.product-sale-confirmed 이벤트 처리 실패", e);
         }
     }
 
@@ -103,11 +103,11 @@ public class ProductEventListener {
     public void handleOrderReleased(String eventJson) {
         try {
             OrderProductSaleReleasedEvent event = objectMapper.readValue(eventJson, OrderProductSaleReleasedEvent.class);
-            log.info("Trigger Release Reservation: orderUuid={}", event.orderUuid());
+            log.info("예약 해제 처리 트리거: orderUuid={}", event.orderUuid());
 
             releaseProductReservationUseCase.execute(event.orderUuid(), event.productUuids());
         } catch (Exception e) {
-            log.error("Failed to process order.product-sale-released event", e);
+            log.error("order.product-sale-released 이벤트 처리 실패", e);
         }
     }
 }
