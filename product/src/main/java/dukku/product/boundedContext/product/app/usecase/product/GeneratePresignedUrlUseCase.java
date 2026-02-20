@@ -39,7 +39,7 @@ public class GeneratePresignedUrlUseCase {
     }
 
     private String createFileName(String extension) {
-        return "products/" + UUID.randomUUID().toString() + "." + extension;
+        return "products/" + UUID.randomUUID() + "." + extension;
     }
 
     private String getContentType(String extension) {
