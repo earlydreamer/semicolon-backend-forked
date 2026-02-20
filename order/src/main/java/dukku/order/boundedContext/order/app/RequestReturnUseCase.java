@@ -50,7 +50,8 @@ public class RequestReturnUseCase {
             // 반품 신청 가능 알맞은 상태로 전환 시도. 검증을 거침.
             orderItem.updateOrderStatus(OrderItemStatus.REFUND_REQUESTED);
 
-            // 반품 환불 비용은 쿠폰 계산을 추가로 해야할 수 있으나 임시적으로 원가 적용
+            // 반품 신청 단계에서는 주문 원가 기준으로 저장
+            // 실제 환불 집행 금액(쿠폰/기환불 반영)은 Payment BC에서 스냅샷 기준으로 재계산
             int refundAmount = orderItem.getProductPrice();
 
             ReturnItem returnItem = ReturnItem.create(orderItem, refundAmount);

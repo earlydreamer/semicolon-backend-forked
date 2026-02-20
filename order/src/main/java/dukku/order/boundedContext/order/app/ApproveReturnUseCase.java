@@ -1,9 +1,10 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.shared.order.exception.ReturnRequestNotFoundException;
 import dukku.common.shared.order.dto.ReturnResponse;
 import dukku.common.shared.order.event.PartialRefundRequestedEvent;
+import dukku.common.shared.order.exception.ReturnApprovalAccessDeniedException;
+import dukku.common.shared.order.exception.ReturnRequestNotFoundException;
 import dukku.order.boundedContext.order.entity.ReturnRequest;
 import dukku.order.boundedContext.order.out.ReturnRequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class ApproveReturnUseCase {
         ReturnRequest returnRequest = returnRequestRepository.findByUuid(returnRequestUuid)
                 .orElseThrow(ReturnRequestNotFoundException::new);
 
-        // TODO: 판매자의 상품이 포함되어 있는지 검증하는 로직 추가
+        validateSellerOwnership(sellerUuid, returnRequest);
 
         returnRequest.approve();
 
@@ -43,5 +44,14 @@ public class ApproveReturnUseCase {
                 refundItems));
 
         return returnRequest.toResponse();
+    }
+
+    private void validateSellerOwnership(UUID sellerUuid, ReturnRequest returnRequest) {
+        boolean ownedBySeller = returnRequest.getReturnItems().stream()
+                .allMatch(item -> sellerUuid.equals(item.getOrderItem().getSellerUuid()));
+
+        if (!ownedBySeller) {
+            throw new ReturnApprovalAccessDeniedException();
+        }
     }
 }
