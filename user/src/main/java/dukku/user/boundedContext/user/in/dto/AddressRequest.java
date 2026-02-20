@@ -6,16 +6,29 @@ import lombok.Getter;
 @Getter
 public class AddressRequest {
     @NotBlank
-    private String receiverName;
+    private String address;
 
     @NotBlank
-    private String receiverPhone;
+    private String zonecode;
 
-    @NotBlank
-    private String zipcode;
-
-    @NotBlank
-    private String address1;
-
-    private String address2;
+    private String addressType;
+    private String bcode;
+    private String bname;
+    private String bname1;
+    private String bname2;
+    private String sido;
+    private String sigungu;
+    private String sigunguCode;
+    private String roadname;
+    private String roadnameCode;
+    private String buildingCode;
+    private String buildingName;
+    private String apartment;
+    private String jibunAddress;
+    private String roadAddress;
+    private String autoRoadAddress;
+    private String autoJibunAddress;
+    private String userSelectedType;
+    private String noSelected;
+    private String query;
 }

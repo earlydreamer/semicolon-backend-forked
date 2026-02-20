@@ -1,6 +1,14 @@
 package dukku.user.boundedContext.user.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,38 +23,29 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 사용자 UUID
-     */
-    @Column(name = "user_uuid", nullable = false, length = 36)
-    private java.util.UUID userUuid;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    private String receiverName;
-    private String receiverPhone;
+    @Column(nullable = false)
+    private String address;
 
-    private String zipcode;
-    private String address1;
-    private String address2;
+    @Column(nullable = false, length = 10)
+    private String zonecode;
 
     @Column(nullable = false)
     private boolean isDefault;
 
     @Builder
     public Address(
-            java.util.UUID userUuid,
-            String receiverName,
-            String receiverPhone,
-            String zipcode,
-            String address1,
-            String address2,
+            User user,
+            String address,
+            String zonecode,
             boolean isDefault
     ) {
-        this.userUuid = userUuid;
-        this.receiverName = receiverName;
-        this.receiverPhone = receiverPhone;
-        this.zipcode = zipcode;
-        this.address1 = address1;
-        this.address2 = address2;
+        this.user = user;
+        this.address = address;
+        this.zonecode = zonecode;
         this.isDefault = isDefault;
     }
 
@@ -55,16 +54,10 @@ public class Address {
     }
 
     public void update(
-            String receiverName,
-            String receiverPhone,
-            String zipcode,
-            String address1,
-            String address2
+            String address,
+            String zonecode
     ) {
-        this.receiverName = receiverName;
-        this.receiverPhone = receiverPhone;
-        this.zipcode = zipcode;
-        this.address1 = address1;
-        this.address2 = address2;
+        this.address = address;
+        this.zonecode = zonecode;
     }
 }
