@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.UUID;
 
@@ -53,15 +54,15 @@ public class CreateSettlementProcessor implements ItemProcessor<ConfirmedOrderIt
 
             // 3. Settlement 생성 (PENDING 상태)
             Settlement settlement = Settlement.create(
-                    orderItem.sellerUuid(),             // 판매자 UUID
-                    orderItem.buyerUuid(),              // 구매자 UUID
-                    paymentUuid,                        // 결제 UUID
-                    orderItem.orderUuid(),              // 주문 UUID
-                    orderItem.orderItemUuid(),          // 주문 상품 UUID
-                    depositUuid,                        // 예치금 계좌 UUID
-                    (long) orderItem.productPrice(),    // 총액 (상품 가격)
-                    batchProperties.getFeeRate(),       // 수수료율
-                    SettlementSchedulePolicy.nextReservationDate() // 정산 예약일
+                    orderItem.sellerUuid(),
+                    orderItem.buyerUuid(),
+                    paymentUuid,
+                    orderItem.orderUuid(),
+                    orderItem.orderItemUuid(),
+                    depositUuid,
+                    (long) orderItem.productPrice(),
+                    batchProperties.getFeeRate(),
+                    SettlementSchedulePolicy.nextReservationDate()
             );
 
             log.info("[Step 1 Processor] Settlement 생성 완료. settlementUuid={}, orderItemUuid={}, amount={}",
@@ -70,15 +71,16 @@ public class CreateSettlementProcessor implements ItemProcessor<ConfirmedOrderIt
             return settlement;
 
         } catch (SettlementProcessingException e) {
+            // 비즈니스 오류 → Skip 처리
             log.error("[Step 1 Processor-Skip] Settlement 생성 실패. orderItemUuid={}, error={}",
                     orderItem.orderItemUuid(), e.getMessage());
             throw e;
 
         } catch (Exception e) {
-            log.error("[Step 1 Processor-Skip] 예상치 못한 오류. orderItemUuid={}, error={}",
+            // 외부 서비스 연결 실패 포함 모든 예상치 못한 오류 → 즉시 Step 실패
+            log.error("[Step 1 Processor] 처리 불가 오류. orderItemUuid={}, error={}",
                     orderItem.orderItemUuid(), e.getMessage(), e);
-            throw new SettlementProcessingException(
-                    "Settlement 생성 중 오류 발생: " + e.getMessage());
+            throw e;
         }
     }
 }

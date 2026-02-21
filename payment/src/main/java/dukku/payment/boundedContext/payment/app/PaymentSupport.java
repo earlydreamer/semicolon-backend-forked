@@ -90,10 +90,18 @@ public class PaymentSupport {
     }
 
     /**
+     * 주문 상품 UUID로 결제 정보 조회
+     */
+    public Optional<Payment> findPaymentByOrderItemUuid(UUID orderItemUuid) {
+        return paymentOrderItemRepository.findByOrderItemUuid(orderItemUuid)
+                .map(PaymentOrderItem::getPayment);
+    }
+
+    /**
      * 결제 저장 (재시도 적용)
      */
-    @Retryable(retryFor = {DataAccessException.class,
-            CannotAcquireLockException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = { DataAccessException.class,
+            CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     @Transactional
     public Payment savePayment(Payment payment) {
         return paymentRepository.save(payment);
@@ -110,10 +118,10 @@ public class PaymentSupport {
      * @param originPg      변경 전 PG 금액
      * @param originDeposit 변경 전 예치금액
      */
-    @Retryable(retryFor = {DataAccessException.class,
-            CannotAcquireLockException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = { DataAccessException.class,
+            CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     public void createHistory(Payment payment, PaymentHistoryType type,
-                              PaymentStatus originStatus, Long originPg, Long originDeposit) {
+            PaymentStatus originStatus, Long originPg, Long originDeposit) {
         PaymentHistory history = PaymentHistory.create(
                 payment,
                 type,
@@ -146,8 +154,8 @@ public class PaymentSupport {
     /**
      * 환불 저장 (재시도 적용)
      */
-    @Retryable(retryFor = {DataAccessException.class,
-            CannotAcquireLockException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = { DataAccessException.class,
+            CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     @Transactional
     public Refund saveRefund(Refund refund) {
         return refundRepository.save(refund);

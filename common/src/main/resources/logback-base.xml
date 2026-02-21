@@ -96,7 +96,7 @@
     <!-- ============================================ -->
 
     <!-- DEV 환경: 콘솔 + Kafka -->
-    <springProfile name="dev">
+    <springProfile name="default,dev">
         <root level="DEBUG">
             <appender-ref ref="CONSOLE"/>
         </root>

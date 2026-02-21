@@ -23,7 +23,7 @@ public enum SettlementStatus {
     public boolean canTransitTo(SettlementStatus next) {
         return switch (this) {
             case CREATED -> next == PENDING;
-            case PENDING -> next == PROCESSING;
+            case PENDING -> next == PROCESSING || next == FAILED;
             case PROCESSING -> next == SUCCESS || next == FAILED;
             case SUCCESS -> false;
             case FAILED -> next == PENDING;

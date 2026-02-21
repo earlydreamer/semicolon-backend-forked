@@ -29,7 +29,7 @@ public class ProductUserEventListener {
                 return;
             }
 
-            productUserRepository.save(ProductUser.create(userUuid, fallbackNickname(userUuid)));
+            productUserRepository.save(ProductUser.create(userUuid, event.nickname()));
             log.info("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 완료. userUuid={}", userUuid);
         } catch (Exception e) {
             publishProductInitFailed(event, e);
@@ -42,7 +42,4 @@ public class ProductUserEventListener {
         log.error("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 실패. userUuid={}", event.userUuid(), cause);
     }
 
-    private String fallbackNickname(UUID userUuid) {
-        return "user-" + userUuid.toString().substring(0, 8);
-    }
 }
