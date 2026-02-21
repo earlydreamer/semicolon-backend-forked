@@ -3,6 +3,7 @@ package dukku.order.boundedContext.order.app;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.order.dto.ReturnRequestCreateDto;
 import dukku.common.shared.order.dto.ReturnResponse;
+import dukku.common.shared.order.dto.ReturnTrackingRegisterDto;
 import dukku.common.shared.order.event.PartialRefundRequestedEvent;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
@@ -57,6 +58,12 @@ class ReturnRefundFlowIntegrationTest {
     private RequestReturnUseCase requestReturnUseCase;
 
     @Autowired
+    private SellerApproveReturnUseCase sellerApproveReturnUseCase;
+
+    @Autowired
+    private RegisterReturnTrackingUseCase registerReturnTrackingUseCase;
+
+    @Autowired
     private ApproveReturnUseCase approveReturnUseCase;
 
     @Autowired
@@ -83,7 +90,7 @@ class ReturnRefundFlowIntegrationTest {
     }
 
     @Test
-    @DisplayName("Return request -> approve -> refund completed updates order item and ignores duplicated retry event")
+    @DisplayName("반품 플로우 완료 후 중복 환불 완료 이벤트는 무시된다")
     void completesReturnFlowAndIgnoresDuplicateRefundEvent() {
         ReturnFlowFixture fixture = createDeliveredOrderFixture();
 
@@ -91,10 +98,23 @@ class ReturnRefundFlowIntegrationTest {
                 fixture.buyerUuid(),
                 fixture.orderUuid(),
                 ReturnRequestCreateDto.builder()
-                        .reason("buyer change of mind")
+                        .reason("단순 변심")
                         .orderItemUuids(List.of(fixture.orderItemUuid()))
                         .build());
         assertThat(requested.getStatus()).isEqualTo(ReturnStatus.RETURN_REQUESTED);
+
+        ReturnResponse sellerApproved = sellerApproveReturnUseCase.execute(fixture.sellerUuid(), requested.getReturnRequestUuid());
+        assertThat(sellerApproved.getStatus()).isEqualTo(ReturnStatus.RETURN_SELLER_APPROVED);
+
+        ReturnResponse shipped = registerReturnTrackingUseCase.execute(
+                fixture.buyerUuid(),
+                requested.getReturnRequestUuid(),
+                ReturnTrackingRegisterDto.builder()
+                        .carrierName("CJ")
+                        .carrierCode("04")
+                        .trackingNumber("1234567890")
+                        .build());
+        assertThat(shipped.getStatus()).isEqualTo(ReturnStatus.RETURN_SHIPPED);
 
         Order requestedOrder = orderRepository.findByUuidWithItems(fixture.orderUuid()).orElseThrow();
         assertThat(requestedOrder.getOrderItems()).hasSize(1);
@@ -102,6 +122,9 @@ class ReturnRefundFlowIntegrationTest {
 
         ReturnResponse approved = approveReturnUseCase.execute(fixture.sellerUuid(), requested.getReturnRequestUuid());
         assertThat(approved.getStatus()).isEqualTo(ReturnStatus.RETURN_APPROVED);
+
+        Order inProgressOrder = orderRepository.findByUuidWithItems(fixture.orderUuid()).orElseThrow();
+        assertThat(inProgressOrder.getOrderItems().get(0).getStatus()).isEqualTo(OrderItemStatus.REFUND_IN_PROGRESS);
 
         ArgumentCaptor<PartialRefundRequestedEvent> eventCaptor =
                 ArgumentCaptor.forClass(PartialRefundRequestedEvent.class);
@@ -141,7 +164,7 @@ class ReturnRefundFlowIntegrationTest {
     }
 
     @Test
-    @DisplayName("Refund failed event reverts approved return back to rejected and order item to delivered")
+    @DisplayName("환불 실패 이벤트 수신 시 최종 승인된 반품은 발송 후 거절 상태로 전환된다")
     void revertsApprovedReturnWhenRefundFails() {
         ReturnFlowFixture fixture = createDeliveredOrderFixture();
 
@@ -151,6 +174,16 @@ class ReturnRefundFlowIntegrationTest {
                 ReturnRequestCreateDto.builder()
                         .reason("defect")
                         .orderItemUuids(List.of(fixture.orderItemUuid()))
+                        .build());
+
+        sellerApproveReturnUseCase.execute(fixture.sellerUuid(), requested.getReturnRequestUuid());
+        registerReturnTrackingUseCase.execute(
+                fixture.buyerUuid(),
+                requested.getReturnRequestUuid(),
+                ReturnTrackingRegisterDto.builder()
+                        .carrierName("CJ")
+                        .carrierCode("04")
+                        .trackingNumber("1234567890")
                         .build());
 
         ReturnResponse approved = approveReturnUseCase.execute(fixture.sellerUuid(), requested.getReturnRequestUuid());
@@ -175,7 +208,7 @@ class ReturnRefundFlowIntegrationTest {
         assertThat(restoredOrder.getOrderItems().get(0).getStatus()).isEqualTo(OrderItemStatus.DELIVERED);
 
         ReturnRequest rejectedRequest = returnRequestRepository.findByUuid(approved.getReturnRequestUuid()).orElseThrow();
-        assertThat(rejectedRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_REJECTED);
+        assertThat(rejectedRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_REJECTED_AFTER_SHIPMENT);
     }
 
     private ReturnFlowFixture createDeliveredOrderFixture() {
