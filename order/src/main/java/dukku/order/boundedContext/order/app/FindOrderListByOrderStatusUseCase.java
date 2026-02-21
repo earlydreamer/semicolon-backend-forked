@@ -5,10 +5,6 @@ import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.order.boundedContext.order.out.OrderRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,20 +18,9 @@ public class FindOrderListByOrderStatusUseCase {
     private final OrderRepository orderRepository;
 
     public List<OrderListResponse> execute(UUID userUuid, OrderStatus status, int limit) {
-        Pageable pageable = PageRequest.of(
-                0,
-                limit,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+        List<Order> orders = orderRepository.findRecentByUserUuidAndStatusWithItems(userUuid, status, limit);
 
-        Page<Order> orders = orderRepository.findByUserUuidAndStatus(
-                userUuid,
-                status,
-                pageable
-        );
-
-        return orders.getContent()
-                .stream()
+        return orders.stream()
                 .map(Order::fromOrderListResponse)
                 .toList();
     }

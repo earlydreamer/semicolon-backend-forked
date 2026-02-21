@@ -1,9 +1,9 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.common.global.exception.ForbiddenException;
 import dukku.common.shared.order.dto.AdminOrderSearchCondition;
 import dukku.common.shared.order.dto.OrderListResponse;
+import dukku.common.shared.order.exception.OrderAdminAccessDeniedException;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.order.boundedContext.order.out.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class FindAdminOrderListUseCase {
 
     public Page<OrderListResponse> execute(AdminOrderSearchCondition condition, Pageable pageable) {
         if (!UserUtil.isAdmin()) {
-            throw new ForbiddenException("관리자만 조회할 수 있습니다.");
+            throw new OrderAdminAccessDeniedException();
         }
 
         Page<Order> orders = orderRepository.searchForAdmin(condition, pageable);

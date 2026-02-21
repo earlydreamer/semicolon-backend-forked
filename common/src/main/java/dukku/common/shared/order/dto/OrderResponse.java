@@ -13,23 +13,17 @@ import java.util.UUID;
 @Getter
 @Builder
 public class OrderResponse {
-    // 1. 주문 기본 정보
-    private UUID orderUuid;
-    private UUID userUuid;
-
-    // 2. 결제 및 상태 정보
-    private int totalAmount;
-    private int refundedAmount;
-    private OrderStatus orderStatus;
+    private UUID orderUuid; // 주문 UUID
+    private UUID userUuid; // 구매자 UUID
+    private int totalAmount; // 주문 총액
+    private int refundedAmount; // 누적 환불 금액
+    private OrderStatus orderStatus; // 주문 상태
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime orderedAt;
-
-    // 3. 배송지 정보
-    private String recipient;
-    private String contactNumber;
-    private String address;
-
-    private List<OrderItemResponse> items;
+    private LocalDateTime orderedAt; // 주문 시각
+    private String recipient; // 수령인
+    private String contactNumber; // 수령인 연락처
+    private String address; // 배송지 주소
+    private List<OrderItemResponse> items; // 주문 상품 목록
 
     @Getter
     @Builder

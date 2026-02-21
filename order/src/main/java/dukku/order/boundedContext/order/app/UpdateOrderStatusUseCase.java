@@ -20,10 +20,10 @@ public class UpdateOrderStatusUseCase {
     private final OrderSupport orderSupport;
     private final EventPublisher eventPublisher;
 
-    // 1. 결제 완료 처리 (PG창에서 결제 완료 할 경우)
+    // 1) 결제 완료 처리 (PG창 결제 완료 시)
     @Transactional
     public void confirmPayment(UUID orderUuid) {
-        Order order = orderSupport.findOrderByUuid(orderUuid);
+        Order order = orderSupport.findOrderByUuidWithItems(orderUuid);
 
         if (!order.getStatus().equals(OrderStatus.PENDING)) {
             log.warn("이미 처리된 주문입니다. 결제 승인 무시. orderUuid={}", orderUuid);
@@ -38,10 +38,10 @@ public class UpdateOrderStatusUseCase {
         );
     }
 
-    // 2. 결제 실패 처리 (PG창에서 결제 실패 할 경우)
+    // 2) 결제 실패 처리 (PG창 결제 실패 시)
     @Transactional
     public void failPayment(UUID orderUuid) {
-        Order order = orderSupport.findOrderByUuid(orderUuid);
+        Order order = orderSupport.findOrderByUuidWithItems(orderUuid);
 
         if (order.getStatus() == OrderStatus.CANCELED) {
             log.info("유효하지 않은 결제 실패 요청입니다 (이미 처리됨). orderUuid={}, currentStatus={}",
