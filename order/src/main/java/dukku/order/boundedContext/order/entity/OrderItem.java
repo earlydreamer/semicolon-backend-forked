@@ -31,6 +31,9 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
     @Column(nullable = false)
     private UUID productUuid;
 
+    @Column(nullable = false, comment = "상품 PK (결제 스냅샷용)")
+    private Integer productId;
+
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false)
     private UUID sellerUuid;
@@ -63,6 +66,7 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
     public static OrderItem createOrderItem(OrderCreateRequest.OrderItemCreateRequest request) {
         return OrderItem.builder()
                 .productUuid(request.getProductUuid())
+                .productId(request.getProductId())
                 .sellerUuid(request.getSellerUuid())
                 .productName(request.getProductName())
                 .productPrice(request.getProductPrice())

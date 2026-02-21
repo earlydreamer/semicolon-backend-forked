@@ -144,7 +144,10 @@ public class Order extends BaseIdAndUUIDAndTime {
     // 주문 상세 항목 응답 DTO 변환
     public static OrderResponse.OrderItemResponse fromOrderItemResponse(OrderItem item) {
         return OrderResponse.OrderItemResponse.builder()
+                .orderItemUuid(item.getUuid())
+                .productId(item.getProductId())
                 .productUuid(item.getProductUuid())
+                .sellerUuid(item.getSellerUuid())
                 .productName(item.getProductName())
                 .productPrice(item.getProductPrice())
                 .imageUrl(item.getImageUrl())
