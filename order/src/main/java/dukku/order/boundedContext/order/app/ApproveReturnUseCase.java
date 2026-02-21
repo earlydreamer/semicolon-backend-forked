@@ -1,9 +1,10 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.global.exception.NotFoundException;
 import dukku.common.shared.order.dto.ReturnResponse;
 import dukku.common.shared.order.event.PartialRefundRequestedEvent;
+import dukku.common.shared.order.exception.ReturnApprovalAccessDeniedException;
+import dukku.common.shared.order.exception.ReturnRequestNotFoundException;
 import dukku.order.boundedContext.order.entity.ReturnRequest;
 import dukku.order.boundedContext.order.out.ReturnRequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,31 +18,40 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApproveReturnUseCase {
 
-        private final ReturnRequestRepository returnRequestRepository;
-        private final EventPublisher eventPublisher;
+    private final ReturnRequestRepository returnRequestRepository;
+    private final EventPublisher eventPublisher;
 
-        @Transactional
-        public ReturnResponse execute(UUID sellerUuid, UUID returnRequestUuid) {
-                ReturnRequest returnRequest = returnRequestRepository.findByUuid(returnRequestUuid)
-                                .orElseThrow(() -> new NotFoundException("반품 요청 정보를 찾을 수 없습니다."));
+    @Transactional
+    public ReturnResponse execute(UUID sellerUuid, UUID returnRequestUuid) {
+        ReturnRequest returnRequest = returnRequestRepository.findByUuid(returnRequestUuid)
+                .orElseThrow(ReturnRequestNotFoundException::new);
 
-                // TODO: 판매자의 상품이 포함되어 있는지 검증하는 로직 추가
+        validateSellerOwnership(sellerUuid, returnRequest);
 
-                returnRequest.approve();
+        returnRequest.approve();
 
-                List<PartialRefundRequestedEvent.RefundItemInfo> refundItems = returnRequest.getReturnItems().stream()
-                                .map(item -> new PartialRefundRequestedEvent.RefundItemInfo(
-                                                item.getOrderItem().getUuid(),
-                                                item.getRefundAmount()))
-                                .toList();
+        List<PartialRefundRequestedEvent.RefundItemInfo> refundItems = returnRequest.getReturnItems().stream()
+                .map(item -> new PartialRefundRequestedEvent.RefundItemInfo(
+                        item.getOrderItem().getUuid(),
+                        item.getRefundAmount()))
+                .toList();
 
-                // PG 부분 환불 트리거 이벤트 발행
-                eventPublisher.publish(new PartialRefundRequestedEvent(
-                                returnRequest.getUuid(),
-                                returnRequest.getOrder().getUuid(),
-                                returnRequest.getUserUuid(),
-                                refundItems));
+        // PG 부분 환불 트리거 이벤트 발행
+        eventPublisher.publish(new PartialRefundRequestedEvent(
+                returnRequest.getUuid(),
+                returnRequest.getOrder().getUuid(),
+                returnRequest.getUserUuid(),
+                refundItems));
 
-                return returnRequest.toResponse();
+        return returnRequest.toResponse();
+    }
+
+    private void validateSellerOwnership(UUID sellerUuid, ReturnRequest returnRequest) {
+        boolean ownedBySeller = returnRequest.getReturnItems().stream()
+                .allMatch(item -> sellerUuid.equals(item.getOrderItem().getSellerUuid()));
+
+        if (!ownedBySeller) {
+            throw new ReturnApprovalAccessDeniedException();
         }
+    }
 }

@@ -1,6 +1,8 @@
 package dukku.common.shared.payment.event;
 
+import dukku.common.global.event.DomainEvent;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -9,8 +11,6 @@ import java.util.UUID;
  * 환불 처리가 완료되었을 때 발행.
  * 예치금 롤백 및 주문/상품 상태 변경의 트리거가 됩니다.
  */
-import dukku.common.global.event.DomainEvent;
-
 public record RefundCompletedEvent(
         UUID refundUuid,
         UUID paymentUuid,
@@ -19,7 +19,7 @@ public record RefundCompletedEvent(
         Long refundDepositAmount, // 환불된 예치금
         UUID userUuid,
         LocalDateTime occurredAt,
-        java.util.List<UUID> refundedItemUuids) implements DomainEvent {
+        List<UUID> refundedItemUuids) implements DomainEvent {
     @Override
     public String getTopic() {
         return "payment.refund-completed";
