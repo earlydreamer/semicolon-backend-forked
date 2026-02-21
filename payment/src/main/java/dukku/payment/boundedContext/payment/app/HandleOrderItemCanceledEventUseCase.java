@@ -3,6 +3,7 @@ package dukku.payment.boundedContext.payment.app;
 import dukku.common.shared.order.event.OrderItemCanceledEvent;
 import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.exception.PaymentNotFoundException;
+import dukku.common.shared.payment.exception.PaymentOrderItemNotFoundException;
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
@@ -48,7 +49,7 @@ public class HandleOrderItemCanceledEventUseCase {
                 PaymentOrderItem targetItem = payment.getItems().stream()
                                 .filter(item -> item.getOrderItemUuid().equals(event.orderItemUuid()))
                                 .findFirst()
-                                .orElseThrow(() -> new PaymentNotFoundException("결제 내역 내에 해당 상품이 존재하지 않습니다."));
+                                .orElseThrow(PaymentOrderItemNotFoundException::new);
 
                 // 4. 환불 요청 생성 (단일 상품 취소이므로 해당 상품 금액만큼)
                 PaymentRefundRequest request = PaymentRefundRequest.builder()

@@ -30,7 +30,7 @@ public class OrderEventListener {
 
     // payment.refund-completed 이벤트 수신 후 주문 환불 상태 반영
     @Retryable(backoff = @Backoff(delay = 1000))
-    @org.springframework.kafka.annotation.KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
+    @KafkaListener(topics = "payment.refund-completed", groupId = "${spring.application.name}-group")
     public void handle(RefundCompletedEvent event) {
         updateOrderRefundStatusUseCase.updateRefund(event.refundUuid(), event.orderUuid(), event.refundAmount(),
                 event.refundedItemUuids());
@@ -40,7 +40,7 @@ public class OrderEventListener {
     @Recover
     public void recoverRefund(Exception e, RefundCompletedEvent event) {
         log.error(
-                "[CRITICAL] Failed to apply refund-completed event. manual action required. orderUuid={}, refundUuid={}, refundAmount={}",
+                "[CRITICAL] refund-completed 이벤트 반영 실패. 수동 조치가 필요합니다. orderUuid={}, refundUuid={}, refundAmount={}",
                 event.orderUuid(), event.refundUuid(), event.refundAmount(), e);
     }
 
@@ -56,7 +56,7 @@ public class OrderEventListener {
     @Recover
     public void recoverRefundFailed(Exception e, RefundFailedEvent event) {
         log.error(
-                "[CRITICAL] Failed to apply refund-failed event. manual action required. orderUuid={}",
+                "[CRITICAL] refund-failed 이벤트 반영 실패. 수동 조치가 필요합니다. orderUuid={}",
                 event.orderUuid(), e);
     }
 
@@ -71,13 +71,13 @@ public class OrderEventListener {
     @Recover
     public void recoverSuccess(Exception e, PaymentSuccessEvent event) {
         log.error(
-                "[CRITICAL] Payment success event failed to update order. Triggering rollback. orderUuid={}, error={}",
+                "[CRITICAL] payment.success 이벤트로 주문 상태 갱신 실패. 롤백을 트리거합니다. orderUuid={}, error={}",
                 event.orderUuid(), e.getMessage());
 
         eventPublisher.publish(
                 new PaymentRollbackRequestEvent(
                         event.orderUuid(),
-                        "Order processing failed after payment success; trigger rollback refund"));
+                        "결제 성공 후 주문 처리 실패로 롤백 환불을 요청합니다."));
     }
 
     // payment.failed 이벤트 수신 후 주문 실패 상태 반영
@@ -91,7 +91,7 @@ public class OrderEventListener {
     @Recover
     public void recoverFail(Exception e, PaymentFailedEvent event) {
         log.error(
-                "[CRITICAL] Payment failed event could not be persisted to order. manual action required. orderUuid= {}",
+                "[CRITICAL] payment.failed 이벤트를 주문 상태에 반영하지 못했습니다. 수동 조치가 필요합니다. orderUuid={}",
                 event.orderUuid(), e);
     }
 }

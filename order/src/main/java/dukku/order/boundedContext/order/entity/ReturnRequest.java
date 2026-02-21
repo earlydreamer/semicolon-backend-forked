@@ -1,9 +1,24 @@
 package dukku.order.boundedContext.order.entity;
 
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
+import dukku.common.shared.order.dto.ReturnResponse;
+import dukku.common.shared.order.dto.ReturnResponse.ReturnItemResponse;
 import dukku.common.shared.order.type.ReturnStatus;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -86,8 +101,8 @@ public class ReturnRequest extends BaseIdAndUUIDAndTime {
         this.status = ReturnStatus.RETURN_REJECTED;
     }
 
-    public dukku.common.shared.order.dto.ReturnResponse toResponse() {
-        return dukku.common.shared.order.dto.ReturnResponse.builder()
+    public ReturnResponse toResponse() {
+        return ReturnResponse.builder()
                 .returnRequestUuid(this.getUuid())
                 .orderUuid(this.order.getUuid())
                 .status(this.status)
@@ -97,7 +112,7 @@ public class ReturnRequest extends BaseIdAndUUIDAndTime {
                 .trackingNumber(this.trackingNumber)
                 .createdAt(this.getCreatedAt())
                 .returnItems(this.returnItems.stream()
-                        .map(item -> dukku.common.shared.order.dto.ReturnResponse.ReturnItemResponse.builder()
+                        .map(item -> ReturnItemResponse.builder()
                                 .returnItemUuid(item.getUuid())
                                 .orderItemUuid(item.getOrderItem().getUuid())
                                 .refundAmount(item.getRefundAmount())

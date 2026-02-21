@@ -3,7 +3,9 @@ package dukku.payment.boundedContext.payment.in;
 import dukku.common.shared.deposit.event.DepositDeductionFailedEvent;
 import dukku.common.shared.deposit.event.DepositRefundFailedEvent;
 import dukku.common.shared.deposit.event.DepositRefundedEvent;
+import dukku.common.shared.order.event.OrderItemCanceledEvent;
 import dukku.common.shared.order.event.PaymentRollbackRequestEvent;
+import dukku.common.shared.order.event.PartialRefundRequestedEvent;
 import dukku.payment.boundedContext.payment.app.PaymentFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +62,7 @@ public class PaymentEventListener {
      * 부분 환불 요청 이벤트 처리 (반품 승인 후)
      */
     @KafkaListener(topics = "order.partial_refund_requested", groupId = "${spring.application.name}-group")
-    public void handle(dukku.common.shared.order.event.PartialRefundRequestedEvent event) {
+    public void handle(PartialRefundRequestedEvent event) {
         paymentFacade.handlePartialRefund(event);
     }
 
@@ -68,7 +70,7 @@ public class PaymentEventListener {
      * 주문 상품 취소 이벤트 처리 (배송 전 취소)
      */
     @KafkaListener(topics = "order.item.canceled", groupId = "${spring.application.name}-group")
-    public void handle(dukku.common.shared.order.event.OrderItemCanceledEvent event) {
+    public void handle(OrderItemCanceledEvent event) {
         log.info("주문 상품 취소 이벤트 수신: orderItemUuid={}", event.orderItemUuid());
         paymentFacade.handleOrderItemCanceled(event);
     }

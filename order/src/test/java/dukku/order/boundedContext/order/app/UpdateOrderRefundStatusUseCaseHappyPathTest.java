@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,7 +53,7 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
         when(orderSupport.findOrderByUuid(orderUuid)).thenReturn(order);
 
         // when: 환불 상태 업데이트 실행
-        useCase.updateRefund(refundUuid, orderUuid, 12000L, java.util.List.of());
+        useCase.updateRefund(refundUuid, orderUuid, 12000L, List.of());
 
         // then: 누적 환불액과 주문 상태가 기대값으로 변경
         verify(orderSupport).findOrderByUuid(orderUuid);
@@ -82,7 +83,7 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
         when(orderSupport.findOrderByUuid(orderUuid)).thenReturn(order);
 
         // when: 환불 상태 업데이트 실행
-        useCase.updateRefund(refundUuid, orderUuid, 5000L, java.util.List.of());
+        useCase.updateRefund(refundUuid, orderUuid, 5000L, List.of());
 
         // then: 상태가 PARTIAL_REFUNDED로 반영되고 누적 환불액이 갱신
         verify(orderSupport).findOrderByUuid(orderUuid);
@@ -113,14 +114,14 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
 
         // when/then: 예외 발생 확인
         assertThatThrownBy(
-                () -> useCase.updateRefund(refundUuid, orderUuid, (long) Integer.MAX_VALUE + 1, java.util.List.of()))
+                () -> useCase.updateRefund(refundUuid, orderUuid, (long) Integer.MAX_VALUE + 1, List.of()))
                 .isInstanceOf(OrderRefundAmountOutOfRangeException.class);
     }
 
     @Test
     @DisplayName("환불 이벤트 입력값이 비어 있으면 OrderRefundRequestInvalidException이 발생한다")
     void throwsWhenRefundRequestInvalid() {
-        assertThatThrownBy(() -> useCase.updateRefund(null, UUID.randomUUID(), 1000L, java.util.List.of()))
+        assertThatThrownBy(() -> useCase.updateRefund(null, UUID.randomUUID(), 1000L, List.of()))
                 .isInstanceOf(OrderRefundRequestInvalidException.class);
     }
 }

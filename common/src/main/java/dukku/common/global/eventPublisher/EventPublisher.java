@@ -1,5 +1,7 @@
 package dukku.common.global.eventPublisher;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dukku.common.global.event.DomainEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +21,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class EventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     /**
      * 이벤트 발행
@@ -39,7 +41,7 @@ public class EventPublisher {
                 });
                 return;
             } catch (IllegalStateException e) {
-                log.debug("Synchronization registration skipped. send now. topic={}, reason={}",
+                log.debug("트랜잭션 동기화 등록을 건너뛰고 즉시 전송합니다. topic={}, reason={}",
                         event.getTopic(), e.getMessage());
             }
         }
@@ -54,17 +56,17 @@ public class EventPublisher {
     private void send(DomainEvent event) {
         try {
             String eventJson = objectMapper.writeValueAsString(event);
-            log.info("Publishing event to Kafka: topic={}, key={}", event.getTopic(), event.getKey());
+            log.info("Kafka 이벤트 발행 시작: topic={}, key={}", event.getTopic(), event.getKey());
             kafkaTemplate.send(event.getTopic(), event.getKey(), eventJson)
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
-                            log.error("Failed to publish event: {}", event, ex);
+                            log.error("Kafka 이벤트 발행 실패: event={}", event, ex);
                         } else {
-                            log.debug("Event published successfully: offset={}", result.getRecordMetadata().offset());
+                            log.debug("Kafka 이벤트 발행 성공: offset={}", result.getRecordMetadata().offset());
                         }
                     });
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            log.error("Failed to serialize event: {}", event, e);
+        } catch (JsonProcessingException e) {
+            log.error("이벤트 직렬화 실패: event={}", event, e);
         }
     }
 }

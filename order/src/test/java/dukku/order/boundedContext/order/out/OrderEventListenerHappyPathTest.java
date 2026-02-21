@@ -6,7 +6,6 @@ import dukku.common.shared.payment.event.RefundCompletedEvent;
 import dukku.order.boundedContext.order.app.UpdateOrderStatusUseCase;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.order.boundedContext.order.in.OrderEventListener;
-import dukku.order.boundedContext.order.out.ProcessedRefundEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,7 +75,7 @@ class OrderEventListenerHappyPathTest {
                 0L,
                 UUID.randomUUID(),
                 LocalDateTime.now(),
-                java.util.List.of());
+                List.of());
 
         // when: payment.refund-completed 이벤트 처리
         listener.handle(event);
@@ -100,7 +100,7 @@ class OrderEventListenerHappyPathTest {
                 0L,
                 UUID.randomUUID(),
                 LocalDateTime.now(),
-                java.util.List.of());
+                List.of());
 
         // when: payment.refund-completed 이벤트 처리
         listener.handle(event);
@@ -126,7 +126,7 @@ class OrderEventListenerHappyPathTest {
                 0L,
                 UUID.randomUUID(),
                 LocalDateTime.now(),
-                java.util.List.of());
+                List.of());
 
         // when: 동일 이벤트를 두 번 처리
         listener.handle(duplicated);
@@ -152,7 +152,7 @@ class OrderEventListenerHappyPathTest {
                 0L,
                 UUID.randomUUID(),
                 LocalDateTime.now(),
-                java.util.List.of());
+                List.of());
         RefundCompletedEvent second = new RefundCompletedEvent(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -161,7 +161,7 @@ class OrderEventListenerHappyPathTest {
                 0L,
                 UUID.randomUUID(),
                 LocalDateTime.now(),
-                java.util.List.of());
+                List.of());
 
         // when: 각 이벤트를 순차 처리
         listener.handle(first);
