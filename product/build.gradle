@@ -9,8 +9,8 @@ dependencies {
     implementation project(':common')
 
     // AWS S3 for Presigned URL
-    implementation 'software.amazon.awssdk:s3:2.25.11'
-    implementation 'software.amazon.awssdk:s3-presigner:2.25.11'
+    implementation platform("software.amazon.awssdk:bom:2.25.11")
+    implementation "software.amazon.awssdk:s3"
 
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
