@@ -27,15 +27,22 @@ public class OrderCreateRequest {
     @NoArgsConstructor
     public static class OrderItemCreateRequest {
         @NotNull
-        private UUID productUuid;
+        private UUID productUuid; // 상품 UUID
+
         @NotNull
-        private UUID sellerUuid;
+        private Integer productId; // 상품 PK (결제 요청 스냅샷용)
+
+        @NotNull
+        private UUID sellerUuid; // 판매자 UUID
+
         @Size(max = 100)
         @NotBlank
-        private String productName;
+        private String productName; // 상품명
+
         @Positive
-        private int productPrice;
-        private String imageUrl;
+        private int productPrice; // 상품 가격
+
+        private String imageUrl; // 상품 썸네일 이미지 URL
     }
 }
 
