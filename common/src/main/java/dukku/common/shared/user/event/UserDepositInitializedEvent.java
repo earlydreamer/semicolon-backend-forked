@@ -4,7 +4,7 @@ import dukku.common.global.event.DomainEvent;
 
 import java.util.UUID;
 
-public record UserDepositInitializedEvent(UUID userUuid) implements DomainEvent {
+public record UserDepositInitializedEvent(UUID userUuid, String nickname) implements DomainEvent {
     @Override
     public String getTopic() {
         return "user.deposit-initialized";
