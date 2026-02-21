@@ -36,6 +36,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Cart {
+    // updatedAt 필드 불필요 : extends BaseIdAndTime 삭제
     @Id
     @GeneratedValue(strategy = IDENTITY)
     private Integer id;
