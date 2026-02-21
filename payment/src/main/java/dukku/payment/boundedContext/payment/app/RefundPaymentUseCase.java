@@ -110,8 +110,7 @@ public class RefundPaymentUseCase {
                         request,
                         PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION,
                         true,
-                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, e.getMessage())
-                );
+                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_EXCEPTION, e.getMessage()));
                 return PaymentRefundResponse.builder()
                         .success(false).code("PG_CANCEL_EXCEPTION")
                         .message("PG 환불 요청 예외 발생: " + e.getMessage())
@@ -131,8 +130,7 @@ public class RefundPaymentUseCase {
                         request,
                         PaymentFailureCode.REFUND_PG_CANCEL_FAILED,
                         false,
-                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_FAILED, responseMessage)
-                );
+                        buildFailureReason(PaymentFailureCode.REFUND_PG_CANCEL_FAILED, responseMessage));
                 return PaymentRefundResponse.builder()
                         .success(false).code("PG_CANCEL_FAILED")
                         .message("PG 환불 처리 실패: " + responseMessage)
@@ -251,7 +249,7 @@ public class RefundPaymentUseCase {
      * 상품별 환불 항목 PG/예치금 분배 계산
      */
     private List<ItemRefundAllocation> resolveItemAllocations(Payment payment,
-                                                              List<PaymentRefundRequest.RefundItemInfo> requestItems) {
+            List<PaymentRefundRequest.RefundItemInfo> requestItems) {
         // 중복 항목 등록, 존재 여부, 환불 가능 금액 초과 등을 검증하며 항목별 환불 배분
         Set<UUID> duplicatedCheck = new HashSet<>();
         List<ItemRefundAllocation> allocations = new ArrayList<>();
@@ -394,14 +392,17 @@ public class RefundPaymentUseCase {
                 refund.getRefundAmountTotal(),
                 refund.getRefundDepositTotal(),
                 payment.getUserUuid(),
-                refund.getCreatedAt()));
+                refund.getCreatedAt(),
+                refund.getItems().stream()
+                        .map(i -> i.getPaymentOrderItem().getOrderItemUuid())
+                        .toList()));
     }
 
     /**
      * PG 취소 실패 시 결제 상태 롤백 실패로 전환, 이력 기록
      */
     private void handleFailure(Payment payment, PaymentStatus originStatus, Long originAmountPg, Long originDeposit,
-                               String reason) {
+            String reason) {
         // PG 실패 시 결제 상태를 롤백 실패로 전환하고 이력 기록
         payment.rollbackFailedStatus();
         support.savePayment(payment);
@@ -413,7 +414,7 @@ public class RefundPaymentUseCase {
      * 환불 실패 이벤트 발행
      */
     private void publishRefundFailed(Payment payment, RefundAllocation allocation, PaymentRefundRequest request,
-                                    PaymentFailureCode failureCode, boolean retryable, String reason) {
+            PaymentFailureCode failureCode, boolean retryable, String reason) {
         // 보상 워크플로우가 이어질 수 있도록 실패 이벤트 비동기 발행
         eventPublisher.publish(new RefundFailedEvent(
                 payment.getOrderUuid(),
@@ -436,10 +437,10 @@ public class RefundPaymentUseCase {
     }
 
     private record RefundAllocation(long pgRefundAmount, long depositRefundAmount,
-                                   List<ItemRefundAllocation> itemRefundAllocations) {
+            List<ItemRefundAllocation> itemRefundAllocations) {
     }
 
     private record ItemRefundAllocation(PaymentOrderItem paymentOrderItem, long refundAmount, long depositAmount,
-                                       long pgAmount) {
+            long pgAmount) {
     }
 }

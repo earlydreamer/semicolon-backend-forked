@@ -1,6 +1,8 @@
 package dukku.coupon.boundedContext.coupon.app.query;
 
+import dukku.common.shared.coupon.dto.CouponInternalResponse;
 import dukku.common.shared.coupon.dto.CouponResponse;
+import dukku.common.shared.coupon.exception.CouponNotFoundException;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.coupon.type.CouponUserStatus;
 import dukku.coupon.boundedContext.coupon.entity.Coupon;
@@ -59,5 +61,19 @@ public class CouponQueryService {
                 .stream()
                 .map(Coupon::from)
                 .toList();
+    }
+
+    /**
+     * 쿠폰 UUID로 단건 조회 (Internal API용)
+     */
+    public CouponInternalResponse findCouponInfo(UUID couponUuid) {
+        Coupon coupon = couponRepository.findByUuid(couponUuid)
+                .orElseThrow(CouponNotFoundException::new);
+
+        return new CouponInternalResponse(
+                coupon.getDiscountAmount(),
+                coupon.getMinimumOrderAmount(),
+                coupon.getStatus()
+        );
     }
 }

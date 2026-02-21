@@ -17,7 +17,7 @@ public class FindAddressUseCase {
 
     @Transactional(readOnly = true)
     public List<AddressResponse> execute(UUID userUuid) {
-        return addressRepository.findByUserUuid(userUuid)
+        return addressRepository.findByUser_UuidOrderByIsDefaultDescIdDesc(userUuid)
                 .stream()
                 .map(AddressResponse::from)
                 .toList();

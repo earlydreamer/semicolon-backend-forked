@@ -19,4 +19,6 @@ public interface PaymentOrderItemRepository extends JpaRepository<PaymentOrderIt
     List<PaymentOrderItem> findByPaymentId(int paymentId);
 
     List<PaymentOrderItem> findBySellerUuid(UUID sellerUuid);
+
+    Optional<PaymentOrderItem> findByOrderItemUuid(UUID orderItemUuid);
 }

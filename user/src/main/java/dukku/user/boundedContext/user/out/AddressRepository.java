@@ -9,11 +9,15 @@ import java.util.UUID;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {
 
-    List<Address> findByUserUuid(UUID userUuid);
+    List<Address> findByUser_UuidOrderByIsDefaultDescIdDesc(UUID userUuid);
 
-    Optional<Address> findByIdAndUserUuid(Long id, UUID userUuid);
+    Optional<Address> findByIdAndUser_Uuid(Long id, UUID userUuid);
 
-    boolean existsByUserUuidAndIsDefaultTrue(UUID userUuid);
+    Optional<Address> findByUser_UuidAndIsDefaultTrue(UUID userUuid);
 
-    long countByUserUuid(UUID userUuid);
+    Optional<Address> findFirstByUser_UuidOrderByIdAsc(UUID userUuid);
+
+    boolean existsByUser_UuidAndIsDefaultTrue(UUID userUuid);
+
+    long countByUser_Uuid(UUID userUuid);
 }

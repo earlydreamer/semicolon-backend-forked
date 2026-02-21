@@ -14,4 +14,6 @@ public interface CouponUserRepository extends JpaRepository<CouponUser, Integer>
     Optional<CouponUser> findByUserUuidAndCoupon_Uuid(UUID userUuid, UUID couponUuid);
 
     List<CouponUser> findByUserUuidAndStatus(UUID userUuid, CouponUserStatus status);
+
+    int countByCouponId(int couponId);
 }

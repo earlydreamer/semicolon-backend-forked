@@ -1,5 +1,6 @@
 package dukku.coupon.boundedContext.coupon.app.query;
 
+import dukku.common.shared.coupon.dto.CouponInternalResponse;
 import dukku.common.shared.coupon.dto.CouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,11 @@ public class CouponQueryFacade {
     // 관리자용 전체 쿠폰 리스트
     public List<CouponResponse> findAllCoupons() {
         return couponQueryService.findAllCoupons();
+    }
+
+    // 쿠폰 UUID로 단건 조회 (Internal API용)
+    public CouponInternalResponse findCouponInfo(UUID couponUuid) {
+        return couponQueryService.findCouponInfo(couponUuid);
     }
 }
 
