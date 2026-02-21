@@ -84,7 +84,7 @@ public class DepositEventListener {
     public void handleUserJoined(UserJoinedEvent event) {
         try {
             depositFacade.findDeposit(event.member().userUuid());
-            eventPublisher.publish(new UserDepositInitializedEvent(event.member().userUuid()));
+            eventPublisher.publish(new UserDepositInitializedEvent(event.member().userUuid(), event.member().nickname()));
             log.info("[UserJoinedEvent] 예치금 계정 초기화 완료. userUuid={}", event.member().userUuid());
         } catch (Exception e) {
             publishDepositInitFailed(event, e);
