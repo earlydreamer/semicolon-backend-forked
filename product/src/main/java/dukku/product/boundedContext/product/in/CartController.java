@@ -30,6 +30,7 @@ public class CartController {
 
     // 선택된 항목 삭제 (body 예: { "cartIds": [1,2,3] })
     @DeleteMapping
+    @CartApiDocs.DeleteCartItems
     public ResponseEntity<Void> deleteSelectedCartItems(@RequestBody CartIdsRequest request) {
         List<Integer> cartIds = request.cartIds();
         if (cartIds == null || cartIds.isEmpty()) {
