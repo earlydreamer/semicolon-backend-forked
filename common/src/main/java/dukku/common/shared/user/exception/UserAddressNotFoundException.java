@@ -4,6 +4,6 @@ import dukku.common.global.exception.NotFoundException;
 
 public class UserAddressNotFoundException extends NotFoundException {
     public UserAddressNotFoundException() {
-        super("Address not found.");
+        super("주소를 찾지 못했습니다.");
     }
 }

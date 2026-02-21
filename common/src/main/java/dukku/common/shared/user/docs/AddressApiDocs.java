@@ -15,6 +15,9 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public final class AddressApiDocs {
+    private static final String JSON = "application/json";
+    private static final String AUTH_REQUIRED_EXAMPLE = "{\"message\":\"인증이 필요합니다.\"}";
+    private static final String INVALID_REQUEST_EXAMPLE = "{\"message\":\"잘못된 요청입니다.\"}";
 
     private AddressApiDocs() {
     }
@@ -23,8 +26,8 @@ public final class AddressApiDocs {
     @Target(TYPE)
     @Retention(RUNTIME)
     @Tag(
-            name = "Address API",
-            description = "My address list and registration endpoints."
+            name = "주소록 API",
+            description = "주소록 조회 및 관리 API"
     )
     public @interface AddressTag {
     }
@@ -41,8 +44,8 @@ public final class AddressApiDocs {
                             responseCode = "401",
                             description = "인증 실패",
                             content = @Content(
-                                    mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\":\"Authentication is required.\"}")
+                                    mediaType = JSON,
+                                    examples = @ExampleObject(value = AUTH_REQUIRED_EXAMPLE)
                             )
                     )
             }
@@ -62,16 +65,16 @@ public final class AddressApiDocs {
                             responseCode = "400",
                             description = "요청 값 검증 실패",
                             content = @Content(
-                                    mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\":\"잘못된 요청입니다.\"}")
+                                    mediaType = JSON,
+                                    examples = @ExampleObject(value = INVALID_REQUEST_EXAMPLE)
                             )
                     ),
                     @ApiResponse(
                             responseCode = "401",
                             description = "인증 실패",
                             content = @Content(
-                                    mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\":\"Authentication is required.\"}")
+                                    mediaType = JSON,
+                                    examples = @ExampleObject(value = AUTH_REQUIRED_EXAMPLE)
                             )
                     )
             }

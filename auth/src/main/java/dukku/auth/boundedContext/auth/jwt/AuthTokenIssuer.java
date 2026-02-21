@@ -20,7 +20,7 @@ import java.util.UUID;
 @Component
 public class AuthTokenIssuer {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60L * 24;
+    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60L * 24; //TODO 5분으로 변경할 것
     private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;
     private static final long REFRESH_TOKEN_ABSOLUTE_VALIDITY = 1000 * 60 * 60 * 24 * 14L;
     private static final String CLAIM_ROLE = "ROLE";
