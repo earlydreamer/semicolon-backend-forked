@@ -1,11 +1,11 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.common.global.exception.ForbiddenException;
-import dukku.common.global.exception.NotFoundException;
+import dukku.common.shared.order.exception.OrderAccessDeniedException;
 import dukku.order.boundedContext.order.entity.OrderItem;
 import dukku.order.boundedContext.order.out.OrderItemRepository;
 import dukku.common.shared.order.dto.DeliveryInfoRequest;
+import dukku.common.shared.order.exception.OrderItemNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +18,10 @@ public class UpdateOrderItemDeliveryInfoUseCase {
 
     public void execute(UUID orderItemUuid, DeliveryInfoRequest request) {
         OrderItem orderItem = orderItemRepository.findByUuid(orderItemUuid)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 주문 상품입니다."));
+                .orElseThrow(OrderItemNotFoundException::new);
 
         if (!UserUtil.isAdmin() && !orderItem.getSellerUuid().equals(UserUtil.getUserId())) {
-            throw new ForbiddenException("주문 수정 권한이 없습니다.");
+            throw new OrderAccessDeniedException();
         }
 
         orderItem.updateDeliveryInfo(request);
