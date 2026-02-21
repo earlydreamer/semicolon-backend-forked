@@ -58,16 +58,21 @@ public class EventPublisher {
         boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
 
         if (txActive && syncActive) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    send(event);
-                }
-            });
-        } else {
-            // 트랜잭션이 활성화되어 있지 않으면 즉시 전송
-            send(event);
+            try {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        send(event);
+                    }
+                });
+                return;
+            } catch (IllegalStateException e) {
+                log.debug("동기화 등록을 생략했습니다. 즉시 전송합니다. topic={}, reason={}",
+                        event.getTopic(), e.getMessage());
+            }
         }
+        // 트랜잭션이 활성화되어 있지 않거나 동기화 등록에 실패한 경우 즉시 전송
+        send(event);
     }
 
     private void send(DomainEvent event) {
