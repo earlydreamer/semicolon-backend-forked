@@ -42,7 +42,7 @@ public class ProductFacade {
             return searchProductUseCase.searchProducts(request, pageable)
                     .getItems();
         } catch (Exception e) {
-            log.error("Failed to search featured products from ES. Fallback to DB.", e);
+            log.error("Elasticsearch 인기 상품 조회 실패, DB로 폴백합니다.", e);
 
             // 3. 실패 시 DB 조회
             return findFeaturedProductsUseCase.execute(size);
@@ -56,7 +56,7 @@ public class ProductFacade {
             return searchProductUseCase.searchProducts(request, pageable);
         } catch (Exception e) {
             // ElasticsearchException 뿐만 아니라 모든 에러 대비 (안전하게 Exception)
-            log.error("ES search failed. request={}", request, e);
+            log.error("Elasticsearch 검색 실패. request={}", request, e);
 
             // ES조회 실패 시 DB에서 단순 조회
             return findProductListUseCase.execute(request.getCategoryId(), pageable);

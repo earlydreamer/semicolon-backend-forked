@@ -20,6 +20,8 @@ public interface CartRepository extends JpaRepository<Cart, Integer> {
 
     Optional<Cart> findByIdAndUser_UserUuid(int cartId, UUID userUuid);
 
+    List<Cart> findAllByIdInAndUser_UserUuid(List<Integer> ids, UUID userUuid);
+
     boolean existsByUserAndProduct(ProductUser user, Product product);
 
     void deleteByUser_UserUuid(UUID userUuid);

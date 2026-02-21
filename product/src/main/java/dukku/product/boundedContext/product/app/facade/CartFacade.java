@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,9 +26,9 @@ public class CartFacade {
         createCartUseCase.execute(UserUtil.getUserId(), productUuid);
     }
 
-    // 장바구니 상품 삭제 (상품 UUID 기준)
-    public void deleteCartItem(int cartId) {
-        deleteCartUseCase.execute(UserUtil.getUserId(), cartId);
+    // 장바구니 상품 다수 선택 삭제
+    public void deleteCartItems(List<Integer> cartIds) {
+        deleteCartUseCase.execute(UserUtil.getUserId(), cartIds);
     }
 
     // 내 장바구니 조회 (페이징 없음)

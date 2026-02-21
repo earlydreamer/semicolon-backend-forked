@@ -18,13 +18,13 @@ public class ProductBatchScheduler {
         try {
             productSyncFacade.syncAllStats();
         } catch (Exception e) {
-            log.warn("product stats sync failed", e);
+            log.warn("상품 통계 동기화 실패", e);
         }
 
         try {
             reviewStatsSyncFacade.syncAllStats();
         } catch (Exception e) {
-            log.warn("review stats sync failed", e);
+            log.warn("리뷰 통계 동기화 실패", e);
         }
     }
 }
