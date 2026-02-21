@@ -79,7 +79,8 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
     }
 
     public void updateOrderStatus(OrderItemStatus newStatus) {
-        if (this.status == newStatus) return;
+        if (this.status == newStatus)
+            return;
 
         validateStateTransition(newStatus);
         this.status = newStatus;
@@ -105,17 +106,17 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
 
                 this.confirmedAt = LocalDateTime.now();
             }
-            // TODO: 환불 정책
-            /*case REFUND_REQUESTED -> {
-                // 구매 확정 전에는 환불(반품) 요청 가능하지만, 아예 배송도 안 된 거면 취소를 해야 함
+            case REFUND_REQUESTED -> {
+                // 배송 전 상품은 취소(CANCEL_REQUESTED) 대상이며, 배송이 시작된 이후에만 반품 가능
                 if (!isShippingOrCompleted()) {
                     throw new ConflictException("아직 배송되지 않은 상품입니다. 주문 취소를 이용해주세요.");
                 }
-                if (this.status == OrderItemStatus.PURCHASE_CONFIRMED) {
-                    // 정책에 따라 다름: 구매 확정 후에도 환불 가능한지? 보통은 불가.
+
+                // 이미 구매 확정이 이뤄진 경우 반품/환불 불가
+                if (this.status == OrderItemStatus.CONFIRMED) {
                     throw new ConflictException("구매 확정 후에는 반품/환불 신청이 불가능합니다.");
                 }
-            }*/
+            }
             // 그 외 관리자용 상태 변경(배송중 등)은 허용하거나 별도 로직 추가
         }
     }
@@ -147,7 +148,6 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
                 orderItem.getProductUuid(),
                 orderItem.getProductName(),
                 orderItem.getProductPrice(),
-                orderItem.getConfirmedAt()
-        );
+                orderItem.getConfirmedAt());
     }
 }

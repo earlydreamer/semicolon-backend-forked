@@ -69,6 +69,7 @@ public class Cart extends BaseIdAndTime {
         return new CartDto(
                 cart.getId(),
                 product.getUuid(),
+                product.getSellerUuid(),
                 product.getTitle(),
                 product.getPrice(),
                 product.getSaleStatus(),
