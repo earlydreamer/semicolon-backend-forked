@@ -1,6 +1,7 @@
 package dukku.product.boundedContext.product.in;
 
 import dukku.common.shared.product.docs.CartApiDocs;
+import dukku.common.shared.product.dto.cart.CartIdsRequest;
 import dukku.common.shared.product.dto.cart.CartInternalResponse;
 import dukku.common.shared.product.dto.cart.CartListResponse;
 import dukku.product.boundedContext.product.app.facade.CartFacade;
@@ -58,6 +59,4 @@ public class CartController {
         CartInternalResponse response = cartFacade.findCartListByUserUuid(userUuid);
         return ResponseEntity.ok(response);
     }
-
-    private record CartIdsRequest(List<Integer> cartIds) {}
 }
