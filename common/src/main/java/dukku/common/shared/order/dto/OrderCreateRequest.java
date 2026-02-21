@@ -51,4 +51,3 @@ public class OrderCreateRequest {
         private String imageUrl; // 상품 썸네일 이미지 URL
     }
 }
-
