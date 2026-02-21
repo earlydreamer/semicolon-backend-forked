@@ -33,6 +33,8 @@ public record ProductUpdateRequest(
         VisibilityStatus visibilityStatus,
 
         // 리스트 자체는 null일 수 있어도, 내부의 URL 문자열은 빈 값이면 안 된다는 검증 예시
-        List<@NotBlank(message = "이미지 URL은 비어있을 수 없습니다.") String> imageUrls
+        List<@NotBlank(message = "이미지 URL은 비어있을 수 없습니다.") String> imageUrls,
+
+        List<String> tags
 ) {
 }

@@ -3,7 +3,9 @@ package dukku.product.boundedContext.product.entity;
 import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import dukku.common.shared.product.dto.product.ProductListResponse;
+import dukku.common.shared.product.dto.product.ProductPayload;
 import dukku.common.shared.product.type.ConditionStatus;
+import dukku.common.shared.product.type.ProductEventType;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
 import dukku.product.boundedContext.product.entity.tag.ProductTag;
@@ -255,5 +257,20 @@ public class Product extends BaseIdAndUUIDAndTime {
                 .totalCount(result.getTotalElements())
                 .hasNext(result.hasNext())
                 .build();
+    }
+
+    public static ProductPayload toProductPayload(Product product, ProductEventType eventType) {
+        return new ProductPayload(
+                eventType,
+                product.getUuid(),
+                product.getTitle(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getShippingFee(),
+                product.getCategory().getId(),
+                product.getCategory().getCategoryName(),
+                product.getTagNames(),
+                product.getSaleStatus()
+        );
     }
 }
