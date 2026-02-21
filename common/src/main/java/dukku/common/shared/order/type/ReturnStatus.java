@@ -1,9 +1,15 @@
 package dukku.common.shared.order.type;
 
+/**
+ * 반품 요청 상태 코드
+ */
 public enum ReturnStatus {
-    RETURN_REQUESTED, // 반품 신청됨
-    RETURN_SHIPPED, // 반품 발송됨 (운송장 등록 완료)
-    RETURN_APPROVED, // 판매자 반품 수락 (환불 트리거)
-    RETURN_COMPLETED, // 반품 완료 (부분환불 완료)
-    RETURN_REJECTED // 반품 거절
+    RETURN_REQUESTED,
+    RETURN_SELLER_APPROVED,
+    RETURN_SHIPPED,
+    RETURN_APPROVED,
+    RETURN_COMPLETED,
+    RETURN_REJECTED_BEFORE_SHIPMENT,
+    RETURN_REJECTED_AFTER_SHIPMENT,
+    RETURN_REJECTED
 }
