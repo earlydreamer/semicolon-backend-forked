@@ -9,4 +9,9 @@ public record CartItemAddedPayload(
         String productTitle,
         Integer categoryId,
         LocalDateTime timestamp
-) implements CartEventPayload {}
+) implements CartEventPayload {
+    @Override
+    public String getUserUuid() {
+        return userUuid.toString();
+    }
+}

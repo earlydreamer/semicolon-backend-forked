@@ -9,4 +9,9 @@ public record CartItemsRemovedPayload(
         List<UUID> productUuids,
         boolean allCleared,
         LocalDateTime timestamp
-) implements CartEventPayload {}
+) implements CartEventPayload {
+    @Override
+    public String getUserUuid() {
+        return userUuid.toString();
+    }
+}
