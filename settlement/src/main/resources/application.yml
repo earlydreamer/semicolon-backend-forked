@@ -6,9 +6,11 @@ spring:
     import: classpath:application-common.yml
   application:
     name: settlement
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:settlement_service}?sslmode=${DB_SSLMODE:disable}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:settlement_service}?sslmode=${DB_SSLMODE:disable}
 
   batch:
     jdbc:
