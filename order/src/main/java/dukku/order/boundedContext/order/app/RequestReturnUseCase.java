@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * 구매자 반품 신청 처리 유스케이스
+ */
 @Service
 @RequiredArgsConstructor
 public class RequestReturnUseCase {
@@ -26,6 +29,9 @@ public class RequestReturnUseCase {
     private final OrderRepository orderRepository;
     private final ReturnRequestRepository returnRequestRepository;
 
+    /**
+     * 주문 소유권 검증 후 반품 신청 생성 처리
+     */
     @Transactional
     public ReturnResponse execute(UUID userUuid, UUID orderUuid, ReturnRequestCreateDto dto) {
         Order order = orderRepository.findByUuidWithItems(orderUuid)
@@ -47,11 +53,7 @@ public class RequestReturnUseCase {
                     .findFirst()
                     .orElseThrow(OrderItemNotFoundException::new);
 
-            // 반품 신청 가능 알맞은 상태로 전환 시도. 검증을 거침.
             orderItem.updateOrderStatus(OrderItemStatus.REFUND_REQUESTED);
-
-            // 반품 신청 단계에서는 주문 원가 기준으로 저장
-            // 실제 환불 집행 금액(쿠폰/기환불 반영)은 Payment BC에서 스냅샷 기준으로 재계산
             int refundAmount = orderItem.getProductPrice();
 
             ReturnItem returnItem = ReturnItem.create(orderItem, refundAmount);

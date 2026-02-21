@@ -42,19 +42,16 @@ class ApproveReturnUseCaseTest {
     private ApproveReturnUseCase useCase;
 
     @Test
-    @DisplayName("반품 요청의 모든 아이템 판매자가 본인이면 승인되고 부분환불 이벤트가 발행된다")
+    @DisplayName("최종 승인 시 모든 반품 아이템의 판매자가 본인이면 승인되고 환불 이벤트가 발행된다")
     void approveWhenSellerOwnsAllItems() {
-        // given
         UUID sellerUuid = UUID.randomUUID();
         UUID buyerUuid = UUID.randomUUID();
         ReturnRequest returnRequest = createReturnRequest(buyerUuid, sellerUuid, sellerUuid);
 
         when(returnRequestRepository.findByUuid(returnRequest.getUuid())).thenReturn(Optional.of(returnRequest));
 
-        // when
         useCase.execute(sellerUuid, returnRequest.getUuid());
 
-        // then
         assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_APPROVED);
 
         ArgumentCaptor<PartialRefundRequestedEvent> eventCaptor =
@@ -65,12 +62,14 @@ class ApproveReturnUseCaseTest {
         assertThat(event.orderUuid()).isEqualTo(returnRequest.getOrder().getUuid());
         assertThat(event.userUuid()).isEqualTo(returnRequest.getUserUuid());
         assertThat(event.refundItems()).hasSize(2);
+        assertThat(returnRequest.getReturnItems())
+                .extracting(item -> item.getOrderItem().getStatus())
+                .containsOnly(OrderItemStatus.REFUND_IN_PROGRESS);
     }
 
     @Test
-    @DisplayName("반품 요청 아이템에 본인 소유가 아닌 상품이 있으면 승인할 수 없다")
+    @DisplayName("최종 승인 시 타 판매자 아이템이 포함되어 있으면 승인할 수 없다")
     void denyWhenSellerDoesNotOwnAllItems() {
-        // given
         UUID buyerUuid = UUID.randomUUID();
         UUID sellerUuid = UUID.randomUUID();
         UUID otherSellerUuid = UUID.randomUUID();
@@ -78,11 +77,10 @@ class ApproveReturnUseCaseTest {
 
         when(returnRequestRepository.findByUuid(returnRequest.getUuid())).thenReturn(Optional.of(returnRequest));
 
-        // when/then
         assertThatThrownBy(() -> useCase.execute(sellerUuid, returnRequest.getUuid()))
                 .isInstanceOf(ReturnApprovalAccessDeniedException.class);
 
-        assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_REQUESTED);
+        assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_SHIPPED);
         verify(eventPublisher, never()).publish(any());
     }
 
@@ -124,7 +122,7 @@ class ApproveReturnUseCaseTest {
                 .order(order)
                 .userUuid(buyerUuid)
                 .reason("단순 변심")
-                .status(ReturnStatus.RETURN_REQUESTED)
+                .status(ReturnStatus.RETURN_SHIPPED)
                 .build();
 
         returnRequest.addReturnItem(ReturnItem.create(firstItem, 10_000));

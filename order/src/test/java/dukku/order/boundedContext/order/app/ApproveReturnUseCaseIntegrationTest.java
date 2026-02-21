@@ -68,7 +68,7 @@ class ApproveReturnUseCaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("반품 요청의 모든 상품 판매자가 요청자와 일치하면 승인되고 이벤트가 발행된다")
+    @DisplayName("최종 승인 시 모든 반품 아이템의 판매자가 본인이면 승인되고 이벤트가 발행된다")
     void approvesWhenSellerOwnsAllItems() {
         UUID sellerUuid = UUID.randomUUID();
         ReturnRequest returnRequest = createReturnRequest(sellerUuid, sellerUuid);
@@ -82,10 +82,14 @@ class ApproveReturnUseCaseIntegrationTest {
                 ArgumentCaptor.forClass(PartialRefundRequestedEvent.class);
         verify(eventPublisher).publish(eventCaptor.capture());
         assertThat(eventCaptor.getValue().returnRequestUuid()).isEqualTo(returnRequest.getUuid());
+
+        assertThat(approved.getReturnItems())
+                .extracting(item -> item.getOrderItem().getStatus())
+                .containsOnly(OrderItemStatus.REFUND_IN_PROGRESS);
     }
 
     @Test
-    @DisplayName("반품 요청에 타 판매자 상품이 포함되면 승인할 수 없다")
+    @DisplayName("최종 승인 시 타 판매자 아이템이 포함되어 있으면 승인할 수 없다")
     void deniesWhenOtherSellerItemExists() {
         UUID sellerUuid = UUID.randomUUID();
         ReturnRequest returnRequest = createReturnRequest(sellerUuid, UUID.randomUUID());
@@ -94,7 +98,7 @@ class ApproveReturnUseCaseIntegrationTest {
                 .isInstanceOf(ReturnApprovalAccessDeniedException.class);
 
         ReturnRequest denied = returnRequestRepository.findByUuid(returnRequest.getUuid()).orElseThrow();
-        assertThat(denied.getStatus()).isEqualTo(ReturnStatus.RETURN_REQUESTED);
+        assertThat(denied.getStatus()).isEqualTo(ReturnStatus.RETURN_SHIPPED);
         verify(eventPublisher, never()).publish(any());
     }
 
@@ -131,6 +135,9 @@ class ApproveReturnUseCaseIntegrationTest {
         Order savedOrder = orderRepository.save(order);
 
         ReturnRequest returnRequest = ReturnRequest.create(savedOrder, buyerUuid, "단순 변심");
+        returnRequest.approveBySeller();
+        returnRequest.updateTrackingInfo("cj", "04", "1234567890");
+
         List<OrderItem> savedItems = savedOrder.getOrderItems();
         returnRequest.addReturnItem(ReturnItem.create(savedItems.get(0), 10_000));
         returnRequest.addReturnItem(ReturnItem.create(savedItems.get(1), 20_000));

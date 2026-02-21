@@ -26,7 +26,7 @@ public class SyncSearchProductStatsUseCase {
             return;
         }
 
-        log.info("Syncing stats to ES. Count: {}", stats.size());
+        log.info("Elasticsearch에 통계 동기화 시작. 개수: {}", stats.size());
 
         List<UpdateQuery> updates = new ArrayList<>();
 

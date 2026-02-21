@@ -1,8 +1,6 @@
 package dukku.order.boundedContext.order.app;
 
-import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.order.dto.ReturnResponse;
-import dukku.common.shared.order.event.PartialRefundRequestedEvent;
 import dukku.common.shared.order.exception.ReturnApprovalAccessDeniedException;
 import dukku.common.shared.order.exception.ReturnRequestNotFoundException;
 import dukku.common.shared.order.exception.ReturnRequestStatusInvalidException;
@@ -14,24 +12,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
- * 판매자 반품 최종 승인 처리 유스케이스
+ * 판매자 반품 최종 거절 처리 유스케이스
  */
 @Service
 @RequiredArgsConstructor
-public class ApproveReturnUseCase {
+public class FinalRejectReturnUseCase {
 
     private final ReturnRequestRepository returnRequestRepository;
-    private final EventPublisher eventPublisher;
 
     /**
-     * 판매자 권한 및 상태 검증 후 반품 최종 승인 처리
+     * 판매자 권한 및 상태 검증 후 반품 최종 거절 처리
      */
     @Transactional
-    public ReturnResponse execute(UUID sellerUuid, UUID returnRequestUuid) {
+    public ReturnResponse execute(UUID sellerUuid, UUID returnRequestUuid, String rejectionReason) {
         ReturnRequest returnRequest = returnRequestRepository.findByUuid(returnRequestUuid)
                 .orElseThrow(ReturnRequestNotFoundException::new);
 
@@ -41,20 +37,14 @@ public class ApproveReturnUseCase {
             throw new ReturnRequestStatusInvalidException(returnRequest.getStatus(), ReturnStatus.RETURN_SHIPPED.name());
         }
 
-        returnRequest.approveFinal();
-        returnRequest.getReturnItems().forEach(item -> item.getOrderItem().updateOrderStatus(OrderItemStatus.REFUND_IN_PROGRESS));
+        returnRequest.rejectAfterShipment(rejectionReason);
 
-        List<PartialRefundRequestedEvent.RefundItemInfo> refundItems = returnRequest.getReturnItems().stream()
-                .map(item -> new PartialRefundRequestedEvent.RefundItemInfo(
-                        item.getOrderItem().getUuid(),
-                        item.getRefundAmount()))
-                .toList();
-
-        eventPublisher.publish(new PartialRefundRequestedEvent(
-                returnRequest.getUuid(),
-                returnRequest.getOrder().getUuid(),
-                returnRequest.getUserUuid(),
-                refundItems));
+        returnRequest.getReturnItems().forEach(item -> {
+            OrderItemStatus currentStatus = item.getOrderItem().getStatus();
+            if (currentStatus == OrderItemStatus.REFUND_REQUESTED || currentStatus == OrderItemStatus.REFUND_IN_PROGRESS) {
+                item.getOrderItem().updateOrderStatus(OrderItemStatus.DELIVERED);
+            }
+        });
 
         return returnRequest.toResponse();
     }

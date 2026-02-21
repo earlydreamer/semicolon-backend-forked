@@ -57,24 +57,32 @@ public final class CartApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "장바구니의 상품 삭제",
-            description = "장바구니에서 특정 상품을 삭제합니다.",
+            summary = "선택된 장바구니 항목 삭제",
+            description = "요청 바디로 전달된 `cartIds`에 해당하는 장바구니 항목들을 한 번에 삭제합니다.\n예: { \"cartIds\": [1, 2, 3] }",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
-                            description = "장바구니 상품 삭제 성공"
+                            description = "선택된 장바구니 항목 삭제 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청(예: cartsIds가 비어있거나 형식 오류)",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(value = "{\"message\": \"잘못된 요청입니다.\"}")
+                            )
                     ),
                     @ApiResponse(
                             responseCode = "404",
-                            description = "장바구니 상품을 찾을 수 없음",
+                            description = "삭제할 장바구니 항목을 찾을 수 없음",
                             content = @Content(
                                     mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\": \"해당 장바구니 상품을 찾을 수 없습니다.\"}")
+                                    examples = @ExampleObject(value = "{\"message\": \"삭제할 장바구니 항목을 찾을 수 없습니다.\"}")
                             )
                     )
             }
     )
-    public @interface DeleteCartItem {
+    public @interface DeleteCartItems {
     }
 
     @Documented

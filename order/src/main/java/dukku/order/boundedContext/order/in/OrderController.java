@@ -4,6 +4,7 @@ import dukku.common.shared.order.dto.*;
 import dukku.common.shared.order.docs.OrderApiDocs;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.order.boundedContext.order.app.OrderFacade;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,7 @@ public class OrderController {
 
     @PostMapping
     @OrderApiDocs.CreateOrder
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderCreateRequest req) {
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody @Valid OrderCreateRequest req) {
         OrderResponse response = orderFacade.createOrder(req);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

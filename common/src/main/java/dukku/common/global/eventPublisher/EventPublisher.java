@@ -50,9 +50,32 @@ public class EventPublisher {
     }
 
     /**
-     * Kafka로 실제 메시지 전송
-     * 프로젝트 표준인 객체(JSON 문자열) 기반 전송을 위한 objectMapper 직접 직렬화
+     * 트랜잭션 커밋 이후에만 이벤트를 발행하도록 보장하는 명시적 API
+     * 현재 스레드에 활성 트랜잭션과 동기화가 존재하면, 커밋이 완료된 후에 이벤트를 전송합니다.
+     * 트랜잭션이나 동기화가 없을 경우, 즉시 전송
      */
+    public void publishAfterCommit(DomainEvent event) {
+        boolean txActive = TransactionSynchronizationManager.isActualTransactionActive();
+        boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
+
+        if (txActive && syncActive) {
+            try {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        send(event);
+                    }
+                });
+                return;
+            } catch (IllegalStateException e) {
+                log.debug("동기화 등록을 생략했습니다. 즉시 전송합니다. topic={}, reason={}",
+                        event.getTopic(), e.getMessage());
+            }
+        }
+        // 트랜잭션이 활성화되어 있지 않거나 동기화 등록에 실패한 경우 즉시 전송
+        send(event);
+    }
+
     private void send(DomainEvent event) {
         try {
             String eventJson = objectMapper.writeValueAsString(event);
