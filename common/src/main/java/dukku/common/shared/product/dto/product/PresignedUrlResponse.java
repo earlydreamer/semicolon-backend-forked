@@ -1,4 +1,4 @@
-package dukku.product.boundedContext.product.in.dto;
+package dukku.common.shared.product.dto.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

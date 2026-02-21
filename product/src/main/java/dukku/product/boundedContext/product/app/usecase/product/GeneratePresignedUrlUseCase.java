@@ -14,7 +14,6 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class GeneratePresignedUrlUseCase {
-
     private final S3Presigner s3Presigner;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -43,13 +42,12 @@ public class GeneratePresignedUrlUseCase {
     }
 
     private String getContentType(String extension) {
-        switch (extension.toLowerCase()) {
-            case "png": return "image/png";
-            case "jpg":
-            case "jpeg": return "image/jpeg";
-            case "gif": return "image/gif";
-            case "webp": return "image/webp";
-            default: return "application/octet-stream";
-        }
+        return switch (extension.toLowerCase()) {
+            case "png" -> "image/png";
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "gif" -> "image/gif";
+            case "webp" -> "image/webp";
+            default -> "application/octet-stream";
+        };
     }
 }

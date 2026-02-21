@@ -7,9 +7,6 @@ jwt:
   access:
     secret:
       key: ${JWT_ACCESS_SECRET}
-  refresh:
-    secret:
-      key: ${JWT_REFRESH_SECRET}
 
 crypto:
   key: ${CRYPTO_KEY}
