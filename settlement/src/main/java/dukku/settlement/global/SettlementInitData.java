@@ -348,7 +348,7 @@ public class SettlementInitData {
                         .sellerUuid(sellerUuid)
                         .buyerUuid(buyerUuid)
                         .paymentId(UUID.randomUUID())
-                        .orderId(UUID.fromString("b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11")) // orderUuid (Swagger 테스트용 고정)
+                        .orderId(UUID.randomUUID())
                         .orderItemId(UUID.randomUUID())
                         .depositId(depositId)
                         .totalAmount(totalAmount)

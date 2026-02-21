@@ -202,7 +202,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase(settlement_anomaly_detected_total{application=\"semicolon\"}[1h])) by (type)",
+          "expr": "round(sum(increase(settlement_anomaly_detected_total{application=\"semicolon\"}[1h])) by (type))",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
@@ -277,7 +277,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (type) (increase(settlement_anomaly_detected_total{application=\"semicolon\", severity=\"CRITICAL\"}[1h]))",
+          "expr": "round(sum by (type) (settlement_anomaly_detected_total{application=\"semicolon\", severity=\"CRITICAL\"}))",
           "legendFormat": "{{type}}",
           "refId": "A",
           "format": "table",
