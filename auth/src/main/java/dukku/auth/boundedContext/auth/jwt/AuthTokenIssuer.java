@@ -96,7 +96,7 @@ public class AuthTokenIssuer {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("�������� ��ū ������ �����߽��ϴ�: {}", e.getMessage());
+            log.warn("리프레시 토큰 검증에 실패했습니다: {}", e.getMessage());
             return false;
         }
     }
@@ -109,7 +109,7 @@ public class AuthTokenIssuer {
                     .parseSignedClaims(refreshToken)
                     .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("�������� ��ū ������ �����߽��ϴ�: {}", e.getMessage());
+            log.warn("리프레시 토큰 검증에 실패했습니다: {}", e.getMessage());
             throw new InvalidRefreshTokenException();
         }
     }

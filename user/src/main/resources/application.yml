@@ -42,9 +42,6 @@ management:
       application: ${spring.application.name}
 
 custom:
-  user:
-    address:
-      max-count: ${USER_ADDRESS_MAX_COUNT:4}
   email:
     verification:
       required: true
