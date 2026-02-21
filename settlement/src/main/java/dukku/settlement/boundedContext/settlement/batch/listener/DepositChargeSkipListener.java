@@ -1,22 +1,21 @@
 package dukku.settlement.boundedContext.settlement.batch.listener;
 
+import dukku.settlement.boundedContext.settlement.batch.notification.SkipReasonTracker;
+import dukku.settlement.boundedContext.settlement.batch.notification.SkipReasonType;
 import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.listener.SkipListener;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.core.scope.context.StepSynchronizationManager;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.stereotype.Component;
 
 /**
- * 예치금 충전 Step Skip 리스너
- * read / process / write 중 skip 발생 시 호출됨(SkipListener)
- * - Skip 발생 시 상세 로깅
+ * Settlement Skip 리스너 (Step 2, 3에서 사용)
+ * - Skip 발생 시 사유를 분류하여 SkipReasonTracker에 기록
  * - 실패한 Settlement를 FAILED 상태로 변경
- * - 읽기: Settlement, 처리 결과:Settlement
- * - 단계	역할
- * - Read Skip	=> 로그
- * - Process Skip => Settlement → FAILED 전이 + 저장
- * - Write Skip	=> 로그
  */
 @Slf4j
 @Component
@@ -24,17 +23,24 @@ import org.springframework.stereotype.Component;
 public class DepositChargeSkipListener implements SkipListener<Settlement, Settlement> {
 
     private final SettlementRepository settlementRepository;
+    private final SkipReasonTracker skipReasonTracker;
 
     @Override
     public void onSkipInRead(Throwable t) {
-        log.error("[DEPOSIT-SKIP-READ] 읽기 중 에러 발생 - Skip 처리됨");
+        SkipReasonType reason = SkipReasonType.classify(t);
+        recordSkipReason(reason);
+
+        log.error("[SKIP-READ] 읽기 중 에러 발생 - Skip 처리됨. 사유={}", reason.getDescription());
         log.error("  - Exception: {}", t.getClass().getSimpleName());
         log.error("  - Message: {}", t.getMessage());
     }
 
     @Override
     public void onSkipInProcess(Settlement item, Throwable t) {
-        log.error("[DEPOSIT-SKIP-PROCESS] 예치금 충전 처리 중 에러 발생 - Skip 처리됨");
+        SkipReasonType reason = SkipReasonType.classify(t);
+        recordSkipReason(reason);
+
+        log.error("[SKIP-PROCESS] 처리 중 에러 발생 - Skip 처리됨. 사유={}", reason.getDescription());
         log.error("  - Settlement UUID: {}", item != null ? item.getUuid() : "null");
         log.error("  - Seller UUID: {}", item != null ? item.getSellerUuid() : "null");
         log.error("  - Exception: {}", t.getClass().getSimpleName());
@@ -55,9 +61,24 @@ public class DepositChargeSkipListener implements SkipListener<Settlement, Settl
 
     @Override
     public void onSkipInWrite(Settlement item, Throwable t) {
-        log.error("[DEPOSIT-SKIP-WRITE] 저장 중 에러 발생 - Skip 처리됨");
+        SkipReasonType reason = SkipReasonType.classify(t);
+        recordSkipReason(reason);
+
+        log.error("[SKIP-WRITE] 저장 중 에러 발생 - Skip 처리됨. 사유={}", reason.getDescription());
         log.error("  - Settlement UUID: {}", item != null ? item.getUuid() : "null");
         log.error("  - Exception: {}", t.getClass().getSimpleName());
         log.error("  - Message: {}", t.getMessage());
+    }
+
+    private void recordSkipReason(SkipReasonType reason) {
+        StepContext stepContext = StepSynchronizationManager.getContext();
+        if (stepContext != null) {
+            StepExecution stepExecution = stepContext.getStepExecution();
+            skipReasonTracker.record(
+                    stepExecution.getJobExecution().getId(),
+                    stepExecution.getStepName(),
+                    reason
+            );
+        }
     }
 }

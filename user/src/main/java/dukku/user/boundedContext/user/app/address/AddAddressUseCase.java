@@ -7,9 +7,9 @@ import dukku.user.boundedContext.user.in.dto.AddressResponse;
 import dukku.user.boundedContext.user.out.AddressRepository;
 import dukku.user.boundedContext.user.out.UserRepository;
 import dukku.common.shared.user.exception.UserNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import jakarta.transaction.Transactional;
 
 import java.util.UUID;
 
@@ -24,8 +24,8 @@ public class AddAddressUseCase {
         User user = userRepository.findByUuidAndDeletedAtIsNull(userUuid)
                 .orElseThrow(UserNotFoundException::new);
 
-        boolean isFirstAddress =
-                addressRepository.countByUser_Uuid(userUuid) == 0;
+        long addressCount = addressRepository.countByUser_Uuid(userUuid);
+        boolean isFirstAddress = addressCount == 0;
 
         Address address = Address.builder()
                 .user(user)

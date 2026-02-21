@@ -71,6 +71,9 @@ public class Settlement extends BaseIdAndUUIDAndTime {
     @Column(name = "completed_at", comment = "정산완료일")
     private LocalDateTime completedAt;
 
+    @Column(name = "fail_reason", comment = "실패 사유")
+    private String failReason;
+
 
     /* ========= 생성 ========= */
 
@@ -154,8 +157,14 @@ public class Settlement extends BaseIdAndUUIDAndTime {
         changeStatus(SettlementStatus.FAILED);
     }
 
+    public void fail(String reason) {
+        changeStatus(SettlementStatus.FAILED);
+        this.failReason = reason;
+    }
+
     public void retry() {
         changeStatus(SettlementStatus.PENDING);
+        this.failReason = null;
     }
 
     private void changeStatus(SettlementStatus newStatus) {
@@ -255,8 +264,8 @@ public class Settlement extends BaseIdAndUUIDAndTime {
                 settlement.getUuid(),
                 settlement.getSettlementStatus(),
                 settlement.getSellerUuid(),
-                null,  // sellerNickname - TODO: UserApiClient 구현 후 사용
-                null,  // productName - TODO: ProductApiClient 구현 후 사용
+                null,  // sellerNickname
+                null,  // productName
                 settlement.getTotalAmount(),
                 settlement.getFee(),
                 settlement.getFeeAmount(),

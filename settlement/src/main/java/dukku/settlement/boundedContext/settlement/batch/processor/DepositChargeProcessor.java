@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 
 /**
  * Step 2: 예치금 충전 Processor
@@ -34,7 +35,7 @@ public class DepositChargeProcessor implements ItemProcessor<Settlement, Settlem
         // Idempotency: 이미 완료된 건은 Skip
         if (settlement.isCompleted()) {
             log.warn("[Step 2 Processor-Skip] 이미 정산 완료된 건. settlementUuid={}", settlement.getUuid());
-            return null; // Writer로 전달하지 않음
+            return null;
         }
 
         if (settlement.isFailed()) {
@@ -43,7 +44,6 @@ public class DepositChargeProcessor implements ItemProcessor<Settlement, Settlem
         }
 
         try {
-            // Deposit BC API Client 호출하여 예치금 충전
             DepositChargeForSettlementResponse response = depositApiClient.chargeDepositForSettlement(
                     settlement.getSellerUuid(),
                     settlement.getSettlementAmount(),
@@ -58,7 +58,6 @@ public class DepositChargeProcessor implements ItemProcessor<Settlement, Settlem
                 throw new SettlementProcessingException("예치금 충전 실패: " + errorMsg);
             }
 
-            // 성공 시 SUCCESS 상태로 변경
             settlement.complete();
 
             log.info("[Step 2 Processor] 예치금 충전 성공. settlementUuid={}, chargedAmount={}, balanceAfter={}",
@@ -68,15 +67,9 @@ public class DepositChargeProcessor implements ItemProcessor<Settlement, Settlem
 
             return settlement;
 
-        } catch (SettlementValidationException e) {
-            // 데이터 유효성 오류 → Skip 처리
-            log.error("[Step 2 Processor-Skip] 데이터 유효성 오류. settlementUuid={}, error={}",
-                    settlement.getUuid(), e.getMessage());
-            throw e;
-
-        } catch (SettlementProcessingException e) {
-            // 비즈니스 처리 오류 → Skip 처리
-            log.error("[Step 2 Processor-Skip] 비즈니스 처리 오류. settlementUuid={}, error={}",
+        } catch (SettlementValidationException | SettlementProcessingException e) {
+            // 데이터/비즈니스 오류 → Skip 처리
+            log.error("[Step 2 Processor-Skip] settlementUuid={}, error={}",
                     settlement.getUuid(), e.getMessage());
             throw e;
 
@@ -87,11 +80,10 @@ public class DepositChargeProcessor implements ItemProcessor<Settlement, Settlem
             throw e;
 
         } catch (Exception e) {
-            // 예상치 못한 오류 → Skip 처리
-            log.error("[Step 2 Processor-Skip] 예상치 못한 오류. settlementUuid={}, error={}",
+            // 외부 서비스 연결 실패 포함 모든 예상치 못한 오류 → 즉시 Step 실패
+            log.error("[Step 2 Processor] 처리 불가 오류. settlementUuid={}, error={}",
                     settlement.getUuid(), e.getMessage(), e);
-            throw new SettlementProcessingException(
-                    "예치금 충전 중 오류 발생: " + e.getMessage());
+            throw e;
         }
     }
 }

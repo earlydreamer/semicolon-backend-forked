@@ -15,7 +15,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -71,17 +74,17 @@ public class OrderCancellationIntegrationTest {
     private TossPaymentClient tossPaymentClient;
 
     @Autowired
-    private org.springframework.kafka.config.KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
+    private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
 
     @Autowired
-    private org.springframework.kafka.test.EmbeddedKafkaBroker embeddedKafkaBroker;
+    private EmbeddedKafkaBroker embeddedKafkaBroker;
 
     private TransactionTemplate transactionTemplate;
 
     @BeforeEach
     void setUp() {
         kafkaListenerEndpointRegistry.getListenerContainers()
-                .forEach(container -> org.springframework.kafka.test.utils.ContainerTestUtils.waitForAssignment(
+                .forEach(container -> ContainerTestUtils.waitForAssignment(
                         container,
                         embeddedKafkaBroker.getPartitionsPerTopic()));
 
