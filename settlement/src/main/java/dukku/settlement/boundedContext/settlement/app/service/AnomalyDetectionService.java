@@ -10,6 +10,7 @@ import dukku.common.shared.settlement.type.SettlementStatus;
 import dukku.common.shared.user.dto.UserProfileResponse;
 import dukku.common.shared.user.out.UserApiClient;
 import dukku.settlement.boundedContext.settlement.app.SettlementMetrics;
+import dukku.settlement.boundedContext.settlement.batch.notification.AnomalyTracker;
 import dukku.settlement.boundedContext.settlement.entity.Settlement;
 import dukku.settlement.boundedContext.settlement.out.SettlementRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ import java.util.UUID;
  * 이상거래 탐지 서비스
  * - 정산 건에 대해 6가지 규칙을 검사
  * - CRITICAL 탐지 시 settlement.fail(reason) 호출
- * - 모든 탐지 건에 대해 Kafka 이벤트 + Micrometer 메트릭
+ * - 모든 탐지 건에 대해 Kafka 이벤트 + Micrometer 메트릭 + AnomalyTracker 기록
  *
  * @return true if CRITICAL anomaly detected (settlement is now FAILED)
  */
@@ -39,6 +40,7 @@ public class AnomalyDetectionService {
     private final SettlementRepository settlementRepository;
     private final EventPublisher eventPublisher;
     private final SettlementMetrics settlementMetrics;
+    private final AnomalyTracker anomalyTracker;
 
     private static final long AMOUNT_TOLERANCE = 1L;
     private static final double REFUND_RATE_THRESHOLD = 0.15;
@@ -186,6 +188,7 @@ public class AnomalyDetectionService {
     private void publishAndCount(Settlement settlement, AnomalyType type, String description,
                                  Long expectedValue, Long actualValue) {
         settlementMetrics.incrementAnomalyDetected(type.name(), type.getSeverity().name());
+        anomalyTracker.record(type, settlement.getUuid(), settlement.getOrderId(), description);
 
         eventPublisher.publish(new SettlementAnomalyDetectedEvent(
                 settlement.getUuid(),

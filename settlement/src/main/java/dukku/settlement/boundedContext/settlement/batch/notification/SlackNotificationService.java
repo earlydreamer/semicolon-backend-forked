@@ -1,5 +1,6 @@
 package dukku.settlement.boundedContext.settlement.batch.notification;
 
+import dukku.common.shared.settlement.type.AnomalyType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.step.StepExecution;
@@ -14,11 +15,13 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Slack 알림 서비스
  * - 정산 배치 완료 시 Slack으로 알림 전송
+ * - 이상거래 탐지 결과 포함
  */
 @Slf4j
 @Service
@@ -30,13 +33,16 @@ public class SlackNotificationService {
     private final RestTemplate restTemplate;
     private final BatchFailureDiagnoser failureDiagnoser;
     private final SkipReasonTracker skipReasonTracker;
+    private final AnomalyTracker anomalyTracker;
 
     public SlackNotificationService(@Qualifier("slackRestTemplate") RestTemplate restTemplate,
                                     BatchFailureDiagnoser failureDiagnoser,
-                                    SkipReasonTracker skipReasonTracker) {
+                                    SkipReasonTracker skipReasonTracker,
+                                    AnomalyTracker anomalyTracker) {
         this.restTemplate = restTemplate;
         this.failureDiagnoser = failureDiagnoser;
         this.skipReasonTracker = skipReasonTracker;
+        this.anomalyTracker = anomalyTracker;
     }
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -73,6 +79,9 @@ public class SlackNotificationService {
             }
         }
 
+        // 이상거래 탐지 결과
+        buildAnomalySection(sb);
+
         // Step별 통계
         sb.append("*Step별 통계:*\n");
         for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
@@ -104,8 +113,55 @@ public class SlackNotificationService {
 
         // 추적 데이터 정리
         skipReasonTracker.clear(jobExecution.getId());
+        anomalyTracker.clear();
 
         return sb.toString();
+    }
+
+    private void buildAnomalySection(StringBuilder sb) {
+        if (!anomalyTracker.hasAnomalies()) {
+            return;
+        }
+
+        Map<AnomalyType, List<AnomalyTracker.AnomalyRecord>> anomalies = anomalyTracker.getAll();
+
+        // CRITICAL 이상거래
+        boolean hasCritical = anomalyTracker.hasCriticalAnomalies();
+        if (hasCritical) {
+            sb.append(":rotating_light: *CRITICAL 이상거래 탐지*\n");
+            for (var entry : anomalies.entrySet()) {
+                AnomalyType type = entry.getKey();
+                if (!type.isCritical()) continue;
+                List<AnomalyTracker.AnomalyRecord> records = entry.getValue();
+
+                sb.append("  • *").append(type.name()).append("* (")
+                        .append(type.getDescription()).append(") — ").append(records.size()).append("건\n");
+                for (AnomalyTracker.AnomalyRecord record : records) {
+                    sb.append("    - `").append(record.settlementUuid()).append("` ")
+                            .append(record.description()).append("\n");
+                }
+            }
+            sb.append("\n");
+        }
+
+        // HIGH 이상거래
+        boolean hasHigh = anomalies.keySet().stream().anyMatch(t -> !t.isCritical());
+        if (hasHigh) {
+            sb.append(":warning: *HIGH 이상거래 탐지*\n");
+            for (var entry : anomalies.entrySet()) {
+                AnomalyType type = entry.getKey();
+                if (type.isCritical()) continue;
+                List<AnomalyTracker.AnomalyRecord> records = entry.getValue();
+
+                sb.append("  • *").append(type.name()).append("* (")
+                        .append(type.getDescription()).append(") — ").append(records.size()).append("건\n");
+                for (AnomalyTracker.AnomalyRecord record : records) {
+                    sb.append("    - `").append(record.settlementUuid()).append("` ")
+                            .append(record.description()).append("\n");
+                }
+            }
+            sb.append("\n");
+        }
     }
 
     private String formatTime(LocalDateTime time) {
