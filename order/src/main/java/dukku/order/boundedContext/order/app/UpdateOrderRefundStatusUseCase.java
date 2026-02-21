@@ -37,7 +37,7 @@ public class UpdateOrderRefundStatusUseCase {
             return;
         }
 
-        Order order = orderSupport.findOrderByUuid(orderUuid);
+        Order order = orderSupport.findOrderByUuidWithItems(orderUuid);
 
         if (refundAmount > Integer.MAX_VALUE) {
             throw new OrderRefundAmountOutOfRangeException();
