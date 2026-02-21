@@ -14,5 +14,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ReturnRejectDto {
-    private String reason;
+    private String reason; // 반품 거절 사유
 }

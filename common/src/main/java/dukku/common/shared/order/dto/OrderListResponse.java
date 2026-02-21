@@ -24,10 +24,10 @@ public class OrderListResponse {
     @Getter
     @Builder
     public static class SimpleOrderItemResponse {
-        private UUID productUuid;
-        private String productName;
-        private int productPrice;
-        private String imageUrl;
+        private UUID productUuid; // 상품 UUID
+        private String productName; // 상품명
+        private int productPrice; // 상품 가격
+        private String imageUrl; // 상품 이미지 URL
         private OrderItemStatus itemStatus; // 개별 상품 상태 (예: 배송중, 구매확정)
     }
 }
