@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai
+  namespace: semicolon
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: ai
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-02-23T00:00:00+09:00"
+      labels:
+        app: ai
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - envFrom:
+            - secretRef:
+                name: semicolon-env
+          # Image tag injected by CI
+          image: dukku/semicolon-ai:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          name: ai
+          ports:
+            - containerPort: 8089
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 600m
+              memory: 768Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
