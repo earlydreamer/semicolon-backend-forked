@@ -2,6 +2,7 @@ package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.exception.UserIdempotencyKeyRequiredException;
+import dukku.common.shared.user.exception.UserSignupHashingFailedException;
 import dukku.common.shared.user.exception.UserSignupIdempotencyConflictException;
 import dukku.common.shared.user.exception.UserSignupRequestInProgressException;
 import lombok.Getter;
@@ -125,7 +126,7 @@ public class SignupIdempotencyService {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 알고리즘을 사용할 수 없습니다.", e);
+            throw new UserSignupHashingFailedException();
         }
     }
 
