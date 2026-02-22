@@ -20,9 +20,17 @@ public class RegisterUserUseCase {
     private final ApplicationEventPublisher springEventPublisher;
     private final EmailVerificationService emailVerificationService;
     private final SignupRequestGuard signupRequestGuard;
+    private final SignupIdempotencyService signupIdempotencyService;
 
     @Transactional
-    public User execute(UserRegisterRequest req, Role role) {
+    public User execute(UserRegisterRequest req, Role role, String idempotencyKey) {
+        SignupIdempotencyService.SignupIdempotencyContext idempotencyContext =
+                signupIdempotencyService.begin(idempotencyKey, req);
+        if (idempotencyContext.isAlreadyCompleted()) {
+            return support.findByEmail(req.getEmail())
+                    .orElseThrow(UserConflictException::new);
+        }
+
         String lockToken = signupRequestGuard.acquire(req.getEmail());
         try {
             emailVerificationService.assertVerifiedForRegister(req.getEmail());
@@ -32,7 +40,11 @@ public class RegisterUserUseCase {
 
             User saved = saveOrThrowConflict(userCandidate);
             springEventPublisher.publishEvent(new UserJoinedEvent(User.toUserDto(saved)));
+            signupIdempotencyService.markCompleted(idempotencyContext);
             return saved;
+        } catch (RuntimeException e) {
+            signupIdempotencyService.rollback(idempotencyContext);
+            throw e;
         } finally {
             signupRequestGuard.release(req.getEmail(), lockToken);
         }
