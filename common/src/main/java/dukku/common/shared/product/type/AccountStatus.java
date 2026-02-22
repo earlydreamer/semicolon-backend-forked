@@ -1,5 +1,7 @@
 package dukku.common.shared.product.type;
 
 public enum AccountStatus {
-    ACTIVE, BLOCKED, DELETED
+    ACTIVE,     // 활성
+    BLOCKED,    // 차단
+    DELETED     // 삭제
 }
