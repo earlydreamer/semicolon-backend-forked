@@ -405,7 +405,7 @@ class PaymentIntegrationTest {
                 payment,
                 payment.getOrderUuid(),
                 orderItemUuid,
-                1,
+                UUID.randomUUID(),
                 "item-" + orderItemUuid.toString().substring(0, 8),
                 price,
                 coupon,
