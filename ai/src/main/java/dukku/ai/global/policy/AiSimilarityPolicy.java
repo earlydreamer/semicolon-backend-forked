@@ -17,6 +17,10 @@ public final class AiSimilarityPolicy {
     // 기억 중복 판단
     public static final double MEMORY_DUPLICATE_THRESHOLD = 0.92;
 
+    // 추천 검색
+    public static final int RECOMMENDATION_TOP_K = 10;
+    public static final double RECOMMENDATION_SIMILARITY_THRESHOLD = 0.5;
+
     // 임베딩
     public static final int EMBEDDING_DIMENSION = 384;
 }
