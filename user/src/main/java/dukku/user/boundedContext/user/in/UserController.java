@@ -24,11 +24,12 @@ public class UserController {
     @PostMapping("/register")
     @UserApiDocs.RegisterUser
     public ResponseEntity<UserResponse> registerUser(
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestBody @Validated UserRegisterRequest userRegisterRequest
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userFacade.registerUser(userRegisterRequest, Role.USER));
+                .body(userFacade.registerUser(userRegisterRequest, Role.USER, idempotencyKey));
     }
 
     @GetMapping("/me")
