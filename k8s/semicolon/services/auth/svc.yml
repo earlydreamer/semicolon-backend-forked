@@ -4,12 +4,12 @@ metadata:
   name: auth-service
   namespace: semicolon
 spec:
+  type: ClusterIP
+  selector:
+    app: auth
   ports:
     - name: http
       port: 80
-      protocol: TCP
       targetPort: 8081
-  selector:
-    app: auth
+      protocol: TCP
   sessionAffinity: None
-  type: ClusterIP
