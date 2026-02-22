@@ -160,11 +160,14 @@ public class Order extends BaseIdAndUUIDAndTime {
     // 주문 목록용 항목 응답 DTO 변환
     public static OrderListResponse.SimpleOrderItemResponse fromSimpleOrderItemResponse(OrderItem item) {
         return OrderListResponse.SimpleOrderItemResponse.builder()
+                .orderItemUuid(item.getUuid())
                 .productUuid(item.getProductUuid())
                 .productName(item.getProductName())
                 .productPrice(item.getProductPrice())
                 .imageUrl(item.getImageUrl())
                 .itemStatus(item.getStatus())
+                .carrierName(item.getCarrierName())
+                .trackingNumber(item.getTrackingNumber())
                 .build();
     }
 }
