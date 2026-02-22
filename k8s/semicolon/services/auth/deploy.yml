@@ -28,8 +28,7 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: auth-db
-          # Image tag injected by CI
-          image: dukku/semicolon-auth:${IMAGE_TAG}
+          image: dukku/semicolon-auth:latest
           imagePullPolicy: IfNotPresent
           name: auth
           ports:

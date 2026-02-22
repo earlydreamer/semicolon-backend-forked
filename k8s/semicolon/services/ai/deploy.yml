@@ -27,8 +27,7 @@ spec:
         - envFrom:
             - secretRef:
                 name: semicolon-env
-          # Image tag injected by CI
-          image: dukku/semicolon-ai:${IMAGE_TAG}
+          image: dukku/semicolon-ai:latest
           imagePullPolicy: IfNotPresent
           name: ai
           ports:

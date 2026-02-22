@@ -28,8 +28,7 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: settlement-db
-          # Image tag injected by CI
-          image: dukku/semicolon-settlement:${IMAGE_TAG}
+          image: dukku/semicolon-settlement:latest
           imagePullPolicy: IfNotPresent
           name: settlement
           ports:

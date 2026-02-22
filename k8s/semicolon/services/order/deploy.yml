@@ -28,8 +28,7 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: order-db
-          # Image tag injected by CI
-          image: dukku/semicolon-order:${IMAGE_TAG}
+          image: dukku/semicolon-order:latest
           imagePullPolicy: IfNotPresent
           name: order
           ports:

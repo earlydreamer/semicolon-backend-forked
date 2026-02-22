@@ -28,8 +28,7 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: payment-db
-          # Image tag injected by CI
-          image: dukku/semicolon-payment:${IMAGE_TAG}
+          image: dukku/semicolon-payment:latest
           imagePullPolicy: IfNotPresent
           name: payment
           ports:
