@@ -21,6 +21,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+/**
+ * 주문 환불 상태 갱신 유스케이스 정상/예외 경로 테스트.
+ */
 @ExtendWith(MockitoExtension.class)
 class UpdateOrderRefundStatusUseCaseHappyPathTest {
 
@@ -54,9 +57,9 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
     }
 
     @Test
-    @DisplayName("부분 환불 시 환불 누적액이 갱신되고 상태가 PARTIAL_REFUNDED로 변경된다")
-    void 부분환불_상태변경() {
-        // given: 부분 환불 이벤트와 PAID 상태 주문을 준비한다.
+    @DisplayName("부분 환불이면 환불 누적액이 갱신되고 상태가 PARTIAL_REFUNDED로 변경된다")
+    void 주문_부분환불_상태변경() {
+        // given
         UUID refundUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
         Order order = newPaidOrder(orderUuid, 12_000);
