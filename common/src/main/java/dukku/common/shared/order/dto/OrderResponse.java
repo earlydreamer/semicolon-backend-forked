@@ -29,7 +29,6 @@ public class OrderResponse {
     @Builder
     public static class OrderItemResponse {
         private UUID orderItemUuid; // 주문 상품 UUID
-        private Integer productId;  // 상품 PK
         private UUID productUuid;   // 상품 UUID
         private UUID sellerUuid;    // 판매자 UUID
         private String productName; // 상품명

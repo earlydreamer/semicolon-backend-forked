@@ -145,7 +145,6 @@ public class Order extends BaseIdAndUUIDAndTime {
     public static OrderResponse.OrderItemResponse fromOrderItemResponse(OrderItem item) {
         return OrderResponse.OrderItemResponse.builder()
                 .orderItemUuid(item.getUuid())
-                .productId(item.getProductId())
                 .productUuid(item.getProductUuid())
                 .sellerUuid(item.getSellerUuid())
                 .productName(item.getProductName())
