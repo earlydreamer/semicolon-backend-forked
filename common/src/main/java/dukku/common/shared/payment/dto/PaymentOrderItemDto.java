@@ -20,7 +20,7 @@ public class PaymentOrderItemDto {
     private UUID orderUuid;
     private UUID orderItemUuid;
     private UUID sellerUuid;
-    private Integer productId;
+    private UUID productUuid;
     private String productName;
     private Long price;
     private Long paymentCoupon;

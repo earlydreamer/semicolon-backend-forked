@@ -69,7 +69,7 @@ public class RequestPaymentUseCase {
 
         // 2. 정렬 + 서버 상품총액 계산/검증
         List<PaymentRequest.PaymentRequestItem> sortedItems = request.getItems().stream()
-                .sorted(Comparator.comparing(PaymentRequest.PaymentRequestItem::getProductId)
+                .sorted(Comparator.comparing(PaymentRequest.PaymentRequestItem::getProductUuid)
                         .thenComparing(PaymentRequest.PaymentRequestItem::getOrderItemUuid))
                 .toList();
 
@@ -392,7 +392,7 @@ public class RequestPaymentUseCase {
                     payment,
                     request.getOrderUuid(),
                     itemDto.getOrderItemUuid(),
-                    itemDto.getProductId(),
+                    itemDto.getProductUuid(),
                     itemDto.getProductName(),
                     itemDto.getPrice(),
                     itemCoupon,

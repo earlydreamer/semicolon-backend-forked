@@ -143,7 +143,7 @@ class HandlePartialRefundEventUseCaseIntegrationTest {
                 payment,
                 orderUuid,
                 orderItemUuid,
-                1,
+                UUID.randomUUID(),
                 "item",
                 itemPrice,
                 itemCoupon,
