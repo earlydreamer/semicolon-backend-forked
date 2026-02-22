@@ -28,11 +28,9 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: settlement-db
-          # Baseline image (used for manual apply / initial bootstrap)
-          # Production rollout is done by GitHub Actions with immutable tag:
-          #   dukku/semicolon-<service>:<git_sha>
-          image: dukku/semicolon-settlement:latest
-          imagePullPolicy: Always
+          # Image tag injected by CI
+          image: dukku/semicolon-settlement:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
           name: settlement
           ports:
             - containerPort: 8088

@@ -28,11 +28,9 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: deposit-db
-          # Baseline image (used for manual apply / initial bootstrap)
-          # Production rollout is done by GitHub Actions with immutable tag:
-          #   dukku/semicolon-<service>:<git_sha>
-          image: dukku/semicolon-deposit:latest
-          imagePullPolicy: Always
+          # Image tag injected by CI
+          image: dukku/semicolon-deposit:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
           name: deposit
           ports:
             - containerPort: 8087

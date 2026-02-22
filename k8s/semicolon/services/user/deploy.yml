@@ -30,11 +30,9 @@ spec:
                 name: user-db
             - secretRef:
                 name: user-db
-          # Baseline image (used for manual apply / initial bootstrap)
-          # Production rollout is done by GitHub Actions with immutable tag:
-          #   dukku/semicolon-<service>:<git_sha>
-          image: dukku/semicolon-user:latest
-          imagePullPolicy: Always
+          # Image tag injected by CI
+          image: dukku/semicolon-user:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
           name: user
           ports:
             - containerPort: 8082

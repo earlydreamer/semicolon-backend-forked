@@ -28,11 +28,9 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: payment-db
-          # Baseline image (used for manual apply / initial bootstrap)
-          # Production rollout is done by GitHub Actions with immutable tag:
-          #   dukku/semicolon-<service>:<git_sha>
-          image: dukku/semicolon-payment:latest
-          imagePullPolicy: Always
+          # Image tag injected by CI
+          image: dukku/semicolon-payment:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
           name: payment
           ports:
             - containerPort: 8086
