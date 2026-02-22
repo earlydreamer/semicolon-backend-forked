@@ -22,7 +22,7 @@ public class UserController {
     private final UserFacade userFacade;
 
     @PostMapping("/register")
-    @UserApiDocs.RegisterUser
+    @UserApiDocs.RegisterUserV2
     public ResponseEntity<UserResponse> registerUser(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestBody @Validated UserRegisterRequest userRegisterRequest
