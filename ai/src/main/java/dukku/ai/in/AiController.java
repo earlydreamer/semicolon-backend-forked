@@ -1,6 +1,7 @@
 package dukku.ai.in;
 
 import java.util.List;
+import java.util.UUID;
 
 import dukku.ai.app.AiFacade;
 import dukku.common.shared.ai.docs.AiApiDocs;
@@ -69,5 +70,11 @@ public class AiController {
     public ResponseEntity<Void> deleteMemory(@PathVariable("id") Integer aiMemoryId) {
         aiFacade.delete(aiMemoryId);
         return ResponseEntity.noContent().build();
+    }
+
+    @AiApiDocs.FindRecommendations
+    @GetMapping("/recommendations/{userUuid}")
+    public ResponseEntity<List<AiMemoryResponse>> findRecommendations(@PathVariable("userUuid") UUID userUuid) {
+        return ResponseEntity.ok(aiFacade.findRecommendations(userUuid));
     }
 }

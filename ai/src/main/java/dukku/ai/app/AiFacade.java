@@ -1,11 +1,13 @@
 package dukku.ai.app;
 
+import brave.internal.baggage.BaggageContext;
 import dukku.ai.app.usecase.*;
 import dukku.ai.entity.AiMemory;
 import dukku.common.shared.ai.dto.AiMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
 import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
 import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AiFacade {
 
@@ -22,14 +25,8 @@ public class AiFacade {
     private final CreateAiMemoryUseCase createAiMemoryUseCase;
     private final UpdateAiMemoryUseCase updateAiMemoryUseCase;
     private final DeleteAiMemoryUseCase deleteAiMemoryUseCase;
+    private final FindRecommendationUseCase findRecommendationUseCase;
 
-    public AiFacade(ChatUseCase chatUseCase, FindAiMemoryUseCase findAiMemoryUseCase, CreateAiMemoryUseCase createAiMemoryUseCase, UpdateAiMemoryUseCase updateAiMemoryUseCase, DeleteAiMemoryUseCase deleteAiMemoryUseCase) {
-        this.chatUseCase = chatUseCase;
-        this.findAiMemoryUseCase = findAiMemoryUseCase;
-        this.createAiMemoryUseCase = createAiMemoryUseCase;
-        this.updateAiMemoryUseCase = updateAiMemoryUseCase;
-        this.deleteAiMemoryUseCase = deleteAiMemoryUseCase;
-    }
 
     public Flux<String> chat(ChatRequest request) {
         String conversationId = resolveConversationId(request.conversationId());
@@ -79,6 +76,13 @@ public class AiFacade {
     @Transactional
     public void delete(Integer aiMemoryId) {
         deleteAiMemoryUseCase.delete(aiMemoryId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AiMemoryResponse> findRecommendations(UUID userUuid) {
+        return findRecommendationUseCase.findByUserUuid(userUuid).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private AiMemoryResponse toResponse(AiMemory memory) {

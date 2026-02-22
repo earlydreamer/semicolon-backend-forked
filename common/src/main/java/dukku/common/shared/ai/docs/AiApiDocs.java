@@ -226,4 +226,41 @@ public final class AiApiDocs {
     )
     public @interface DeleteMemory {
     }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(
+            summary = "사용자 추천 상품 조회",
+            description = "장바구니 추가 이벤트 기반으로 생성된 AI 추천 결과를 조회합니다. importance_score 내림차순으로 최대 10건 반환합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            name = "추천 목록",
+                                            value = """
+                                                    [
+                                                      {
+                                                        "aiMemoryId": 5,
+                                                        "userUuid": "550e8400-e29b-41d4-a716-446655440000",
+                                                        "memoryType": "RECOMMENDATION",
+                                                        "subType": "SHOPPING",
+                                                        "content": "장바구니 추가 기반 추천 (기준: 캠핑 의자): 접이식 테이블, 캠핑 랜턴, 침낭",
+                                                        "importanceScore": 0.7,
+                                                        "confidenceScore": 0.8,
+                                                        "accessCount": 0,
+                                                        "createdAt": "2026-02-22T18:30:00",
+                                                        "updatedAt": null
+                                                      }
+                                                    ]"""
+                                    )
+                            )
+                    )
+            }
+    )
+    public @interface FindRecommendations {
+    }
 }
