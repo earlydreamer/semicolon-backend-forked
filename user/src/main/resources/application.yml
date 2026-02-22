@@ -49,7 +49,7 @@ custom:
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
   signup:
-    request-lock-ttl-seconds: ${SIGNUP_REQUEST_LOCK_TTL_SECONDS:10}
+    request-lock-ttl-seconds: 10
     idempotency:
-      in-progress-ttl-seconds: ${SIGNUP_IDEMPOTENCY_IN_PROGRESS_TTL_SECONDS:30}
-      completed-ttl-seconds: ${SIGNUP_IDEMPOTENCY_COMPLETED_TTL_SECONDS:1800}
+      in-progress-ttl-seconds: 30
+      completed-ttl-seconds: 1800
