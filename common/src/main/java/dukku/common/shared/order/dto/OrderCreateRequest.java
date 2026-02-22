@@ -39,9 +39,6 @@ public class OrderCreateRequest {
         private UUID productUuid; // 상품 UUID
 
         @NotNull
-        private Integer productId; // 상품 PK (결제 요청 스냅샷용)
-
-        @NotNull
         private UUID sellerUuid; // 판매자 UUID
 
         @Size(max = 100)
