@@ -46,6 +46,7 @@ custom:
     verification:
       required: true
       base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
+      success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://dukku.shop}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
   signup:
