@@ -13,12 +13,13 @@ spring:
 
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         show_sql: true              # 부하 테스트 시 반드시 false
         format_sql: false
         use_sql_comments: false
-
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 100
 
