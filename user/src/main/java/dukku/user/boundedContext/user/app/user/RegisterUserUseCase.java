@@ -1,5 +1,6 @@
-package dukku.user.boundedContext.user.app.user;
+﻿package dukku.user.boundedContext.user.app.user;
 
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.event.UserJoinedEvent;
 import dukku.common.shared.user.exception.UserConflictException;
@@ -8,7 +9,6 @@ import dukku.user.boundedContext.user.app.email.EmailVerificationService;
 import dukku.user.boundedContext.user.entity.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class RegisterUserUseCase {
 
     private final UserSupport support;
-    private final ApplicationEventPublisher springEventPublisher;
+    private final EventPublisher eventPublisher;
     private final EmailVerificationService emailVerificationService;
     private final SignupRequestGuard signupRequestGuard;
     private final SignupIdempotencyService signupIdempotencyService;
@@ -35,11 +35,11 @@ public class RegisterUserUseCase {
         try {
             emailVerificationService.assertVerifiedForRegister(req.getEmail());
             User userCandidate = support.findByEmail(req.getEmail())
-                    .map(existing -> restoreOrFail(existing))
+                    .map(this::restoreOrFail)
                     .orElseGet(() -> createNew(req, role));
 
             User saved = saveOrThrowConflict(userCandidate);
-            springEventPublisher.publishEvent(new UserJoinedEvent(User.toUserDto(saved)));
+            eventPublisher.publish(new UserJoinedEvent(User.toUserDto(saved)));
             signupIdempotencyService.markCompleted(idempotencyContext);
             return saved;
         } catch (RuntimeException e) {

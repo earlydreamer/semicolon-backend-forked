@@ -19,6 +19,8 @@ import dukku.ai.global.advisor.LoggingAdvisor;
 import dukku.ai.global.advisor.MemoryExtractionAdvisor;
 import dukku.ai.global.advisor.MemoryRetrievalAdvisor;
 import dukku.ai.global.advisor.ToolAdvisor;
+import dukku.ai.global.policy.AiGuardPolicy;
+import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.ai.global.tool.CartHistoryTool;
 import dukku.ai.global.tool.NotificationTool;
 import dukku.ai.global.tool.PurchaseHistoryTool;
@@ -38,7 +40,7 @@ public class ChatClientConfig {
 
     @Bean
     GuardAdvisor guardAdvisor() {
-        return new GuardAdvisor(500, List.of(), 0);
+        return new GuardAdvisor(AiGuardPolicy.MAX_INPUT_LENGTH, AiGuardPolicy.FORBIDDEN_WORDS, 0);
     }
 
     @Bean
@@ -81,7 +83,7 @@ public class ChatClientConfig {
                           RecommendationSaveTool recommendationSaveTool,
                           NotificationTool notificationTool) {
         return builder
-                .defaultSystem("당신은 사용자 정보 기반 상품 추천 모델입니다")
+                .defaultSystem(AiPromptPolicy.SYSTEM_PROMPT)
                 .defaultTools(
                         cartHistoryTool,
                         purchaseHistoryTool,

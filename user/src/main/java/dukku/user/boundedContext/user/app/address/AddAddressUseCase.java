@@ -1,12 +1,15 @@
 package dukku.user.boundedContext.user.app.address;
 
 import dukku.user.boundedContext.user.entity.Address;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.user.boundedContext.user.in.dto.AddressRequest;
 import dukku.user.boundedContext.user.in.dto.AddressResponse;
 import dukku.user.boundedContext.user.out.AddressRepository;
-import jakarta.transaction.Transactional;
+import dukku.user.boundedContext.user.out.UserRepository;
+import dukku.common.shared.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import jakarta.transaction.Transactional;
 
 import java.util.UUID;
 
@@ -14,20 +17,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AddAddressUseCase {
     private final AddressRepository addressRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public AddressResponse add(UUID userUuid, AddressRequest request) {
+        User user = userRepository.findByUuidAndDeletedAtIsNull(userUuid)
+                .orElseThrow(UserNotFoundException::new);
 
-        boolean isFirstAddress =
-                addressRepository.countByUserUuid(userUuid) == 0;
+        long addressCount = addressRepository.countByUser_Uuid(userUuid);
+        boolean isFirstAddress = addressCount == 0;
 
         Address address = Address.builder()
-                .userUuid(userUuid)
-                .receiverName(request.getReceiverName())
-                .receiverPhone(request.getReceiverPhone())
-                .zipcode(request.getZipcode())
-                .address1(request.getAddress1())
-                .address2(request.getAddress2())
+                .user(user)
+                .address(request.getAddress())
+                .zonecode(request.getZonecode())
                 .isDefault(isFirstAddress)
                 .build();
 

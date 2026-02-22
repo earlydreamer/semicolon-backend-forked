@@ -2,6 +2,8 @@ package dukku.ai.global.advisor;
 
 import java.util.List;
 
+import dukku.common.shared.ai.exception.AiForbiddenWordIncludedException;
+import dukku.common.shared.ai.exception.AiQuestionTooLongException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.ai.chat.client.ChatClientRequest;
@@ -13,15 +15,9 @@ import org.springframework.ai.chat.messages.UserMessage;
 @RequiredArgsConstructor
 public class GuardAdvisor implements BaseAdvisor {
 
-    private static final int DEFAULT_MAX_LENGTH = 500;
-
     private final int maxLength;
     private final List<String> forbiddenWords;
     private final int order;
-
-    public GuardAdvisor() {
-        this(DEFAULT_MAX_LENGTH, List.of(), 0);
-    }
 
     @Override
     public ChatClientRequest before(ChatClientRequest request, AdvisorChain chain) {
@@ -36,14 +32,12 @@ public class GuardAdvisor implements BaseAdvisor {
         }
 
         if (userText.length() > maxLength) {
-            throw new IllegalArgumentException(
-                    "질문이 너무 깁니다. 최대 " + maxLength + "자까지 입력 가능합니다.");
+            throw new AiQuestionTooLongException(maxLength);
         }
 
         for (String word : forbiddenWords) {
             if (userText.contains(word)) {
-                throw new IllegalArgumentException(
-                        "금칙어가 포함되어 있습니다: " + word);
+                throw new AiForbiddenWordIncludedException(word);
             }
         }
 

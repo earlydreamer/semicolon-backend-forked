@@ -1,6 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
+import dukku.common.shared.order.exception.OrderDateRangeInvalidException;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.order.boundedContext.order.entity.OrderItem;
 import dukku.order.boundedContext.order.out.OrderItemRepository;
@@ -19,7 +20,7 @@ public class FindConfirmedItemsUseCase {
 
     public List<ConfirmedOrderItemResponse> execute(LocalDateTime startDateTime, LocalDateTime endDateTime){
         if (startDateTime.isAfter(endDateTime)) {
-            throw new IllegalArgumentException("startDateTime must be before endDateTime");
+            throw new OrderDateRangeInvalidException();
         }
 
         return orderItemRepository

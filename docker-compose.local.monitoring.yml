@@ -1,0 +1,93 @@
+# Prometheus + Grafana 모니터링 스택
+# 사용법: docker compose -f docker-compose.local.monitoring.yml up -d (루트에서 실행)
+services:
+  # Prometheus - 메트릭 수집 및 저장
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: semicolon-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=365d'  # 1년간 데이터 보관
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - team05-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Linux에서도 작동하도록 설정
+
+  # Grafana - 메트릭 시각화 대시보드
+  grafana:
+    image: grafana/grafana:latest
+    container_name: semicolon-grafana
+    env_file:
+      - ./monitoring/.env
+    environment:
+      # 기본 관리자 계정 (운영 환경에서는 반드시 변경!)
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # 익명 접근 허용 (개발용 - Public Dashboard 없이도 대시보드 조회 가능)
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      # 기본 조직 설정
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # 시간대 설정
+      - GF_DATE_FORMATS_DEFAULT_TIMEZONE=Asia/Seoul
+      # Unified Alerting 활성화
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_ALERTING_ENABLED=false
+      # Public Dashboard 기능 활성화
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      # iframe 임베딩 허용 (프론트엔드에서 대시보드 임베드 시 필요)
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      # Infinity 플러그인 (Log API 연동용)
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - team05-network
+    depends_on:
+      - prometheus
+      - mongodb
+  # 로그 데이터 저장
+  mongodb:
+    image: mongo:7
+    container_name: semicolon-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: log_service
+    volumes:
+      - mongodb_data:/data/db
+      - ./monitoring/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - team05-network
+
+# 영구 볼륨 정의
+volumes:
+  prometheus_data:
+  grafana_data:
+  mongodb_data:
+    driver: local
+
+# 네트워크 정의
+networks:
+  team05-network:
+    external: true

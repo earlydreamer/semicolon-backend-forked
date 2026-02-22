@@ -57,24 +57,32 @@ public final class CartApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "장바구니의 상품 삭제",
-            description = "장바구니에서 특정 상품을 삭제합니다.",
+            summary = "선택된 장바구니 항목 삭제",
+            description = "요청 바디로 전달된 `cartIds`에 해당하는 장바구니 항목들을 한 번에 삭제합니다.\n예: { \"cartIds\": [1, 2, 3] }",
             responses = {
                     @ApiResponse(
                             responseCode = "204",
-                            description = "장바구니 상품 삭제 성공"
+                            description = "선택된 장바구니 항목 삭제 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청(예: cartsIds가 비어있거나 형식 오류)",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(value = "{\"message\": \"잘못된 요청입니다.\"}")
+                            )
                     ),
                     @ApiResponse(
                             responseCode = "404",
-                            description = "장바구니 상품을 찾을 수 없음",
+                            description = "삭제할 장바구니 항목을 찾을 수 없음",
                             content = @Content(
                                     mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\": \"해당 장바구니 상품을 찾을 수 없습니다.\"}")
+                                    examples = @ExampleObject(value = "{\"message\": \"삭제할 장바구니 항목을 찾을 수 없습니다.\"}")
                             )
                     )
             }
     )
-    public @interface DeleteCartItem {
+    public @interface DeleteCartItems {
     }
 
     @Documented
@@ -98,6 +106,54 @@ public final class CartApiDocs {
             }
     )
     public @interface FindMyCartList {
+    }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(
+            summary = "내부용: 특정 유저 장바구니 조회",
+            description = """
+                    AI Tool 추천을 위한 서버 간 내부 통신 전용 API입니다.
+                    인증된 사용자 본인만 조회하는 /me 대신, userUuid로 장바구니를 조회합니다.
+                    ※ 외부 노출 금지(Internal 전용)
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "장바구니 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            name = "Internal Cart List",
+                                            value = """
+                                                    {
+                                                      "items": [
+                                                        {
+                                                          "cartId": 1,
+                                                          "productUuid": "550e8400-e29b-41d4-a716-446655440000",
+                                                          "productTitle": "캠핑 의자",
+                                                          "productPrice": 35000,
+                                                          "saleStatus": "ON_SALE",
+                                                          "thumbnailUrl": "https://example.com/thumb.jpg"
+                                                        }
+                                                      ]
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청(예: UUID 형식 오류)",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(value = "{\"message\": \"잘못된 요청입니다.\"}")
+                            )
+                    )
+            }
+    )
+    public @interface FindCartListByUserUuid {
     }
 
     @Documented

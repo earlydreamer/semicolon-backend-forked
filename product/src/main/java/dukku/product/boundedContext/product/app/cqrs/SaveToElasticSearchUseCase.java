@@ -72,7 +72,7 @@ public class SaveToElasticSearchUseCase {
 
         // 전체 저장은 Repository가 편합니다.
         productSearchRepository.save(document);
-        log.info("Full Sync Completed: {}", product.getId());
+        log.info("전체 동기화 완료: 제품 ID={}", product.getId());
     }
 
     // [Case 2] 부분 업데이트 (ElasticsearchOperations 사용)
@@ -105,7 +105,7 @@ public class SaveToElasticSearchUseCase {
                 elasticsearchOperations.getIndexCoordinatesFor(ProductDocument.class)
         );
 
-        log.info("Partial Sync Completed: {}", product.getId());
+        log.info("부분 동기화 완료: 제품 ID={}", product.getId());
     }
 
     private String getThumbnailUrl(Product product) {

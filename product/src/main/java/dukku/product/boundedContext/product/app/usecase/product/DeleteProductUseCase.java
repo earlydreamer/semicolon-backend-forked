@@ -1,7 +1,10 @@
 package dukku.product.boundedContext.product.app.usecase.product;
 
 import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.product.dto.product.ProductPayload;
+import dukku.common.shared.product.event.ProductSyncEvent;
 import dukku.common.shared.product.exception.ProductUnauthorizedException;
+import dukku.common.shared.product.type.ProductEventType;
 import dukku.product.boundedContext.product.app.support.ProductSupport;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.global.event.ProductDeletedEvent;
@@ -11,9 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static dukku.product.boundedContext.product.entity.Product.toProductPayload;
+
 @Component
 @RequiredArgsConstructor
 public class DeleteProductUseCase {
+    private static final ProductEventType PRODUCT_EVENT_TYPE = ProductEventType.DELETED;
+
     private final ProductSupport productSupport;
     private final EventPublisher eventPublisher;
 
@@ -28,5 +35,8 @@ public class DeleteProductUseCase {
         product.delete();
 
         eventPublisher.publish(new ProductDeletedEvent(product.getId()));
+
+        ProductPayload payload = toProductPayload(product, PRODUCT_EVENT_TYPE);
+        eventPublisher.publish(new ProductSyncEvent(payload));
     }
 }

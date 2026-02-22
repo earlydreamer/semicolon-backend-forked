@@ -7,6 +7,7 @@ import dukku.auth.boundedContext.auth.infra.UserClient;
 import dukku.auth.boundedContext.auth.jwt.AuthTokenIssuer;
 import dukku.common.global.exception.UnauthorizedException;
 import dukku.common.shared.user.dto.UserVerificationResponse;
+import dukku.common.shared.user.type.SocialProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,15 @@ public class AuthService {
 
     public TokenResponse login(LoginRequest request) {
         UserVerificationResponse user = userClient.verifyUser(request.getEmail(), request.getPassword());
+        return issueTokens(user);
+    }
 
+    public TokenResponse loginWithGoogle(String email, String nickname) {
+        UserVerificationResponse user = userClient.upsertSocialUser(SocialProvider.GOOGLE, email, nickname);
+        return issueTokens(user);
+    }
+
+    private TokenResponse issueTokens(UserVerificationResponse user) {
         String accessToken = authTokenIssuer.createAccessToken(user.getUserUuid(), user.getRole().name());
         String refreshToken = authTokenIssuer.createRefreshToken(user.getUserUuid(), user.getRole().name());
 

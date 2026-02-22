@@ -13,6 +13,7 @@ import dukku.common.shared.user.exception.UserWithdrawRestoreNotAllowedException
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,6 +42,9 @@ public class User extends SourceUser {
     @Convert(converter = AesGcmConverter.class)
     @Column(name = "withdrawal_nickname_backup", length = 100)
     private String withdrawalNicknameBackup;
+
+    @OneToMany(mappedBy = "user")
+    private List<Address> addresses = new ArrayList<>();
 
 
     public static User createUser(UserRegisterRequest req, Role role, String encodedPassword) {
@@ -115,6 +121,7 @@ public class User extends SourceUser {
                 user.getNickname(),
                 user.getRole(),
                 user.getStatus(),
+                user.getStatus().getLabel(),
                 user.getCreatedAt()
         );
     }

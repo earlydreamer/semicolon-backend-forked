@@ -51,7 +51,7 @@ public class DepositHistoryResponse {
     @NoArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ReferenceInfo {
-        private UUID paymentId;
+        private UUID paymentUuid;
         private UUID orderUuid;
         private UUID settlementUuid;
     }

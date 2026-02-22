@@ -1,8 +1,6 @@
 # Redpanda Kafka 로컬 개발 환경
 # MSA 로깅 시스템을 위한 Kafka 브로커 + Console UI
 # 사용법: docker-compose -f docker-compose.local.redpanda.yml up -d
-version: "3.8"
-
 services:
   # ============================================
   # Redpanda Kafka Broker
@@ -93,5 +91,5 @@ volumes:
 # 네트워크 (기존 서비스와 연결)
 # ============================================
 networks:
-  semicolon-network:
-    driver: bridge
+  team05-network:
+    external: true

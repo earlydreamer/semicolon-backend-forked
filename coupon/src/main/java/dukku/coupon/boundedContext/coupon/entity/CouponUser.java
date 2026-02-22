@@ -1,6 +1,6 @@
 package dukku.coupon.boundedContext.coupon.entity;
 
-import dukku.common.global.exception.ConflictException;
+import dukku.common.shared.coupon.exception.CouponUseNotAllowedException;
 import dukku.common.shared.coupon.type.CouponUserStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -14,7 +14,10 @@ import java.util.UUID;
 @Table(
         name = "coupon_users",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"user_uuid", "coupon_id"})
+                @UniqueConstraint(name = "uk_user_coupon", columnNames = {"user_uuid", "coupon_id"})
+        },
+        indexes = {
+                @Index(name = "idx_coupon_users_query", columnList = "user_uuid, coupon_id")
         }
 )
 @Getter
@@ -56,21 +59,25 @@ public class CouponUser {
     public static CouponUser issue(UUID userUuid, Coupon coupon) {
         coupon.issue(); // 쿠폰 수량 차감
 
-        CouponUser cu = new CouponUser();
-        cu.userUuid = userUuid;
-        cu.coupon = coupon;
-        cu.status = CouponUserStatus.AVAILABLE;
-        cu.issuedAt = LocalDateTime.now();
-        return cu;
+        return create(userUuid, coupon);
     }
 
     /* 사용 */
     public void use() {
         if (status != CouponUserStatus.AVAILABLE) {
-            throw new ConflictException("사용할 수 없는 쿠폰");
+            throw new CouponUseNotAllowedException();
         }
         this.status = CouponUserStatus.USED;
         this.usedAt = LocalDateTime.now();
+    }
+
+    /* 결제 실패 시 쿠폰 복구 */
+    public void rollbackUseForPayment() {
+        if (status != CouponUserStatus.USED) {
+            return;
+        }
+        this.status = CouponUserStatus.AVAILABLE;
+        this.usedAt = null;
     }
 
     /* 만료 */

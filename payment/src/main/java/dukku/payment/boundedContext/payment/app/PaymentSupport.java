@@ -4,23 +4,28 @@ import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.payment.boundedContext.payment.entity.PaymentHistory;
 import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
 import dukku.payment.boundedContext.payment.entity.Refund;
+import dukku.payment.boundedContext.payment.entity.RefundItem;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.payment.boundedContext.payment.out.PaymentHistoryRepository;
 import dukku.payment.boundedContext.payment.out.PaymentOrderItemRepository;
 import dukku.payment.boundedContext.payment.out.PaymentRepository;
 import dukku.payment.boundedContext.payment.out.RefundRepository;
+import dukku.payment.boundedContext.payment.out.RefundItemRepository;
 import dukku.common.shared.payment.exception.PaymentNotFoundException;
+import dukku.common.shared.payment.type.RefundStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
-import org.springframework.stereotype.Component;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.CannotAcquireLockException;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.ToLongFunction;
 
 /**
  * Payment 도메인 공통 지원 클래스
@@ -36,6 +41,7 @@ public class PaymentSupport {
     private final PaymentRepository paymentRepository;
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final RefundRepository refundRepository;
+    private final RefundItemRepository refundItemRepository;
     private final PaymentOrderItemRepository paymentOrderItemRepository;
 
     // === Payment 관련 ===
@@ -49,17 +55,17 @@ public class PaymentSupport {
     }
 
     /**
-     * 결제 아이템 조회 (Payment ID + Order Item UUID)
-     */
-    public Optional<PaymentOrderItem> findPaymentOrderItem(int paymentId, UUID orderItemUuid) {
-        return paymentOrderItemRepository.findByPaymentIdAndOrderItemUuid(paymentId, orderItemUuid);
-    }
-
-    /**
      * UUID로 결제 조회 (Optional)
      */
     public Optional<Payment> findPaymentByUuidOptional(UUID uuid) {
         return paymentRepository.findByUuid(uuid);
+    }
+
+    /**
+     * PG 결제키로 결제 조회
+     */
+    public Optional<Payment> findPaymentByPgPaymentKey(String pgPaymentKey) {
+        return paymentRepository.findByPgPaymentKey(pgPaymentKey);
     }
 
     /**
@@ -77,17 +83,26 @@ public class PaymentSupport {
     }
 
     /**
-     * PG 결제키로 결제 조회
+     * 결제 아이템 조회 (Payment ID + Order Item UUID)
      */
-    public Optional<Payment> findPaymentByPgPaymentKey(String pgPaymentKey) {
-        return paymentRepository.findByPgPaymentKey(pgPaymentKey);
+    public Optional<PaymentOrderItem> findPaymentOrderItem(int paymentId, UUID orderItemUuid) {
+        return paymentOrderItemRepository.findByPaymentIdAndOrderItemUuid(paymentId, orderItemUuid);
+    }
+
+    /**
+     * 주문 상품 UUID로 결제 정보 조회
+     */
+    public Optional<Payment> findPaymentByOrderItemUuid(UUID orderItemUuid) {
+        return paymentOrderItemRepository.findByOrderItemUuid(orderItemUuid)
+                .map(PaymentOrderItem::getPayment);
     }
 
     /**
      * 결제 저장 (재시도 적용)
      */
-    @Retryable(retryFor = {DataAccessException.class,
-            CannotAcquireLockException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = { DataAccessException.class,
+            CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Transactional
     public Payment savePayment(Payment payment) {
         return paymentRepository.save(payment);
     }
@@ -103,10 +118,10 @@ public class PaymentSupport {
      * @param originPg      변경 전 PG 금액
      * @param originDeposit 변경 전 예치금액
      */
-    @Retryable(retryFor = {DataAccessException.class,
-            CannotAcquireLockException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = { DataAccessException.class,
+            CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     public void createHistory(Payment payment, PaymentHistoryType type,
-                              PaymentStatus originStatus, Long originPg, Long originDeposit) {
+            PaymentStatus originStatus, Long originPg, Long originDeposit) {
         PaymentHistory history = PaymentHistory.create(
                 payment,
                 type,
@@ -139,8 +154,9 @@ public class PaymentSupport {
     /**
      * 환불 저장 (재시도 적용)
      */
-    @Retryable(retryFor = {DataAccessException.class,
-            CannotAcquireLockException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(retryFor = { DataAccessException.class,
+            CannotAcquireLockException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Transactional
     public Refund saveRefund(Refund refund) {
         return refundRepository.save(refund);
     }
@@ -150,5 +166,33 @@ public class PaymentSupport {
      */
     public Optional<Refund> findRefundByIdempotencyKey(String idempotencyKey) {
         return refundRepository.findByIdempotencyKey(idempotencyKey);
+    }
+
+    /**
+     * UUID로 환불 조회 (Optional)
+     */
+    public Optional<Refund> findRefundByUuid(UUID refundUuid) {
+        return refundRepository.findByUuid(refundUuid);
+    }
+
+    /**
+     * 주문상품 기준 누적 환불 금액 조회(취소건 제외)
+     */
+    public Long getRefundedAmountByPaymentOrderItem(int paymentOrderItemId) {
+        return getRefundAmount(paymentOrderItemId, RefundItem::getRefundAmount);
+    }
+
+    /**
+     * 주문상품 기준 누적 환불 예치금 조회(취소건 제외)
+     */
+    public Long getRefundedDepositAmountByPaymentOrderItem(int paymentOrderItemId) {
+        return getRefundAmount(paymentOrderItemId, RefundItem::getRefundDeposit);
+    }
+
+    private Long getRefundAmount(int paymentOrderItemId, ToLongFunction<RefundItem> amountExtractor) {
+        return refundItemRepository.findByPaymentOrderItemId(paymentOrderItemId).stream()
+                .filter(item -> item.getRefund().getRefundStatus() != RefundStatus.CANCELED)
+                .mapToLong(amountExtractor)
+                .sum();
     }
 }

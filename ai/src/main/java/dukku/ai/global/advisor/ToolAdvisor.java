@@ -13,13 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ToolAdvisor implements BaseAdvisor {
 
-    private static final String TOOL_PROMPT = """
-
-            필요한 경우 제공된 Tool을 활용하여 작업을 수행하세요.
-            각 단계에서 필요한 Tool을 순서대로 호출하고, 결과를 기반으로 다음 단계를 진행하세요.
-            Tool 호출 결과를 사용자에게 자연스럽게 설명하세요.
-            """;
-
     private final int order;
 
     @Override

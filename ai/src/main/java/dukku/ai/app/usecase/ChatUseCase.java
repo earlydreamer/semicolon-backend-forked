@@ -1,5 +1,7 @@
 package dukku.ai.app.usecase;
 
+import java.util.UUID;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,13 +15,13 @@ public class ChatUseCase {
         this.chatClient = chatClient;
     }
 
-    public Flux<String> chat(String conversationId, Long userId, String userMessage) {
+    public Flux<String> chat(String conversationId, UUID userUuid, String userMessage) {
         return chatClient.prompt()
                 .user(userMessage)
                 .advisors(a -> {
                     a.param("chat_memory_conversation_id", conversationId);
-                    if (userId != null) {
-                        a.param("user_id", userId);
+                    if (userUuid != null) {
+                        a.param("user_id", userUuid);
                     }
                     if (userMessage != null) {
                         a.param("user_message", userMessage);

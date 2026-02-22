@@ -3,7 +3,10 @@ package dukku.product.boundedContext.product.app.usecase.product;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.product.dto.product.ProductCreateRequest;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
+import dukku.common.shared.product.dto.product.ProductPayload;
+import dukku.common.shared.product.event.ProductSyncEvent;
 import dukku.common.shared.product.exception.ProductCategoryNotFoundException;
+import dukku.common.shared.product.type.ProductEventType;
 import dukku.product.boundedContext.product.app.support.ProductMapper;
 import dukku.product.boundedContext.product.app.support.ProductSupport;
 import dukku.product.boundedContext.product.app.support.ProductTagSupport;
@@ -19,9 +22,13 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
 
+import static dukku.product.boundedContext.product.entity.Product.toProductPayload;
+
 @Component
 @RequiredArgsConstructor
 public class CreateProductUseCase {
+    private static final ProductEventType PRODUCT_EVENT_TYPE = ProductEventType.CREATED;
+
     private final ProductSupport productSupport;
     private final ProductTagSupport productTagSupport;
     private final CategoryRepository categoryRepository;
@@ -55,6 +62,9 @@ public class CreateProductUseCase {
 
         Product savedProduct = productRepository.save(product);
         eventPublisher.publish(new ProductCreatedEvent(savedProduct.getId()));
+
+        ProductPayload payload = toProductPayload(savedProduct, PRODUCT_EVENT_TYPE);
+        eventPublisher.publish(new ProductSyncEvent(payload));
 
         return ProductMapper.toDetail(savedProduct);
     }

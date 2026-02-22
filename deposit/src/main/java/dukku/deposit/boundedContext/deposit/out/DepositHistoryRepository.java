@@ -18,6 +18,8 @@ public interface DepositHistoryRepository
 
     List<DepositHistory> findByOrderItemUuid(UUID orderItemUuid);
 
+    void deleteByUserUuid(UUID userUuid);
+
     /**
      * 특정 orderItemUuid(또는 settlementUuid)로 이미 처리된 이력이 있는지 확인 (멱등성 체크)
      */

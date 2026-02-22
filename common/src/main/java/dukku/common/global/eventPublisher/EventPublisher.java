@@ -1,5 +1,7 @@
 package dukku.common.global.eventPublisher;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dukku.common.global.event.DomainEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,41 +10,86 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+/**
+ * 도메인 이벤트 발행기
+ * KafkaTemplate<String, String> 기반 이벤트 전송
+ * 트랜잭션 활성 시 Commit 이후 전송되도록 동기화 처리
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class EventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
+    /**
+     * 이벤트 발행
+     * 트랜잭션 활성 상태 시 afterCommit 동기화를 통한 데이터 정합성 보장
+     */
     public void publish(DomainEvent event) {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    send(event);
-                }
-            });
-        } else {
-            send(event);
+        boolean txActive = TransactionSynchronizationManager.isActualTransactionActive();
+        boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
+
+        if (txActive && syncActive) {
+            try {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        send(event);
+                    }
+                });
+                return;
+            } catch (IllegalStateException e) {
+                log.debug("트랜잭션 동기화 등록을 건너뛰고 즉시 전송합니다. topic={}, reason={}",
+                        event.getTopic(), e.getMessage());
+            }
         }
+
+        send(event);
+    }
+
+    /**
+     * 트랜잭션 커밋 이후에만 이벤트를 발행하도록 보장하는 명시적 API
+     * 현재 스레드에 활성 트랜잭션과 동기화가 존재하면, 커밋이 완료된 후에 이벤트를 전송합니다.
+     * 트랜잭션이나 동기화가 없을 경우, 즉시 전송
+     */
+    public void publishAfterCommit(DomainEvent event) {
+        boolean txActive = TransactionSynchronizationManager.isActualTransactionActive();
+        boolean syncActive = TransactionSynchronizationManager.isSynchronizationActive();
+
+        if (txActive && syncActive) {
+            try {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        send(event);
+                    }
+                });
+                return;
+            } catch (IllegalStateException e) {
+                log.debug("동기화 등록을 생략했습니다. 즉시 전송합니다. topic={}, reason={}",
+                        event.getTopic(), e.getMessage());
+            }
+        }
+        // 트랜잭션이 활성화되어 있지 않거나 동기화 등록에 실패한 경우 즉시 전송
+        send(event);
     }
 
     private void send(DomainEvent event) {
         try {
             String eventJson = objectMapper.writeValueAsString(event);
-            log.info("Publishing event to Kafka: topic={}, key={}", event.getTopic(), event.getKey());
+            log.info("Kafka 이벤트 발행 시작: topic={}, key={}", event.getTopic(), event.getKey());
             kafkaTemplate.send(event.getTopic(), event.getKey(), eventJson)
                     .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Failed to publish event: {}", event, ex);
-                    } else {
-                        log.debug("Event published successfully: offset={}", result.getRecordMetadata().offset());
-                    }
-                });
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            log.error("Failed to serialize event: {}", event, e);
+                        if (ex != null) {
+                            log.error("Kafka 이벤트 발행 실패: event={}", event, ex);
+                        } else {
+                            log.debug("Kafka 이벤트 발행 성공: offset={}", result.getRecordMetadata().offset());
+                        }
+                    });
+        } catch (JsonProcessingException e) {
+            log.error("이벤트 직렬화 실패: event={}", event, e);
         }
     }
 }

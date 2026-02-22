@@ -27,8 +27,8 @@ public class RefundItem extends BaseIdAndUUIDAndTime {
     @JoinColumn(nullable = false)
     private Refund refund;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_order_item_id", nullable = false)
     private PaymentOrderItem paymentOrderItem;
 
     @Column(nullable = false, comment = "환불 금액 (결제주문상품 금액 - 쿠폰 할인액)")

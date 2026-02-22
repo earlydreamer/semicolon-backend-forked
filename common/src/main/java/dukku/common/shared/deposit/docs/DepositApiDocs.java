@@ -74,7 +74,7 @@ public final class DepositApiDocs {
                             "amount": -4500,
                             "balanceAfter": 12500,
                             "ref": {
-                              "paymentId": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
+                              "paymentUuid": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
                               "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
                             },
                             "createdAt": "2026-01-15T13:58:00+09:00"
@@ -138,7 +138,7 @@ public final class DepositApiDocs {
                             "amount": -4500,
                             "balanceAfter": 12500,
                             "ref": {
-                              "paymentId": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
+                              "paymentUuid": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
                               "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
                             },
                             "createdAt": "2026-01-15T13:58:00+09:00"
@@ -177,7 +177,7 @@ public final class DepositApiDocs {
                             "amount": -4500,
                             "balanceAfter": 12500,
                             "ref": {
-                              "paymentId": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
+                              "paymentUuid": "9a5be1c6-735e-4f69-a35f-7a9f6b0a9a9a",
                               "orderUuid": "b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11"
                             },
                             "createdAt": "2026-01-15T13:58:00+09:00"

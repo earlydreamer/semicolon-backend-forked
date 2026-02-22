@@ -56,8 +56,8 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
     @Column(nullable = false, comment = "결제 시점 단가")
     private Long price;
 
-    @Column(nullable = false, comment = "상품별 예치금 사용액 (2026-01-24 추가)")
-    private Long paymentDeposit; // 2026-01-24 추가
+    @Column(nullable = false, comment = "상품별 예치금 사용액")
+    private Long paymentDeposit;
 
     /**
      * 결제 주문 상품 스냅샷 생성
@@ -84,7 +84,7 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
                 .price(price)
                 .paymentCoupon(paymentCoupon)
                 .sellerUuid(sellerUuid)
-                .paymentDeposit(paymentDeposit) // 2026-01-24 추가
+                .paymentDeposit(paymentDeposit)
                 .build();
     }
 
@@ -101,7 +101,7 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
                 .price(this.price)
                 .paymentCoupon(this.paymentCoupon)
                 .sellerUuid(this.sellerUuid)
-                .paymentDeposit(this.paymentDeposit) // 2026-01-24 추가
+                .paymentDeposit(this.paymentDeposit)
                 .build();
     }
 }

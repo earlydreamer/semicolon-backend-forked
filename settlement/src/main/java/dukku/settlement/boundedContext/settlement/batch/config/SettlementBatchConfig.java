@@ -2,6 +2,7 @@ package dukku.settlement.boundedContext.settlement.batch.config;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.settlement.boundedContext.settlement.entity.Settlement;
+import dukku.settlement.boundedContext.settlement.batch.listener.CreateSettlementSkipListener;
 import dukku.settlement.boundedContext.settlement.batch.listener.DepositChargeSkipListener;
 import dukku.settlement.boundedContext.settlement.batch.listener.SettlementBatchListener;
 import dukku.settlement.boundedContext.settlement.batch.processor.CreateSettlementProcessor;
@@ -36,8 +37,9 @@ import org.springframework.dao.DataAccessException;
  *  ├─ Step 1: createSettlementStep (정산 대상 생성)
  *  │   - Order BC API 호출 → 당일 확정된 OrderItem 조회 → Settlement 생성
  *  │
- *  ├─ Step 2: validateSettlementStep (금액 검증)
- *  │   - PENDING Settlement 조회 → 금액 검증 → PROCESSING 상태
+ *  ├─ Step 2: validateSettlementStep (이상거래 탐지 + 금액 검증)
+ *  │   - PENDING Settlement 조회 → 이상거래 탐지 → 금액 검증 → PROCESSING 상태
+ *  │   - CRITICAL 이상거래 탐지 시 FAILED 처리 (PROCESSING 전이하지 않음)
  *  │
  *  └─ Step 3: depositChargeStep (예치금 충전)
  *      - PROCESSING Settlement 조회 → Deposit API 동기 호출 → SUCCESS 상태
@@ -59,6 +61,7 @@ public class SettlementBatchConfig {
 
     // Listeners
     private final SettlementBatchListener batchListener;
+    private final CreateSettlementSkipListener createSettlementSkipListener;
     private final DepositChargeSkipListener depositChargeSkipListener;
 
     // Step 1: 정산 대상 생성
@@ -139,6 +142,7 @@ public class SettlementBatchConfig {
                 .retry(DataAccessException.class)
                 .retryLimit(batchProperties.getRetryLimit())
                 // Listener
+                .skipListener(createSettlementSkipListener)
                 .listener(batchListener)
                 .build();
     }
@@ -147,6 +151,7 @@ public class SettlementBatchConfig {
     /**
      * Step 2: 금액 검증
      * - PENDING 상태의 Settlement 조회 (정산 예약일 <= 현재 시간)
+     * - 이상거래 탐지 (CRITICAL 시 FAILED 처리)
      * - 금액 유효성 검증
      * - PENDING → PROCESSING 상태 전이
      */
@@ -169,8 +174,8 @@ public class SettlementBatchConfig {
                 .retry(DataAccessException.class)
                 .retryLimit(batchProperties.getRetryLimit())
                 // Listener
+                .skipListener(depositChargeSkipListener)
                 .listener(batchListener)
-                .listener(depositChargeSkipListener)
                 .build();
     }
 
@@ -205,8 +210,8 @@ public class SettlementBatchConfig {
                 .retry(DataAccessException.class)
                 .retryLimit(batchProperties.getRetryLimit())
                 // Listener
+                .skipListener(depositChargeSkipListener)
                 .listener(batchListener)
-                .listener(depositChargeSkipListener)
                 .build();
     }
 

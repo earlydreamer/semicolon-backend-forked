@@ -1,5 +1,7 @@
 package dukku.ai.global.advisor;
 
+import java.util.UUID;
+
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
@@ -22,25 +24,25 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
 
     @Override
     public ChatClientRequest before(ChatClientRequest request, AdvisorChain chain) {
-        Object userIdObj = request.context().get(USER_ID_KEY);
-        if (userIdObj == null) {
+        Object userUuidObj = request.context().get(USER_ID_KEY);
+        if (userUuidObj == null) {
             return request;
         }
 
-        Long userId = Long.valueOf(userIdObj.toString());
+        UUID userUuid = UUID.fromString(userUuidObj.toString());
         UserMessage userMessage = request.prompt().getUserMessage();
         if (userMessage == null) {
             return request;
         }
 
         String memoryContext = memoryRetrievalService.retrieveMemoryContext(
-                userId, userMessage.getText());
+                userUuid, userMessage.getText());
 
         if (memoryContext.isEmpty()) {
             return request;
         }
 
-        log.debug("장기 기억 주입: userId={}, context length={}", userId, memoryContext.length());
+        log.debug("장기 기억 주입: userUuid={}, context length={}", userUuid, memoryContext.length());
 
         Prompt augmented = request.prompt().augmentSystemMessage(memoryContext);
         return request.mutate().prompt(augmented).build();

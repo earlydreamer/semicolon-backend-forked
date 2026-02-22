@@ -32,6 +32,6 @@ public class ConfirmProductSaleUseCase {
             eventPublisher.publish(new ProductUpdatedEvent(product.getId(), false));
         }
 
-        log.info("Sale Confirmed for products: {}", productUuids);
+        log.info("판매 확정 처리 완료: 제품들={}", productUuids);
     }
 }

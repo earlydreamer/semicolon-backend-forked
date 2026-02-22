@@ -1,8 +1,8 @@
 package dukku.product.boundedContext.product.app.cqrs;
 
-import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.common.shared.product.dto.cqrs.ProductStatDto;
 import dukku.common.shared.product.event.ProductStatsBulkUpdatedEvent;
+import dukku.product.boundedContext.product.out.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,7 +41,7 @@ public class SyncProductStatsUseCase {
         // 4. 정리
         redisSupport.cleanupDirtyIds(dirtyIdSet);
 
-        log.info("Synced stats for {} products", productIds.size());
+        log.info("{}개의 상품 통계 동기화 완료", productIds.size());
     }
 
     private void processUpdates(List<Integer> productIds, List<Object> statsValues) {

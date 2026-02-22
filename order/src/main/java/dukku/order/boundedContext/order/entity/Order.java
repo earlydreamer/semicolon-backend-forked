@@ -49,11 +49,13 @@ public class Order extends BaseIdAndUUIDAndTime {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    // 주문 항목 추가와 주문-상품 연관관계 동기화
     public void addOrderItem(OrderItem orderItem) {
         this.orderItems.add(orderItem);
         orderItem.setOrder(this);
     }
 
+    // 주문 생성 요청 기준 총 주문 금액 계산, 환불 누적 0 초기화
     public static Order createOrder(OrderCreateRequest request, UUID userUuid) {
         int totalAmount = request.getItems().stream()
                 .mapToInt(OrderCreateRequest.OrderItemCreateRequest::getProductPrice)
@@ -69,10 +71,12 @@ public class Order extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
+    // 주문 상태 전환
     public void updateOrderStatus(OrderStatus status) {
         this.status = status;
     }
 
+    // 배송지 정보 변경 가능 조건 검사 후 사용자 배송 정보 반영
     public void updateOrderForUser(String address, String recipient, String contactNumber) {
         if (!isShipped()) {
             throw new ConflictException("이미 배송 준비 중이거나 완료된 상품이 있어 배송지를 변경할 수 없습니다.");
@@ -83,10 +87,16 @@ public class Order extends BaseIdAndUUIDAndTime {
         this.contactNumber = contactNumber;
     }
 
+    // 환불 누적치 갱신(음수/0 무시, 총액 초과분은 총액 상한)
     public void updateRefundedAmount(int refundedAmount) {
-        this.refundedAmount = refundedAmount;
+        if (refundedAmount <= 0) {
+            return;
+        }
+        long accumulated = (long) this.refundedAmount + refundedAmount;
+        this.refundedAmount = (int) Math.min(accumulated, this.totalAmount);
     }
 
+    // 주문 상세 응답 DTO 변환
     public static OrderResponse toOrderResponse(Order order) {
         return OrderResponse.builder()
                 .orderUuid(order.getUuid())
@@ -104,18 +114,21 @@ public class Order extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
+    // 주문 항목 상태가 모두 변경 가능이면 true
     public boolean isShipped() {
         return orderItems.stream()
                 .map(OrderItem::getStatus)
                 .allMatch(OrderItemStatus::canChangeShippingInfo);
     }
 
+    // 주문 상품 UUID 목록 추출
     public List<UUID> getProductUuids() {
         return orderItems.stream()
                 .map(BaseIdAndUUIDAndTime::getUuid)
                 .toList();
     }
 
+    // 주문 목록 응답 DTO 변환
     public static OrderListResponse fromOrderListResponse(Order order) {
         return OrderListResponse.builder()
                 .orderUuid(order.getUuid())
@@ -128,6 +141,7 @@ public class Order extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
+    // 주문 상세 항목 응답 DTO 변환
     public static OrderResponse.OrderItemResponse fromOrderItemResponse(OrderItem item) {
         return OrderResponse.OrderItemResponse.builder()
                 .productUuid(item.getProductUuid())
@@ -140,6 +154,7 @@ public class Order extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
+    // 주문 목록용 항목 응답 DTO 변환
     public static OrderListResponse.SimpleOrderItemResponse fromSimpleOrderItemResponse(OrderItem item) {
         return OrderListResponse.SimpleOrderItemResponse.builder()
                 .productUuid(item.getProductUuid())

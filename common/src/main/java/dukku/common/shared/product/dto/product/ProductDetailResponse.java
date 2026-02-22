@@ -16,6 +16,7 @@ import java.util.UUID;
 public class ProductDetailResponse {
 
     private UUID productUuid;
+    private UUID sellerUuid;
     private String title;
     private String description;
     private Long price;

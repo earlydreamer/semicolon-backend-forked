@@ -1,8 +1,8 @@
 package dukku.product.boundedContext.product.app.cqrs;
 
+import dukku.common.shared.product.exception.ProductNotFoundException;
 import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import dukku.product.boundedContext.product.out.ProductSearchRepository;
-import dukku.common.shared.product.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +24,6 @@ public class DeleteProductSyncUseCase {
         // 4. Elasticsearch 저장 (Upsert: 기존 ID가 있으면 덮어쓰기)
         productSearchRepository.save(document);
 
-        log.info("Successfully synced product to ES. ID: {}, Status: {}", productId, document.getVisibilityStatus());
+        log.info("제품을 ES에 성공적으로 동기화했습니다. ID: {}, 상태: {}", productId, document.getVisibilityStatus());
     }
 }

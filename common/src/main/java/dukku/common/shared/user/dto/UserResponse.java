@@ -14,11 +14,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @ToString
 public class UserResponse {
-    private UUID userUuid; // uuid
-    private String email; // 이메일
-    private String nickname; // 이름
-    private Role role; // 권한
-    private UserStatus status; // 계정 상태
+    private UUID userUuid;
+    private String email;
+    private String nickname;
+    private Role role;
+    private UserStatus status;
+    private String statusLabel;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt; // 생성 날짜
+    private LocalDateTime createdAt;
 }

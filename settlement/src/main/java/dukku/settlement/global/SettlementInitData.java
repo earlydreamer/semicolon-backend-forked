@@ -71,18 +71,18 @@ public class SettlementInitData {
             @Transactional
             public void run(String... args) throws Exception {
                 if (settlementRepository.count() > 0) {
-                    log.info("✅ [SettlementInitData] 이미 데이터가 존재합니다. 초기화 건너뜀.");
+                    log.info(" [SettlementInitData] 이미 데이터가 존재합니다. 초기화 건너뜀.");
                     return;
                 }
 
-                log.info("🚀 [SettlementInitData] 테스트 데이터 생성 시작...");
+                log.info(" [SettlementInitData] 테스트 데이터 생성 시작...");
 
                 LocalDateTime now = LocalDateTime.now();
                 LocalDateTime pastReservation = now.minusDays(1); // 과거 (처리 가능)
                 LocalDateTime futureReservation = now.plusMonths(1).withDayOfMonth(1); // 미래 (다음 달 1일)
 
                 // ===== PENDING 상태 (12건) =====
-                log.info("📝 PENDING 상태 정산 생성 중...");
+                log.info(" PENDING 상태 정산 생성 중...");
 
                 // 과거 예약일 - 처리 대기 중 (8건)
                 createSettlement(settlementRepository, SETTLEMENT_PENDING_SAMPLE, SELLER_1, BUYER_1, DEPOSIT_1, 100000L, pastReservation);
@@ -101,7 +101,7 @@ public class SettlementInitData {
                 createSettlement(settlementRepository, SELLER_1, BUYER_2, DEPOSIT_1, 540000L, futureReservation);
 
                 // ===== PROCESSING 상태 (8건) =====
-                log.info("⚙️ PROCESSING 상태 정산 생성 중...");
+                log.info(" PROCESSING 상태 정산 생성 중...");
 
                 Settlement proc1 = createSettlement(settlementRepository, SETTLEMENT_PROCESSING_SAMPLE, SELLER_1, BUYER_3, DEPOSIT_1, 120000L, pastReservation);
                 proc1.startProcessing();
@@ -128,7 +128,7 @@ public class SettlementInitData {
                 proc8.startProcessing();
 
                 // ===== SUCCESS 상태 (20건) =====
-                log.info("✅ SUCCESS 상태 정산 생성 중...");
+                log.info(" SUCCESS 상태 정산 생성 중...");
 
                 Settlement succ1 = createSettlement(settlementRepository, SETTLEMENT_SUCCESS_SAMPLE, SELLER_1, BUYER_4, DEPOSIT_1, 50000L, pastReservation.minusDays(5));
                 succ1.startProcessing();
@@ -211,7 +211,7 @@ public class SettlementInitData {
                 succ20.complete();
 
                 // ===== FAILED 상태 (5건) =====
-                log.info("❌ FAILED 상태 정산 생성 중...");
+                log.info(" FAILED 상태 정산 생성 중...");
 
                 Settlement fail1 = createSettlement(settlementRepository, SETTLEMENT_FAILED_SAMPLE, SELLER_1, BUYER_6, DEPOSIT_1, 300000L, pastReservation.minusDays(1));
                 fail1.startProcessing();
@@ -233,22 +233,73 @@ public class SettlementInitData {
                 fail5.startProcessing();
                 fail5.fail();
 
+                // ===== 이상거래 탐지 테스트용 PENDING (4건) =====
+                log.info(" 이상거래 탐지 테스트 데이터 생성 중...");
+
+                // 수수료 계산 오류 (FEE_CALCULATION_ERROR - HIGH): totalAmount != settlementAmount + feeAmount
+                UUID feeError1OrderId = UUID.randomUUID();
+                Settlement feeErr1 = Settlement.builder()
+                        .sellerUuid(SELLER_2).buyerUuid(BUYER_1)
+                        .paymentId(UUID.randomUUID()).orderId(feeError1OrderId).orderItemId(UUID.randomUUID())
+                        .depositId(DEPOSIT_2).totalAmount(300000L)
+                        .fee(DEFAULT_FEE_RATE).feeAmount(15000L).settlementAmount(280000L) // 280000+15000=295000 != 300000
+                        .settlementStatus(SettlementStatus.PENDING)
+                        .settlementReservationDate(pastReservation)
+                        .build();
+                settlementRepository.save(feeErr1);
+
+                UUID feeError2OrderId = UUID.randomUUID();
+                Settlement feeErr2 = Settlement.builder()
+                        .sellerUuid(SELLER_3).buyerUuid(BUYER_2)
+                        .paymentId(UUID.randomUUID()).orderId(feeError2OrderId).orderItemId(UUID.randomUUID())
+                        .depositId(DEPOSIT_3).totalAmount(500000L)
+                        .fee(DEFAULT_FEE_RATE).feeAmount(25000L).settlementAmount(470000L) // 470000+25000=495000 != 500000
+                        .settlementStatus(SettlementStatus.PENDING)
+                        .settlementReservationDate(pastReservation)
+                        .build();
+                settlementRepository.save(feeErr2);
+
+                // 중복 정산 (DUPLICATE_SETTLEMENT - CRITICAL): 같은 orderId로 2건
+                UUID duplicateOrderId = UUID.randomUUID();
+                Settlement dup1 = Settlement.builder()
+                        .sellerUuid(SELLER_1).buyerUuid(BUYER_3)
+                        .paymentId(UUID.randomUUID()).orderId(duplicateOrderId).orderItemId(UUID.randomUUID())
+                        .depositId(DEPOSIT_1).totalAmount(680000L)
+                        .fee(DEFAULT_FEE_RATE).feeAmount(34000L).settlementAmount(646000L)
+                        .settlementStatus(SettlementStatus.PENDING)
+                        .settlementReservationDate(pastReservation)
+                        .build();
+                settlementRepository.save(dup1);
+
+                Settlement dup2 = Settlement.builder()
+                        .sellerUuid(SELLER_1).buyerUuid(BUYER_3)
+                        .paymentId(UUID.randomUUID()).orderId(duplicateOrderId).orderItemId(UUID.randomUUID())
+                        .depositId(DEPOSIT_1).totalAmount(680000L)
+                        .fee(DEFAULT_FEE_RATE).feeAmount(34000L).settlementAmount(646000L)
+                        .settlementStatus(SettlementStatus.PENDING)
+                        .settlementReservationDate(pastReservation)
+                        .build();
+                settlementRepository.save(dup2);
+
                 long totalCount = settlementRepository.count();
-                log.info("✅ [SettlementInitData] 테스트 데이터 생성 완료. 총 {}건", totalCount);
-                log.info("  📊 상태별 분포:");
-                log.info("    - PENDING: 12건 (과거 8건, 미래 4건)");
+                log.info(" [SettlementInitData] 테스트 데이터 생성 완료. 총 {}건", totalCount);
+                log.info("   상태별 분포:");
+                log.info("    - PENDING: 16건 (정상 8건, 미래 4건, 이상거래 테스트 4건)");
                 log.info("    - PROCESSING: 8건");
                 log.info("    - SUCCESS: 20건");
                 log.info("    - FAILED: 5건");
+                log.info("   이상거래 테스트:");
+                log.info("    - 수수료 계산 오류 2건 (HIGH - FEE_CALCULATION_ERROR)");
+                log.info("    - 중복 정산 2건 (CRITICAL - DUPLICATE_SETTLEMENT, orderId: {})", duplicateOrderId);
                 log.info("");
-                log.info("  👥 판매자 정보:");
+                log.info("   판매자 정보:");
                 log.info("    - SELLER_1 (홍길동상점): {}", SELLER_1);
                 log.info("    - SELLER_2 (테크마스터): {}", SELLER_2);
                 log.info("    - SELLER_3 (소리사랑): {}", SELLER_3);
                 log.info("    - SELLER_4 (숲속의집): {}", SELLER_4);
                 log.info("    - SELLER_5 (나이스샷): {}", SELLER_5);
                 log.info("");
-                log.info("  🔍 Swagger 테스트용 UUID:");
+                log.info("   Swagger 테스트용 UUID:");
                 log.info("    - SUCCESS 샘플: {}", SETTLEMENT_SUCCESS_SAMPLE);
                 log.info("    - PROCESSING 샘플: {}", SETTLEMENT_PROCESSING_SAMPLE);
                 log.info("    - PENDING 샘플: {}", SETTLEMENT_PENDING_SAMPLE);
@@ -297,7 +348,7 @@ public class SettlementInitData {
                         .sellerUuid(sellerUuid)
                         .buyerUuid(buyerUuid)
                         .paymentId(UUID.randomUUID())
-                        .orderId(UUID.fromString("b2f0f6d3-9c4f-44d1-9f1f-8c2b3c7b1a11")) // orderUuid (Swagger 테스트용 고정)
+                        .orderId(UUID.randomUUID())
                         .orderItemId(UUID.randomUUID())
                         .depositId(depositId)
                         .totalAmount(totalAmount)

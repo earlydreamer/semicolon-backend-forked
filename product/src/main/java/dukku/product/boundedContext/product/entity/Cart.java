@@ -1,6 +1,5 @@
 package dukku.product.boundedContext.product.entity;
 
-import dukku.common.global.jpa.entity.BaseIdAndTime;
 import dukku.common.shared.product.dto.cart.CartDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,8 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
+
+import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(
@@ -28,9 +32,19 @@ import java.util.Comparator;
 )
 @Getter
 @SuperBuilder
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Cart extends BaseIdAndTime {
+public class Cart {
+    // updatedAt 필드 불필요 : extends BaseIdAndTime 삭제
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Integer id;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false, comment = "생성일")
+    private LocalDateTime createdAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_uuid", nullable = false, comment = "구매 희망자 (ProductUser 참조)")
     private ProductUser user;
@@ -69,6 +83,7 @@ public class Cart extends BaseIdAndTime {
         return new CartDto(
                 cart.getId(),
                 product.getUuid(),
+                product.getSellerUuid(),
                 product.getTitle(),
                 product.getPrice(),
                 product.getSaleStatus(),
