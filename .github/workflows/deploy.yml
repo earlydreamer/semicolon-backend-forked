@@ -69,7 +69,7 @@ jobs:
             $K -n "$NS" get deploy
 
             echo "[2] rollout: set images by sha"
-            for m in auth user product order coupon payment deposit settlement; do
+            for m in auth user product order coupon payment deposit settlement ai; do
               img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
               echo " - deploy/${m} -> ${img}"
               $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
@@ -79,7 +79,7 @@ jobs:
             RUN_ID="${{ github.run_id }}"
             
             echo "[2-1] annotate pod template with git metadata (revision tracking)"
-            for m in auth user product order coupon payment deposit settlement; do
+            for m in auth user product order coupon payment deposit settlement ai; do
               $K -n "$NS" patch deploy/${m} -p "{
                 \"spec\": {
                   \"template\": {
@@ -96,12 +96,12 @@ jobs:
             done
 
             echo "[2-2] current images (sanity check)"
-            for m in auth user product order coupon payment deposit settlement; do
+            for m in auth user product order coupon payment deposit settlement ai; do
               $K -n "$NS" get deploy "${m}" -o jsonpath='{.metadata.name}{" -> "}{.spec.template.spec.containers[0].image}{"\n"}'
             done
 
             echo "[3] wait rollout status"
-            for m in auth user product order coupon payment deposit settlement; do
+            for m in auth user product order coupon payment deposit settlement ai; do
               $K -n "$NS" rollout status "deploy/${m}" --timeout=180s
             done
 
@@ -109,7 +109,7 @@ jobs:
             $K -n "$NS" get deploy -o wide
 
             echo "[4-1] rollout history"
-            for m in auth user product order coupon payment deposit settlement; do
+            for m in auth user product order coupon payment deposit settlement ai; do
               echo "=== ${m} ==="
               $K -n "$NS" rollout history "deploy/${m}" || true
             done
