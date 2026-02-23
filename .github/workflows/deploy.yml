@@ -89,6 +89,18 @@ jobs:
               # 이미지 및 어노테이션 업데이트
               echo " - Updating image and metadata..."
               $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
+              
+              # [설정 동기화] K8s 클러스터의 Probe 설정을 코드 사양에 맞게 강제 업데이트
+              echo " - Patching health probes for stability..."
+              $K -n "$NS" patch deploy/${m} --type='json' -p='[
+                {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/timeoutSeconds", "value": 5},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/timeoutSeconds", "value": 5},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/initialDelaySeconds", "value": 150},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/initialDelaySeconds", "value": 40},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/failureThreshold", "value": 5},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/failureThreshold", "value": 5}
+              ]' || true
+
               $K -n "$NS" patch "deploy/${m}" -p "{
                 \"spec\": {
                   \"template\": {
