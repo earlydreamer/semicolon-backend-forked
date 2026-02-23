@@ -15,13 +15,13 @@ import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
 
 @Service
-public class MemoryRetrievalService {
+public class UserMemoryReadService {
 
     private final AiMemoryRepository aiMemoryRepository;
     private final EmbeddingModel embeddingModel;
 
-    public MemoryRetrievalService(AiMemoryRepository aiMemoryRepository,
-                                  EmbeddingModel embeddingModel) {
+    public UserMemoryReadService(AiMemoryRepository aiMemoryRepository,
+                                 EmbeddingModel embeddingModel) {
         this.aiMemoryRepository = aiMemoryRepository;
         this.embeddingModel = embeddingModel;
     }

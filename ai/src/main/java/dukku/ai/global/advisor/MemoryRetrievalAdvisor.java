@@ -9,7 +9,7 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 
-import dukku.ai.app.service.MemoryRetrievalService;
+import dukku.ai.app.service.UserMemoryReadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +19,7 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
 
     public static final String USER_ID_KEY = "user_id";
 
-    private final MemoryRetrievalService memoryRetrievalService;
+    private final UserMemoryReadService userMemoryReadService;
     private final int order;
 
     @Override
@@ -35,7 +35,7 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        String memoryContext = memoryRetrievalService.retrieveMemoryContext(
+        String memoryContext = userMemoryReadService.retrieveMemoryContext(
                 userUuid, userMessage.getText());
 
         if (memoryContext.isEmpty()) {

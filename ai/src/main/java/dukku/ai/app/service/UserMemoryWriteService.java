@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MemoryExtractionService {
+public class UserMemoryWriteService {
 
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;

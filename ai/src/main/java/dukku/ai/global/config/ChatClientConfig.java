@@ -1,9 +1,9 @@
 package dukku.ai.global.config;
 
-import dukku.ai.app.service.MemoryRetrievalService;
+import dukku.ai.app.service.UserMemoryReadService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import dukku.ai.app.service.DocumentRetrievalService;
+import dukku.ai.app.service.ProductRetrievalService;
 import dukku.ai.global.advisor.DocumentRetrievalAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -45,8 +45,8 @@ public class ChatClientConfig {
     }
 
     @Bean
-    MemoryRetrievalAdvisor memoryRetrievalAdvisor(MemoryRetrievalService memoryRetrievalService) {
-        return new MemoryRetrievalAdvisor(memoryRetrievalService, 110);
+    MemoryRetrievalAdvisor memoryRetrievalAdvisor(UserMemoryReadService userMemoryReadService) {
+        return new MemoryRetrievalAdvisor(userMemoryReadService, 110);
     }
 
     @Bean
@@ -55,8 +55,8 @@ public class ChatClientConfig {
     }
 
     @Bean
-    DocumentRetrievalAdvisor documentRetrievalAdvisor(DocumentRetrievalService documentRetrievalUseCase) {
-        return new DocumentRetrievalAdvisor(documentRetrievalUseCase, 130);
+    DocumentRetrievalAdvisor documentRetrievalAdvisor(ProductRetrievalService documentRetrievalService) {
+        return new DocumentRetrievalAdvisor(documentRetrievalService, 130);
     }
 
     @Bean

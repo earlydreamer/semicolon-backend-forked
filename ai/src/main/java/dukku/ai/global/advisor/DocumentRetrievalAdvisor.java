@@ -7,7 +7,7 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 
-import dukku.ai.app.service.DocumentRetrievalService;
+import dukku.ai.app.service.ProductRetrievalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DocumentRetrievalAdvisor implements BaseAdvisor {
 
-    private final DocumentRetrievalService documentRetrievalUseCase;
+    private final ProductRetrievalService productRetrievalService;
     private final int order;
 
     @Override
@@ -25,7 +25,7 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        String context = documentRetrievalUseCase.retrieve(userMessage.getText());
+        String context = productRetrievalService.retrieve(userMessage.getText());
 
         if (context.isEmpty()) {
             return request;

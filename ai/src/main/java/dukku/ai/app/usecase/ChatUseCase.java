@@ -2,7 +2,7 @@ package dukku.ai.app.usecase;
 
 import java.util.UUID;
 
-import dukku.ai.app.service.MemoryExtractionService;
+import dukku.ai.app.service.UserMemoryWriteService;
 import dukku.ai.global.policy.AiPromptPolicy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -14,11 +14,11 @@ import reactor.core.publisher.Flux;
 public class ChatUseCase {
 
     private final ChatClient chatClient;
-    private final MemoryExtractionService memoryExtractionService;
+    private final UserMemoryWriteService userMemoryWriteService;
 
-    public ChatUseCase(ChatClient chatClient, MemoryExtractionService memoryExtractionService) {
+    public ChatUseCase(ChatClient chatClient, UserMemoryWriteService userMemoryWriteService) {
         this.chatClient = chatClient;
-        this.memoryExtractionService = memoryExtractionService;
+        this.userMemoryWriteService = userMemoryWriteService;
     }
 
     public Flux<String> chat(String conversationId, UUID userUuid, String userMessage) {
@@ -52,7 +52,7 @@ public class ChatUseCase {
                     .doOnComplete(() -> {
                         String aiText = fullResponse.toString();
                         if (!aiText.isEmpty()) {
-                            memoryExtractionService.extractAndStoreMemories(userUuid, userMessage, aiText);
+                            userMemoryWriteService.extractAndStoreMemories(userUuid, userMessage, aiText);
                             log.info("장기 기억 추출 트리거: userUuid={}", userUuid);
                         }
                     })
