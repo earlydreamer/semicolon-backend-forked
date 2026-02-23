@@ -31,6 +31,13 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/admin/login")
+    public ResponseEntity<TokenResponse> adminLogin(
+            @RequestBody @Validated LoginRequest request
+    ) {
+        return ResponseEntity.ok(authService.adminLogin(request));
+    }
+
     @GetMapping("/social/google")
     @AuthApiDocs.StartGoogleSocialLogin
     public ResponseEntity<Void> startGoogleSocialLogin() {
