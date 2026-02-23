@@ -96,7 +96,7 @@ public class AuthService {
 
     private void validateRole(UserVerificationResponse user, Role expectedRole) {
         if (user.getRole() != expectedRole) {
-            throw new UnauthorizedException("Role mismatch");
+            throw new UnauthorizedException("역할이 일치하지 않습니다");
         }
     }
 }

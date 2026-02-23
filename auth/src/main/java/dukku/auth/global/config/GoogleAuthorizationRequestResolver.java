@@ -43,7 +43,7 @@ public class GoogleAuthorizationRequestResolver implements OAuth2AuthorizationRe
             return null;
         }
 
-        String registrationId = (String) authorizationRequest.getAttribute("registration_id");
+        String registrationId = (String) authorizationRequest.getAttribute("등록된 클라이언트 식별자");
         if (!GOOGLE_REGISTRATION_ID.equals(registrationId)) {
             return authorizationRequest;
         }

@@ -25,7 +25,7 @@ public final class AuthApiDocs {
     @Retention(RUNTIME)
     @Tag(
             name = "Auth API",
-            description = "Authentication, token refresh, logout, and social login APIs."
+            description = "로그인/토큰 재발급/로그아웃 및 소셜 로그인 진입 API."
     )
     public @interface AuthTag {
     }
@@ -34,9 +34,8 @@ public final class AuthApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "User Login",
-            description = "Validates email/password and issues access/refresh tokens. " +
-                    "This endpoint only allows Role.USER accounts. Role.ADMIN receives 401.",
+            summary = "이메일 로그인",
+            description = "이메일/비밀번호를 검증하고 access/refresh 토큰을 발급합니다.",
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(
@@ -52,8 +51,8 @@ public final class AuthApiDocs {
                     )
             ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Login success"),
-                    @ApiResponse(responseCode = "401", description = "Unauthorized (invalid credentials or role mismatch)")
+                    @ApiResponse(responseCode = "200", description = "로그인 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증 실패")
             }
     )
     public @interface Login {
@@ -63,9 +62,9 @@ public final class AuthApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "Admin Login",
-            description = "Admin-only login endpoint. " +
-                    "This endpoint only allows Role.ADMIN accounts. Role.USER receives 401.",
+            summary = "구글 소셜 로그인 시작",
+            description = "구글 OAuth 인증 페이지로 리다이렉트합니다. " +
+                    "브라우저에서 호출해야 하며, 인증 완료 후 콜백 URL로 이동합니다.",
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(
@@ -81,8 +80,8 @@ public final class AuthApiDocs {
                     )
             ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Admin login success"),
-                    @ApiResponse(responseCode = "401", description = "Unauthorized (invalid credentials or role mismatch)")
+                    @ApiResponse(responseCode = "200", description = "관리자 로그인 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증 실패 (잘못된 자격 증명 또는 권한 불일치")
             }
     )
     public @interface AdminLogin {
@@ -92,11 +91,11 @@ public final class AuthApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "Start Google Social Login",
-            description = "Redirects to the Google OAuth authorization page.",
+            summary = "구글 소셜 로그인 시작",
+            description = "구글 OAuth 인증 페이지로 리다이렉트합니다.",
             responses = {
-                    @ApiResponse(responseCode = "302", description = "Redirect to Google OAuth"),
-                    @ApiResponse(responseCode = "500", description = "Failed to build redirect URL")
+                    @ApiResponse(responseCode = "302", description = "구글 OAuth 인증 페이지로 리다이렉트"),
+                    @ApiResponse(responseCode = "500", description = "리다이렉트 URL 생성 실패")
             }
     )
     public @interface StartGoogleSocialLogin {
@@ -106,11 +105,11 @@ public final class AuthApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "Refresh Token",
-            description = "Reissues access/refresh tokens using `X-Refresh-Token` header.",
+            summary = "토큰 재발급",
+            description = "X-Refresh-Token 헤더를 사용하여 access/refresh 토큰을 재발급합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Refresh success"),
-                    @ApiResponse(responseCode = "401", description = "Invalid refresh token")
+                    @ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
+                    @ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
             }
     )
     public @interface Refresh {
@@ -120,10 +119,10 @@ public final class AuthApiDocs {
     @Target(METHOD)
     @Retention(RUNTIME)
     @Operation(
-            summary = "Logout",
-            description = "Invalidates server-side refresh token using `X-Refresh-Token` header.",
+            summary = "로그아웃",
+            description = "X-Refresh-Token 헤더를 사용하여 access/refresh 토큰을 폐기합니다.",
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Logout success")
+                    @ApiResponse(responseCode = "204", description = "로그아웃 성공")
             }
     )
     public @interface Logout {
