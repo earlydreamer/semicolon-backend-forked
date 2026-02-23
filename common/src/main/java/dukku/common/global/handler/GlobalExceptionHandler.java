@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -33,6 +34,29 @@ public class GlobalExceptionHandler {
         log.error("ValidationException: {}", ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.getReasonPhrase(), "입력 데이터에 오류가 있습니다.", HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
+    /**
+     * 필수 헤더 누락 예외 처리.
+     *
+     * @param ex MissingRequestHeaderException 인스턴스
+     * @return HTTP 400 상태와 누락 헤더 정보가 포함된 에러 응답
+     */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestHeaderException(
+            MissingRequestHeaderException ex
+    ) {
+        log.error("MissingRequestHeaderException: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "필수 요청 헤더가 누락되었습니다.",
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage()
+        );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);

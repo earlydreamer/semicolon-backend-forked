@@ -29,7 +29,7 @@ spring:
               - openid
               - profile
               - email
-            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:http://localhost:8081/login/oauth2/code/google}
+            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:https://localhost:8081/login/oauth2/code/google}
 
 management:
   endpoints:
@@ -46,4 +46,4 @@ management:
 custom:
   auth:
     oauth2:
-      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:http://localhost:3000/oauth/google/callback}
+      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:${GOOGLE_OAUTH_SUCCESS_REDIRECT_URI:https://localhost:3000/oauth/google/callback}}
