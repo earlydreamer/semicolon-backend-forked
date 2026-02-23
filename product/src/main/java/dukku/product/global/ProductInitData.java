@@ -207,16 +207,18 @@ public class ProductInitData {
         userMap.put(uId, userUuid);
 
         if (!productSellerRepository.existsByUuid(userUuid)) {
-            ProductSeller seller = ProductSeller.builder()
-                    .sellerUuid(UUID.randomUUID())
-                    .userUuid(userUuid)
-                    .intro(intro)
-                    .salesCount(sales)
-                    .activeListingCount(active)
-                    .averageRating(BigDecimal.valueOf(rating))
-                    .reviewCount(0)
-                    .build();
-            productSellerRepository.save(seller);
+            ProductSeller seller = productSellerRepository.findByUserUuid(userUuid)
+                    .orElseGet(() -> productSellerRepository.save(
+                            ProductSeller.builder()
+                                    .sellerUuid(UUID.randomUUID())
+                                    .userUuid(userUuid)
+                                    .intro(intro)
+                                    .salesCount(sales)
+                                    .activeListingCount(active)
+                                    .averageRating(BigDecimal.valueOf(rating))
+                                    .reviewCount(0)
+                                    .build()
+                    ));
             sellerMap.put(sId, seller.getSellerUuid());
         } else {
             productSellerRepository.findByUserUuid(userUuid).ifPresent(s -> sellerMap.put(sId, s.getSellerUuid()));
