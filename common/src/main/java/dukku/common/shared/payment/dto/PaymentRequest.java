@@ -114,8 +114,8 @@ public class PaymentRequest {
         @NotNull(message = "주문 상품 UUID는 필수입니다.")
         private UUID orderItemUuid;
 
-        @NotNull(message = "상품 ID는 필수입니다.")
-        private Integer productId;
+        @NotNull(message = "상품 UUID는 필수입니다.")
+        private UUID productUuid;
 
         @NotBlank(message = "상품명은 필수입니다.")
         private String productName;

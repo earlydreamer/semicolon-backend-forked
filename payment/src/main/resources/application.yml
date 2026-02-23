@@ -21,3 +21,7 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+toss:
+  callback:
+    base-url: ${TOSS_CALLBACK_BASE_URL:https://dukku.shop}

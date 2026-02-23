@@ -31,8 +31,8 @@ services:
       - ./monitoring/.env
     environment:
       # 기본 관리자 계정 (운영 환경에서는 반드시 변경!)
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       # 익명 접근 허용 (개발용 - Public Dashboard 없이도 대시보드 조회 가능)
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer

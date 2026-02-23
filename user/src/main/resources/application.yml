@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 8082
 
 spring:
@@ -45,6 +45,14 @@ custom:
   email:
     verification:
       required: true
-      base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
+      base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8082}
+      success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://localhost/email/verify}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
+      result-token-ttl-seconds: ${EMAIL_VERIFICATION_RESULT_TOKEN_TTL_SECONDS:300}
+  signup:
+    request-lock-ttl-seconds: 10
+    idempotency:
+      in-progress-ttl-seconds: 30
+      completed-ttl-seconds: 1800
+

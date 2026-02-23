@@ -1,0 +1,273 @@
+services:
+  # ---------------------------------------------------------------------------
+  # [인프라] Redpanda (Kafka 대체재)
+  # - 역할: 이벤트 브로커 (Kafka 프로토콜 호환)
+  # - 사양: M1 16GB 메모리를 고려하여 2GB로 제한 (가장 무거운 컨테이너)
+  # ---------------------------------------------------------------------------
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: semicolon-redpanda
+    # [명령어 설정 설명]
+    # 1. dev-container: 개발용 모드 (fsync 완화 등 I/O 성능 향상)
+    # 2. advertise-kafka-addr:
+    #    - 내부(컨테이너 간): 'redpanda:9092'로 통신
+    #    - 외부(팀원/Tailscale): '${TAILSCALE_IP}:19092'로 통신
+    # 3. Admin API 설정 제거: 기본값(0.0.0.0:9644)을 사용하여 에러 방지
+    command:
+      - redpanda start
+      - --mode dev-container
+      - --smp 1
+      - --memory 2G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --check=false
+      # Kafka 리스너 (내부/외부 분리)
+      - --kafka-addr Internal://0.0.0.0:9092,External://0.0.0.0:19092
+      - --advertise-kafka-addr Internal://redpanda:9092,External://${TAILSCALE_IP}:19092
+      # Schema Registry & Proxy 리스너
+      - --pandaproxy-addr Internal://0.0.0.0:8082,External://0.0.0.0:18082
+      - --advertise-pandaproxy-addr Internal://redpanda:8082,External://${TAILSCALE_IP}:18082
+    ports:
+      - "19092:19092" # Kafka 클라이언트 접근용 (팀원 사용)
+      - "18081:18081" # 스키마 레지스트리
+      - "18082:18082" # PandaProxy
+      - "19644:9644" # Admin API (콘솔/CLI 관리용)
+    volumes:
+      - ./data/redpanda:/var/lib/redpanda/data
+    deploy:
+      resources:
+        limits:
+          memory: 2.5G
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # [모니터링] Redpanda Console (웹 대시보드)
+  # - 역할: 토픽 조회, 메시지 디버깅, 컨슈머 그룹 관리
+  # - 포트: 18080 (Spring Boot의 8080 포트와 충돌 방지)
+  # ---------------------------------------------------------------------------
+  console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: semicolon-console
+    restart: on-failure
+    environment:
+      # YAML 내부 주입 (별도 파일 없이 설정 적용)
+      # 같은 네트워크(Bridge) 안에 있으므로 서비스명(redpanda)으로 접근
+      KAFKA_BROKERS: "redpanda:9092"
+      KAFKA_SCHEMAREGISTRY_ENABLED: "true"
+      KAFKA_SCHEMAREGISTRY_URLS: "http://redpanda:18081"
+      REDPANDA_ADMINAPI_ENABLED: "true"
+      REDPANDA_ADMINAPI_URLS: "http://redpanda:9644"
+    ports:
+      - "18080:8080" # 브라우저에서 http://<IP>:18080 으로 접속
+    depends_on:
+      redpanda:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # [검색엔진] Elasticsearch 9.2.2
+  # - 역할: 검색 서비스 백엔드
+  # - 설정: Nori(한글 형태소 분석기) 자동 설치 스크립트 포함
+  # - 메모리: 힙 2GB 고정 (OOM 방지)
+  # ---------------------------------------------------------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.2
+    container_name: semicolon-elasticsearch
+    environment:
+      - discovery.type=single-node
+      # 개발 편의를 위해 보안(HTTPS, ID/PW) 비활성화
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    ports:
+      - "19200:9200" # Spring 앱은 19200 포트로 연결
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    # 플러그인 확인 후 없으면 설치하고 실행하는 스크립트
+    command: >
+      /bin/sh -c "
+        if ! ./bin/elasticsearch-plugin list | grep -q analysis-nori; then
+          ./bin/elasticsearch-plugin install analysis-nori;
+        fi;
+        /usr/local/bin/docker-entrypoint.sh elasticsearch
+      "
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+
+  # ---------------------------------------------------------------------------
+  # [데이터베이스] PostgreSQL 18.1
+  # - 주의: 18 버전부터 데이터 경로 정책이 변경됨 (/data -> /var/lib/postgresql)
+  # - 포트: 15432 (로컬에 설치된 Postgres 5432와 충돌 방지)
+  # ---------------------------------------------------------------------------
+
+  postgresql:
+    build:
+      context: postgres
+      dockerfile: Dockerfile
+    container_name: semicolon-postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: semicolon
+
+    ports:
+      - "15432:5432" # DB 접속 시 포트 15432 사용
+
+    volumes:
+      # [처음 준 설정 기준] PG 18+ 대응: 루트 경로 마운트
+      - ./data/postgres:/var/lib/postgresql
+
+      # [로컬용 설정 기준] init 스크립트로 pgroonga/vector 확장 및 DB 초기화 처리
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
+
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ---------------------------------------------------------------------------
+  # [캐시] Redis (Latest)
+  # - 포트: 16379 (로컬 Redis 6379와 충돌 방지)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:latest
+    container_name: semicolon-redis
+    restart: always
+    ports:
+      - "16379:6379" # Spring 앱은 16379 포트로 연결
+    volumes:
+      - ./data/redis:/data
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+
+  # ---------------------------------------------------------------------------
+  # [모니터링] cAdvisor (컨테이너 리소스)
+  # - 웹: http://<TAILSCALE_IP>:18090
+  # ---------------------------------------------------------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: semicolon-cadvisor
+    restart: unless-stopped
+    ports:
+      - "18090:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+
+  # ---------------------------------------------------------------------------
+  # [로그] Dozzle (웹 실시간 tail)
+  # - 웹: http://<TAILSCALE_IP>:18091
+  # ---------------------------------------------------------------------------
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: semicolon-dozzle
+    restart: unless-stopped
+    ports:
+      - "18091:8080"
+    environment:
+      - DOZZLE_LEVEL=info
+      - DOZZLE_TAILSIZE=300
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # ---------------------------------------------------------------------------
+  # [모니터링] Prometheus
+  # - URL: http://<TAILSCALE_IP>:19090
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: semicolon-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=365d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "19090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ---------------------------------------------------------------------------
+  # [모니터링] Grafana
+  # - URL: http://<TAILSCALE_IP>:13000
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: semicolon-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DATE_FORMATS_DEFAULT_TIMEZONE=Asia/Seoul
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/admin/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - SLACK_WEBHOOK_URL_GRAFANA=${SLACK_WEBHOOK_URL_GRAFANA}
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_ALERTING_ENABLED=false
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
+    ports:
+      - "13000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - prometheus
+      - mongodb
+
+  # ---------------------------------------------------------------------------
+  # [로그 저장소] MongoDB
+  # ---------------------------------------------------------------------------
+  mongodb:
+    image: mongo:7
+    container_name: semicolon-mongodb
+    restart: unless-stopped
+    ports:
+      - "17017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: log_service
+    volumes:
+      - mongodb_data:/data/db
+      - ./monitoring/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  mongodb_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
