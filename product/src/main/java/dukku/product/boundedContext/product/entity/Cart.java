@@ -82,7 +82,6 @@ public class Cart {
 
         return new CartDto(
                 cart.getId(),
-                product.getId(),
                 product.getUuid(),
                 product.getSellerUuid(),
                 product.getTitle(),

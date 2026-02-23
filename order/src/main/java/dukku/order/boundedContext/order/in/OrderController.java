@@ -1,7 +1,6 @@
 package dukku.order.boundedContext.order.in;
 
 import dukku.common.shared.order.dto.*;
-import dukku.common.shared.order.dto.SellerOrderItemResponse;
 import dukku.common.shared.order.docs.OrderApiDocs;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.order.boundedContext.order.app.OrderFacade;
@@ -14,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -83,10 +81,5 @@ public class OrderController {
         orderFacade.updateDeliveryInfo(orderItemUuid, status);
 
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/me/sales")
-    public ResponseEntity<List<SellerOrderItemResponse>> findSellerOrderItems() {
-        return ResponseEntity.ok(orderFacade.findSellerOrderItems());
     }
 }

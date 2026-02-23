@@ -1,4 +1,4 @@
-package dukku.product.boundedContext.product.in.listener;
+package dukku.product.boundedContext.product.in;
 
 import dukku.product.boundedContext.product.app.cqrs.review.ReviewStatsRedisSupport;
 import dukku.common.shared.product.event.ReviewStatsSyncedEvent;

@@ -2,7 +2,6 @@ package dukku.product.boundedContext.product.app.support;
 
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.entity.ProductImage;
-import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.common.shared.product.dto.product.ProductDetailResponse;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 
@@ -21,27 +20,17 @@ public class ProductMapper {
                 .title(p.getTitle())
                 .price(p.getPrice())
                 .thumbnailUrl(thumb)
-                .saleStatus(p.getSaleStatus())
-                .createdAt(p.getCreatedAt())
                 .likeCount(p.getLikeCount())
-                .viewCount(p.getViewCount())
-                .commentCount(p.getCommentCount())
-                .tagNames(p.getTagNames())
                 .build();
     }
 
     public static ProductDetailResponse toDetail(Product p) {
-        return toDetail(p, null, null);
-    }
-
-    public static ProductDetailResponse toDetail(Product p, ProductSeller seller, String nickname) {
         List<String> imageUrls = p.getImages().stream()
                 .sorted(Comparator.comparingInt(ProductImage::getSortOrder))
                 .map(ProductImage::getImageUrl)
                 .toList();
 
         return ProductDetailResponse.builder()
-                .productId(p.getId())
                 .productUuid(p.getUuid())
                 .sellerUuid(p.getSellerUuid())
                 .title(p.getTitle())
@@ -58,12 +47,6 @@ public class ProductMapper {
                         .id(p.getCategory().getId())
                         .name(p.getCategory().getCategoryName())
                         .depth(p.getCategory().getDepth())
-                        .build())
-                .seller(seller == null ? null : ProductDetailResponse.Seller.builder()
-                        .sellerUuid(seller.getUserUuid())
-                        .nickname(nickname)
-                        .averageRating(seller.getAverageRating())
-                        .reviewCount(seller.getReviewCount())
                         .build())
                 .createdAt(p.getCreatedAt())
                 .tagNames(p.getTagNames())

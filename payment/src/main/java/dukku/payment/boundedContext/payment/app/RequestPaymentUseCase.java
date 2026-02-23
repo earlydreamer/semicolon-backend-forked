@@ -16,7 +16,6 @@ import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -36,9 +35,6 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class RequestPaymentUseCase {
-
-    @Value("${toss.callback.base-url}")
-    private String tossCallbackBaseUrl;
 
     private final PaymentSupport support;
     private final DepositApiClient depositApiClient;
@@ -69,7 +65,7 @@ public class RequestPaymentUseCase {
 
         // 2. 정렬 + 서버 상품총액 계산/검증
         List<PaymentRequest.PaymentRequestItem> sortedItems = request.getItems().stream()
-                .sorted(Comparator.comparing(PaymentRequest.PaymentRequestItem::getProductUuid)
+                .sorted(Comparator.comparing(PaymentRequest.PaymentRequestItem::getProductId)
                         .thenComparing(PaymentRequest.PaymentRequestItem::getOrderItemUuid))
                 .toList();
 
@@ -95,7 +91,7 @@ public class RequestPaymentUseCase {
 
         // 6. 응답 생성
         log.debug("결제 요청 완료. orderUuid={}, tossOrderId={}", request.getOrderUuid(), tossOrderId);
-        return payment.toPaymentResponse(request.getOrderName(), tossCallbackBaseUrl);
+        return payment.toPaymentResponse(request.getOrderName());
     }
 
     /**
@@ -392,7 +388,7 @@ public class RequestPaymentUseCase {
                     payment,
                     request.getOrderUuid(),
                     itemDto.getOrderItemUuid(),
-                    itemDto.getProductUuid(),
+                    itemDto.getProductId(),
                     itemDto.getProductName(),
                     itemDto.getPrice(),
                     itemCoupon,

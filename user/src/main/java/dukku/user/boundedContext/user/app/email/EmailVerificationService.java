@@ -18,7 +18,6 @@ public class EmailVerificationService {
 
     private static final String TOKEN_KEY_PREFIX = "email:verify:token:";
     private static final String VERIFIED_KEY_PREFIX = "email:verify:ok:";
-    private static final String RESULT_TOKEN_KEY_PREFIX = "email:verify:result:";
 
     private final JavaMailSender mailSender;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -34,9 +33,6 @@ public class EmailVerificationService {
 
     @Value("${custom.email.verification.verified-ttl-seconds:1800}")
     private long verifiedTtlSeconds;
-
-    @Value("${custom.email.verification.result-token-ttl-seconds:300}")
-    private long resultTokenTtlSeconds;
 
     @Value("${custom.email.verification.required:true}")
     private boolean verificationRequired;
@@ -73,32 +69,6 @@ public class EmailVerificationService {
             throw new UserEmailVerificationRequiredException();
         }
         redisTemplate.delete(verifiedKey(normalizedEmail));
-    }
-
-    public String issueVerificationResultToken(boolean verified, String email) {
-        // 프론트 인증 결과 페이지 진입용 1회성 결과 토큰 저장
-        String token = generateToken();
-        String normalizedEmail = normalizeEmail(email);
-        String payload = (verified ? "1" : "0") + "|" + normalizedEmail;
-        redisTemplate.opsForValue()
-                .set(resultTokenKey(token), payload, Duration.ofSeconds(resultTokenTtlSeconds));
-        return token;
-    }
-
-    public VerificationResult consumeVerificationResultToken(String token) {
-        String normalizedToken = token == null ? "" : token.trim();
-        Object stored = redisTemplate.opsForValue().get(resultTokenKey(normalizedToken));
-        if (stored == null) {
-            return VerificationResult.invalid();
-        }
-
-        // 토큰 재사용 방지를 위해 조회 즉시 삭제
-        redisTemplate.delete(resultTokenKey(normalizedToken));
-        String payload = stored.toString();
-        String[] parts = payload.split("\\|", 2);
-        boolean verified = parts.length > 0 && "1".equals(parts[0]);
-        String email = parts.length > 1 ? parts[1] : "";
-        return new VerificationResult(verified, email);
     }
 
     private void saveToken(String email, String token) {
@@ -144,21 +114,11 @@ public class EmailVerificationService {
         return TOKEN_KEY_PREFIX + token;
     }
 
-    private String resultTokenKey(String token) {
-        return RESULT_TOKEN_KEY_PREFIX + token;
-    }
-
     private String verifiedKey(String email) {
         return VERIFIED_KEY_PREFIX + email;
     }
 
     private String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase();
-    }
-
-    public record VerificationResult(boolean verified, String email) {
-        public static VerificationResult invalid() {
-            return new VerificationResult(false, "");
-        }
     }
 }

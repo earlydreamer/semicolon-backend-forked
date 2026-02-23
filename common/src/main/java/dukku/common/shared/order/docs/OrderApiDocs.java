@@ -53,6 +53,7 @@ public final class OrderApiDocs {
                                               "receiverPostalCode": "12345",
                                               "orderItems": [
                                                 {
+                                                  "productId": 1,
                                                   "quantity": 2
                                                 }
                                               ]
@@ -82,6 +83,7 @@ public final class OrderApiDocs {
                                                       "orderItems": [
                                                         {
                                                           "orderItemUuid": "550e8400-e29b-41d4-a716-446655440002",
+                                                          "productId": 1,
                                                           "productName": "상품명",
                                                           "quantity": 2,
                                                           "price": 10000,
@@ -135,6 +137,7 @@ public final class OrderApiDocs {
                                                       "orderItems": [
                                                         {
                                                           "orderItemUuid": "550e8400-e29b-41d4-a716-446655440002",
+                                                          "productId": 1,
                                                           "productName": "상품명",
                                                           "quantity": 2,
                                                           "price": 10000,

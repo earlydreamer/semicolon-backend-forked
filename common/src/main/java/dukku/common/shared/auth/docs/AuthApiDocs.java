@@ -25,7 +25,7 @@ public final class AuthApiDocs {
     @Retention(RUNTIME)
     @Tag(
             name = "Auth API",
-            description = "로그인/토큰 재발급/로그아웃 및 소셜 로그인 진입 API."
+            description = "로그인/토큰 재발급/로그아웃 및 소셜 로그인 진입 API"
     )
     public @interface AuthTag {
     }
@@ -65,37 +65,9 @@ public final class AuthApiDocs {
             summary = "구글 소셜 로그인 시작",
             description = "구글 OAuth 인증 페이지로 리다이렉트합니다. " +
                     "브라우저에서 호출해야 하며, 인증 완료 후 콜백 URL로 이동합니다.",
-            requestBody = @RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                              "email": "admin@semicolon.com",
-                                              "password": "Admin123!"
-                                            }
-                                            """
-                            )
-                    )
-            ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "관리자 로그인 성공"),
-                    @ApiResponse(responseCode = "401", description = "인증 실패 (잘못된 자격 증명 또는 권한 불일치")
-            }
-    )
-    public @interface AdminLogin {
-    }
-
-    @Documented
-    @Target(METHOD)
-    @Retention(RUNTIME)
-    @Operation(
-            summary = "구글 소셜 로그인 시작",
-            description = "구글 OAuth 인증 페이지로 리다이렉트합니다.",
-            responses = {
-                    @ApiResponse(responseCode = "302", description = "구글 OAuth 인증 페이지로 리다이렉트"),
-                    @ApiResponse(responseCode = "500", description = "리다이렉트 URL 생성 실패")
+                    @ApiResponse(responseCode = "302", description = "구글 인증 페이지로 리다이렉트"),
+                    @ApiResponse(responseCode = "500", description = "리다이렉트 생성 실패")
             }
     )
     public @interface StartGoogleSocialLogin {
@@ -106,10 +78,10 @@ public final class AuthApiDocs {
     @Retention(RUNTIME)
     @Operation(
             summary = "토큰 재발급",
-            description = "X-Refresh-Token 헤더를 사용하여 access/refresh 토큰을 재발급합니다.",
+            description = "헤더 `X-Refresh-Token`의 refresh token으로 access/refresh를 재발급합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
-                    @ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
+                    @ApiResponse(responseCode = "200", description = "재발급 성공"),
+                    @ApiResponse(responseCode = "401", description = "유효하지 않은 refresh token")
             }
     )
     public @interface Refresh {
@@ -120,7 +92,7 @@ public final class AuthApiDocs {
     @Retention(RUNTIME)
     @Operation(
             summary = "로그아웃",
-            description = "X-Refresh-Token 헤더를 사용하여 access/refresh 토큰을 폐기합니다.",
+            description = "헤더 `X-Refresh-Token` 기반으로 서버에 저장된 refresh token을 폐기합니다.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "로그아웃 성공")
             }

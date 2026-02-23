@@ -1,4 +1,4 @@
-package dukku.product.boundedContext.product.in.listener;
+package dukku.product.boundedContext.product.in;
 
 import dukku.common.shared.order.event.OrderProductSaleConfirmedEvent;
 import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;

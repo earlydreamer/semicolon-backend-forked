@@ -47,9 +47,8 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
     @Column(nullable = false, columnDefinition = "uuid", comment = "판매자 UUID")
     private UUID sellerUuid;
 
-    @JdbcTypeCode(SqlTypes.UUID)
-    @Column(nullable = false, columnDefinition = "uuid", comment = "상품 UUID 스냅샷")
-    private UUID productUuid;
+    @Column(nullable = false, comment = "원본 상품 ID 스냅샷")
+    private Integer productId;
 
     @Column(nullable = false, comment = "상품명 스냅샷")
     private String productName;
@@ -66,7 +65,7 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
      * @param payment        연관된 결제 엔티티
      * @param orderUuid      주문 식별자
      * @param orderItemUuid  주문 상품 식별자
-     * @param productUuid    상품 UUID
+     * @param productId      원본 상품 ID
      * @param productName    상품명
      * @param price          결제 시점 단가
      * @param paymentCoupon  해당 상품에 적용된 쿠폰 할인액
@@ -74,13 +73,13 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
      * @param paymentDeposit 이 상품 구매에 사용된 예치금액 (분배 알고리즘에 의해 계산된 값)
      * @return 결제 주문 상품 엔티티
      */
-    public static PaymentOrderItem create(Payment payment, UUID orderUuid, UUID orderItemUuid, UUID productUuid,
+    public static PaymentOrderItem create(Payment payment, UUID orderUuid, UUID orderItemUuid, Integer productId,
                                           String productName, Long price, Long paymentCoupon, UUID sellerUuid, Long paymentDeposit) {
         return PaymentOrderItem.builder()
                 .payment(payment)
                 .orderUuid(orderUuid)
                 .orderItemUuid(orderItemUuid)
-                .productUuid(productUuid)
+                .productId(productId)
                 .productName(productName)
                 .price(price)
                 .paymentCoupon(paymentCoupon)
@@ -97,7 +96,7 @@ public class PaymentOrderItem extends BaseIdAndUUIDAndTime {
                 .uuid(this.getUuid())
                 .orderUuid(this.orderUuid)
                 .orderItemUuid(this.orderItemUuid)
-                .productUuid(this.productUuid)
+                .productId(this.productId)
                 .productName(this.productName)
                 .price(this.price)
                 .paymentCoupon(this.paymentCoupon)

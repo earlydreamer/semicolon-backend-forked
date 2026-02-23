@@ -238,7 +238,7 @@ public class Payment extends BaseIdAndUUIDAndTime {
 
     // === DTO 변환 ===
 
-    public PaymentResponse toPaymentResponse(String orderName, String callbackBaseUrl) {
+    public PaymentResponse toPaymentResponse(String orderName) {
         return PaymentResponse.builder()
                 .success(true)
                 .code("PAYMENT_REQUESTED")
@@ -250,9 +250,9 @@ public class Payment extends BaseIdAndUUIDAndTime {
                                 .orderId(this.tossOrderId)
                                 .amount(this.amountPg)
                                 .orderName(orderName)
-                                .successUrl(callbackBaseUrl + "/payments/success?paymentUuid="
+                                .successUrl("https://localhost:3000/payments/success?paymentUuid="
                                         + this.getUuid())
-                                .failUrl(callbackBaseUrl + "/payments/fail?paymentUuid="
+                                .failUrl("https://localhost:3000/payments/fail?paymentUuid="
                                         + this.getUuid())
                                 .build())
                         .amounts(PaymentResponse.ResponseAmounts.builder()

@@ -34,12 +34,8 @@ public final class ShopApiDocs {
     @ApiResponse(responseCode = "200", description = "내 상점 정보 조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
             {
               "shopUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
-              "nickname": "내 상점",
-              "intro": "내 상점입니다. 많이 이용해주세요.",
-              "salesCount": 12,
-              "activeListingCount": 3,
-              "averageRating": 4.75,
-              "reviewCount": 24
+              "shopName": "내 상점",
+              "description": "내 상점입니다. 많이 이용해주세요."
             }
             """)))
     @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"message\": \"인증이 필요합니다.\"}")))
@@ -53,18 +49,14 @@ public final class ShopApiDocs {
     @Operation(summary = "내 상점 소개 수정", description = "로그인한 사용자의 상점 소개를 수정합니다.")
     @RequestBody(required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
             {
-              "intro": "새로운 상점 소개입니다."
+              "description": "새로운 상점 소개입니다."
             }
             """)))
     @ApiResponse(responseCode = "200", description = "내 상점 소개 수정 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
             {
               "shopUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
-              "nickname": "내 상점",
-              "intro": "새로운 상점 소개입니다.",
-              "salesCount": 12,
-              "activeListingCount": 3,
-              "averageRating": 4.75,
-              "reviewCount": 24
+              "shopName": "내 상점",
+              "description": "새로운 상점 소개입니다."
             }
             """)))
     @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"message\": \"인증이 필요합니다.\"}")))
@@ -101,12 +93,8 @@ public final class ShopApiDocs {
     @ApiResponse(responseCode = "200", description = "판매자 상점 정보 조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
             {
               "shopUuid": "s1h2o3p4-e5f6-7890-1234-abcdefghij",
-              "nickname": "다른 사람의 상점",
-              "intro": "구경하고 가세요.",
-              "salesCount": 4,
-              "activeListingCount": 1,
-              "averageRating": 5.00,
-              "reviewCount": 2
+              "shopName": "다른 사람의 상점",
+              "description": "구경하고 가세요."
             }
             """)))
     @ApiResponse(responseCode = "404", description = "상점을 찾을 수 없음", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"message\": \"상점을 찾을 수 없습니다.\"}")))

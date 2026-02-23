@@ -5,9 +5,7 @@ import dukku.common.shared.order.dto.ReturnRejectDto;
 import dukku.common.shared.order.dto.ReturnRequestCreateDto;
 import dukku.common.shared.order.dto.ReturnResponse;
 import dukku.common.shared.order.dto.ReturnTrackingRegisterDto;
-import dukku.common.shared.order.dto.SellerReturnResponse;
 import dukku.order.boundedContext.order.app.ApproveReturnUseCase;
-import dukku.order.boundedContext.order.app.FindSellerReturnsUseCase;
 import dukku.order.boundedContext.order.app.FinalRejectReturnUseCase;
 import dukku.order.boundedContext.order.app.RegisterReturnTrackingUseCase;
 import dukku.order.boundedContext.order.app.RequestReturnUseCase;
@@ -15,7 +13,6 @@ import dukku.order.boundedContext.order.app.SellerApproveReturnUseCase;
 import dukku.order.boundedContext.order.app.SellerRejectReturnUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -40,7 +36,6 @@ public class ReturnController {
     private final SellerRejectReturnUseCase sellerRejectReturnUseCase;
     private final ApproveReturnUseCase approveReturnUseCase;
     private final FinalRejectReturnUseCase finalRejectReturnUseCase;
-    private final FindSellerReturnsUseCase findSellerReturnsUseCase;
 
     /**
      * 구매자 반품 신청 처리 API
@@ -52,14 +47,6 @@ public class ReturnController {
         UUID userUuid = UserUtil.getUserId();
         ReturnResponse response = requestReturnUseCase.execute(userUuid, orderUuid, requestDto);
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * 판매자 반품 요청 목록 조회 API (GET /api/v1/returns/me/sales)
-     */
-    @GetMapping("/me/sales")
-    public ResponseEntity<List<SellerReturnResponse>> findSellerReturns() {
-        return ResponseEntity.ok(findSellerReturnsUseCase.execute());
     }
 
     /**

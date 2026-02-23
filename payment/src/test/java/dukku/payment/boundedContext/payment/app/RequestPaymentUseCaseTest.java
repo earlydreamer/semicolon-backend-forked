@@ -8,8 +8,6 @@ import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.deposit.out.depositApiClient.DepositApiClient;
 import dukku.common.shared.payment.dto.PaymentRequest;
 import dukku.common.shared.payment.exception.AmountMismatchException;
-import dukku.common.shared.payment.exception.DepositShortageException;
-import dukku.common.shared.payment.type.PaymentType;
 import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
 import dukku.payment.boundedContext.payment.out.PaymentOrderItemRepository;
@@ -57,10 +55,6 @@ import static org.mockito.Mockito.when;
 @Transactional
 class RequestPaymentUseCaseTest {
 
-    private static final UUID PRODUCT_UUID_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    private static final UUID PRODUCT_UUID_2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
-    private static final UUID PRODUCT_UUID_3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
-
     @Autowired
     private RequestPaymentUseCase requestPaymentUseCase;
 
@@ -107,8 +101,8 @@ class RequestPaymentUseCaseTest {
                 5_000L,
                 25_000L,
                 List.of(
-                        item(PRODUCT_UUID_2, 20_000L),
-                        item(PRODUCT_UUID_1, 10_000L)
+                        item(2, 20_000L),
+                        item(1, 10_000L)
                 ));
 
         requestPaymentUseCase.execute(request, "idem-no-coupon");
@@ -138,8 +132,8 @@ class RequestPaymentUseCaseTest {
                 0L,
                 27_000L,
                 List.of(
-                        item(PRODUCT_UUID_2, 20_000L),
-                        item(PRODUCT_UUID_1, 10_000L)
+                        item(2, 20_000L),
+                        item(1, 10_000L)
                 ));
 
         requestPaymentUseCase.execute(request, "idem-coupon-basic");
@@ -147,9 +141,9 @@ class RequestPaymentUseCaseTest {
         Payment payment = paymentRepository.findAll().get(0);
         assertThat(payment.getPaymentCouponTotal()).isEqualTo(3_000L);
 
-        Map<UUID, Long> couponByProduct = couponByProductUuid(payment);
-        assertThat(couponByProduct.get(PRODUCT_UUID_1)).isEqualTo(1_000L);
-        assertThat(couponByProduct.get(PRODUCT_UUID_2)).isEqualTo(2_000L);
+        Map<Integer, Long> couponByProduct = couponByProductId(payment);
+        assertThat(couponByProduct.get(1)).isEqualTo(1_000L);
+        assertThat(couponByProduct.get(2)).isEqualTo(2_000L);
         assertThat(couponByProduct.values().stream().mapToLong(Long::longValue).sum()).isEqualTo(3_000L);
     }
 
@@ -168,9 +162,9 @@ class RequestPaymentUseCaseTest {
                 0L,
                 10_001L,
                 List.of(
-                        item(PRODUCT_UUID_1, 10_000L),
-                        item(PRODUCT_UUID_2, 10_000L),
-                        item(PRODUCT_UUID_3, 1L)
+                        item(1, 10_000L),
+                        item(2, 10_000L),
+                        item(3, 1L)
                 ));
 
         requestPaymentUseCase.execute(request, "idem-coupon-overflow");
@@ -183,10 +177,10 @@ class RequestPaymentUseCaseTest {
         assertThat(orderItems)
                 .allSatisfy(item -> assertThat(item.getPaymentCoupon()).isLessThanOrEqualTo(item.getPrice()));
 
-        Map<UUID, Long> couponByProduct = couponByProductUuid(payment);
-        assertThat(couponByProduct.get(PRODUCT_UUID_1)).isEqualTo(5_000L);
-        assertThat(couponByProduct.get(PRODUCT_UUID_2)).isEqualTo(4_999L);
-        assertThat(couponByProduct.get(PRODUCT_UUID_3)).isEqualTo(1L);
+        Map<Integer, Long> couponByProduct = couponByProductId(payment);
+        assertThat(couponByProduct.get(1)).isEqualTo(5_000L);
+        assertThat(couponByProduct.get(2)).isEqualTo(4_999L);
+        assertThat(couponByProduct.get(3)).isEqualTo(1L);
     }
 
     @Test
@@ -199,7 +193,7 @@ class RequestPaymentUseCaseTest {
                 9_999L,
                 0L,
                 9_999L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
+                List.of(item(1, 10_000L)));
 
         assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-total-mismatch"))
                 .isInstanceOf(AmountMismatchException.class);
@@ -221,7 +215,7 @@ class RequestPaymentUseCaseTest {
                 10_000L,
                 0L,
                 10_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
+                List.of(item(1, 10_000L)));
 
         assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-coupon-too-large"))
                 .isInstanceOf(AmountMismatchException.class);
@@ -243,7 +237,7 @@ class RequestPaymentUseCaseTest {
                 10_000L,
                 0L,
                 10_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
+                List.of(item(1, 10_000L)));
 
         assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-coupon-inactive"))
                 .isInstanceOf(CouponUseNotAllowedException.class);
@@ -252,221 +246,9 @@ class RequestPaymentUseCaseTest {
         verifyNoInteractions(depositApiClient);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 추가 테스트: productUuid 스냅샷, 금액 검증, 예치금, PaymentType
-    // ─────────────────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("결제 생성 시 productUuid가 스냅샷으로 저장된다")
-    void savesProductUuidSnapshot() {
-        when(depositApiClient.getBalance(any())).thenReturn(0L);
-
-        PaymentRequest request = buildRequest(
-                null,
-                10_000L,
-                0L,
-                10_000L,
-                0L,
-                10_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        requestPaymentUseCase.execute(request, "idem-snapshot");
-
-        Payment payment = paymentRepository.findAll().get(0);
-        List<PaymentOrderItem> orderItems = paymentOrderItemRepository.findByPaymentId(payment.getId());
-
-        assertThat(orderItems).hasSize(1);
-        assertThat(orderItems.get(0).getProductUuid()).isEqualTo(PRODUCT_UUID_1);
-    }
-
-    @Test
-    @DisplayName("쿠폰 최소 주문 금액 미달 시 예외를 던진다")
-    void rejectsWhenBelowMinimumOrderAmount() {
-        UUID couponUuid = UUID.randomUUID();
-        when(couponApiClient.getCouponInfo(couponUuid))
-                .thenReturn(new CouponInternalResponse(1_000, 20_000, CouponStatus.ACTIVE));
-
-        PaymentRequest request = buildRequest(
-                couponUuid,
-                10_000L,
-                0L,
-                10_000L,
-                0L,
-                10_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-min-order"))
-                .isInstanceOf(AmountMismatchException.class)
-                .extracting(e -> ((AmountMismatchException) e).getDetails())
-                .asString().contains("최소 주문 금액 미달");
-
-        assertThat(paymentRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("예치금 잔액이 부족하면 DepositShortageException을 던진다")
-    void rejectsWhenDepositInsufficient() {
-        when(depositApiClient.getBalance(any())).thenReturn(3_000L);
-
-        PaymentRequest request = buildRequest(
-                null,
-                10_000L,
-                0L,
-                10_000L,
-                5_000L,
-                5_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-deposit-shortage"))
-                .isInstanceOf(DepositShortageException.class);
-
-        assertThat(paymentRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("finalPayAmount != depositUseAmount + pgPayAmount 이면 예외를 던진다")
-    void rejectsWhenFinalAmountMismatch() {
-        when(depositApiClient.getBalance(any())).thenReturn(0L);
-
-        PaymentRequest request = buildRequest(
-                null,
-                10_000L,
-                0L,
-                9_000L,   // 실제는 0 + 10_000 = 10_000이어야 하는데 9_000으로 전송
-                0L,
-                10_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-final-mismatch"))
-                .isInstanceOf(AmountMismatchException.class)
-                .extracting(e -> ((AmountMismatchException) e).getDetails())
-                .asString().contains("최종 결제금액 불일치");
-
-        assertThat(paymentRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("itemsTotalAmount - couponDiscountAmount != finalPayAmount 이면 예외를 던진다")
-    void rejectsWhenItemsMinusCouponMismatch() {
-        UUID couponUuid = UUID.randomUUID();
-        when(couponApiClient.getCouponInfo(couponUuid))
-                .thenReturn(new CouponInternalResponse(2_000, 0, CouponStatus.ACTIVE));
-        when(depositApiClient.getBalance(any())).thenReturn(0L);
-
-        PaymentRequest request = buildRequest(
-                couponUuid,
-                10_000L,
-                0L,
-                9_000L,   // 10_000 - 2_000 = 8_000이어야 하는데 9_000으로 전송
-                0L,
-                9_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-items-coupon-mismatch"))
-                .isInstanceOf(AmountMismatchException.class)
-                .extracting(e -> ((AmountMismatchException) e).getDetails())
-                .asString().contains("상품금액 계산 불일치");
-
-        assertThat(paymentRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("pgPayAmount가 0이면 PaymentType이 DEPOSIT으로 저장된다")
-    void savesPaymentTypeAsDepositWhenPgAmountIsZero() {
-        when(depositApiClient.getBalance(any())).thenReturn(100_000L);
-
-        PaymentRequest request = buildRequest(
-                null,
-                10_000L,
-                0L,
-                10_000L,
-                10_000L,
-                0L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        requestPaymentUseCase.execute(request, "idem-deposit-type");
-
-        Payment payment = paymentRepository.findAll().get(0);
-        assertThat(payment.getPaymentType()).isEqualTo(PaymentType.DEPOSIT);
-    }
-
-    @Test
-    @DisplayName("pgPayAmount가 0보다 크면 PaymentType이 MIXED로 저장된다")
-    void savesPaymentTypeAsMixedWhenPgAmountIsPositive() {
-        when(depositApiClient.getBalance(any())).thenReturn(100_000L);
-
-        PaymentRequest request = buildRequest(
-                null,
-                10_000L,
-                0L,
-                10_000L,
-                3_000L,
-                7_000L,
-                List.of(item(PRODUCT_UUID_1, 10_000L)));
-
-        requestPaymentUseCase.execute(request, "idem-mixed-type");
-
-        Payment payment = paymentRepository.findAll().get(0);
-        assertThat(payment.getPaymentType()).isEqualTo(PaymentType.MIXED);
-    }
-
-    @Test
-    @DisplayName("예치금은 정렬된 상품 순서대로 순차 차감된다")
-    void distributeDepositSequentially() {
-        when(depositApiClient.getBalance(any())).thenReturn(100_000L);
-
-        // PRODUCT_UUID_1 < PRODUCT_UUID_2 (UUID 문자열 정렬 기준)
-        // 예치금 15_000원, 상품1 = 10_000, 상품2 = 20_000
-        // 상품1에 10_000 전부 차감 후 상품2에 나머지 5_000 차감
-        PaymentRequest request = buildRequest(
-                null,
-                30_000L,
-                0L,
-                30_000L,
-                15_000L,
-                15_000L,
-                List.of(
-                        item(PRODUCT_UUID_2, 20_000L),
-                        item(PRODUCT_UUID_1, 10_000L)
-                ));
-
-        requestPaymentUseCase.execute(request, "idem-deposit-seq");
-
-        Payment payment = paymentRepository.findAll().get(0);
-        List<PaymentOrderItem> orderItems = paymentOrderItemRepository.findByPaymentId(payment.getId());
-
-        // UUID 정렬: PRODUCT_UUID_1 먼저, PRODUCT_UUID_2 다음
-        Map<UUID, Long> depositByProduct = orderItems.stream()
-                .collect(Collectors.toMap(PaymentOrderItem::getProductUuid, PaymentOrderItem::getPaymentDeposit));
-
-        assertThat(depositByProduct.get(PRODUCT_UUID_1)).isEqualTo(10_000L);
-        assertThat(depositByProduct.get(PRODUCT_UUID_2)).isEqualTo(5_000L);
-        assertThat(depositByProduct.values().stream().mapToLong(Long::longValue).sum()).isEqualTo(15_000L);
-    }
-
-    @Test
-    @DisplayName("상품 목록이 비어 있으면 예외를 던진다")
-    void rejectsWhenItemsEmpty() {
-        PaymentRequest request = buildRequest(
-                null,
-                0L,
-                0L,
-                0L,
-                0L,
-                0L,
-                List.of());
-
-        assertThatThrownBy(() -> requestPaymentUseCase.execute(request, "idem-empty-items"))
-                .isInstanceOf(AmountMismatchException.class)
-                .extracting(e -> ((AmountMismatchException) e).getDetails())
-                .asString().contains("비어 있습니다");
-
-        assertThat(paymentRepository.findAll()).isEmpty();
-    }
-
-    private Map<UUID, Long> couponByProductUuid(Payment payment) {
+    private Map<Integer, Long> couponByProductId(Payment payment) {
         return paymentOrderItemRepository.findByPaymentId(payment.getId()).stream()
-                .collect(Collectors.toMap(PaymentOrderItem::getProductUuid, PaymentOrderItem::getPaymentCoupon));
+                .collect(Collectors.toMap(PaymentOrderItem::getProductId, PaymentOrderItem::getPaymentCoupon));
     }
 
     private PaymentRequest buildRequest(UUID couponUuid,
@@ -491,11 +273,11 @@ class RequestPaymentUseCaseTest {
                 .build();
     }
 
-    private PaymentRequest.PaymentRequestItem item(UUID productUuid, long price) {
+    private PaymentRequest.PaymentRequestItem item(int productId, long price) {
         return PaymentRequest.PaymentRequestItem.builder()
                 .orderItemUuid(UUID.randomUUID())
-                .productUuid(productUuid)
-                .productName("product-" + productUuid)
+                .productId(productId)
+                .productName("product-" + productId)
                 .price(price)
                 .sellerUuid(UUID.randomUUID())
                 .build();

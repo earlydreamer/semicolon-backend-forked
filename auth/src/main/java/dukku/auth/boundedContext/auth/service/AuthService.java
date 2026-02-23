@@ -7,7 +7,6 @@ import dukku.auth.boundedContext.auth.infra.UserClient;
 import dukku.auth.boundedContext.auth.jwt.AuthTokenIssuer;
 import dukku.common.global.exception.UnauthorizedException;
 import dukku.common.shared.user.dto.UserVerificationResponse;
-import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.type.SocialProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +26,6 @@ public class AuthService {
 
     public TokenResponse login(LoginRequest request) {
         UserVerificationResponse user = userClient.verifyUser(request.getEmail(), request.getPassword());
-        validateRole(user, Role.USER);
-        return issueTokens(user);
-    }
-
-    public TokenResponse loginAdmin(LoginRequest request) {
-        UserVerificationResponse user = userClient.verifyUser(request.getEmail(), request.getPassword());
-        validateRole(user, Role.ADMIN);
         return issueTokens(user);
     }
 
@@ -91,12 +83,6 @@ public class AuthService {
             UUID userUuid = UUID.fromString(claims.getSubject());
             refreshTokenStoreService.delete(userUuid);
         } catch (UnauthorizedException ignored) {
-        }
-    }
-
-    private void validateRole(UserVerificationResponse user, Role expectedRole) {
-        if (user.getRole() != expectedRole) {
-            throw new UnauthorizedException("역할이 일치하지 않습니다");
         }
     }
 }

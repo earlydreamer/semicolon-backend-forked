@@ -1,7 +1,29 @@
+server:
+  port: 8086
+
 spring:
+  config:
+    import: classpath:application-common.yml
+  application:
+    name: payment
+
   datasource:
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payment_service}?sslmode=${DB_SSLMODE:disable}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/payment
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
   jpa:
     hibernate:

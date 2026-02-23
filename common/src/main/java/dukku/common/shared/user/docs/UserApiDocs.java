@@ -1,13 +1,10 @@
 package dukku.common.shared.user.docs;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.lang.annotation.Documented;
@@ -109,77 +106,6 @@ public final class UserApiDocs {
             }
     )
     public @interface RegisterUser {
-    }
-
-    @Documented
-    @Target(METHOD)
-    @Retention(RUNTIME)
-    @Operation(
-            summary = "회원가입 (중복요청 방지)",
-            description = "Idempotency-Key 헤더와 이메일 인증을 기반으로 회원가입을 처리합니다.",
-            requestBody = @RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            examples = @ExampleObject(
-                                    name = "Register Request",
-                                    value = """
-                                            {
-                                              "email": "semicolon@example.com",
-                                              "password": "Password123!",
-                                              "nickname": "세미콜론"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            responses = {
-                    @ApiResponse(
-                            responseCode = "201",
-                            description = "회원가입 성공",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    examples = @ExampleObject(
-                                            name = "Success Response",
-                                            value = """
-                                                    {
-                                                      "userUuid": "550e8400-e29b-41d4-a716-446655440000",
-                                                      "email": "semicolon@example.com",
-                                                      "nickname": "세미콜론",
-                                                      "role": "USER",
-                                                      "status": "ACTIVE"
-                                                    }
-                                                    """
-                                    )
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "잘못된 요청 (유효성 검증 실패, 이메일 인증 미완료 등)",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\": \"이메일 인증이 필요합니다.\"}")
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "409",
-                            description = "중복 요청 또는 이미 가입된 이메일",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    examples = @ExampleObject(value = "{\"message\": \"동일한 회원가입 요청이 처리 중입니다. 잠시 후 다시 시도해주세요.\"}")
-                            )
-                    )
-            }
-    )
-    @Parameters({
-            @Parameter(
-                    name = "Idempotency-Key",
-                    in = ParameterIn.HEADER,
-                    required = true,
-                    description = "중복 회원가입 요청 방지를 위한 멱등성 키"
-            )
-    })
-    public @interface RegisterUserV2 {
     }
 
     // =============== 2) 본인 정보 조회 ===============
