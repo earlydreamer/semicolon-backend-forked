@@ -2,20 +2,20 @@ package dukku.ai.app.usecase;
 
 import java.util.UUID;
 
+import dukku.ai.out.AiUserMemoryRepository;
 import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiUserMemory;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
-import dukku.ai.out.AiMemoryRepository;
 
 @Service
 public class CreateAiMemoryUseCase {
 
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
 
-    public CreateAiMemoryUseCase(AiMemoryRepository aiMemoryRepository) {
-        this.aiMemoryRepository = aiMemoryRepository;
+    public CreateAiMemoryUseCase(AiUserMemoryRepository aiUserMemoryRepository) {
+        this.aiUserMemoryRepository = aiUserMemoryRepository;
     }
 
     public AiUserMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
@@ -27,6 +27,6 @@ public class CreateAiMemoryUseCase {
                 .content(content)
                 .importanceScore(importanceScore)
                 .build();
-        return aiMemoryRepository.save(memory);
+        return aiUserMemoryRepository.save(memory);
     }
 }

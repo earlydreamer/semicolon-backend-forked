@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.UUID;
 
 import dukku.ai.entity.AiUserMemory;
+import dukku.ai.out.AiUserMemoryRepository;
 import org.springframework.stereotype.Service;
 
 import dukku.ai.global.policy.AiSimilarityPolicy;
-import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.type.MemoryType;
 import lombok.RequiredArgsConstructor;
 
@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FindRecommendationUseCase {
 
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
 
     public List<AiUserMemory> findByUserUuid(UUID userUuid) {
-        return aiMemoryRepository.findTopByUserIdAndMemoryType(
+        return aiUserMemoryRepository.findTopByUserIdAndMemoryType(
                 userUuid,
                 MemoryType.RECOMMENDATION.name(),
                 AiSimilarityPolicy.RECOMMENDATION_TOP_K

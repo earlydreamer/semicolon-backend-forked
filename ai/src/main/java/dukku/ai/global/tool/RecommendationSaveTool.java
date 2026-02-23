@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.UUID;
 
 import dukku.ai.entity.AiUserMemory;
+import dukku.ai.out.AiUserMemoryRepository;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.stereotype.Component;
 
-import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RecommendationSaveTool {
 
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
     private final EmbeddingModel embeddingModel;
 
     @Tool(description = "생성된 추천 결과를 저장합니다")
@@ -44,7 +44,7 @@ public class RecommendationSaveTool {
                     .importanceScore(0.7)
                     .build();
 
-            aiMemoryRepository.save(memory);
+            aiUserMemoryRepository.save(memory);
 
             log.info("[RecommendationSaveTool] {}건 추천 결과 저장 완료", products.size());
             return "사용자 %s의 추천 결과 %d건 저장 완료".formatted(userId, products.size());

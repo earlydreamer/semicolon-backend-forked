@@ -30,7 +30,7 @@ import lombok.experimental.SuperBuilder;
 public class AiUserMemory extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private UUID userUuid;
 
     @Enumerated(EnumType.STRING)

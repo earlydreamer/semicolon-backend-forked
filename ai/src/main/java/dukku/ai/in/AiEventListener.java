@@ -3,10 +3,14 @@ package dukku.ai.in;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dukku.ai.app.usecase.InitializeAiUserMemoryUseCase;
 import dukku.ai.app.usecase.ProductVectorSyncUseCase;
 import dukku.ai.app.usecase.CartRecommendationUseCase;
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.product.dto.product.ProductPayload;
 
+import dukku.common.shared.user.event.UserAiInitializationFailedEvent;
+import dukku.common.shared.user.event.UserProductInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,9 +29,23 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AiEventListener {
 
+    private final InitializeAiUserMemoryUseCase initializeAiUserMemoryUseCase;
+    private final EventPublisher eventPublisher;
     private final CartRecommendationUseCase cartRecommendationUseCase;
     private final ProductVectorSyncUseCase productVectorSyncUseCase;
     private final ObjectMapper objectMapper;
+
+    @KafkaListener(topics = "user.product-initialized", groupId = "${spring.application.name}-group")
+    public void handleProductInitialized(UserProductInitializedEvent event) {
+        try {
+            initializeAiUserMemoryUseCase.execute(event.userUuid(), event.nickname(), event.email());
+            log.info("[UserProductInitializedEvent] AI user initialization completed. userUuid={}", event.userUuid());
+        } catch (Exception e) {
+            String reason = e.getMessage() == null ? "AI user initialization exception" : e.getMessage();
+            eventPublisher.publish(new UserAiInitializationFailedEvent(event.userUuid(), reason));
+            log.error("[UserProductInitializedEvent] AI user 초기화 실패. userUuid={}", event.userUuid());
+        }
+    }
 
     @KafkaListener(topics = "cart-events", groupId = "${spring.application.name}-group")
     public void handleCartEvent(String eventJson) {

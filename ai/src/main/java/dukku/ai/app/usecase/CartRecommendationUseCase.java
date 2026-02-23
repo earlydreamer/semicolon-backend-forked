@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiSimilarityPolicy;
-import dukku.ai.out.AiMemoryRepository;
+import dukku.ai.out.AiUserMemoryRepository;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CartRecommendationUseCase {
 
     private final VectorStore vectorStore;
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
     private final EmbeddingModel embeddingModel;
 
     @Async
@@ -69,7 +69,7 @@ public class CartRecommendationUseCase {
                     .importanceScore(0.7)
                     .build();
 
-            aiMemoryRepository.save(memory);
+            aiUserMemoryRepository.save(memory);
 
             log.info("[CartRecommendation] 추천 {}건 저장 완료: userId={}", recommendedProducts.size(), userUuid);
 

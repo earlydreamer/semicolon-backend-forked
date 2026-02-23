@@ -18,7 +18,7 @@ import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
-import dukku.ai.out.AiMemoryRepository;
+import dukku.ai.out.AiUserMemoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +29,7 @@ public class UserMemoryWriteService {
 
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
     private final ObjectMapper objectMapper;
 
 
@@ -76,13 +76,13 @@ public class UserMemoryWriteService {
         float[] embedding = embeddingModel.embed(extraction.content());
         String embeddingStr = Arrays.toString(embedding);
 
-        List<AiUserMemory> duplicates = aiMemoryRepository.findDuplicateMemory(
+        List<AiUserMemory> duplicates = aiUserMemoryRepository.findDuplicateMemory(
                 userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
 
         if (!duplicates.isEmpty()) {
             AiUserMemory existing = duplicates.getFirst();
             existing.updateImportanceScore(extraction.confidence());
-            aiMemoryRepository.save(existing);
+            aiUserMemoryRepository.save(existing);
             log.info("[기억 추출] 기존 기억 업데이트: id={}, content={}", existing.getId(), existing.getContent());
         } else {
             AiUserMemory newMemory = AiUserMemory.builder()
@@ -93,7 +93,7 @@ public class UserMemoryWriteService {
                     .embedding(embedding)
                     .importanceScore(extraction.confidence())
                     .build();
-            aiMemoryRepository.save(newMemory);
+            aiUserMemoryRepository.save(newMemory);
             log.info("[기억 추출] 새 기억 저장: type={}/{}, content={}", extraction.memoryType(), extraction.subType(), extraction.content());
         }
     }

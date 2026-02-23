@@ -1,7 +1,7 @@
 package dukku.ai.global;
 
 import dukku.ai.entity.AiUserMemory;
-import dukku.ai.out.AiMemoryRepository;
+import dukku.ai.out.AiUserMemoryRepository;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AiInitData {
 
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
     private final VectorStore vectorStore;
     private final JdbcTemplate jdbcTemplate;
 
@@ -44,7 +44,7 @@ public class AiInitData {
             public void run(String... args) {
                 ensureVectorDimensions();
 
-                if (aiMemoryRepository.count() > 0) {
+                if (aiUserMemoryRepository.count() > 0) {
                     log.info("📌 [AiInitData] 기존 AI 메모리 데이터 존재 — 초기화 스킵");
                     return;
                 }
@@ -84,7 +84,7 @@ public class AiInitData {
                         "장바구니 추가 기반 추천 (기준: 맥북 프로 14인치 M3 Pro): 아이패드 프로 12.9 M2, 맥북 에어 M2, LG 그램 17인치 2024",
                         0.7);
 
-                log.info(" [AiInitData] AI 메모리 초기화 완료 (총 {}건)", aiMemoryRepository.count());
+                log.info(" [AiInitData] AI 메모리 초기화 완료 (총 {}건)", aiUserMemoryRepository.count());
 
                 // ===== VectorStore =====
                 // [안내] 아래 초기화 코드는 초기 개발/테스트용 샘플 데이터입니다.
@@ -154,7 +154,7 @@ public class AiInitData {
                 .content(content)
                 .importanceScore(importanceScore)
                 .build();
-        aiMemoryRepository.save(memory);
+        aiUserMemoryRepository.save(memory);
     }
 
     private static Document productDocument(String text) {
