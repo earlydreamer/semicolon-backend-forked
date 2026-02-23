@@ -14,6 +14,7 @@ jobs:
 
     env:
       SPRING_PROFILES_ACTIVE: release
+      SPRING_APPLICATION_JSON: '{"spring": {"jpa": {"hibernate": {"ddl-auto": "update"}}}}'
       SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
 
       DB_HOST: localhost
@@ -121,7 +122,7 @@ jobs:
           esac
 
       - name: Build and Test (Application Startup Only)
-        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info -Dspring.jpa.hibernate.ddl-auto=update
+        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info
 
       - name: Print Container Logs on Failure
         if: failure()
