@@ -13,8 +13,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    username: rolts1231@gmail.com                       #${MAIL_USERNAME:}
+    password: koim hwlv enkz ehro                       #${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -45,8 +45,8 @@ custom:
   email:
     verification:
       required: true
-      base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8080}
-      success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://dukku.shop}
+      base-url: ${EMAIL_VERIFICATION_BASE_URL:http://localhost:8082}
+      success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://localhost:3000/login}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}
   signup:
