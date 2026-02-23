@@ -73,13 +73,19 @@ jobs:
             echo "[1] cluster check"
             $K -n "$NS" get deploy -o wide
           
-            echo "[2] rollout sequential: set image -> annotate -> wait"
+            echo "[2] rollout sequential (Resource-Saving Mode): scale 0 -> set image -> scale 1 -> wait"
             for m in $MODS; do
               img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
-              echo " - deploy/${m} -> ${img}"
+              echo ">>> Deploying ${m} (Image: ${img}) <<<"
             
+              # [순차 기동 핵심] 자원 겹침을 방지하기 위해 기존 Pod를 먼저 완전히 종료
+              echo " - Scaling down ${m} to 0..."
+              $K -n "$NS" scale deploy/${m} --replicas=0
+              sleep 5
+            
+              # 이미지 및 어노테이션 업데이트
+              echo " - Updating image and metadata..."
               $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
-            
               $K -n "$NS" patch "deploy/${m}" -p "{
                 \"spec\": {
                   \"template\": {
@@ -94,11 +100,17 @@ jobs:
                 }
               }"
             
-              echo "[debug] pods for ${m}"
-              $K -n "$NS" get pods -l app=${m} -o wide || true
-              $K -n "$NS" describe deploy/${m} | grep -E "Replicas|Strategy" || true
+              # 새 버전 기동
+              echo " - Scaling up ${m} to 1..."
+              $K -n "$NS" scale deploy/${m} --replicas=1
             
+              # 완전히 뜰 때까지 대기
+              echo " - Waiting for ${m} to be ready..."
               $K -n "$NS" rollout status "deploy/${m}" --timeout=600s
+              
+              # 서버 부하 전이를 막기 위한 짧은 안정화 시간
+              echo " - Wait 10s for stability..."
+              sleep 10
             done
             
             echo "[3] current images (sanity check)"

@@ -92,3 +92,32 @@ custom:
   security:
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,https://localhost,http://localhost:3000,https://localhost:3000}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: release
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:redpanda:9092}
+
+  global:
+    internalBackUrl: ${INTERNAL_BACK_URL:http://auth:8081}
+  client:
+    user:
+      url: ${CUSTOM_CLIENT_USER_URL:http://user:8082}
+    product:
+      url: ${CUSTOM_CLIENT_PRODUCT_URL:http://product:8083}
+    settlement:
+      url: ${CUSTOM_CLIENT_SETTLEMENT_URL:http://settlement:8088}
+    order:
+      url: ${CUSTOM_CLIENT_ORDER_URL:http://order:8084}
+    payment:
+      url: ${CUSTOM_CLIENT_PAYMENT_URL:http://payment:8086}
+    coupon:
+      url: ${CUSTOM_CLIENT_COUPON_URL:http://coupon:8085}
+    deposit:
+      url: ${CUSTOM_CLIENT_DEPOSIT_URL:http://deposit:8087}
+    ai:
+      url: ${CUSTOM_CLIENT_AI_URL:http://ai:8089}
