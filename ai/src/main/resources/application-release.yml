@@ -2,8 +2,12 @@ spring:
   datasource:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ai_service}?sslmode=${DB_SSLMODE:disable}
-
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -23,16 +27,9 @@ jwt:
   access:
     secret:
       key: ${JWT_ACCESS_SECRET}
-  refresh:
-    secret:
-      key: ${JWT_REFRESH_SECRET}
 
 crypto:
   key: ${CRYPTO_KEY}
-
-slack:
-  webhook:
-    url: ${SLACK_WEBHOOK_URL}
 
 custom:
   global:
