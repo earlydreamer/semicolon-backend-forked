@@ -32,6 +32,7 @@ public class AuthController {
     }
 
     @PostMapping("/admin/login")
+    @AuthApiDocs.AdminLogin
     public ResponseEntity<TokenResponse> adminLogin(
             @RequestBody @Validated LoginRequest request
     ) {
