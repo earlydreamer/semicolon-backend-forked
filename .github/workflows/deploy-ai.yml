@@ -1,0 +1,101 @@
+name: Deploy AI Only to k3s (EC2)
+
+on:
+  push:
+    branches: [ "infra/hwang" ] # dev 브랜치 푸시 시 자동 배포
+  workflow_dispatch: # 모든 브랜치에서 수동 실행 가능
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+  EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+  K8S_NAMESPACE: semicolon
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push AI (sha + latest)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/semicolon-ai:${{ github.sha }}
+            ${{ env.DOCKER_USERNAME }}/semicolon-ai:latest
+          build-args: |
+            MODULE_NAME=ai
+          cache-from: type=gha,scope=ai
+          cache-to: type=gha,mode=max,scope=ai
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy AI to EC2 (k3s) via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ env.EC2_SSH_KEY }}
+          port: 22
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+  
+            NS="${{ env.K8S_NAMESPACE }}"
+            SHA="${{ github.sha }}"
+            DOCKER_USERNAME="${{ env.DOCKER_USERNAME }}"
+            K="sudo kubectl"
+            
+            m="ai"
+            img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
+            
+            echo ">>> Deploying ${m} (Image: ${img}) <<<"
+            
+            # [기동 핵심] 자원 절약을 위한 Scale down -> Update -> Scale up
+            echo " - Scaling down ${m} to 0..."
+            $K -n "$NS" scale deploy/${m} --replicas=0
+            sleep 5
+            
+            echo " - Updating image to ${img}..."
+            $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
+            
+            echo " - Updating metadata..."
+            $K -n "$NS" patch "deploy/${m}" -p "{
+              \"spec\": {
+                \"template\": {
+                  \"metadata\": {
+                    \"annotations\": {
+                      \"deploy.git.sha\": \"${SHA}\",
+                      \"deploy.git.time\": \"$(date +'%Y-%m-%dT%H:%M:%S%z')\"
+                    }
+                  }
+                }
+              }
+            }"
+            
+            echo " - Scaling up ${m} to 1..."
+            $K -n "$NS" scale deploy/${m} --replicas=1
+            
+            echo " - Waiting for rollout status..."
+            $K -n "$NS" rollout status "deploy/${m}" --timeout=300s
+            
+            echo "[Final Status]"
+            $K -n "$NS" get pods -l app=${m}
+            
+            echo "Done!"
