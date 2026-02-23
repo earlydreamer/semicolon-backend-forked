@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
-    @Value("${spring.data.mongodb.host:localhost}")
+    @Value("${spring.data.mongodb.host:${MONGO_HOST:localhost}}")
     private String host;
 
     @Value("${spring.data.mongodb.port:27017}")
