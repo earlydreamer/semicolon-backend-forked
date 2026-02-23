@@ -21,16 +21,9 @@ jwt:
   access:
     secret:
       key: ${JWT_ACCESS_SECRET}
-  refresh:
-    secret:
-      key: ${JWT_REFRESH_SECRET}
 
 crypto:
   key: ${CRYPTO_KEY}
-
-slack:
-  webhook:
-    url: ${SLACK_WEBHOOK_URL}
 
 custom:
   global:

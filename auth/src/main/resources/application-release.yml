@@ -24,10 +24,6 @@ jwt:
 crypto:
   key: ${CRYPTO_KEY}
 
-slack:
-  webhook:
-    url: ${SLACK_WEBHOOK_URL}
-
 custom:
   global:
     internalBackUrl: ${INTERNAL_BACK_URL}

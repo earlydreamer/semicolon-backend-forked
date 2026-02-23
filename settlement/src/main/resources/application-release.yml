@@ -7,11 +7,6 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration/settlement
 
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration/settlement
-
   jpa:
     hibernate:
       ddl-auto: validate
@@ -26,9 +21,6 @@ jwt:
   access:
     secret:
       key: ${JWT_ACCESS_SECRET}
-  refresh:
-    secret:
-      key: ${JWT_REFRESH_SECRET}
 
 crypto:
   key: ${CRYPTO_KEY}
