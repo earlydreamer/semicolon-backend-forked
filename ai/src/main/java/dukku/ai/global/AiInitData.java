@@ -11,6 +11,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class AiInitData {
     private static final UUID USER_2_UUID = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     @Bean
+    @Profile("dev")
     public CommandLineRunner initAiMemories() {
         return new CommandLineRunner() {
             @Override
@@ -76,6 +78,8 @@ public class AiInitData {
                 log.info(" [AiInitData] AI 메모리 초기화 완료 (총 {}건)", aiMemoryRepository.count());
 
                 // ===== VectorStore =====
+                // [안내] 아래 초기화 코드는 초기 개발/테스트용 샘플 데이터입니다.
+                // 실제 환경에서는 ProductVectorSyncService를 통한 이벤트 기반 동기화를 사용합니다.
                 log.info(" [AiInitData] VectorStore 상품 데이터 초기화 시작");
                 List<Document> products = List.of(
                         new Document("스노우피크 랜드록 텐트 - 캠핑용 거실형 텐트, 4-6인용"),
