@@ -115,13 +115,12 @@ container_running_name() {
 ensure_certs() {
   mkdir -p "$CERTS_DIR"
 
-  if [[ -f "$CERT_FULLCHAIN" && -f "$CERT_PRIVKEY" ]]; then
-    return 0
-  fi
-
-  echo "[${SCRIPT_NAME}] TLS cert not found. Generating certs..."
+  rm -f "$CERT_FULLCHAIN" "$CERT_PRIVKEY"
+  echo "[${SCRIPT_NAME}] Generating TLS certs..."
 
   if command -v mkcert >/dev/null 2>&1; then
+    echo "[${SCRIPT_NAME}] Using mkcert ..."
+    mkcert -install >/dev/null 2>&1 || echo "[${SCRIPT_NAME}] mkcert -install failed or requires elevated privileges. Certificate may not be trusted."
     if ! mkcert -cert-file "$CERT_FULLCHAIN" -key-file "$CERT_PRIVKEY" api.dukku.shop localhost 127.0.0.1 >/dev/null 2>&1; then
       echo "[${SCRIPT_NAME}] mkcert generation failed." >&2
       return 1
