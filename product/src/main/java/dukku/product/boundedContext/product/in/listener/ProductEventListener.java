@@ -29,13 +29,11 @@ public class ProductEventListener {
     private final ReleaseProductReservationUseCase releaseProductReservationUseCase;
 
     private final ProductRepository productRepository;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
-
+    // Kafka DTO 역직렬화 전략과 맞추기 위해 String 수신 대신 DTO 시그니처를 사용한다.
     // 1. 생성 동기화
     @KafkaListener(topics = "product.created", groupId = "${spring.application.name}-group")
-    public void syncCreate(String eventJson) {
+    public void syncCreate(ProductCreatedEvent event) {
         try {
-            ProductCreatedEvent event = objectMapper.readValue(eventJson, ProductCreatedEvent.class);
             Product product = productRepository.findById(event.productId())
                     .orElseThrow(); // Or handle gracefully
             saveToElasticSearchUseCase.execute(product, true);
@@ -46,9 +44,8 @@ public class ProductEventListener {
 
     // 2. 수정 동기화
     @KafkaListener(topics = "product.updated", groupId = "${spring.application.name}-group")
-    public void syncUpdate(String eventJson) {
+    public void syncUpdate(ProductUpdatedEvent event) {
         try {
-            ProductUpdatedEvent event = objectMapper.readValue(eventJson, ProductUpdatedEvent.class);
             log.info("상품 업데이트 동기화: id={}", event.productId());
 
             Product product = productRepository.findById(event.productId())
@@ -61,9 +58,8 @@ public class ProductEventListener {
 
     // 3. 삭제 동기화
     @KafkaListener(topics = "product.deleted", groupId = "${spring.application.name}-group")
-    public void syncDelete(String eventJson) {
+    public void syncDelete(ProductDeletedEvent event) {
         try {
-            ProductDeletedEvent event = objectMapper.readValue(eventJson, ProductDeletedEvent.class);
             productSyncFacade.syncProductToElasticsearch(event.productId().longValue());
         } catch (Exception e) {
             log.error("product.deleted 이벤트 처리 실패", e);
@@ -72,9 +68,8 @@ public class ProductEventListener {
 
     // 4. 통계 동기화 (배치 작업 후 실행)
     @KafkaListener(topics = "product.stats-updated", groupId = "${spring.application.name}-group")
-    public void syncStats(String eventJson) {
+    public void syncStats(ProductStatsBulkUpdatedEvent event) {
         try {
-            ProductStatsBulkUpdatedEvent event = objectMapper.readValue(eventJson, ProductStatsBulkUpdatedEvent.class);
             syncSearchProductStatsUseCase.execute(event.getStats());
         } catch (Exception e) {
             log.error("product.stats-updated 이벤트 처리 실패", e);
@@ -85,9 +80,8 @@ public class ProductEventListener {
      * 1. 결제 완료 -> 판매 확정 처리 위임
      */
     @KafkaListener(topics = "order.product-sale-confirmed", groupId = "${spring.application.name}-group")
-    public void handleOrderConfirmed(String eventJson) {
+    public void handleOrderConfirmed(OrderProductSaleConfirmedEvent event) {
         try {
-            OrderProductSaleConfirmedEvent event = objectMapper.readValue(eventJson, OrderProductSaleConfirmedEvent.class);
             log.info("판매 확정 처리 트리거: orderUuid={}", event.orderUuid());
 
             confirmProductSaleUseCase.execute(event.orderUuid(), event.productUuids());
@@ -100,9 +94,8 @@ public class ProductEventListener {
      * 2. 결제 실패/취소 -> 예약 해제 처리 위임
      */
     @KafkaListener(topics = "order.product-sale-released", groupId = "${spring.application.name}-group")
-    public void handleOrderReleased(String eventJson) {
+    public void handleOrderReleased(OrderProductSaleReleasedEvent event) {
         try {
-            OrderProductSaleReleasedEvent event = objectMapper.readValue(eventJson, OrderProductSaleReleasedEvent.class);
             log.info("예약 해제 처리 트리거: orderUuid={}", event.orderUuid());
 
             releaseProductReservationUseCase.execute(event.orderUuid(), event.productUuids());
