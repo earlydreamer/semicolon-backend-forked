@@ -58,6 +58,7 @@ public class SecurityReleaseConfig {
                                 .permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/admin/auth/login",
                                 "/oauth2/**",
                                 "/login/oauth2/**"
                         )
