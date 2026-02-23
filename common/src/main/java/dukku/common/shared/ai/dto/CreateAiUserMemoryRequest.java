@@ -12,7 +12,6 @@ public record CreateAiUserMemoryRequest(
         @NotNull MemoryType memoryType,
         @NotNull MemorySubType subType,
         @NotBlank String content,
-        Double importanceScore,
-        Double confidenceScore
+        Double importanceScore
 ) {
 }

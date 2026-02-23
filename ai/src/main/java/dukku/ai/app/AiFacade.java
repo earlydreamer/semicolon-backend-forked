@@ -56,8 +56,7 @@ public class AiFacade {
                 request.memoryType(),
                 request.subType(),
                 request.content(),
-                request.importanceScore(),
-                request.confidenceScore()
+                request.importanceScore()
         );
         return toResponse(memory);
     }
@@ -66,8 +65,7 @@ public class AiFacade {
     public AiUserMemoryResponse update(Integer aiMemoryId, UpdateAiUserMemoryRequest request) {
         AiUserMemory memory = updateAiMemoryUseCase.update(
                 aiMemoryId,
-                request.importanceScore(),
-                request.confidenceScore()
+                request.importanceScore()
         );
         return toResponse(memory);
     }
@@ -92,7 +90,6 @@ public class AiFacade {
                 memory.getSubType(),
                 memory.getContent(),
                 memory.getImportanceScore(),
-                memory.getConfidenceScore(),
                 memory.getAccessCount(),
                 memory.getCreatedAt(),
                 memory.getUpdatedAt()

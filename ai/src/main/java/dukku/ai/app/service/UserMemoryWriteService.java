@@ -81,7 +81,7 @@ public class UserMemoryWriteService {
 
         if (!duplicates.isEmpty()) {
             AiUserMemory existing = duplicates.getFirst();
-            existing.updateConfidence(extraction.confidence());
+            existing.updateImportanceScore(extraction.confidence());
             aiMemoryRepository.save(existing);
             log.info("[기억 추출] 기존 기억 업데이트: id={}, content={}", existing.getId(), existing.getContent());
         } else {
@@ -92,7 +92,6 @@ public class UserMemoryWriteService {
                     .content(extraction.content())
                     .embedding(embedding)
                     .importanceScore(extraction.confidence())
-                    .confidenceScore(extraction.confidence())
                     .build();
             aiMemoryRepository.save(newMemory);
             log.info("[기억 추출] 새 기억 저장: type={}/{}, content={}", extraction.memoryType(), extraction.subType(), extraction.content());

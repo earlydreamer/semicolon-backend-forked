@@ -52,21 +52,12 @@ public class AiUserMemory extends BaseIdAndUUIDAndTime {
     @Column(nullable = false)
     private Double importanceScore;
 
-    @Column(nullable = false)
-    private Double confidenceScore;
-
     @Builder.Default
     @Column(nullable = false)
     private Integer accessCount = 0;
 
-    private String sourceMessageId;
-
     public void incrementAccessCount() {
         this.accessCount++;
-    }
-
-    public void updateConfidence(Double newConfidence) {
-        this.confidenceScore = (this.confidenceScore + newConfidence) / 2.0;
     }
 
     public void updateImportanceScore(Double score) {

@@ -55,34 +55,34 @@ public class AiInitData {
                 // 프로필
                 saveMemory(USER_1_UUID, MemoryType.PROFILE, MemorySubType.GENERAL,
                         "30대 남성 개발자. 캠핑과 전자기기에 관심이 많음.",
-                        0.95, 0.9);
+                        0.95);
 
                 // 쇼핑 선호도
                 saveMemory(USER_1_UUID, MemoryType.PREFERENCE, MemorySubType.SHOPPING,
                         "가성비 좋은 캠핑 용품을 선호함. 경량 제품 위주로 구매. 브랜드는 헬리녹스, 스노우피크 선호.",
-                        0.85, 0.8);
+                        0.85);
 
                 // 추천 결과 (장바구니 기반)
                 saveMemory(USER_1_UUID, MemoryType.RECOMMENDATION, MemorySubType.SHOPPING,
                         "장바구니 추가 기반 추천 (기준: 헬리녹스 체어제로 블랙): 스노우피크 랜드록 텐트, 스노우피크 티타늄 싱글머그 450, 힐레베르그 아틀라스 4인용",
-                        0.7, 0.8);
+                        0.7);
 
                 saveMemory(USER_1_UUID, MemoryType.RECOMMENDATION, MemorySubType.SHOPPING,
                         "장바구니 추가 기반 추천 (기준: 소니 WF-1000XM5 무선이어폰): 소니 WH-1000XM5 무선 헤드폰, 에어팟 맥스 스페이스그레이, 젠하이저 HD660S2",
-                        0.7, 0.8);
+                        0.7);
 
                 // ===== User 2 (테크마스터) =====
                 saveMemory(USER_2_UUID, MemoryType.PROFILE, MemorySubType.GENERAL,
                         "전자기기 덕후. 최신 IT 기기 리뷰를 즐겨봄.",
-                        0.9, 0.85);
+                        0.9);
 
                 saveMemory(USER_2_UUID, MemoryType.PREFERENCE, MemorySubType.SHOPPING,
                         "애플 생태계 선호. 맥북, 아이패드, 아이폰 시리즈에 관심.",
-                        0.8, 0.75);
+                        0.8);
 
                 saveMemory(USER_2_UUID, MemoryType.RECOMMENDATION, MemorySubType.SHOPPING,
                         "장바구니 추가 기반 추천 (기준: 맥북 프로 14인치 M3 Pro): 아이패드 프로 12.9 M2, 맥북 에어 M2, LG 그램 17인치 2024",
-                        0.7, 0.8);
+                        0.7);
 
                 log.info(" [AiInitData] AI 메모리 초기화 완료 (총 {}건)", aiMemoryRepository.count());
 
@@ -146,14 +146,13 @@ public class AiInitData {
     }
 
     private void saveMemory(UUID userUuid, MemoryType memoryType, MemorySubType subType,
-                            String content, double importanceScore, double confidenceScore) {
+                            String content, double importanceScore) {
         AiUserMemory memory = AiUserMemory.builder()
                 .userUuid(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)
                 .content(content)
                 .importanceScore(importanceScore)
-                .confidenceScore(confidenceScore)
                 .build();
         aiMemoryRepository.save(memory);
     }

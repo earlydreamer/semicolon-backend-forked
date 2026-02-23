@@ -42,7 +42,6 @@ public class RecommendationSaveTool {
                     .content(content)
                     .embedding(embedding)
                     .importanceScore(0.7)
-                    .confidenceScore(0.8)
                     .build();
 
             aiMemoryRepository.save(memory);

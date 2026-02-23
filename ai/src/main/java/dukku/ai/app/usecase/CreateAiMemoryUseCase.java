@@ -19,14 +19,13 @@ public class CreateAiMemoryUseCase {
     }
 
     public AiUserMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
-                               String content, Double importanceScore, Double confidenceScore) {
+                               String content, Double importanceScore) {
         AiUserMemory memory = AiUserMemory.builder()
                 .userUuid(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)
                 .content(content)
                 .importanceScore(importanceScore)
-                .confidenceScore(confidenceScore)
                 .build();
         return aiMemoryRepository.save(memory);
     }

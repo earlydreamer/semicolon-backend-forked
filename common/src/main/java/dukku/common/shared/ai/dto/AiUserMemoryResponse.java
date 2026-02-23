@@ -13,7 +13,6 @@ public record AiUserMemoryResponse(
         MemorySubType subType,
         String content,
         Double importanceScore,
-        Double confidenceScore,
         Integer accessCount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

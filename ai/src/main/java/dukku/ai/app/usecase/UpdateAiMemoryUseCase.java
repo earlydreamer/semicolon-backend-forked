@@ -15,15 +15,12 @@ public class UpdateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public AiUserMemory update(Integer aiMemoryId, Double importanceScore, Double confidenceScore) {
+    public AiUserMemory update(Integer aiMemoryId, Double importanceScore) {
         AiUserMemory memory = aiMemoryRepository.findById(aiMemoryId)
                 .orElseThrow(() -> new AiMemoryNotFoundException(aiMemoryId));
 
         if (importanceScore != null) {
             memory.updateImportanceScore(importanceScore);
-        }
-        if (confidenceScore != null) {
-            memory.updateConfidence(confidenceScore);
         }
         return memory;
     }
