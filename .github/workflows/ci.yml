@@ -121,7 +121,7 @@ jobs:
           esac
 
       - name: Build and Test (Application Startup Only)
-        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info
+        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info -Dspring.jpa.hibernate.ddl-auto=update
 
       - name: Print Container Logs on Failure
         if: failure()
