@@ -108,7 +108,7 @@ public class OrderCancellationIntegrationTest {
                     "toss-order-id-" + orderUuid);
             p.approve("pg-key-123");
 
-            PaymentOrderItem item = PaymentOrderItem.create(p, orderUuid, orderItemUuid, 1, "테스트 상품", amount, 0L,
+            PaymentOrderItem item = PaymentOrderItem.create(p, orderUuid, orderItemUuid, UUID.randomUUID(), "테스트 상품", amount, 0L,
                     UUID.randomUUID(), 0L);
             p.addItem(item);
 
