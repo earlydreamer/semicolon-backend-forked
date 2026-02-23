@@ -2,7 +2,6 @@ package dukku.product.boundedContext.product.app.usecase.shop;
 
 import dukku.common.shared.product.dto.shop.ShopResponse;
 import dukku.common.shared.product.exception.ProductSellerNotFoundException;
-import dukku.common.shared.product.exception.ProductUserNotFoundException;
 import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
@@ -28,7 +27,7 @@ public class FindShopUseCase {
         String nickname = productUserRepository.findById(seller.getUserUuid())
                 .map(user -> user.getNickname())
                 .filter(StringUtils::hasText)
-                .orElseThrow(ProductUserNotFoundException::new);
+                .orElseGet(() -> "이름없음");
 
         return ProductSeller.from(seller, nickname);
     }

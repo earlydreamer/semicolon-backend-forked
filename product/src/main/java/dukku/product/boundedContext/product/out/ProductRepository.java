@@ -11,28 +11,26 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import javax.swing.text.html.Option;
-import java.util.List;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, CustomProductRepository {
     @Query("""
-        select p.id
-        from Product p
-        where p.uuid = :productUuid
-          and p.deletedAt is null
-        """)
+            select p.id
+            from Product p
+            where p.uuid = :productUuid
+              and p.deletedAt is null
+            """)
     Optional<Integer> findIdByUuidAndDeletedAtIsNull(UUID productUuid);
 
     @Query("""
-select distinct p
-from Product p
-left join fetch p.images i
-left join fetch p.category c
-where p.uuid = :uuid
-""")
+            select distinct p
+            from Product p
+            left join fetch p.images i
+            left join fetch p.category c
+            where p.uuid = :uuid
+            """)
     Optional<Product> findByUuidWithImagesAndCategory(@Param("uuid") UUID uuid);
 
     Optional<Product> findByUuid(UUID productUuid);
@@ -49,20 +47,17 @@ where p.uuid = :uuid
 
     @EntityGraph(attributePaths = "images")
     Page<Product> findBySellerUuidAndSaleStatusAndDeletedAtIsNull(
-            UUID sellerUuid, SaleStatus saleStatus, Pageable pageable
-    );
+            UUID sellerUuid, SaleStatus saleStatus, Pageable pageable);
 
     // 1. 카테고리별 조회 (Fallback용) - 인덱스 필수! (category_id)
     Page<Product> findByCategory_IdInAndVisibilityStatusAndDeletedAtIsNull(
             List<Integer> categoryIds,
             VisibilityStatus visibilityStatus,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     // 2. 전체 최신순 조회 (Fallback용)
     // 검색어가 들어와도 그냥 이걸로 돌려버립니다.
     Page<Product> findByVisibilityStatusAndDeletedAtIsNull(
             VisibilityStatus visibilityStatus,
-            Pageable pageable
-    );
+            Pageable pageable);
 }
