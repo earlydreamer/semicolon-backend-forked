@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 rem =========================================================
 rem Local nginx helper for Windows.
-rem Usage: nginx-local.bat [up^|down^|restart^|reload^|logs^|ps^|toggle] [pause^-p] [-y^|--yes]
+rem Usage: nginx-local.bat [up^|down^|restart^|reload^|logs^|ps^|toggle] [pause^-p] [-y^|--yes] [--no-pause]
 rem =========================================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -19,21 +19,42 @@ if "%BACKEND_DOCKER_NETWORK%"=="" (
     set "NETWORK_NAME=%BACKEND_DOCKER_NETWORK%"
 )
 
-set "ACTION=%~1"
-if "%ACTION%"=="" set "ACTION=toggle"
-
-set "PAUSE_AFTER=0"
+set "ACTION=toggle"
+set "PAUSE_AFTER=1"
 set "FORCE_DOWN=0"
 set "SKIP_PAUSE=0"
-if "%~1"=="" set "PAUSE_AFTER=1"
+set "REMOVE_ORPHANS=0"
+set "UP_EXTRA_ARGS="
+
 for %%A in (%*) do (
-    if /I "%%~A"=="pause" set "PAUSE_AFTER=1"
-    if /I "%%~A"=="-p" set "PAUSE_AFTER=1"
-    if /I "%%~A"=="-y" set "FORCE_DOWN=1"
-    if /I "%%~A"=="--yes" set "FORCE_DOWN=1"
-    if /I "%%~A"=="--no-pause" set "SKIP_PAUSE=1"
+    set "ARG=%%~A"
+    if /I "%ARG%"=="pause" set "PAUSE_AFTER=1"
+    if /I "%ARG%"=="-p" set "PAUSE_AFTER=1"
+    if /I "%ARG%"=="-y" set "FORCE_DOWN=1"
+    if /I "%ARG%"=="--yes" set "FORCE_DOWN=1"
+    if /I "%ARG%"=="--no-pause" set "SKIP_PAUSE=1"
+    if /I "%ARG%"=="--remove-orphans" set "REMOVE_ORPHANS=1"
+    if /I "%ARG%"=="--orphan" set "REMOVE_ORPHANS=1"
+    if /I "%ARG%"=="-h" set "ACTION=help"
+    if /I "%ARG%"=="--help" set "ACTION=help"
+    if /I "%ARG:~0,1%" NEQ "-" (
+        if /I "%ARG%"=="up" set "ACTION=up"
+        if /I "%ARG%"=="down" set "ACTION=down"
+        if /I "%ARG%"=="restart" set "ACTION=restart"
+        if /I "%ARG%"=="reload" set "ACTION=reload"
+        if /I "%ARG%"=="logs" set "ACTION=logs"
+        if /I "%ARG%"=="ps" set "ACTION=ps"
+        if /I "%ARG%"=="toggle" set "ACTION=toggle"
+        if /I "%ARG%"=="help" set "ACTION=help"
+    )
 )
+
+if "%ACTION%"=="help" goto :help
+
 if "%SKIP_PAUSE%"=="1" set "PAUSE_AFTER=0"
+
+call :ensure_docker
+if errorlevel 1 goto :finish
 
 docker compose version >nul 2>&1
 if not errorlevel 1 (
@@ -49,6 +70,18 @@ if not errorlevel 1 (
     )
 )
 
+goto :unknown_action
+
+:ensure_docker
+docker version >nul 2>&1
+if errorlevel 1 (
+    echo [nginx-local] Docker is not running or unavailable. Start Docker Desktop and retry.
+    set "EXIT_CODE=1"
+    goto :finish
+)
+goto :eof
+
+:unknown_action
 if /I "%ACTION%"=="up" goto :up
 if /I "%ACTION%"=="down" goto :down
 if /I "%ACTION%"=="restart" goto :restart
@@ -57,7 +90,8 @@ if /I "%ACTION%"=="logs" goto :logs
 if /I "%ACTION%"=="ps" goto :ps
 if /I "%ACTION%"=="toggle" goto :toggle
 
-echo [nginx-local] Unknown action: %ACTION%
+:help
+    echo [nginx-local] Unknown or missing action: %ACTION%
 echo Usage: nginx-local.bat [up^|down^|restart^|reload^|logs^|ps^|toggle] [pause^-p] [-y^|--yes] [--no-pause]
 set "EXIT_CODE=1"
 goto :finish
@@ -111,59 +145,51 @@ if not exist "%CERT_PRIVKEY%" (
 )
 goto :eof
 
-:detect_compose
-docker compose version >nul 2>&1
-if not errorlevel 1 (
-    set "COMPOSE_CMD=docker compose"
-    goto :eof
-)
-
-where docker-compose >nul 2>&1
-if not errorlevel 1 (
-    set "COMPOSE_CMD=docker-compose"
-    goto :eof
-)
-
-echo [nginx-local] Docker compose command not found. Install Docker Compose plugin or docker-compose.
-set "EXIT_CODE=1"
-goto :finish
-
-:up
+:ensure_network
 docker network inspect "%NETWORK_NAME%" >nul 2>&1
 if errorlevel 1 (
     echo [nginx-local] Docker network "%NETWORK_NAME%" not found. Creating...
     docker network create "%NETWORK_NAME%" >nul
     if errorlevel 1 (
+        echo [nginx-local] Failed to create docker network "%NETWORK_NAME%".
         set "EXIT_CODE=1"
         goto :finish
     )
 )
+goto :eof
 
+:up
+if "%REMOVE_ORPHANS%"=="1" set "UP_EXTRA_ARGS=--remove-orphans"
+docker network inspect "%NETWORK_NAME%" >nul 2>&1
+if errorlevel 1 (
+    echo [nginx-local] Docker network "%NETWORK_NAME%" not found. Creating...
+    docker network create "%NETWORK_NAME%" >nul
+    if errorlevel 1 (
+        echo [nginx-local] Failed to create docker network "%NETWORK_NAME%".
+        set "EXIT_CODE=1"
+        goto :finish
+    )
+)
 call :ensure_certs
 if errorlevel 1 (
     echo [nginx-local] Failed to prepare cert files.
-    set "EXIT_CODE=1"
     goto :finish
 )
-
-%COMPOSE_CMD% -f "%COMPOSE_FILE%" up -d nginx
+    %COMPOSE_CMD% -f "%COMPOSE_FILE%" up -d %UP_EXTRA_ARGS% nginx
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :down
 set "RUNNING_ID="
-for /f "usebackq delims=" %%I in (`docker ps --filter "name=semicolon-nginx" --filter "status=running" -q`) do (
-    set "RUNNING_ID=%%I"
-    goto :down_exec_check
-)
-:down_exec_check
+for /f "delims=" %%I in ('docker ps --filter "name=semicolon-nginx" --filter "status=running" -q') do set "RUNNING_ID=%%I"
+
 if defined RUNNING_ID goto :down_detected
 goto :down_execute
 
 :down_detected
 if not "%FORCE_DOWN%"=="1" (
     echo [nginx-local] semicolon-nginx is currently UP.
-    set /p CONFIRM_DOWN=Proceed with down? ^(y/N^): 
+    set /p CONFIRM_DOWN=Proceed with down? (y/N): 
     if /I not "!CONFIRM_DOWN!"=="y" (
         echo [nginx-local] Canceled.
         set "EXIT_CODE=0"
@@ -178,11 +204,8 @@ goto :finish
 
 :toggle
 set "RUNNING_ID="
-for /f "usebackq delims=" %%I in (`docker ps --filter "name=semicolon-nginx" --filter "status=running" -q`) do (
-    set "RUNNING_ID=%%I"
-    goto :toggle_exec_check
-)
-:toggle_exec_check
+for /f "delims=" %%I in ('docker ps --filter "name=semicolon-nginx" --filter "status=running" -q') do set "RUNNING_ID=%%I"
+
 if defined RUNNING_ID (
     echo [nginx-local] semicolon-nginx is running. Stopping...
     %COMPOSE_CMD% -f "%COMPOSE_FILE%" down
@@ -191,6 +214,23 @@ if defined RUNNING_ID (
 )
 
 echo [nginx-local] semicolon-nginx is not running. Starting...
+if "%REMOVE_ORPHANS%"=="1" set "UP_EXTRA_ARGS=--remove-orphans"
+docker network inspect "%NETWORK_NAME%" >nul 2>&1
+if errorlevel 1 (
+    echo [nginx-local] Docker network "%NETWORK_NAME%" not found. Creating...
+    docker network create "%NETWORK_NAME%" >nul
+    if errorlevel 1 (
+        echo [nginx-local] Failed to create docker network "%NETWORK_NAME%".
+        set "EXIT_CODE=1"
+        goto :finish
+    )
+)
+call :ensure_certs
+if errorlevel 1 (
+    echo [nginx-local] Failed to prepare cert files.
+    goto :finish
+)
+
 goto :up
 
 :restart
@@ -199,11 +239,11 @@ set "EXIT_CODE=%errorlevel%"
 goto :finish
 
 :reload
-docker exec semicolon-nginx nginx -t || (
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" exec nginx nginx -t || (
     set "EXIT_CODE=1"
     goto :finish
 )
-docker exec semicolon-nginx nginx -s reload
+%COMPOSE_CMD% -f "%COMPOSE_FILE%" exec nginx nginx -s reload
 set "EXIT_CODE=%errorlevel%"
 goto :finish
 
