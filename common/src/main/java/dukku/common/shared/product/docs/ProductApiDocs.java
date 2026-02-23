@@ -97,9 +97,11 @@ public final class ProductApiDocs {
               "price": 1500000,
               "stock": 10,
               "images": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
-              "sellerInfo": {
-                "shopUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
-                "shopName": "최고의 상점"
+              "seller": {
+                "sellerUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
+                "nickname": "최고의 상점",
+                "averageRating": 4.90,
+                "reviewCount": 18
               }
             }
             """)))
