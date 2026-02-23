@@ -70,10 +70,13 @@ jobs:
             
             MODS="auth user product order coupon payment deposit settlement ai"
             
-            echo "[1] cluster check"
+            echo "[1] Pre-Cleanup: Remove dangling containers"
+            docker container prune -f || true
+            
+            echo "[2] cluster check"
             $K -n "$NS" get deploy -o wide
           
-            echo "[2] rollout sequential (Resource-Saving Mode): scale 0 -> set image -> scale 1 -> wait"
+            echo "[3] rollout sequential (Resource-Saving Mode): scale 0 -> set image -> scale 1 -> wait"
             for m in $MODS; do
               img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
               echo ">>> Deploying ${m} (Image: ${img}) <<<"
@@ -123,8 +126,7 @@ jobs:
             $K -n "$NS" get pods -o wide
             $K -n "$NS" get rs -o wide
             
-            echo "[5] rollout history"
-            for m in $MODS; do
-              echo "=== ${m} ==="
-              $K -n "$NS" rollout history "deploy/${m}" || true
-            done
+            echo "[6] Post-Cleanup: Remove unused images"
+            docker image prune -f || true
+            
+            echo "Done!"

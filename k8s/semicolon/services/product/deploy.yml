@@ -44,21 +44,24 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8083
-            failureThreshold: 20
-            periodSeconds: 10 # 최대 200초 동안 구동 대기
+            failureThreshold: 30
+            periodSeconds: 10 # 최대 300초 동안 구동 대기
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8083
             initialDelaySeconds: 10 # startupProbe 성공 후부터 체크
             periodSeconds: 20
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8083
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
