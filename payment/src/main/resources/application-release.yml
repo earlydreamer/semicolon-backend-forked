@@ -28,7 +28,7 @@ crypto:
 
 custom:
   global:
-    internalBackUrl: ${INTERNAL_BACK_URL}
+    internalBackUrl: ${INTERNAL_BACK_URL:http://localhost:${server.port:8080}}
   security:
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}

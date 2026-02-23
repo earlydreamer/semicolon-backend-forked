@@ -15,6 +15,7 @@ jobs:
     env:
       SPRING_PROFILES_ACTIVE: release
       SPRING_APPLICATION_JSON: '{"spring": {"jpa": {"hibernate": {"ddl-auto": "update"}}}}'
+      INTERNAL_BACK_URL: http://localhost:8080
       SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
 
       DB_HOST: localhost

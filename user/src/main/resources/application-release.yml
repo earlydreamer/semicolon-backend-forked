@@ -27,7 +27,7 @@ crypto:
 
 custom:
   global:
-    internalBackUrl: ${INTERNAL_BACK_URL}
+    internalBackUrl: ${INTERNAL_BACK_URL:http://localhost:${server.port:8080}}
   email:
     verification:
       success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://localhost/email/verify}
