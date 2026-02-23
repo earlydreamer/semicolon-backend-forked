@@ -48,9 +48,11 @@ public final class SellerProductApiDocs {
               "price": 25000,
               "stock": 50,
               "images": [],
-              "sellerInfo": {
-                "shopUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
-                "shopName": "판매자의 상점"
+              "seller": {
+                "sellerUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
+                "nickname": "판매자의 상점",
+                "averageRating": 4.90,
+                "reviewCount": 18
               }
             }
             """)))
@@ -79,9 +81,11 @@ public final class SellerProductApiDocs {
               "price": 30000,
               "stock": 40,
               "images": [],
-              "sellerInfo": {
-                "shopUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
-                "shopName": "판매자의 상점"
+              "seller": {
+                "sellerUuid": "s1h2o3p4-e5f6-7890-1234-567890abcdef",
+                "nickname": "판매자의 상점",
+                "averageRating": 4.90,
+                "reviewCount": 18
               }
             }
             """)))
