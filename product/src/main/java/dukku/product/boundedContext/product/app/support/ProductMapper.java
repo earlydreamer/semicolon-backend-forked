@@ -21,7 +21,12 @@ public class ProductMapper {
                 .title(p.getTitle())
                 .price(p.getPrice())
                 .thumbnailUrl(thumb)
+                .saleStatus(p.getSaleStatus())
+                .createdAt(p.getCreatedAt())
                 .likeCount(p.getLikeCount())
+                .viewCount(p.getViewCount())
+                .commentCount(p.getCommentCount())
+                .tagNames(p.getTagNames())
                 .build();
     }
 
