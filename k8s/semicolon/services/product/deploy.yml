@@ -35,10 +35,13 @@ spec:
           resources:
             limits:
               cpu: 1000m  # 초기 구동 속도를 위해 CPU 한도 상향
-              memory: 1Gi # 메모리 부족으로 인한 GC 지연 방지
+              memory: 640Mi
             requests:
               cpu: 200m
-              memory: 512Mi
+              memory: 384Mi
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xmx384m"
           # startupProbe를 사용하여 앱이 완전히 켜질 때까지 기다림
           startupProbe:
             httpGet:

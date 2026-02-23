@@ -36,10 +36,13 @@ spec:
           resources:
             limits:
               cpu: 600m
-              memory: 768Mi
+              memory: 832Mi
             requests:
               cpu: 50m
-              memory: 256Mi
+              memory: 512Mi
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xmx512m"
           livenessProbe:
             httpGet:
               path: /actuator/health
