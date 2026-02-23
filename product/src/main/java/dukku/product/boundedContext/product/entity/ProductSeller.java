@@ -74,12 +74,15 @@ public class ProductSeller extends BaseIdAndUUIDAndTime {
         this.intro = intro;
     }
 
-    public static ShopResponse from(ProductSeller seller) {
+    public static ShopResponse from(ProductSeller seller, String nickname) {
         return ShopResponse.builder()
                 .shopUuid(seller.getUuid())
+                .nickname(nickname)
                 .intro(seller.getIntro())
                 .salesCount(seller.getSalesCount())
                 .activeListingCount(seller.getActiveListingCount())
+                .averageRating(seller.getAverageRating())
+                .reviewCount(seller.getReviewCount())
                 .build();
     }
 }
