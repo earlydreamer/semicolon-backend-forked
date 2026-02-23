@@ -3,6 +3,8 @@ package dukku.user.boundedContext.user.in;
 import dukku.common.shared.user.exception.UserEmailVerificationTokenInvalidException;
 import dukku.user.boundedContext.user.app.email.EmailVerificationService;
 import dukku.user.boundedContext.user.in.dto.EmailSendRequest;
+import dukku.user.boundedContext.user.in.dto.EmailVerifyResponse;
+import dukku.user.boundedContext.user.in.dto.EmailVerifyResultRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -40,10 +42,11 @@ public class EmailVerificationController {
             @RequestParam("token") String token
     ) {
         try {
+            // 메일 링크 토큰 검증이 성공하면, 프론트에서 1회 확인 가능한 결과 토큰을 발급한다.
             String verifiedEmail = emailVerificationService.verifyByToken(token);
+            String resultToken = emailVerificationService.issueVerificationResultToken(true, verifiedEmail);
             String verifiedRedirectUrl = UriComponentsBuilder.fromUriString(successRedirectUrl)
-                    .queryParam("verified", true)
-                    .queryParam("email", verifiedEmail)
+                    .queryParam("resultToken", resultToken)
                     .build()
                     .toUriString();
 
@@ -51,8 +54,10 @@ public class EmailVerificationController {
                     .header(HttpHeaders.LOCATION, verifiedRedirectUrl)
                     .build();
         } catch (UserEmailVerificationTokenInvalidException e) {
+            // 검증 실패도 동일하게 결과 토큰을 발급해, 프론트가 직접 상태를 단정하지 못하게 한다.
+            String resultToken = emailVerificationService.issueVerificationResultToken(false, null);
             String failureRedirectUrl = UriComponentsBuilder.fromUriString(successRedirectUrl)
-                    .queryParam("verified", false)
+                    .queryParam("resultToken", resultToken)
                     .build()
                     .toUriString();
 
@@ -60,5 +65,15 @@ public class EmailVerificationController {
                     .header(HttpHeaders.LOCATION, failureRedirectUrl)
                     .build();
         }
+    }
+
+    @PostMapping("/verify/result")
+    public ResponseEntity<EmailVerifyResponse> verifyResult(
+            @RequestBody @Validated EmailVerifyResultRequest request
+    ) {
+        // 결과 토큰은 1회 소모된다. 재사용이나 직접 URL 진입은 유효 토큰이 없으면 실패 처리된다.
+        EmailVerificationService.VerificationResult result =
+                emailVerificationService.consumeVerificationResultToken(request.getResultToken());
+        return ResponseEntity.ok(new EmailVerifyResponse(result.verified(), result.email()));
     }
 }
