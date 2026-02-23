@@ -201,28 +201,32 @@ public class ProductInitData {
         String uuidStr = String.format("00000000-0000-0000-0000-%012d", seed);
         UUID userUuid = UUID.fromString(uuidStr);
 
+        // User 생성 및 체크
         if (!productUserRepository.existsById(userUuid)) {
             productUserRepository.save(ProductUser.create(userUuid, nickname));
         }
         userMap.put(uId, userUuid);
 
-        if (!productSellerRepository.existsByUuid(userUuid)) {
-            ProductSeller seller = productSellerRepository.findByUserUuid(userUuid)
-                    .orElseGet(() -> productSellerRepository.save(
-                            ProductSeller.builder()
-                                    .sellerUuid(UUID.randomUUID())
-                                    .userUuid(userUuid)
-                                    .intro(intro)
-                                    .salesCount(sales)
-                                    .activeListingCount(active)
-                                    .averageRating(BigDecimal.valueOf(rating))
-                                    .reviewCount(0)
-                                    .build()
-                    ));
-            sellerMap.put(sId, seller.getSellerUuid());
-        } else {
-            productSellerRepository.findByUserUuid(userUuid).ifPresent(s -> sellerMap.put(sId, s.getSellerUuid()));
-        }
+        // 수정된 Seller 체크 로직: 반드시 userUuid로 조회해서 확인
+        productSellerRepository.findByUserUuid(userUuid).ifPresentOrElse(
+                existing -> {
+                    log.info("ℹ️ Seller already exists for user: {}", userUuid);
+                    sellerMap.put(sId, existing.getSellerUuid());
+                },
+                () -> {
+                    ProductSeller seller = ProductSeller.builder()
+                            .sellerUuid(UUID.randomUUID())
+                            .userUuid(userUuid)
+                            .intro(intro)
+                            .salesCount(sales)
+                            .activeListingCount(active)
+                            .averageRating(BigDecimal.valueOf(rating))
+                            .reviewCount(0)
+                            .build();
+                    productSellerRepository.save(seller);
+                    sellerMap.put(sId, seller.getSellerUuid());
+                }
+        );
     }
 
     private void createProducts(Map<String, String> catNameMap) {
