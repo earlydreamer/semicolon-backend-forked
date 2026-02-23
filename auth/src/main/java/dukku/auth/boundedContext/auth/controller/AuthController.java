@@ -31,12 +31,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @PostMapping("/admin/login")
+    @PostMapping("/login/admin")
     @AuthApiDocs.AdminLogin
-    public ResponseEntity<TokenResponse> adminLogin(
+    public ResponseEntity<TokenResponse> loginAdmin(
             @RequestBody @Validated LoginRequest request
     ) {
-        return ResponseEntity.ok(authService.adminLogin(request));
+        return ResponseEntity.ok(authService.loginAdmin(request));
     }
 
     @GetMapping("/social/google")
