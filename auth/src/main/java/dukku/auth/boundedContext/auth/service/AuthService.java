@@ -31,7 +31,7 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    public TokenResponse adminLogin(LoginRequest request) {
+    public TokenResponse loginAdmin(LoginRequest request) {
         UserVerificationResponse user = userClient.verifyUser(request.getEmail(), request.getPassword());
         validateRole(user, Role.ADMIN);
         return issueTokens(user);

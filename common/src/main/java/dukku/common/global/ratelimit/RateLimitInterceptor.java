@@ -190,7 +190,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private List<RateLimitProperties.Policy> defaultPolicies() {
         return List.of(
                 policy("auth_login", "/api/v1/auth/login", List.of("POST"), 5, 60, RateLimitScope.IP),
-                policy("auth_admin_login", "/api/v1/auth/admin/login", List.of("POST"), 5, 60, RateLimitScope.IP),
+                policy("auth_login_admin", "/api/v1/auth/login/admin", List.of("POST"), 5, 60, RateLimitScope.IP),
                 policy("auth_refresh", "/api/v1/auth/refresh", List.of("POST"), 10, 60, RateLimitScope.IP),
                 policy("email_send_sustained", "/api/v1/users/email/send", List.of("POST"), 3, 600, RateLimitScope.IP),
                 policy("email_send_burst", "/api/v1/users/email/send", List.of("POST"), 5, 60, RateLimitScope.IP),
