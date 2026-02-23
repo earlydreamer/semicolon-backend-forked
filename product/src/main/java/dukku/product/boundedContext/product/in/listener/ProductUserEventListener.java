@@ -3,7 +3,9 @@ package dukku.product.boundedContext.product.in.listener;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.user.event.UserDepositInitializedEvent;
 import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
+import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.product.boundedContext.product.entity.ProductUser;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class ProductUserEventListener {
 
     private final ProductUserRepository productUserRepository;
+    private final ProductSellerRepository productSellerRepository;
     private final EventPublisher eventPublisher;
 
     @KafkaListener(topics = "user.deposit-initialized", groupId = "${spring.application.name}-group")
@@ -30,6 +33,11 @@ public class ProductUserEventListener {
             }
 
             productUserRepository.save(ProductUser.create(userUuid, event.nickname()));
+
+            // 상점 정보(ProductSeller)도 자동 생성
+            if (!productSellerRepository.findByUserUuid(userUuid).isPresent()) {
+                productSellerRepository.save(ProductSeller.create(userUuid, "반가워요! 내 상점입니다."));
+            }
             log.info("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 완료. userUuid={}", userUuid);
         } catch (Exception e) {
             publishProductInitFailed(event, e);
