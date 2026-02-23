@@ -44,9 +44,9 @@ public class AiUserMemory extends BaseIdAndUUIDAndTime {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(columnDefinition = "vector(384)")
+    @Column(columnDefinition = "vector(1536)")
     @JdbcTypeCode(SqlTypes.VECTOR)
-    @Array(length = 384)
+    @Array(length = 1536)
     private float[] embedding;
 
     @Column(nullable = false)

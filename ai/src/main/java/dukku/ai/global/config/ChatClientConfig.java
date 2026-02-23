@@ -4,7 +4,7 @@ import dukku.ai.app.service.UserMemoryReadService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import dukku.ai.app.service.ProductRetrievalService;
-import dukku.ai.global.advisor.DocumentRetrievalAdvisor;
+import dukku.ai.global.advisor.ProductRetrievalAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
@@ -55,8 +55,8 @@ public class ChatClientConfig {
     }
 
     @Bean
-    DocumentRetrievalAdvisor documentRetrievalAdvisor(ProductRetrievalService documentRetrievalService) {
-        return new DocumentRetrievalAdvisor(documentRetrievalService, 130);
+    ProductRetrievalAdvisor productRetrievalAdvisor(ProductRetrievalService productRetrievalService) {
+        return new ProductRetrievalAdvisor(productRetrievalService, 130);
     }
 
     @Bean
@@ -66,7 +66,7 @@ public class ChatClientConfig {
                           LoggingAdvisor loggingAdvisor,
                           MemoryRetrievalAdvisor memoryRetrievalAdvisor,
                           ToolAdvisor toolAdvisor,
-                          DocumentRetrievalAdvisor documentRetrievalAdvisor,
+                          ProductRetrievalAdvisor productRetrievalAdvisor,
                           CartHistoryTool cartHistoryTool,
                           PurchaseHistoryTool purchaseHistoryTool,
                           RecommendationTool recommendationTool,
@@ -86,7 +86,7 @@ public class ChatClientConfig {
                         MessageChatMemoryAdvisor.builder(chatMemory).order(10).build(),   // 2. 대화 메모리
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
                         toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
-                        documentRetrievalAdvisor,                               // 5. 선택적 문서 검색 (order=130)
+                        productRetrievalAdvisor,                                // 5. 선택적 상품 검색 (order=130)
                         loggingAdvisor                                          // 6. 로깅/관측 (order=200)
                 )
                 .build();

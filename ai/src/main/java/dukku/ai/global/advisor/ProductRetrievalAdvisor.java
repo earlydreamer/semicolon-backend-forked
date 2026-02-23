@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DocumentRetrievalAdvisor implements BaseAdvisor {
+public class ProductRetrievalAdvisor implements BaseAdvisor {
 
     private final ProductRetrievalService productRetrievalService;
     private final int order;
@@ -28,10 +28,11 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
         String context = productRetrievalService.retrieve(userMessage.getText());
 
         if (context.isEmpty()) {
+            log.info("[상품 검색 Advisor] 관련 상품 없음 → 스킵");
             return request;
         }
 
-        log.info("[DocumentRetrievalAdvisor] 문서 컨텍스트 주입:\n{}", context);
+        log.info("[상품 검색 Advisor] 상품 컨텍스트 주입 완료 ({}건)", context.lines().count() - 1);
 
         Prompt augmented = request.prompt().augmentSystemMessage(context);
         return request.mutate().prompt(augmented).build();
@@ -44,7 +45,7 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
 
     @Override
     public String getName() {
-        return "DocumentRetrievalAdvisor";
+        return "ProductRetrievalAdvisor";
     }
 
     @Override
