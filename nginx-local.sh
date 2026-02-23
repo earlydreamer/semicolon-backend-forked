@@ -60,7 +60,11 @@ compose_up() {
   if (( REMOVE_ORPHANS == 1 )); then
     extra+=(--remove-orphans)
   fi
-  compose_cmd up -d "${extra[@]}" "$@"
+  if (( ${#extra[@]} > 0 )); then
+    compose_cmd up -d "${extra[@]}" "$@"
+  else
+    compose_cmd up -d "$@"
+  fi
 }
 
 compose_logs() { compose_cmd logs -f "$@"; }
@@ -236,6 +240,7 @@ case "$ACTION" in
     finish $? ;;
 
   restart)
+    ensure_certs || { echo "[${SCRIPT_NAME}] Failed to prepare cert files."; finish 1; }
     compose_restart nginx
     finish $? ;;
 
