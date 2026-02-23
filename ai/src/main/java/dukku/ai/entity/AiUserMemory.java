@@ -27,7 +27,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class AiMemory extends BaseIdAndUUIDAndTime {
+public class AiUserMemory extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false)

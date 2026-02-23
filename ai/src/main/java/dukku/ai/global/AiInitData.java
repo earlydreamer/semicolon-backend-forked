@@ -1,6 +1,6 @@
 package dukku.ai.global;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
@@ -99,7 +99,7 @@ public class AiInitData {
 
     private void saveMemory(UUID userUuid, MemoryType memoryType, MemorySubType subType,
                             String content, double importanceScore, double confidenceScore) {
-        AiMemory memory = AiMemory.builder()
+        AiUserMemory memory = AiUserMemory.builder()
                 .userUuid(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.common.shared.ai.type.MemorySubType;
@@ -42,7 +42,14 @@ public class MemoryExtractionService {
                     .getOutput()
                     .getText();
 
+            log.info("[기억 추출] userUuid={}, AI 추출 결과: {}", userUuid, result);
+
             List<MemoryExtraction> extractions = parseExtractions(result);
+
+            if (extractions.isEmpty()) {
+                log.info("[기억 추출] userUuid={} — 추출된 기억 없음", userUuid);
+                return;
+            }
 
             for (MemoryExtraction extraction : extractions) {
                 processExtraction(userUuid, extraction);
@@ -69,16 +76,16 @@ public class MemoryExtractionService {
         float[] embedding = embeddingModel.embed(extraction.content());
         String embeddingStr = Arrays.toString(embedding);
 
-        List<AiMemory> duplicates = aiMemoryRepository.findDuplicateMemory(
+        List<AiUserMemory> duplicates = aiMemoryRepository.findDuplicateMemory(
                 userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
 
         if (!duplicates.isEmpty()) {
-            AiMemory existing = duplicates.getFirst();
+            AiUserMemory existing = duplicates.getFirst();
             existing.updateConfidence(extraction.confidence());
             aiMemoryRepository.save(existing);
-            log.debug("기존 기억 업데이트: id={}", existing.getId());
+            log.info("[기억 추출] 기존 기억 업데이트: id={}, content={}", existing.getId(), existing.getContent());
         } else {
-            AiMemory newMemory = AiMemory.builder()
+            AiUserMemory newMemory = AiUserMemory.builder()
                     .userUuid(userUuid)
                     .memoryType(MemoryType.valueOf(extraction.memoryType()))
                     .subType(MemorySubType.valueOf(extraction.subType()))
@@ -88,7 +95,7 @@ public class MemoryExtractionService {
                     .confidenceScore(extraction.confidence())
                     .build();
             aiMemoryRepository.save(newMemory);
-            log.debug("새 기억 저장: content={}", extraction.content());
+            log.info("[기억 추출] 새 기억 저장: type={}/{}, content={}", extraction.memoryType(), extraction.subType(), extraction.content());
         }
     }
 

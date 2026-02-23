@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
@@ -18,9 +18,9 @@ public class CreateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public AiMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
-                           String content, Double importanceScore, Double confidenceScore) {
-        AiMemory memory = AiMemory.builder()
+    public AiUserMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
+                               String content, Double importanceScore, Double confidenceScore) {
+        AiUserMemory memory = AiUserMemory.builder()
                 .userUuid(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)

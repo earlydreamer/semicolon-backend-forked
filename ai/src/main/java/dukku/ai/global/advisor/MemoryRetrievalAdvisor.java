@@ -39,10 +39,11 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
                 userUuid, userMessage.getText());
 
         if (memoryContext.isEmpty()) {
+            log.info("[장기 기억] userUuid={} — 관련 기억 없음", userUuid);
             return request;
         }
 
-        log.debug("장기 기억 주입: userUuid={}, context length={}", userUuid, memoryContext.length());
+        log.info("[장기 기억] userUuid={}, 주입 내용:\n{}", userUuid, memoryContext);
 
         Prompt augmented = request.prompt().augmentSystemMessage(memoryContext);
         return request.mutate().prompt(augmented).build();

@@ -3,9 +3,9 @@ package dukku.ai.app.usecase;
 import java.util.List;
 import java.util.UUID;
 
+import dukku.ai.entity.AiUserMemory;
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.type.MemoryType;
@@ -17,7 +17,7 @@ public class FindRecommendationUseCase {
 
     private final AiMemoryRepository aiMemoryRepository;
 
-    public List<AiMemory> findByUserUuid(UUID userUuid) {
+    public List<AiUserMemory> findByUserUuid(UUID userUuid) {
         return aiMemoryRepository.findTopByUserIdAndMemoryType(
                 userUuid,
                 MemoryType.RECOMMENDATION.name(),

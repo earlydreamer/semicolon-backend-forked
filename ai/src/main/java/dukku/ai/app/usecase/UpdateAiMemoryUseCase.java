@@ -2,7 +2,7 @@ package dukku.ai.app.usecase;
 
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.exception.AiMemoryNotFoundException;
 
@@ -15,8 +15,8 @@ public class UpdateAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public AiMemory update(Integer aiMemoryId, Double importanceScore, Double confidenceScore) {
-        AiMemory memory = aiMemoryRepository.findById(aiMemoryId)
+    public AiUserMemory update(Integer aiMemoryId, Double importanceScore, Double confidenceScore) {
+        AiUserMemory memory = aiMemoryRepository.findById(aiMemoryId)
                 .orElseThrow(() -> new AiMemoryNotFoundException(aiMemoryId));
 
         if (importanceScore != null) {

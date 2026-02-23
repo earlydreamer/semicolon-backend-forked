@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.exception.AiMemoryNotFoundException;
 
@@ -17,11 +17,11 @@ public class FindAiMemoryUseCase {
         this.aiMemoryRepository = aiMemoryRepository;
     }
 
-    public List<AiMemory> findAll() {
+    public List<AiUserMemory> findAll() {
         return aiMemoryRepository.findAll();
     }
 
-    public AiMemory findById(Integer aiMemoryId) {
+    public AiUserMemory findById(Integer aiMemoryId) {
         return aiMemoryRepository.findById(aiMemoryId)
                 .orElseThrow(() -> new AiMemoryNotFoundException(aiMemoryId));
     }

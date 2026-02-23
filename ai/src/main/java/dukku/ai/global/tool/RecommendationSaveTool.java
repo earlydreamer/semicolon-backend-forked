@@ -3,13 +3,13 @@ package dukku.ai.global.tool;
 import java.util.List;
 import java.util.UUID;
 
+import dukku.ai.entity.AiUserMemory;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.stereotype.Component;
 
-import dukku.ai.entity.AiMemory;
 import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
@@ -35,7 +35,7 @@ public class RecommendationSaveTool {
             String content = "추천 상품: " + String.join(", ", products);
             float[] embedding = embeddingModel.embed(content);
 
-            AiMemory memory = AiMemory.builder()
+            AiUserMemory memory = AiUserMemory.builder()
                     .userUuid(userUuid)
                     .memoryType(MemoryType.RECOMMENDATION)
                     .subType(MemorySubType.SHOPPING)

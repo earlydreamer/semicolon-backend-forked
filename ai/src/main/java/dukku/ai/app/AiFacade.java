@@ -1,8 +1,7 @@
 package dukku.ai.app;
 
-import brave.internal.baggage.BaggageContext;
 import dukku.ai.app.usecase.*;
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.common.shared.ai.dto.AiMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
 import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
@@ -52,7 +51,7 @@ public class AiFacade {
 
     @Transactional
     public AiMemoryResponse create(CreateAiMemoryRequest request) {
-        AiMemory memory = createAiMemoryUseCase.create(
+        AiUserMemory memory = createAiMemoryUseCase.create(
                 request.userUuid(),
                 request.memoryType(),
                 request.subType(),
@@ -65,7 +64,7 @@ public class AiFacade {
 
     @Transactional
     public AiMemoryResponse update(Integer aiMemoryId, UpdateAiMemoryRequest request) {
-        AiMemory memory = updateAiMemoryUseCase.update(
+        AiUserMemory memory = updateAiMemoryUseCase.update(
                 aiMemoryId,
                 request.importanceScore(),
                 request.confidenceScore()
@@ -85,7 +84,7 @@ public class AiFacade {
                 .toList();
     }
 
-    private AiMemoryResponse toResponse(AiMemory memory) {
+    private AiMemoryResponse toResponse(AiUserMemory memory) {
         return new AiMemoryResponse(
                 memory.getId(),
                 memory.getUserUuid(),

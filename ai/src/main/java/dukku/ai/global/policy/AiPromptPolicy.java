@@ -36,7 +36,22 @@ public final class AiPromptPolicy {
 
             memoryType 기준:
             - PROFILE: 이름, 나이, 직업 등 기본 정보
-            - PREFERENCE: 좋아하는 것, 싫어하는 것, 선호도
+            - PREFERENCE: 좋아하는 것, 싫어하는 것, 선호도, 관심 카테고리
+
+            추출 가이드:
+            - 직접 발화뿐 아니라 요청/질문에서 드러나는 암묵적 관심사도 추출하세요.
+            - "추천해줘", "찾아줘", "알려줘" 같은 요청에서 관심 카테고리와 조건을 추출하세요.
+            - 이미 알고 있는 정보의 반복이면 추출하지 마세요.
+
+            예시:
+            사용자: "가성비 좋은 캠핑 의자 추천해줘"
+            → [{"memoryType":"PREFERENCE","subType":"SHOPPING","content":"가성비 좋은 캠핑 의자에 관심 있음","confidence":0.7}]
+
+            사용자: "요즘 맥북 프로 M4 어때?"
+            → [{"memoryType":"PREFERENCE","subType":"TECH","content":"맥북 프로 M4에 관심 있음","confidence":0.6}]
+
+            사용자: "그냥 안녕"
+            → []
 
             JSON 배열만 반환하고 다른 텍스트는 포함하지 마세요.
 

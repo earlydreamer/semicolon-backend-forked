@@ -10,7 +10,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.ai.out.AiMemoryRepository;
 import dukku.common.shared.ai.type.MemorySubType;
@@ -60,7 +60,7 @@ public class CartRecommendationUseCase {
                     productTitle, String.join(", ", recommendedProducts));
             float[] embedding = embeddingModel.embed(content);
 
-            AiMemory memory = AiMemory.builder()
+            AiUserMemory memory = AiUserMemory.builder()
                     .userUuid(userUuid)
                     .memoryType(MemoryType.RECOMMENDATION)
                     .subType(MemorySubType.SHOPPING)
