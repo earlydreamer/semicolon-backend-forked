@@ -1,6 +1,7 @@
 package dukku.coupon.boundedContext.coupon.in;
 
 import dukku.common.shared.coupon.dto.CouponCreateRequest;
+import dukku.common.shared.coupon.dto.CouponIssueToUserRequest;
 import dukku.common.shared.coupon.dto.CouponResponse;
 import dukku.common.shared.coupon.dto.CouponUpdateRequest;
 import dukku.coupon.boundedContext.coupon.app.command.CouponFacade;
@@ -48,5 +49,14 @@ public class AdminCouponController {
     @GetMapping
     public List<CouponResponse> findAllCoupons() {
         return couponQueryFacade.findAllCoupons();
+    }
+
+    @PostMapping("/{couponUuid}/issue")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void issueCouponToUser(
+            @PathVariable UUID couponUuid,
+            @RequestBody @Valid CouponIssueToUserRequest request
+    ) {
+        couponFacade.issueCoupon(request.userUuid(), couponUuid);
     }
 }
