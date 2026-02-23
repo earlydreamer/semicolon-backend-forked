@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -33,6 +34,7 @@ public class SecurityReleaseConfig {
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
     private final GoogleOAuth2FailureHandler googleOAuth2FailureHandler;
+    private final OAuth2AuthorizationRequestResolver googleAuthorizationRequestResolver;
 
     /**
      * CSRF는 서버가 브라우저의 세션/쿠키를 신뢰할 때 공격 위험이 생김.
@@ -56,6 +58,7 @@ public class SecurityReleaseConfig {
                                 .permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/admin/auth/login",
                                 "/oauth2/**",
                                 "/login/oauth2/**"
                         )
@@ -71,6 +74,8 @@ public class SecurityReleaseConfig {
                         .anyRequest().authenticated() // 그 외는 인증 필요
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestResolver(googleAuthorizationRequestResolver))
                         .successHandler(googleOAuth2SuccessHandler)
                         .failureHandler(googleOAuth2FailureHandler))
                 .cors(cors -> cors.configurationSource(request -> {
