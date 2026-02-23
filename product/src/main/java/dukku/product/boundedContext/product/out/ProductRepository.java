@@ -18,6 +18,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, CustomProductRepository {
+    @Query("""
+        select p.id
+        from Product p
+        where p.uuid = :productUuid
+          and p.deletedAt is null
+        """)
     Optional<Integer> findIdByUuidAndDeletedAtIsNull(UUID productUuid);
 
     @Query("""
