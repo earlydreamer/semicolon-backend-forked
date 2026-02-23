@@ -1,8 +1,5 @@
 package dukku.ai.global.config;
 
-import java.util.List;
-
-import dukku.ai.app.service.MemoryExtractionService;
 import dukku.ai.app.service.MemoryRetrievalService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -16,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 
 import dukku.ai.global.advisor.GuardAdvisor;
 import dukku.ai.global.advisor.LoggingAdvisor;
-import dukku.ai.global.advisor.MemoryExtractionAdvisor;
 import dukku.ai.global.advisor.MemoryRetrievalAdvisor;
 import dukku.ai.global.advisor.ToolAdvisor;
 import dukku.ai.global.policy.AiGuardPolicy;
@@ -54,11 +50,6 @@ public class ChatClientConfig {
     }
 
     @Bean
-    MemoryExtractionAdvisor memoryExtractionAdvisor(MemoryExtractionService memoryExtractionService) {
-        return new MemoryExtractionAdvisor(memoryExtractionService, 150);
-    }
-
-    @Bean
     ToolAdvisor toolAdvisor() {
         return new ToolAdvisor(120);
     }
@@ -74,7 +65,6 @@ public class ChatClientConfig {
                           GuardAdvisor guardAdvisor,
                           LoggingAdvisor loggingAdvisor,
                           MemoryRetrievalAdvisor memoryRetrievalAdvisor,
-                          MemoryExtractionAdvisor memoryExtractionAdvisor,
                           ToolAdvisor toolAdvisor,
                           DocumentRetrievalAdvisor documentRetrievalAdvisor,
                           CartHistoryTool cartHistoryTool,
@@ -97,8 +87,7 @@ public class ChatClientConfig {
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
                         toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
                         documentRetrievalAdvisor,                               // 5. 선택적 문서 검색 (order=130)
-                        memoryExtractionAdvisor,                                // 6. 기억 추출 (order=150)
-                        loggingAdvisor                                          // 7. 로깅/관측 (order=200)
+                        loggingAdvisor                                          // 6. 로깅/관측 (order=200)
                 )
                 .build();
     }
