@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.stereotype.Component;
 
 import dukku.ai.entity.AiMemory;
@@ -25,15 +26,17 @@ public class RecommendationSaveTool {
 
     @Tool(description = "생성된 추천 결과를 저장합니다")
     public String saveRecommendation(
-            @ToolParam(description = "사용자 UUID") UUID userId,
+            ToolContext context,
             @ToolParam(description = "추천 상품 목록") List<String> products) {
+        String userId = context.getContext().get("userId").toString();
         log.info("[Tool 호출] 추천 결과 저장: userId={}, products={}", userId, products);
         try {
+            UUID userUuid = UUID.fromString(userId);
             String content = "추천 상품: " + String.join(", ", products);
             float[] embedding = embeddingModel.embed(content);
 
             AiMemory memory = AiMemory.builder()
-                    .userUuid(userId)
+                    .userUuid(userUuid)
                     .memoryType(MemoryType.RECOMMENDATION)
                     .subType(MemorySubType.SHOPPING)
                     .content(content)

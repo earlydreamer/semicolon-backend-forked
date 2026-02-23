@@ -31,7 +31,7 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        log.debug("[DocumentRetrievalAdvisor] 문서 컨텍스트 주입, length={}", context.length());
+        log.info("[DocumentRetrievalAdvisor] 문서 컨텍스트 주입:\n{}", context);
 
         Prompt augmented = request.prompt().augmentSystemMessage(context);
         return request.mutate().prompt(augmented).build();

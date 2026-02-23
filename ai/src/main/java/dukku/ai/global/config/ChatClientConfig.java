@@ -93,7 +93,7 @@ public class ChatClientConfig {
                 )
                 .defaultAdvisors(
                         guardAdvisor,                                           // 1. 입력 검증 (order=0)
-                        MessageChatMemoryAdvisor.builder(chatMemory).build(),   // 2. 대화 메모리
+                        MessageChatMemoryAdvisor.builder(chatMemory).order(10).build(),   // 2. 대화 메모리
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
                         toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
                         documentRetrievalAdvisor,                               // 5. 선택적 문서 검색 (order=130)

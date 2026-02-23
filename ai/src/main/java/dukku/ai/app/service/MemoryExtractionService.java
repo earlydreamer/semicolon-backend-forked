@@ -20,9 +20,11 @@ import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import dukku.ai.out.AiMemoryRepository;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class MemoryExtractionService {
 
     private final ChatModel chatModel;
@@ -30,15 +32,6 @@ public class MemoryExtractionService {
     private final AiMemoryRepository aiMemoryRepository;
     private final ObjectMapper objectMapper;
 
-    public MemoryExtractionService(ChatModel chatModel,
-                                   EmbeddingModel embeddingModel,
-                                   AiMemoryRepository aiMemoryRepository,
-                                   ObjectMapper objectMapper) {
-        this.chatModel = chatModel;
-        this.embeddingModel = embeddingModel;
-        this.aiMemoryRepository = aiMemoryRepository;
-        this.objectMapper = objectMapper;
-    }
 
     @Async
     public void extractAndStoreMemories(UUID userUuid, String userMessage, String aiResponse) {
