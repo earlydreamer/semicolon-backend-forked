@@ -24,8 +24,8 @@ public class UserFacade {
     private final WithdrawUserUseCase withdrawUserUseCase;
     private final RestoreWithdrawnUserUseCase restoreWithdrawnUserUseCase;
 
-    public UserResponse registerUser(UserRegisterRequest req, Role role) {
-        return User.toUserResponse(registerUser.execute(req, role));
+    public UserResponse registerUser(UserRegisterRequest req, Role role, String idempotencyKey) {
+        return User.toUserResponse(registerUser.execute(req, role, idempotencyKey));
     }
 
     @Transactional(readOnly = true)
