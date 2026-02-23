@@ -1,4 +1,4 @@
-﻿package dukku.common.shared.user.exception;
+package dukku.common.shared.user.exception;
 
 import dukku.common.global.exception.BaseException;
 import org.springframework.http.HttpStatus;
