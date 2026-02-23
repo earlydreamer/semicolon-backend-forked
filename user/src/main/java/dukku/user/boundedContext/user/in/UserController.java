@@ -22,13 +22,14 @@ public class UserController {
     private final UserFacade userFacade;
 
     @PostMapping("/register")
-    @UserApiDocs.RegisterUser
+    @UserApiDocs.RegisterUserV2
     public ResponseEntity<UserResponse> registerUser(
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestBody @Validated UserRegisterRequest userRegisterRequest
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userFacade.registerUser(userRegisterRequest, Role.USER));
+                .body(userFacade.registerUser(userRegisterRequest, Role.USER, idempotencyKey));
     }
 
     @GetMapping("/me")
