@@ -28,12 +28,14 @@ public class OrderResponse {
     @Getter
     @Builder
     public static class OrderItemResponse {
-        private UUID productUuid; // 상품 UUID
+        private UUID orderItemUuid; // 주문 상품 UUID
+        private UUID productUuid;   // 상품 UUID
+        private UUID sellerUuid;    // 판매자 UUID
         private String productName; // 상품명
-        private int productPrice; // 상품 가격
-        private String imageUrl; // 상품 이미지 URL
+        private int productPrice;   // 상품 가격
+        private String imageUrl;    // 상품 이미지 URL
         private OrderItemStatus itemStatus; // 주문 상품 상태
-        private String carrierName; // 택배사 명
+        private String carrierName;    // 택배사 명
         private String trackingNumber; // 운송장 번호
     }
 }

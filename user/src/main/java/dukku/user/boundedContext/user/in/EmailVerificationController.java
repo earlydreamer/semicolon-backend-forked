@@ -46,7 +46,7 @@ public class EmailVerificationController {
                     .build();
         } catch (UserEmailVerificationTokenInvalidException e) {
             String failureRedirectUrl = UriComponentsBuilder.fromUriString(successRedirectUrl)
-                    .queryParam("error", "email_verification_failed")
+                    .queryParam("error", "이메일_인증_실패")
                     .build()
                     .toUriString();
             return ResponseEntity.status(HttpStatus.FOUND)

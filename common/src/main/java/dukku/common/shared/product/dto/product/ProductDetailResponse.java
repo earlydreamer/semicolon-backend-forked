@@ -15,6 +15,7 @@ import java.util.UUID;
 @Builder
 public class ProductDetailResponse {
 
+    private Integer productId;   // 상품 PK (주문/결제 스냅샷용)
     private UUID productUuid;
     private UUID sellerUuid;
     private String title;
