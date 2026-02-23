@@ -6,7 +6,7 @@ import dukku.common.shared.ai.type.MemoryType;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record AiMemoryResponse(
+public record AiUserMemoryResponse(
         Integer aiMemoryId,
         UUID userUuid,
         MemoryType memoryType,

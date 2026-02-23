@@ -5,10 +5,10 @@ import java.util.UUID;
 
 import dukku.ai.app.AiFacade;
 import dukku.common.shared.ai.docs.AiApiDocs;
-import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.common.shared.ai.dto.AiUserMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
-import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
-import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
+import dukku.common.shared.ai.dto.CreateAiUserMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiUserMemoryRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,41 +40,41 @@ public class AiController {
     }
 
     @AiApiDocs.FindAllMemories
-    @GetMapping("/ai-memories")
-    public ResponseEntity<List<AiMemoryResponse>> findAllMemories() {
+    @GetMapping("/ai-user-memories")
+    public ResponseEntity<List<AiUserMemoryResponse>> findAllMemories() {
         return ResponseEntity.ok(aiFacade.findAll());
     }
 
     @AiApiDocs.FindMemoryById
-    @GetMapping("/ai-memories/{id}")
-    public ResponseEntity<AiMemoryResponse> findMemoryById(@PathVariable("id") Integer aiMemoryId) {
-        return ResponseEntity.ok(aiFacade.findById(aiMemoryId));
+    @GetMapping("/ai-user-memories/{id}")
+    public ResponseEntity<AiUserMemoryResponse> findMemoryById(@PathVariable("id") Integer aiUserMemoryId) {
+        return ResponseEntity.ok(aiFacade.findById(aiUserMemoryId));
     }
 
     @AiApiDocs.CreateMemory
-    @PostMapping("/ai-memories")
-    public ResponseEntity<AiMemoryResponse> createMemory(@RequestBody CreateAiMemoryRequest request) {
+    @PostMapping("/ai-user-memories")
+    public ResponseEntity<AiUserMemoryResponse> createMemory(@RequestBody CreateAiUserMemoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(aiFacade.create(request));
     }
 
     @AiApiDocs.UpdateMemory
-    @PatchMapping("/ai-memories/{id}")
-    public ResponseEntity<AiMemoryResponse> updateMemory(
-            @PathVariable("id") Integer aiMemoryId,
-            @RequestBody UpdateAiMemoryRequest request) {
-        return ResponseEntity.ok(aiFacade.update(aiMemoryId, request));
+    @PatchMapping("/ai-user-memories/{id}")
+    public ResponseEntity<AiUserMemoryResponse> updateMemory(
+            @PathVariable("id") Integer aiUserMemoryId,
+            @RequestBody UpdateAiUserMemoryRequest request) {
+        return ResponseEntity.ok(aiFacade.update(aiUserMemoryId, request));
     }
 
     @AiApiDocs.DeleteMemory
-    @DeleteMapping("/ai-memories/{id}")
-    public ResponseEntity<Void> deleteMemory(@PathVariable("id") Integer aiMemoryId) {
-        aiFacade.delete(aiMemoryId);
+    @DeleteMapping("/ai-user-memories/{id}")
+    public ResponseEntity<Void> deleteMemory(@PathVariable("id") Integer aiUserMemoryId) {
+        aiFacade.delete(aiUserMemoryId);
         return ResponseEntity.noContent().build();
     }
 
     @AiApiDocs.FindRecommendations
     @GetMapping("/recommendations/{userUuid}")
-    public ResponseEntity<List<AiMemoryResponse>> findRecommendations(@PathVariable("userUuid") UUID userUuid) {
+    public ResponseEntity<List<AiUserMemoryResponse>> findRecommendations(@PathVariable("userUuid") UUID userUuid) {
         return ResponseEntity.ok(aiFacade.findRecommendations(userUuid));
     }
 }

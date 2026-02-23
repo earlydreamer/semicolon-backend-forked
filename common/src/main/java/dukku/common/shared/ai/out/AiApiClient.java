@@ -1,9 +1,9 @@
 package dukku.common.shared.ai.out;
 
-import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.common.shared.ai.dto.AiUserMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
-import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
-import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
+import dukku.common.shared.ai.dto.CreateAiUserMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiUserMemoryRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -32,36 +32,36 @@ public class AiApiClient {
                 .body(String.class);
     }
 
-    public List<AiMemoryResponse> findAllMemories() {
+    public List<AiUserMemoryResponse> findAllMemories() {
         return restClient.get()
                 .uri("/ai-memories")
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {});
     }
 
-    public AiMemoryResponse findMemoryById(Integer aiMemoryId) {
+    public AiUserMemoryResponse findMemoryById(Integer aiMemoryId) {
         return restClient.get()
                 .uri("/ai-memories/{id}", aiMemoryId)
                 .retrieve()
-                .body(AiMemoryResponse.class);
+                .body(AiUserMemoryResponse.class);
     }
 
-    public AiMemoryResponse createMemory(CreateAiMemoryRequest request) {
+    public AiUserMemoryResponse createMemory(CreateAiUserMemoryRequest request) {
         return restClient.post()
                 .uri("/ai-memories")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
-                .body(AiMemoryResponse.class);
+                .body(AiUserMemoryResponse.class);
     }
 
-    public AiMemoryResponse updateMemory(Integer aiMemoryId, UpdateAiMemoryRequest request) {
+    public AiUserMemoryResponse updateMemory(Integer aiMemoryId, UpdateAiUserMemoryRequest request) {
         return restClient.patch()
                 .uri("/ai-memories/{id}", aiMemoryId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
-                .body(AiMemoryResponse.class);
+                .body(AiUserMemoryResponse.class);
     }
 
     public void deleteMemory(Integer aiMemoryId) {

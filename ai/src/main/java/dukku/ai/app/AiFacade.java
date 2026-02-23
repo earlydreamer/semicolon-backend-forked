@@ -2,10 +2,10 @@ package dukku.ai.app;
 
 import dukku.ai.app.usecase.*;
 import dukku.ai.entity.AiUserMemory;
-import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.common.shared.ai.dto.AiUserMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
-import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
-import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
+import dukku.common.shared.ai.dto.CreateAiUserMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiUserMemoryRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,18 +39,18 @@ public class AiFacade {
         return conversationId;
     }
 
-    public List<AiMemoryResponse> findAll() {
+    public List<AiUserMemoryResponse> findAll() {
         return findAiMemoryUseCase.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public AiMemoryResponse findById(Integer aiMemoryId) {
+    public AiUserMemoryResponse findById(Integer aiMemoryId) {
         return toResponse(findAiMemoryUseCase.findById(aiMemoryId));
     }
 
     @Transactional
-    public AiMemoryResponse create(CreateAiMemoryRequest request) {
+    public AiUserMemoryResponse create(CreateAiUserMemoryRequest request) {
         AiUserMemory memory = createAiMemoryUseCase.create(
                 request.userUuid(),
                 request.memoryType(),
@@ -63,7 +63,7 @@ public class AiFacade {
     }
 
     @Transactional
-    public AiMemoryResponse update(Integer aiMemoryId, UpdateAiMemoryRequest request) {
+    public AiUserMemoryResponse update(Integer aiMemoryId, UpdateAiUserMemoryRequest request) {
         AiUserMemory memory = updateAiMemoryUseCase.update(
                 aiMemoryId,
                 request.importanceScore(),
@@ -78,14 +78,14 @@ public class AiFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<AiMemoryResponse> findRecommendations(UUID userUuid) {
+    public List<AiUserMemoryResponse> findRecommendations(UUID userUuid) {
         return findRecommendationUseCase.findByUserUuid(userUuid).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    private AiMemoryResponse toResponse(AiUserMemory memory) {
-        return new AiMemoryResponse(
+    private AiUserMemoryResponse toResponse(AiUserMemory memory) {
+        return new AiUserMemoryResponse(
                 memory.getId(),
                 memory.getUserUuid(),
                 memory.getMemoryType(),
