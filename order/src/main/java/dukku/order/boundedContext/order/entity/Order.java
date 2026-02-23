@@ -68,6 +68,7 @@ public class Order extends BaseIdAndUUIDAndTime {
                 .recipient(request.getRecipient())
                 .contactNumber(request.getContactNumber())
                 .refundedAmount(0)
+                .status(OrderStatus.PENDING)
                 .build();
     }
 
