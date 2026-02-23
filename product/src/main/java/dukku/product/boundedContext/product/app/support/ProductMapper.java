@@ -31,6 +31,7 @@ public class ProductMapper {
                 .toList();
 
         return ProductDetailResponse.builder()
+                .productId(p.getId())
                 .productUuid(p.getUuid())
                 .sellerUuid(p.getSellerUuid())
                 .title(p.getTitle())

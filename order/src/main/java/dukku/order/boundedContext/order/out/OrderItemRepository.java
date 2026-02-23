@@ -34,4 +34,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             LocalDateTime start,
             LocalDateTime end
     );
+
+    /**
+     * 판매자 UUID로 주문아이템을 주문과 함께 최신순으로 조회한다.
+     */
+    @EntityGraph(attributePaths = {"order"})
+    List<OrderItem> findAllBySellerUuidOrderByOrder_CreatedAtDesc(UUID sellerUuid);
 }

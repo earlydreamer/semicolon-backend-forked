@@ -17,9 +17,6 @@ jwt:
   access:
     secret:
       key: ${JWT_ACCESS_SECRET}
-  refresh:
-    secret:
-      key: ${JWT_REFRESH_SECRET}
 
 crypto:
   key: ${CRYPTO_KEY}
@@ -34,3 +31,13 @@ custom:
   security:
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${AWS_REGION}
+    s3:
+      bucket: ${AWS_S3_BUCKET}

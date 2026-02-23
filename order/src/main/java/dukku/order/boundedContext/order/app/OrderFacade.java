@@ -1,6 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.shared.order.dto.*;
+import dukku.common.shared.order.dto.SellerOrderItemResponse;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
 import dukku.order.boundedContext.order.entity.Order;
@@ -27,6 +28,7 @@ public class OrderFacade {
     private final UpdateOrderItemStatusUseCase updateOrderItemStatus;
     private final FindConfirmedItemsUseCase findConfirmedItems;
     private final FindOrderListByOrderStatusUseCase findOrderListByOrderStatus;
+    private final FindSellerOrderItemsUseCase findSellerOrderItems;
 
     public OrderResponse createOrder(OrderCreateRequest req) {
         return Order.toOrderResponse(createOrder.execute(req));
@@ -72,5 +74,11 @@ public class OrderFacade {
 
     public List<OrderListResponse> findOrderListByOrderStatus(UUID userUuid, OrderStatus status, int limit) {
         return findOrderListByOrderStatus.execute(userUuid, status, limit);
+    }
+
+    // 판매자가 본인 판매 주문아이템 목록을 조회하고 싶을 때
+    @Transactional(readOnly = true)
+    public List<SellerOrderItemResponse> findSellerOrderItems() {
+        return findSellerOrderItems.execute();
     }
 }

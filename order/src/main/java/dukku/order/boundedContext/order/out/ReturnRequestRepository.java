@@ -3,6 +3,8 @@ package dukku.order.boundedContext.order.out;
 import dukku.order.boundedContext.order.entity.ReturnRequest;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,4 +28,17 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Lo
      */
     @EntityGraph(attributePaths = {"returnItems", "returnItems.orderItem"})
     List<ReturnRequest> findByOrderUuid(UUID orderUuid);
+
+    /**
+     * 판매자 UUID 기준으로 본인 상품에 접수된 반품 요청 목록을 최신순으로 조회한다.
+     */
+    @Query("""
+            SELECT DISTINCT rr FROM ReturnRequest rr
+            JOIN FETCH rr.returnItems ri
+            JOIN FETCH ri.orderItem oi
+            JOIN FETCH rr.order o
+            WHERE oi.sellerUuid = :sellerUuid
+            ORDER BY rr.createdAt DESC
+            """)
+    List<ReturnRequest> findAllBySellerUuid(@Param("sellerUuid") UUID sellerUuid);
 }

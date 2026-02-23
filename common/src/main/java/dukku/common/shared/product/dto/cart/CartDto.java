@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record CartDto(
         int cartId,
+        int productId,
         UUID productUuid,
         UUID sellerUuid,
         String title,
