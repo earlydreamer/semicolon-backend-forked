@@ -1,5 +1,5 @@
 # [Stage 1] 빌드 단계
-FROM ghcr.io/adoptium/temurin:25-jdk AS builder
+FROM public.ecr.aws/docker/library/eclipse-temurin:25-jdk AS builder
 
 WORKDIR /app
 
@@ -33,7 +33,7 @@ RUN ./gradlew :${MODULE_NAME}:bootJar -x test --no-daemon --stacktrace --warning
 RUN rm -f ${MODULE_NAME}/build/libs/*-plain.jar
 
 # [Stage 2] 실행 단계
-FROM ghcr.io/adoptium/temurin:25-jre
+FROM public.ecr.aws/docker/library/eclipse-temurin:25-jre
 
 WORKDIR /app
 
