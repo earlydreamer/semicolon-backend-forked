@@ -13,7 +13,7 @@ public class SettlementApiClient {
 
     private final RestClient restClient;
 
-    public SettlementApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public SettlementApiClient(@Value("${custom.client.settlement.url:${custom.global.internalBackUrl}}") String internalBackUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/admin/settlements")
                 .build();
