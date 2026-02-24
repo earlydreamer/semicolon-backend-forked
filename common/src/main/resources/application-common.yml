@@ -81,7 +81,7 @@ crypto:
 
 custom:
   global:
-    internalBackUrl: ${INTERNAL_BACK_URL:http://localhost:${server.port:8080}}
+    internalBackUrl: ${INTERNAL_BACK_URL:http://localhost}
   client:
     user:
       url: ${CUSTOM_CLIENT_USER_URL:${custom.global.internalBackUrl}}

@@ -24,6 +24,10 @@ jwt:
 crypto:
   key: ${CRYPTO_KEY}
 
+service:
+  user:
+    url: ${SERVICE_USER_URL}
+
 custom:
   security:
     cors:
