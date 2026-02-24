@@ -6,42 +6,42 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import dukku.ai.out.AiUserMemoryRepository;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.common.shared.ai.type.MemoryType;
-import dukku.ai.out.AiMemoryRepository;
 
 @Service
-public class MemoryRetrievalService {
+public class UserMemoryReadService {
 
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
     private final EmbeddingModel embeddingModel;
 
-    public MemoryRetrievalService(AiMemoryRepository aiMemoryRepository,
-                                  EmbeddingModel embeddingModel) {
-        this.aiMemoryRepository = aiMemoryRepository;
+    public UserMemoryReadService(AiUserMemoryRepository aiUserMemoryRepository,
+                                 EmbeddingModel embeddingModel) {
+        this.aiUserMemoryRepository = aiUserMemoryRepository;
         this.embeddingModel = embeddingModel;
     }
 
     public String retrieveMemoryContext(UUID userUuid, String userMessage) {
-        List<AiMemory> profileMemories = aiMemoryRepository.findTopByUserIdAndMemoryType(
+        List<AiUserMemory> profileMemories = aiUserMemoryRepository.findTopByUserIdAndMemoryType(
                 userUuid, MemoryType.PROFILE.name(), AiSimilarityPolicy.MEMORY_PROFILE_LIMIT);
 
         float[] queryEmbedding = embeddingModel.embed(userMessage);
         String embeddingStr = toVectorString(queryEmbedding);
 
-        List<AiMemory> similarMemories = aiMemoryRepository.findSimilarMemories(
+        List<AiUserMemory> similarMemories = aiUserMemoryRepository.findSimilarMemories(
                 userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_SIMILARITY_THRESHOLD, AiSimilarityPolicy.MEMORY_SIMILAR_LIMIT);
 
-        similarMemories.forEach(AiMemory::incrementAccessCount);
+        similarMemories.forEach(AiUserMemory::incrementAccessCount);
         if (!similarMemories.isEmpty()) {
-            aiMemoryRepository.saveAll(similarMemories);
+            aiUserMemoryRepository.saveAll(similarMemories);
         }
 
-        List<AiMemory> allMemories = new ArrayList<>(profileMemories);
+        List<AiUserMemory> allMemories = new ArrayList<>(profileMemories);
         allMemories.addAll(similarMemories);
 
         if (allMemories.isEmpty()) {

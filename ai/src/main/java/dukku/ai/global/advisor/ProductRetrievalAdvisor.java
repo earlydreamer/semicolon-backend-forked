@@ -7,15 +7,15 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 
-import dukku.ai.app.service.DocumentRetrievalService;
+import dukku.ai.app.service.ProductRetrievalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DocumentRetrievalAdvisor implements BaseAdvisor {
+public class ProductRetrievalAdvisor implements BaseAdvisor {
 
-    private final DocumentRetrievalService documentRetrievalUseCase;
+    private final ProductRetrievalService productRetrievalService;
     private final int order;
 
     @Override
@@ -25,13 +25,14 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        String context = documentRetrievalUseCase.retrieve(userMessage.getText());
+        String context = productRetrievalService.retrieve(userMessage.getText());
 
         if (context.isEmpty()) {
+            log.info("[상품 검색 Advisor] 관련 상품 없음 → 스킵");
             return request;
         }
 
-        log.debug("[DocumentRetrievalAdvisor] 문서 컨텍스트 주입, length={}", context.length());
+        log.info("[상품 검색 Advisor] 상품 컨텍스트 주입 완료 ({}건)", context.lines().count() - 1);
 
         Prompt augmented = request.prompt().augmentSystemMessage(context);
         return request.mutate().prompt(augmented).build();
@@ -44,7 +45,7 @@ public class DocumentRetrievalAdvisor implements BaseAdvisor {
 
     @Override
     public String getName() {
-        return "DocumentRetrievalAdvisor";
+        return "ProductRetrievalAdvisor";
     }
 
     @Override

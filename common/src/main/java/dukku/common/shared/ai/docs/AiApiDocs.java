@@ -44,8 +44,8 @@ public final class AiApiDocs {
                                     value = """
                                             {
                                               "conversationId": "conv-123",
-                                              "userUuid": "550e8400-e29b-41d4-a716-446655440000",
-                                              "message": "가성비 좋은 노트북 추천해줘"
+                                              "userUuid": "00000000-0000-0000-0000-000000000001",
+                                              "message": "가성비 좋은 캠핑 의자 추천해줘"
                                             }"""
                             )
                     )
@@ -87,15 +87,15 @@ public final class AiApiDocs {
                                                     [
                                                       {
                                                         "aiMemoryId": 1,
-                                                        "userUuid": "550e8400-e29b-41d4-a716-446655440000",
+                                                        "userUuid": "00000000-0000-0000-0000-000000000001",
                                                         "memoryType": "PROFILE",
                                                         "subType": "GENERAL",
-                                                        "content": "사용자는 백엔드 개발자입니다",
-                                                        "importanceScore": 0.9,
-                                                        "confidenceScore": 0.85,
-                                                        "accessCount": 3,
-                                                        "createdAt": "2026-02-13T10:00:00",
-                                                        "updatedAt": "2026-02-13T12:00:00"
+                                                        "content": "30대 남성 개발자. 캠핑과 전자기기에 관심이 많음.",
+                                                        "importanceScore": 0.95,
+                                                        "confidenceScore": 0.9,
+                                                        "accessCount": 0,
+                                                        "createdAt": "2026-02-22T21:00:00",
+                                                        "updatedAt": null
                                                       }
                                                     ]"""
                                     )
@@ -144,12 +144,12 @@ public final class AiApiDocs {
                                     name = "메모리 생성 요청",
                                     value = """
                                             {
-                                              "userUuid": "550e8400-e29b-41d4-a716-446655440000",
+                                              "userUuid": "00000000-0000-0000-0000-000000000001",
                                               "memoryType": "PREFERENCE",
                                               "subType": "SHOPPING",
-                                              "content": "가성비 제품을 선호합니다",
-                                              "importanceScore": 0.8,
-                                              "confidenceScore": 0.7
+                                              "content": "가성비 좋은 캠핑 용품을 선호함. 경량 제품 위주로 구매.",
+                                              "importanceScore": 0.85,
+                                              "confidenceScore": 0.8
                                             }"""
                             )
                     )
@@ -225,5 +225,42 @@ public final class AiApiDocs {
             }
     )
     public @interface DeleteMemory {
+    }
+
+    @Documented
+    @Target(METHOD)
+    @Retention(RUNTIME)
+    @Operation(
+            summary = "사용자 추천 상품 조회",
+            description = "장바구니 추가 이벤트 기반으로 생성된 AI 추천 결과를 조회합니다. importance_score 내림차순으로 최대 10건 반환합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            name = "추천 목록",
+                                            value = """
+                                                    [
+                                                      {
+                                                        "aiMemoryId": 3,
+                                                        "userUuid": "00000000-0000-0000-0000-000000000001",
+                                                        "memoryType": "RECOMMENDATION",
+                                                        "subType": "SHOPPING",
+                                                        "content": "장바구니 추가 기반 추천 (기준: 헬리녹스 체어제로 블랙): 스노우피크 랜드록 텐트, 스노우피크 티타늄 싱글머그 450, 힐레베르그 아틀라스 4인용",
+                                                        "importanceScore": 0.7,
+                                                        "confidenceScore": 0.8,
+                                                        "accessCount": 0,
+                                                        "createdAt": "2026-02-22T21:00:00",
+                                                        "updatedAt": null
+                                                      }
+                                                    ]"""
+                                    )
+                            )
+                    )
+            }
+    )
+    public @interface FindRecommendations {
     }
 }

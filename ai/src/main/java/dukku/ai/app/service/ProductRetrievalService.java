@@ -16,15 +16,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DocumentRetrievalService {
+public class ProductRetrievalService {
 
     private final VectorStore vectorStore;
 
     public String retrieve(String userMessage) {
         if (!requiresRetrieval(userMessage)) {
-            log.debug("[DocumentRetrieval] 검색 불필요 - 스킵: {}", userMessage);
+            log.info("[상품 검색] 키워드 미감지 → 스킵: {}", userMessage);
             return "";
         }
+
+        String matchedKeyword = AiPromptPolicy.DOCUMENT_RETRIEVAL_KEYWORDS.stream()
+                .filter(userMessage::contains)
+                .findFirst()
+                .orElse("?");
+        log.info("[상품 검색] 키워드 감지: '{}' → 검색 실행", matchedKeyword);
 
         SearchRequest request = SearchRequest.builder()
                 .query(userMessage)
@@ -32,14 +38,17 @@ public class DocumentRetrievalService {
                 .similarityThreshold(AiSimilarityPolicy.DOCUMENT_SIMILARITY_THRESHOLD)
                 .build();
 
+        log.info("[상품 검색] query={}, topK={}, threshold={}", userMessage, AiSimilarityPolicy.DOCUMENT_TOP_K, AiSimilarityPolicy.DOCUMENT_SIMILARITY_THRESHOLD);
+
         List<Document> docs = vectorStore.similaritySearch(request);
 
         if (docs.isEmpty()) {
-            log.debug("[DocumentRetrieval] 검색 결과 없음");
+            log.info("[상품 검색] 검색 결과 없음");
             return "";
         }
 
-        log.debug("[DocumentRetrieval] {}건 검색 완료", docs.size());
+        log.info("[상품 검색] {}건 검색 완료", docs.size());
+        docs.forEach(doc -> log.info("[상품 검색]   - [score={}] {}", String.format("%.4f", doc.getScore()), doc.getText()));
         return formatDocuments(docs);
     }
 

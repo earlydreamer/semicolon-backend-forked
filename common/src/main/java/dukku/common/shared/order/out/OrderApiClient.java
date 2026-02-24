@@ -1,6 +1,7 @@
 package dukku.common.shared.order.out;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
+import dukku.common.shared.order.dto.OrderListResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -8,6 +9,7 @@ import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class OrderApiClient {
@@ -31,6 +33,20 @@ public class OrderApiClient {
                         .queryParam("startDateTime", startDateTime)
                         .queryParam("endDateTime", endDateTime)
                         .build()
+                )
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
+    }
+
+    // 특정 사용자의 주문 이력 조회 (AI 추천용)
+    public List<OrderListResponse> findOrdersByUserUuid(UUID userUuid, String status, int limit) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/{userUuid}")
+                        .queryParam("status", status)
+                        .queryParam("limit", limit)
+                        .build(userUuid)
                 )
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
