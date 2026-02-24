@@ -14,6 +14,8 @@ jobs:
 
     env:
       SPRING_PROFILES_ACTIVE: release
+      SPRING_APPLICATION_JSON: '{"spring": {"jpa": {"hibernate": {"ddl-auto": "update"}}}}'
+      INTERNAL_BACK_URL: http://localhost:8080
       SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
 
       DB_HOST: localhost
@@ -25,6 +27,8 @@ jobs:
 
       SPRING_DATA_REDIS_HOST: localhost
       SPRING_DATA_REDIS_PORT: 6379
+
+      KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
       SPRING_ELASTICSEARCH_URIS: http://localhost:9200
 
@@ -119,9 +123,9 @@ jobs:
             ai) echo "TEST_CLASS=dukku.ai.ApplicationTests" >> $GITHUB_ENV ;;
             *) echo "Unknown module"; exit 1 ;;
           esac
-          
+
       - name: Build and Test (Application Startup Only)
-        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info -Dspring.jpa.hibernate.ddl-auto=update
+        run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info
 
       - name: Print Container Logs on Failure
         if: failure()
