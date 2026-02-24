@@ -25,6 +25,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, Cust
     Optional<Integer> findIdByUuidAndDeletedAtIsNull(UUID productUuid);
 
     @Query("""
+            select p.id
+            from Product p
+            where p.deletedAt is null
+            order by p.id asc
+            """)
+    Page<Integer> findActiveProductIds(Pageable pageable);
+
+    @Query("""
             select distinct p
             from Product p
             left join fetch p.images i
@@ -33,9 +41,29 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, Cust
             """)
     Optional<Product> findByUuidWithImagesAndCategory(@Param("uuid") UUID uuid);
 
+    @Query("""
+            select distinct p
+            from Product p
+            left join fetch p.images i
+            left join fetch p.category c
+            where p.id = :id
+            """)
+    Optional<Product> findByIdWithImagesAndCategory(@Param("id") Integer id);
+
+    @Query("""
+            select pt.id
+            from ProductTag pt
+            join pt.tag t
+            where pt.product.id = :productId
+            """)
+    List<Long> preloadProductTagsByProductId(@Param("productId") Integer productId);
+
     Optional<Product> findByUuid(UUID productUuid);
 
     Optional<Product> findByUuidAndDeletedAtIsNull(UUID productUuid);
+
+    boolean existsBySellerUuidAndCategory_IdAndTitleAndPriceAndDeletedAtIsNull(
+            UUID sellerUuid, Integer categoryId, String title, Long price);
 
     List<Product> findAllByUuidIn(List<UUID> uuids);
 
