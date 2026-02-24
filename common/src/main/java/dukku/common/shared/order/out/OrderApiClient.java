@@ -1,6 +1,7 @@
 package dukku.common.shared.order.out;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
+import dukku.common.shared.order.dto.OrderResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -8,6 +9,7 @@ import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class OrderApiClient {
@@ -35,5 +37,13 @@ public class OrderApiClient {
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
                 });
+    }
+
+    // 결제 도메인에서 주문 만료 검증에 사용할 주문 상세 정보를 조회한다.
+    public OrderResponse findOrderByUuid(UUID orderUuid) {
+        return restClient.get()
+                .uri("/{orderUuid}/detail", orderUuid)
+                .retrieve()
+                .body(OrderResponse.class);
     }
 }

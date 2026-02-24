@@ -11,15 +11,20 @@ import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.common.shared.payment.dto.PaymentConfirmRequest;
 import dukku.common.shared.payment.dto.PaymentConfirmResponse;
 import dukku.common.shared.payment.exception.DuplicatePaymentKeyException;
+import dukku.common.shared.payment.exception.PaymentExpiredException;
 import dukku.common.shared.payment.exception.PaymentNotPendingException;
 import dukku.common.shared.payment.exception.TossAmountMismatchException;
+import dukku.common.shared.order.dto.OrderResponse;
+import dukku.common.shared.order.out.OrderApiClient;
 import dukku.payment.boundedContext.payment.out.TossPaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +41,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ConfirmPaymentUseCase {
 
+    @Value("${payment.pending-expiration.minutes:5}")
+    private long pendingExpirationMinutes;
+
     private final PaymentSupport support;
     private final TossPaymentClient tossClient;
     private final EventPublisher eventPublisher;
+    private final OrderApiClient orderApiClient;
 
     /**
      * 결제 승인 확정 처리
@@ -59,6 +68,7 @@ public class ConfirmPaymentUseCase {
         try {
             // 승인 가능 상태 검증 (PENDING만 허용)
             validatePaymentStatus(payment);
+            validateOrderNotExpired(payment.getOrderUuid());
             // PG 승인 금액 일치 검증
             validateAmount(payment, request.getToss().getAmount());
             // 동일 paymentKey 중복 승인 방지
@@ -192,6 +202,9 @@ public class ConfirmPaymentUseCase {
         if (e instanceof PaymentNotPendingException) {
             return PaymentFailureCode.PAYMENT_STATUS_INVALID;
         }
+        if (e instanceof PaymentExpiredException) {
+            return PaymentFailureCode.PAYMENT_EXPIRED;
+        }
         if (e instanceof TossAmountMismatchException) {
             return PaymentFailureCode.AMOUNT_MISMATCH;
         }
@@ -210,5 +223,16 @@ public class ConfirmPaymentUseCase {
             return code.name();
         }
         return code.name() + ": " + detail;
+    }
+
+    // 결제 승인 직전 주문 만료 여부를 다시 확인해 만료 주문 승인을 차단한다.
+    private void validateOrderNotExpired(java.util.UUID orderUuid) {
+        OrderResponse order = orderApiClient.findOrderByUuid(orderUuid);
+        LocalDateTime orderedAt = order.getOrderedAt();
+        LocalDateTime expiresAt = orderedAt.plusMinutes(pendingExpirationMinutes);
+        if (LocalDateTime.now().isAfter(expiresAt)) {
+            long orderAgeMinutes = ChronoUnit.MINUTES.between(orderedAt, LocalDateTime.now());
+            throw new PaymentExpiredException(orderAgeMinutes, pendingExpirationMinutes);
+        }
     }
 }
