@@ -17,7 +17,7 @@ public class CreateCouponUseCase {
 
     public CouponResponse execute(CouponCreateRequest request) {
         Coupon coupon = Coupon.createCoupon(request);
-        couponRepository.save(coupon);
+        coupon = couponRepository.save(coupon);
 
         return Coupon.from(coupon);
     }
