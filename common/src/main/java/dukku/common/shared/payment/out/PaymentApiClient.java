@@ -12,7 +12,7 @@ public class PaymentApiClient {
 
     private final RestClient restClient;
 
-    public PaymentApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public PaymentApiClient(@Value("${custom.client.payment.url:${custom.global.internalBackUrl}}") String internalBackUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/internal/payments")
                 .build();

@@ -3,7 +3,7 @@ server:
 
 spring:
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   config:
     import: classpath:application-common.yml
@@ -12,12 +12,6 @@ spring:
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:auth_service}?sslmode=${DB_SSLMODE:disable}
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
   security:
     oauth2:
       client:
@@ -29,7 +23,7 @@ spring:
               - openid
               - profile
               - email
-            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:http://localhost:8081/login/oauth2/code/google}
+            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:https://localhost:8081/login/oauth2/code/google}
 
 management:
   endpoints:
@@ -46,4 +40,4 @@ management:
 custom:
   auth:
     oauth2:
-      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:http://localhost:3000/oauth/google/callback}
+      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:${GOOGLE_OAUTH_SUCCESS_REDIRECT_URI:https://localhost:3000/oauth/google/callback}}

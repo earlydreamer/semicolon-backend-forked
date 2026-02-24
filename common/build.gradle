@@ -49,6 +49,10 @@ dependencies {
 
     // === 10. Redis ===
     api 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // === Lombok (annotation processing for common module) ===
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }
 
 // === QueryDSL 설정 ===

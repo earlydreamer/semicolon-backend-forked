@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"settlement-service","namespace":"semicolon"},"spec":{"ports":[{"name":"http","port":80,"targetPort":8088}],"selector":{"app":"settlement"},"type":"ClusterIP"}}
+  creationTimestamp: "2026-02-18T10:38:34Z"
+  name: settlement-service
+  namespace: semicolon
+  resourceVersion: "161067"
+  uid: 770bf264-84f3-47a1-adf6-e387335e735f
+spec:
+  clusterIP: 10.43.190.232
+  clusterIPs:
+  - 10.43.190.232
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8088
+  selector:
+    app: settlement
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

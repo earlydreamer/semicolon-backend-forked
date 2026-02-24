@@ -1,0 +1,21 @@
+# NOTE: 서브도메인/서비스별 Ingress 대비용 템플릿 (기본 apply 대상 아님)
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auth-ingress
+  namespace: semicolon
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+    - host: auth.api.dukku.shop
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80

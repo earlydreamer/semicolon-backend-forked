@@ -1,7 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.common.global.exception.ForbiddenException;
+import dukku.common.shared.order.exception.OrderAccessDeniedException;
 import dukku.order.boundedContext.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +19,7 @@ public class FindOrderUseCase {
         Order order = orderSupport.findOrderByUuidWithItems(orderUuid);
 
         if (!UserUtil.isAdmin() && !order.getUserUuid().equals(UserUtil.getUserId())) {
-            throw new ForbiddenException("주문 접근 권한이 없습니다.");
+            throw new OrderAccessDeniedException();
         }
 
         return order;

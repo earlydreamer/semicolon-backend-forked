@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Builder
 public class ProductDetailResponse {
 
+    private Integer productId;   // 상품 PK (주문/결제 스냅샷용)
     private UUID productUuid;
     private UUID sellerUuid;
     private String title;
@@ -30,6 +32,7 @@ public class ProductDetailResponse {
     private int viewCount;
     private List<String> imageUrls;
     private CategorySummary category;
+    private Seller seller;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     private List<String> tagNames;
@@ -40,5 +43,14 @@ public class ProductDetailResponse {
         private Integer id;
         private String name;
         private int depth;
+    }
+
+    @Getter
+    @Builder
+    public static class Seller {
+        private UUID sellerUuid;
+        private String nickname;
+        private BigDecimal averageRating;
+        private int reviewCount;
     }
 }

@@ -16,7 +16,7 @@ public class OrderApiClient {
 
     private final RestClient restClient;
 
-    public OrderApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public OrderApiClient(@Value("${custom.client.order.url:${custom.global.internalBackUrl}}") String internalBackUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/internal/orders")
                 .build();

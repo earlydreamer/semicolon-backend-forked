@@ -14,6 +14,8 @@ jobs:
 
     env:
       SPRING_PROFILES_ACTIVE: release
+      SPRING_APPLICATION_JSON: '{"spring": {"jpa": {"hibernate": {"ddl-auto": "update"}}}}'
+      INTERNAL_BACK_URL: http://localhost:8080
       SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
 
       DB_HOST: localhost
@@ -25,6 +27,8 @@ jobs:
 
       SPRING_DATA_REDIS_HOST: localhost
       SPRING_DATA_REDIS_PORT: 6379
+
+      KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
       SPRING_ELASTICSEARCH_URIS: http://localhost:9200
 

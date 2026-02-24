@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"deposit-service","namespace":"semicolon"},"spec":{"ports":[{"name":"http","port":80,"targetPort":8087}],"selector":{"app":"deposit"},"type":"ClusterIP"}}
+  creationTimestamp: "2026-02-18T10:38:33Z"
+  name: deposit-service
+  namespace: semicolon
+  resourceVersion: "161063"
+  uid: fa568b90-7282-4537-bae4-f975043357cd
+spec:
+  clusterIP: 10.43.213.33
+  clusterIPs:
+  - 10.43.213.33
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8087
+  selector:
+    app: deposit
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

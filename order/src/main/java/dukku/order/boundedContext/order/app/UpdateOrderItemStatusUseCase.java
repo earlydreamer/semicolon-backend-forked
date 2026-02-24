@@ -2,8 +2,9 @@ package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.global.exception.ForbiddenException;
-import dukku.common.global.exception.NotFoundException;
+import dukku.common.shared.order.exception.OrderAccessDeniedException;
+import dukku.common.shared.order.exception.OrderItemActionNotAllowedException;
+import dukku.common.shared.order.exception.OrderItemNotFoundException;
 import dukku.common.shared.order.event.OrderItemCanceledEvent;
 import dukku.common.shared.order.event.OrderItemConfirmedEvent;
 import dukku.common.shared.order.event.OrderItemRefundRequestedEvent;
@@ -26,18 +27,20 @@ public class UpdateOrderItemStatusUseCase {
 
     @Transactional
     public void execute(UUID orderItemUuid, OrderItemStatus newStatus) {
-        if (newStatus == null) return;
+        if (newStatus == null) {
+            return;
+        }
 
         OrderItem orderItem = orderItemRepository.findByUuid(orderItemUuid)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 주문 상품입니다."));
+                .orElseThrow(OrderItemNotFoundException::new);
 
-        // 1. 권한 검증 (관리자 프리패스, 사용자 엄격 검증)
+        // 1) 권한 검증 (관리자 프리패스, 사용자 엄격 검증)
         checkPermission(orderItem, newStatus);
 
-        // 2. 상태 변경 (엔티티 내부에서 흐름 검증 수행 -> 실패 시 예외 발생)
+        // 2) 상태 변경 (엔티티 내부에서 흐름 검증 수행 -> 실패 시 예외 발생)
         orderItem.updateOrderStatus(newStatus);
 
-        // 3. 변경된 상태에 맞는 이벤트 발행 (알림, 정산, 재고 복구 등)
+        // 3) 변경된 상태에 맞는 이벤트 발행 (알림, 정산, 재고 복구 등)
         publishEvent(orderItem, newStatus);
 
         log.info("주문 상품 상태 변경 완료: uuid={}, status={}", orderItemUuid, newStatus);
@@ -51,13 +54,13 @@ public class UpdateOrderItemStatusUseCase {
 
         // 본인 주문 확인
         if (!orderItem.getOrder().getUserUuid().equals(UserUtil.getUserId())) {
-            throw new ForbiddenException("주문 수정 권한이 없습니다.");
+            throw new OrderAccessDeniedException();
         }
 
         // 사용자가 요청할 수 있는 상태인지 확인 (Enum 내 정의된 리스트 체크)
         // ex: 사용자가 갑자기 status를 'SHIPPING(배송중)'으로 바꾸는 해킹 시도 방어
         if (!OrderItemStatus.isUserActionAllowed(newStatus)) {
-            throw new ForbiddenException("사용자가 변경할 수 없는 상태입니다.");
+            throw new OrderItemActionNotAllowedException();
         }
     }
 

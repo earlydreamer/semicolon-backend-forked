@@ -61,6 +61,7 @@ public class Coupon {
     // 쿠폰 생성 시 초기 상태는 DRAFT
     public static Coupon createCoupon(CouponCreateRequest request) {
         return Coupon.builder()
+                .uuid(UUID.randomUUID())
                 .couponName(request.couponName())
                 .discountAmount(request.discountAmount())
                 .minimumOrderAmount(request.minimumOrderAmount())
@@ -69,6 +70,13 @@ public class Coupon {
                 .issuedQuantity(0)
                 .totalQuantity(request.totalQuantity())
                 .build();
+    }
+
+    @PrePersist
+    void prePersist() {
+        if (this.uuid == null) {
+            this.uuid = UUID.randomUUID();
+        }
     }
 
     // 발급 전(Active로 전환 전) 수정 허용

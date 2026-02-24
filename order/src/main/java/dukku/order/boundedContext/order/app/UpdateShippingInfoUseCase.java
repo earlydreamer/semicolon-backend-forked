@@ -1,7 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
-import dukku.common.global.exception.ForbiddenException;
+import dukku.common.shared.order.exception.OrderAccessDeniedException;
 import dukku.order.boundedContext.order.entity.Order;
 import dukku.common.shared.order.dto.OrderUpdateRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class UpdateShippingInfoUseCase {
         Order order = orderSupport.findOrderByUuidWithItems(orderUuid);
 
         if (!UserUtil.isAdmin() && !order.getUserUuid().equals(UserUtil.getUserId())) {
-            throw new ForbiddenException("주문 상품 수정 권한이 없습니다.");
+            throw new OrderAccessDeniedException();
         }
 
         order.updateOrderForUser(req.getAddress(), req.getRecipient(), req.getContactNumber());

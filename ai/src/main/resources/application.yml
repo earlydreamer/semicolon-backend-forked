@@ -2,6 +2,8 @@ server:
   port: 8089
 
 spring:
+  config:
+    import: classpath:application-common.yml
   application:
     name: ai
 
@@ -21,7 +23,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        show_sql: tru
+        show_sql: true
         format_sql: true
         use_sql_comments: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
