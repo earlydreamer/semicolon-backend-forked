@@ -25,10 +25,10 @@ public class SellerProductFacade {
     }
 
     public ProductDetailResponse update(UUID productUuid, ProductUpdateRequest request) {
-        return updateProductUseCase.execute(UserUtil.getUserId(), productUuid, request);
+        return updateProductUseCase.execute(productUuid, UserUtil.getUserId(), request);
     }
 
     public void delete(UUID productUuid) {
-        deleteProductUseCase.execute(UserUtil.getUserId(), productUuid);
+        deleteProductUseCase.execute(productUuid, UserUtil.getUserId());
     }
 }

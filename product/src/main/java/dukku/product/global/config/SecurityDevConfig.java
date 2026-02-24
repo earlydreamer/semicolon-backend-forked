@@ -54,7 +54,7 @@ public class SecurityDevConfig {
                     corsConfig.setAllowedOrigins(
                             Arrays.asList(allowedOrigins)
                     );
-                    corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+                    corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
                     corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
