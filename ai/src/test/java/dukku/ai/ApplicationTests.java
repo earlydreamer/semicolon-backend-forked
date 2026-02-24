@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
         "spring.datasource.password=",
         "spring.jpa.properties.hibernate.hbm2ddl.auto=create-drop",
         "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+        "spring.ai.vectorstore.pgvector.initialize-schema=false",
         "spring.kafka.listener.auto-startup=false",
         "spring.kafka.bootstrap-servers=localhost:9092",
         "spring.data.redis.host=localhost",
