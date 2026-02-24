@@ -27,7 +27,7 @@ public final class AiPromptPolicy {
             형식:
             [
               {
-                "memoryType": "PROFILE|PREFERENCE",
+                "memoryType": "PROFILE|PREFERENCE|PURCHASE",
                 "subType": "TECH|SHOPPING|GENERAL",
                 "content": "기억할 내용",
                 "confidence": 0.0~1.0
@@ -37,10 +37,12 @@ public final class AiPromptPolicy {
             memoryType 기준:
             - PROFILE: 이름, 나이, 직업 등 기본 정보
             - PREFERENCE: 좋아하는 것, 싫어하는 것, 선호도, 관심 카테고리
+            - PURCHASE: 구매 이력, 결제한 상품, 주문 내역
 
             추출 가이드:
             - 직접 발화뿐 아니라 요청/질문에서 드러나는 암묵적 관심사도 추출하세요.
             - "추천해줘", "찾아줘", "알려줘" 같은 요청에서 관심 카테고리와 조건을 추출하세요.
+            - "이거 샀는데", "주문했어", "결제했어" 같은 구매 관련 발화는 PURCHASE로 추출하세요.
             - 이미 알고 있는 정보의 반복이면 추출하지 마세요.
 
             예시:
@@ -49,6 +51,9 @@ public final class AiPromptPolicy {
 
             사용자: "요즘 맥북 프로 M4 어때?"
             → [{"memoryType":"PREFERENCE","subType":"TECH","content":"맥북 프로 M4에 관심 있음","confidence":0.6}]
+
+            사용자: "어제 캠핑 의자 샀어"
+            → [{"memoryType":"PURCHASE","subType":"SHOPPING","content":"캠핑 의자를 구매함","confidence":0.9}]
 
             사용자: "그냥 안녕"
             → []

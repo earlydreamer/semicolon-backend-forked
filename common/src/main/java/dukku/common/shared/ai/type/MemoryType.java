@@ -4,4 +4,5 @@ public enum MemoryType {
     PROFILE,
     PREFERENCE,
     RECOMMENDATION,
+    PURCHASE,
 }

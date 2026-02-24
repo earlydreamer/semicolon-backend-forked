@@ -1,6 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.order.event.OrderPaidEvent;
 import dukku.common.shared.order.event.OrderProductSaleConfirmedEvent;
 import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
 import dukku.common.shared.order.type.OrderItemStatus;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -35,6 +37,15 @@ public class UpdateOrderStatusUseCase {
 
         eventPublisher.publish(
                 new OrderProductSaleConfirmedEvent(order.getUuid(), order.getProductUuids())
+        );
+
+        List<OrderPaidEvent.PaidItem> paidItems = order.getOrderItems().stream()
+                .map(item -> new OrderPaidEvent.PaidItem(
+                        item.getProductUuid(), item.getProductName(), item.getProductPrice()))
+                .toList();
+
+        eventPublisher.publish(
+                new OrderPaidEvent(order.getUuid(), order.getUserUuid(), paidItems)
         );
     }
 

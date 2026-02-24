@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dukku.ai.app.usecase.InitializeAiUserMemoryUseCase;
 import dukku.ai.app.usecase.ProductVectorSyncUseCase;
 import dukku.ai.app.usecase.CartRecommendationUseCase;
+import dukku.ai.app.usecase.PurchaseMemoryUseCase;
+import dukku.common.shared.order.event.OrderPaidEvent;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.product.dto.product.ProductPayload;
 
@@ -17,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -32,6 +36,7 @@ public class AiEventListener {
     private final InitializeAiUserMemoryUseCase initializeAiUserMemoryUseCase;
     private final EventPublisher eventPublisher;
     private final CartRecommendationUseCase cartRecommendationUseCase;
+    private final PurchaseMemoryUseCase purchaseMemoryUseCase;
     private final ProductVectorSyncUseCase productVectorSyncUseCase;
     private final ObjectMapper objectMapper;
 
@@ -68,6 +73,30 @@ public class AiEventListener {
 
         } catch (Exception e) {
             log.error("[CartEventListener] 장바구니 이벤트 처리 실패: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "order.paid", groupId = "${spring.application.name}-group")
+    public void handleOrderPaidEvent(String eventJson) {
+        try {
+            JsonNode root = objectMapper.readTree(eventJson);
+            UUID userUuid = UUID.fromString(root.get("userUuid").asText());
+
+            List<OrderPaidEvent.PaidItem> items = new ArrayList<>();
+            for (JsonNode itemNode : root.get("items")) {
+                items.add(new OrderPaidEvent.PaidItem(
+                        UUID.fromString(itemNode.get("productUuid").asText()),
+                        itemNode.get("productName").asText(),
+                        itemNode.get("productPrice").asInt()
+                ));
+            }
+
+            log.info("[OrderPaidEvent] 결제 완료 이벤트 수신: userUuid={}, itemCount={}", userUuid, items.size());
+
+            purchaseMemoryUseCase.storePurchaseMemory(userUuid, items);
+
+        } catch (Exception e) {
+            log.error("[OrderPaidEvent] 결제 완료 이벤트 처리 실패: {}", e.getMessage(), e);
         }
     }
 
