@@ -1,13 +1,10 @@
 package dukku.ai.global.config;
 
-import java.util.List;
-
-import dukku.ai.app.service.MemoryExtractionService;
-import dukku.ai.app.service.MemoryRetrievalService;
+import dukku.ai.app.service.UserMemoryReadService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import dukku.ai.app.service.DocumentRetrievalService;
-import dukku.ai.global.advisor.DocumentRetrievalAdvisor;
+import dukku.ai.app.service.ProductRetrievalService;
+import dukku.ai.global.advisor.ProductRetrievalAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
@@ -16,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 
 import dukku.ai.global.advisor.GuardAdvisor;
 import dukku.ai.global.advisor.LoggingAdvisor;
-import dukku.ai.global.advisor.MemoryExtractionAdvisor;
 import dukku.ai.global.advisor.MemoryRetrievalAdvisor;
 import dukku.ai.global.advisor.ToolAdvisor;
 import dukku.ai.global.policy.AiGuardPolicy;
@@ -49,13 +45,8 @@ public class ChatClientConfig {
     }
 
     @Bean
-    MemoryRetrievalAdvisor memoryRetrievalAdvisor(MemoryRetrievalService memoryRetrievalService) {
-        return new MemoryRetrievalAdvisor(memoryRetrievalService, 110);
-    }
-
-    @Bean
-    MemoryExtractionAdvisor memoryExtractionAdvisor(MemoryExtractionService memoryExtractionService) {
-        return new MemoryExtractionAdvisor(memoryExtractionService, 150);
+    MemoryRetrievalAdvisor memoryRetrievalAdvisor(UserMemoryReadService userMemoryReadService) {
+        return new MemoryRetrievalAdvisor(userMemoryReadService, 110);
     }
 
     @Bean
@@ -64,8 +55,8 @@ public class ChatClientConfig {
     }
 
     @Bean
-    DocumentRetrievalAdvisor documentRetrievalAdvisor(DocumentRetrievalService documentRetrievalUseCase) {
-        return new DocumentRetrievalAdvisor(documentRetrievalUseCase, 130);
+    ProductRetrievalAdvisor productRetrievalAdvisor(ProductRetrievalService productRetrievalService) {
+        return new ProductRetrievalAdvisor(productRetrievalService, 130);
     }
 
     @Bean
@@ -74,9 +65,8 @@ public class ChatClientConfig {
                           GuardAdvisor guardAdvisor,
                           LoggingAdvisor loggingAdvisor,
                           MemoryRetrievalAdvisor memoryRetrievalAdvisor,
-                          MemoryExtractionAdvisor memoryExtractionAdvisor,
                           ToolAdvisor toolAdvisor,
-                          DocumentRetrievalAdvisor documentRetrievalAdvisor,
+                          ProductRetrievalAdvisor productRetrievalAdvisor,
                           CartHistoryTool cartHistoryTool,
                           PurchaseHistoryTool purchaseHistoryTool,
                           RecommendationTool recommendationTool,
@@ -93,12 +83,11 @@ public class ChatClientConfig {
                 )
                 .defaultAdvisors(
                         guardAdvisor,                                           // 1. 입력 검증 (order=0)
-                        MessageChatMemoryAdvisor.builder(chatMemory).build(),   // 2. 대화 메모리
+                        MessageChatMemoryAdvisor.builder(chatMemory).order(10).build(),   // 2. 대화 메모리
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
                         toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
-                        documentRetrievalAdvisor,                               // 5. 선택적 문서 검색 (order=130)
-                        memoryExtractionAdvisor,                                // 6. 기억 추출 (order=150)
-                        loggingAdvisor                                          // 7. 로깅/관측 (order=200)
+                        productRetrievalAdvisor,                                // 5. 선택적 상품 검색 (order=130)
+                        loggingAdvisor                                          // 6. 로깅/관측 (order=200)
                 )
                 .build();
     }

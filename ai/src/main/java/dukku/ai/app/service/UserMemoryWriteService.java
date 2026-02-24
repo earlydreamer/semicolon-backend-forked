@@ -13,32 +13,25 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
-import dukku.ai.out.AiMemoryRepository;
+import dukku.ai.out.AiUserMemoryRepository;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
 @Slf4j
 @Service
-public class MemoryExtractionService {
+@RequiredArgsConstructor
+public class UserMemoryWriteService {
 
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
     private final ObjectMapper objectMapper;
 
-    public MemoryExtractionService(ChatModel chatModel,
-                                   EmbeddingModel embeddingModel,
-                                   AiMemoryRepository aiMemoryRepository,
-                                   ObjectMapper objectMapper) {
-        this.chatModel = chatModel;
-        this.embeddingModel = embeddingModel;
-        this.aiMemoryRepository = aiMemoryRepository;
-        this.objectMapper = objectMapper;
-    }
 
     @Async
     public void extractAndStoreMemories(UUID userUuid, String userMessage, String aiResponse) {
@@ -49,7 +42,14 @@ public class MemoryExtractionService {
                     .getOutput()
                     .getText();
 
+            log.info("[기억 추출] userUuid={}, AI 추출 결과: {}", userUuid, result);
+
             List<MemoryExtraction> extractions = parseExtractions(result);
+
+            if (extractions.isEmpty()) {
+                log.info("[기억 추출] userUuid={} — 추출된 기억 없음", userUuid);
+                return;
+            }
 
             for (MemoryExtraction extraction : extractions) {
                 processExtraction(userUuid, extraction);
@@ -76,26 +76,25 @@ public class MemoryExtractionService {
         float[] embedding = embeddingModel.embed(extraction.content());
         String embeddingStr = Arrays.toString(embedding);
 
-        List<AiMemory> duplicates = aiMemoryRepository.findDuplicateMemory(
+        List<AiUserMemory> duplicates = aiUserMemoryRepository.findDuplicateMemory(
                 userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
 
         if (!duplicates.isEmpty()) {
-            AiMemory existing = duplicates.getFirst();
-            existing.updateConfidence(extraction.confidence());
-            aiMemoryRepository.save(existing);
-            log.debug("기존 기억 업데이트: id={}", existing.getId());
+            AiUserMemory existing = duplicates.getFirst();
+            existing.updateImportanceScore(extraction.confidence());
+            aiUserMemoryRepository.save(existing);
+            log.info("[기억 추출] 기존 기억 업데이트: id={}, content={}", existing.getId(), existing.getContent());
         } else {
-            AiMemory newMemory = AiMemory.builder()
+            AiUserMemory newMemory = AiUserMemory.builder()
                     .userUuid(userUuid)
                     .memoryType(MemoryType.valueOf(extraction.memoryType()))
                     .subType(MemorySubType.valueOf(extraction.subType()))
                     .content(extraction.content())
                     .embedding(embedding)
                     .importanceScore(extraction.confidence())
-                    .confidenceScore(extraction.confidence())
                     .build();
-            aiMemoryRepository.save(newMemory);
-            log.debug("새 기억 저장: content={}", extraction.content());
+            aiUserMemoryRepository.save(newMemory);
+            log.info("[기억 추출] 새 기억 저장: type={}/{}, content={}", extraction.memoryType(), extraction.subType(), extraction.content());
         }
     }
 

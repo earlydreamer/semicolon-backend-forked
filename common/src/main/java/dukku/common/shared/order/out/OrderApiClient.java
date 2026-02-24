@@ -1,6 +1,7 @@
 package dukku.common.shared.order.out;
 
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
+import dukku.common.shared.order.dto.OrderListResponse;
 import dukku.common.shared.order.dto.OrderResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -45,5 +46,19 @@ public class OrderApiClient {
                 .uri("/{orderUuid}/detail", orderUuid)
                 .retrieve()
                 .body(OrderResponse.class);
+    }
+
+    // 특정 사용자의 주문 이력 조회 (AI 추천용)
+    public List<OrderListResponse> findOrdersByUserUuid(UUID userUuid, String status, int limit) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/{userUuid}")
+                        .queryParam("status", status)
+                        .queryParam("limit", limit)
+                        .build(userUuid)
+                )
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
     }
 }

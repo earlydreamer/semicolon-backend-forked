@@ -7,7 +7,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableAsync
 @EnableJpaAuditing
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+        "dukku.ai",
+        "dukku.common"
+})
 public class AiApplication {
 
     public static void main(String[] args) {

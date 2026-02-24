@@ -9,6 +9,7 @@ import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.ProductEventType;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
+import dukku.product.boundedContext.product.app.support.ProductMapper;
 import dukku.product.boundedContext.product.entity.tag.ProductTag;
 import dukku.product.boundedContext.product.entity.tag.Tag;
 import jakarta.persistence.*;
@@ -285,7 +286,8 @@ public class Product extends BaseIdAndUUIDAndTime {
                 product.getCategory().getId(),
                 product.getCategory().getCategoryName(),
                 product.getTagNames(),
-                product.getSaleStatus()
+                product.getSaleStatus(),
+                ProductMapper.buildProductUrl(product.getUuid())
         );
     }
 }

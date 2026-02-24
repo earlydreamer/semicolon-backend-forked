@@ -5,8 +5,7 @@ public final class AiSimilarityPolicy {
     private AiSimilarityPolicy() {
     }
 
-    // 문서 검색
-    public static final double DOCUMENT_SIMILARITY_THRESHOLD = 0.7;
+    public static final double DOCUMENT_SIMILARITY_THRESHOLD = 0.3;
     public static final int DOCUMENT_TOP_K = 5;
 
     // 기억 검색
@@ -17,6 +16,9 @@ public final class AiSimilarityPolicy {
     // 기억 중복 판단
     public static final double MEMORY_DUPLICATE_THRESHOLD = 0.92;
 
-    // 임베딩
-    public static final int EMBEDDING_DIMENSION = 384;
+    // 추천 검색
+    public static final int RECOMMENDATION_TOP_K = 10;
+    public static final double RECOMMENDATION_SIMILARITY_THRESHOLD = 0.3;
+
+    public static final int EMBEDDING_DIMENSION = 1536;
 }

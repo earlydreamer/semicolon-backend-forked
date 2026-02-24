@@ -2,32 +2,31 @@ package dukku.ai.app.usecase;
 
 import java.util.UUID;
 
+import dukku.ai.out.AiUserMemoryRepository;
 import org.springframework.stereotype.Service;
 
-import dukku.ai.entity.AiMemory;
+import dukku.ai.entity.AiUserMemory;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
-import dukku.ai.out.AiMemoryRepository;
 
 @Service
 public class CreateAiMemoryUseCase {
 
-    private final AiMemoryRepository aiMemoryRepository;
+    private final AiUserMemoryRepository aiUserMemoryRepository;
 
-    public CreateAiMemoryUseCase(AiMemoryRepository aiMemoryRepository) {
-        this.aiMemoryRepository = aiMemoryRepository;
+    public CreateAiMemoryUseCase(AiUserMemoryRepository aiUserMemoryRepository) {
+        this.aiUserMemoryRepository = aiUserMemoryRepository;
     }
 
-    public AiMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
-                           String content, Double importanceScore, Double confidenceScore) {
-        AiMemory memory = AiMemory.builder()
+    public AiUserMemory create(UUID userUuid, MemoryType memoryType, MemorySubType subType,
+                               String content, Double importanceScore) {
+        AiUserMemory memory = AiUserMemory.builder()
                 .userUuid(userUuid)
                 .memoryType(memoryType)
                 .subType(subType)
                 .content(content)
                 .importanceScore(importanceScore)
-                .confidenceScore(confidenceScore)
                 .build();
-        return aiMemoryRepository.save(memory);
+        return aiUserMemoryRepository.save(memory);
     }
 }

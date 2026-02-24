@@ -1,11 +1,12 @@
 package dukku.ai.app;
 
 import dukku.ai.app.usecase.*;
-import dukku.ai.entity.AiMemory;
-import dukku.common.shared.ai.dto.AiMemoryResponse;
+import dukku.ai.entity.AiUserMemory;
+import dukku.common.shared.ai.dto.AiUserMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
-import dukku.common.shared.ai.dto.CreateAiMemoryRequest;
-import dukku.common.shared.ai.dto.UpdateAiMemoryRequest;
+import dukku.common.shared.ai.dto.CreateAiUserMemoryRequest;
+import dukku.common.shared.ai.dto.UpdateAiUserMemoryRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AiFacade {
 
@@ -22,14 +24,8 @@ public class AiFacade {
     private final CreateAiMemoryUseCase createAiMemoryUseCase;
     private final UpdateAiMemoryUseCase updateAiMemoryUseCase;
     private final DeleteAiMemoryUseCase deleteAiMemoryUseCase;
+    private final FindRecommendationUseCase findRecommendationUseCase;
 
-    public AiFacade(ChatUseCase chatUseCase, FindAiMemoryUseCase findAiMemoryUseCase, CreateAiMemoryUseCase createAiMemoryUseCase, UpdateAiMemoryUseCase updateAiMemoryUseCase, DeleteAiMemoryUseCase deleteAiMemoryUseCase) {
-        this.chatUseCase = chatUseCase;
-        this.findAiMemoryUseCase = findAiMemoryUseCase;
-        this.createAiMemoryUseCase = createAiMemoryUseCase;
-        this.updateAiMemoryUseCase = updateAiMemoryUseCase;
-        this.deleteAiMemoryUseCase = deleteAiMemoryUseCase;
-    }
 
     public Flux<String> chat(ChatRequest request) {
         String conversationId = resolveConversationId(request.conversationId());
@@ -43,35 +39,33 @@ public class AiFacade {
         return conversationId;
     }
 
-    public List<AiMemoryResponse> findAll() {
+    public List<AiUserMemoryResponse> findAll() {
         return findAiMemoryUseCase.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public AiMemoryResponse findById(Integer aiMemoryId) {
+    public AiUserMemoryResponse findById(Integer aiMemoryId) {
         return toResponse(findAiMemoryUseCase.findById(aiMemoryId));
     }
 
     @Transactional
-    public AiMemoryResponse create(CreateAiMemoryRequest request) {
-        AiMemory memory = createAiMemoryUseCase.create(
+    public AiUserMemoryResponse create(CreateAiUserMemoryRequest request) {
+        AiUserMemory memory = createAiMemoryUseCase.create(
                 request.userUuid(),
                 request.memoryType(),
                 request.subType(),
                 request.content(),
-                request.importanceScore(),
-                request.confidenceScore()
+                request.importanceScore()
         );
         return toResponse(memory);
     }
 
     @Transactional
-    public AiMemoryResponse update(Integer aiMemoryId, UpdateAiMemoryRequest request) {
-        AiMemory memory = updateAiMemoryUseCase.update(
+    public AiUserMemoryResponse update(Integer aiMemoryId, UpdateAiUserMemoryRequest request) {
+        AiUserMemory memory = updateAiMemoryUseCase.update(
                 aiMemoryId,
-                request.importanceScore(),
-                request.confidenceScore()
+                request.importanceScore()
         );
         return toResponse(memory);
     }
@@ -81,15 +75,21 @@ public class AiFacade {
         deleteAiMemoryUseCase.delete(aiMemoryId);
     }
 
-    private AiMemoryResponse toResponse(AiMemory memory) {
-        return new AiMemoryResponse(
+    @Transactional(readOnly = true)
+    public List<AiUserMemoryResponse> findRecommendations(UUID userUuid) {
+        return findRecommendationUseCase.findByUserUuid(userUuid).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private AiUserMemoryResponse toResponse(AiUserMemory memory) {
+        return new AiUserMemoryResponse(
                 memory.getId(),
                 memory.getUserUuid(),
                 memory.getMemoryType(),
                 memory.getSubType(),
                 memory.getContent(),
                 memory.getImportanceScore(),
-                memory.getConfidenceScore(),
                 memory.getAccessCount(),
                 memory.getCreatedAt(),
                 memory.getUpdatedAt()

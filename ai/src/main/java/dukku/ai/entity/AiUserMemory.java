@@ -27,7 +27,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class AiMemory extends BaseIdAndUUIDAndTime {
+public class AiUserMemory extends BaseIdAndUUIDAndTime {
 
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(nullable = false)
@@ -44,29 +44,20 @@ public class AiMemory extends BaseIdAndUUIDAndTime {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(columnDefinition = "vector(384)")
+    @Column(columnDefinition = "vector(1536)")
     @JdbcTypeCode(SqlTypes.VECTOR)
-    @Array(length = 384)
+    @Array(length = 1536)
     private float[] embedding;
 
     @Column(nullable = false)
     private Double importanceScore;
 
-    @Column(nullable = false)
-    private Double confidenceScore;
-
     @Builder.Default
     @Column(nullable = false)
     private Integer accessCount = 0;
 
-    private String sourceMessageId;
-
     public void incrementAccessCount() {
         this.accessCount++;
-    }
-
-    public void updateConfidence(Double newConfidence) {
-        this.confidenceScore = (this.confidenceScore + newConfidence) / 2.0;
     }
 
     public void updateImportanceScore(Double score) {

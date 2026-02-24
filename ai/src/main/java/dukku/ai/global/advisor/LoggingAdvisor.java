@@ -38,10 +38,14 @@ public class LoggingAdvisor implements BaseAdvisor {
         ChatResponse chatResponse = response.chatResponse();
         if (chatResponse != null && chatResponse.getResult() != null) {
             String content = chatResponse.getResult().getOutput().getText();
-            log.info("[AI 응답] content={}",
-                    content != null && content.length() > 100
-                            ? content.substring(0, 100) + "..."
-                            : content);
+            if (content != null && !content.isEmpty()) {
+                log.info("[AI 응답] content={}",
+                        content.length() > 100
+                                ? content.substring(0, 100) + "..."
+                                : content);
+            } else {
+                log.info("[AI 응답 시작] (스트리밍 중이거나 텍스트 내용 없음)");
+            }
         }
 
         if (chatResponse != null && chatResponse.getMetadata() != null

@@ -1,10 +1,10 @@
 package dukku.product.boundedContext.product.app.support;
 
+import dukku.common.shared.product.dto.product.ProductDetailResponse;
+import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.entity.ProductImage;
 import dukku.product.boundedContext.product.entity.ProductSeller;
-import dukku.common.shared.product.dto.product.ProductDetailResponse;
-import dukku.common.shared.product.dto.product.ProductListItemResponse;
 
 import java.util.Comparator;
 import java.util.List;
@@ -68,5 +68,20 @@ public class ProductMapper {
                 .createdAt(p.getCreatedAt())
                 .tagNames(p.getTagNames())
                 .build();
+    }
+
+    // 환경 변수 FRONTEND_BASE_URL 또는 시스템 속성 frontend.base.url을 사용해
+    // 상품 상세 페이지 URL을 생성합니다.
+    // 예: https://dukku.shop/products/{productUuid}
+    public static String buildProductUrl(java.util.UUID productUuid) {
+        String base = System.getenv("FRONTEND_BASE_URL");
+        if (base == null || base.isBlank()) {
+            base = System.getProperty("frontend.base.url");
+        }
+        if (base == null || base.isBlank()) {
+            base = "https://dukku.shop"; // 기본 폴백
+        }
+        if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        return base + "/products/" + productUuid.toString();
     }
 }
