@@ -7,9 +7,6 @@ spring:
   application:
     name: ai
 
-  config:
-    import: classpath:application-common.yml
-
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
