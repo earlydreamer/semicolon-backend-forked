@@ -22,27 +22,22 @@ import java.util.List;
 public class SaveToElasticSearchUseCase {
     private final ProductSearchRepository productSearchRepository;
     private final CategoryRepository categoryRepository;
-
-    // 부분 업데이트(update)는 Repository가 아니라 Operations가 담당
     private final ElasticsearchOperations elasticsearchOperations;
 
-    // 생성 시 편의 메서드 (Create)
     @Transactional(readOnly = true)
     public void execute(Product product) {
         execute(product, true);
     }
 
-    // 수정 시 메인 메서드 (Update)
     @Transactional(readOnly = true)
     public void execute(Product product, boolean isCategoryUpdated) {
         if (isCategoryUpdated) {
             saveFullDocument(product);
-        } else {
-            updatePartialDocument(product);
+            return;
         }
+        updatePartialDocument(product);
     }
 
-    // [Case 1] 전체 저장 (Repository 사용)
     private void saveFullDocument(Product product) {
         List<Integer> categoryPathIds = categoryRepository.findCategoryPathIds(product.getCategory().getId());
         String thumbnail = getThumbnailUrl(product);
@@ -70,14 +65,19 @@ public class SaveToElasticSearchUseCase {
                 .tags(product.getTagNames())
                 .build();
 
-        // 전체 저장은 Repository가 편합니다.
         productSearchRepository.save(document);
-        log.info("전체 동기화 완료: 제품 ID={}", product.getId());
+        log.info("[ES 동기화] 전체 저장 완료. productId={}", product.getId());
     }
 
-    // [Case 2] 부분 업데이트 (ElasticsearchOperations 사용)
     private void updatePartialDocument(Product product) {
         String docId = String.valueOf(product.getId());
+
+        if (!productSearchRepository.existsById(docId)) {
+            log.warn("[ES 동기화] 부분 업데이트 대상 문서 없음 -> 전체 저장으로 전환. productId={}", product.getId());
+            saveFullDocument(product);
+            return;
+        }
+
         String thumbnail = getThumbnailUrl(product);
         int sortPriority = (product.getSaleStatus() == SaleStatus.SOLD_OUT) ? 1 : 0;
 
@@ -93,19 +93,17 @@ public class SaveToElasticSearchUseCase {
         document.put("thumbnailImageUrl", thumbnail);
         document.put("tags", product.getTagNames());
 
-        // deletedAt 등 변경 가능성 있는 다른 필드도 필요하면 추가
         UpdateQuery updateQuery = UpdateQuery.builder(docId)
                 .withDocument(document)
                 .withDocAsUpsert(true)
                 .build();
 
-        // getIndexCoordinatesFor()를 사용해 인덱스 정보를 추출해서 전달
         elasticsearchOperations.update(
                 updateQuery,
                 elasticsearchOperations.getIndexCoordinatesFor(ProductDocument.class)
         );
 
-        log.info("부분 동기화 완료: 제품 ID={}", product.getId());
+        log.info("[ES 동기화] 부분 업데이트 완료. productId={}", product.getId());
     }
 
     private String getThumbnailUrl(Product product) {

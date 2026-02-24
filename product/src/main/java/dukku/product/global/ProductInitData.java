@@ -11,7 +11,9 @@ import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import dukku.product.boundedContext.product.out.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -24,7 +26,7 @@ import java.util.*;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@Order(2)
+@ConditionalOnProperty(name = "product.init.enabled", havingValue = "true", matchIfMissing = true)
 public class ProductInitData {
 
     private final ProductRepository productRepository;
@@ -32,6 +34,8 @@ public class ProductInitData {
     private final CategoryRepository categoryRepository;
     private final ProductUserRepository productUserRepository;
     private final ProductSearchRepository productSearchRepository;
+    @Value("${product.init.clear-es-on-startup:false}")
+    private boolean clearEsOnStartup;
 
     private final Map<String, UUID> userMap = new HashMap<>();
     private final Map<String, UUID> sellerMap = new HashMap<>();
@@ -50,6 +54,7 @@ public class ProductInitData {
     private static final String IMG_CAMERA = "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=500";
 
     @Bean
+    @Order(2)
     public CommandLineRunner initProducts() {
         return new CommandLineRunner() {
             @Override
@@ -57,12 +62,7 @@ public class ProductInitData {
             public void run(String... args) throws Exception {
                 log.info("🚀 [InitData] Data Initialization Started");
 
-                try {
-                    productSearchRepository.deleteAll();
-                    log.info("🗑️ Elasticsearch index cleared.");
-                } catch (Exception e) {
-                    log.warn("⚠️ Failed to clear Elasticsearch index: {}", e.getMessage());
-                }
+                clearSearchIndexIfNeeded();
 
                 userMap.clear();
                 sellerMap.clear();
@@ -77,6 +77,18 @@ public class ProductInitData {
                 log.info("✅ [InitData] Initialization Completed.");
             }
         };
+    }
+
+    private void clearSearchIndexIfNeeded() {
+        if (!clearEsOnStartup) {
+            return;
+        }
+        try {
+            productSearchRepository.deleteAll();
+            log.info("[InitData] Elasticsearch index cleared.");
+        } catch (Exception e) {
+            log.warn("[InitData] Failed to clear Elasticsearch index: {}", e.getMessage());
+        }
     }
 
     private void initCategoryHierarchy() {
@@ -246,6 +258,14 @@ public class ProductInitData {
         String categoryName = catNameMap.getOrDefault(catCode, "기타");
         Category category = categoryRepository.findByCategoryName(categoryName).orElseThrow(() -> new RuntimeException("Category not found: " + categoryName));
         UUID sellerUuid = sellerMap.get(sId);
+
+        boolean exists = productRepository.existsBySellerUuidAndCategory_IdAndTitleAndPriceAndDeletedAtIsNull(
+                sellerUuid, category.getId(), title, price);
+        if (exists) {
+            log.info("[InitData] 중복 상품 생성 스킵. sellerUuid={}, categoryId={}, title={}",
+                    sellerUuid, category.getId(), title);
+            return;
+        }
 
         Product product = Product.builder()
                 .sellerUuid(sellerUuid)

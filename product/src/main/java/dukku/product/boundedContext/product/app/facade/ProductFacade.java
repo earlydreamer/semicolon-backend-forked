@@ -2,9 +2,17 @@ package dukku.product.boundedContext.product.app.facade;
 
 import dukku.common.shared.product.dto.cqrs.ProductSearchRequest;
 import dukku.common.shared.product.dto.cqrs.ProductSortType;
-import dukku.common.shared.product.dto.product.*;
+import dukku.common.shared.product.dto.product.CategoryCreateResponse;
+import dukku.common.shared.product.dto.product.ProductDetailResponse;
+import dukku.common.shared.product.dto.product.ProductListItemResponse;
+import dukku.common.shared.product.dto.product.ProductListResponse;
+import dukku.common.shared.product.dto.product.ProductReserveRequest;
 import dukku.product.boundedContext.product.app.cqrs.SearchProductUseCase;
-import dukku.product.boundedContext.product.app.usecase.product.*;
+import dukku.product.boundedContext.product.app.usecase.product.FindCategoryListUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.FindFeaturedProductsUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.FindProductDetailUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.FindProductListUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.ReserveProductUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -30,21 +38,21 @@ public class ProductFacade {
     }
 
     public List<ProductListItemResponse> findFeatured(int size) {
-        // 1. 인기순(LIKES) 검색 조건 생성
         ProductSearchRequest request = new ProductSearchRequest();
         request.setSortType(ProductSortType.LIKES);
-        // 키워드나 카테고리 없이 sortType만 세팅하면 전체 상품 대상 랭킹이 됨
 
         Pageable pageable = PageRequest.of(0, size);
 
         try {
-            // 2. ES 조회 시도
-            return searchProductUseCase.searchProducts(request, pageable)
-                    .getItems();
+            List<ProductListItemResponse> items = searchProductUseCase.searchProducts(request, pageable).getItems();
+            if (items.isEmpty()) {
+                log.warn("상품 조회 소스=DB 폴백 (featured, empty-result), size={}", size);
+                return findFeaturedProductsUseCase.execute(size);
+            }
+            log.info("상품 조회 소스=ES (featured), size={}, resultCount={}", size, items.size());
+            return items;
         } catch (Exception e) {
-            log.error("Elasticsearch 인기 상품 조회 실패, DB로 폴백합니다.", e);
-
-            // 3. 실패 시 DB 조회
+            log.warn("상품 조회 소스=DB 폴백 (featured), size={}", size, e);
             return findFeaturedProductsUseCase.execute(size);
         }
     }
@@ -53,12 +61,18 @@ public class ProductFacade {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(size, 50));
 
         try {
-            return searchProductUseCase.searchProducts(request, pageable);
+            ProductListResponse response = searchProductUseCase.searchProducts(request, pageable);
+            if (response.getItems() == null || response.getItems().isEmpty()) {
+                log.warn("상품 조회 소스=DB 폴백 (empty-result), page={}, size={}, categoryId={}",
+                        pageable.getPageNumber(), pageable.getPageSize(), request.getCategoryId());
+                return findProductListUseCase.execute(request.getCategoryId(), pageable);
+            }
+            log.info("상품 조회 소스=ES, page={}, size={}, categoryId={}, totalCount={}",
+                    pageable.getPageNumber(), pageable.getPageSize(), request.getCategoryId(), response.getTotalCount());
+            return response;
         } catch (Exception e) {
-            // ElasticsearchException 뿐만 아니라 모든 에러 대비 (안전하게 Exception)
-            log.error("Elasticsearch 검색 실패. request={}", request, e);
-
-            // ES조회 실패 시 DB에서 단순 조회
+            log.warn("상품 조회 소스=DB 폴백, page={}, size={}, categoryId={}",
+                    pageable.getPageNumber(), pageable.getPageSize(), request.getCategoryId(), e);
             return findProductListUseCase.execute(request.getCategoryId(), pageable);
         }
     }
