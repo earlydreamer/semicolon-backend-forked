@@ -25,7 +25,13 @@ public class ProductRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        String context = productRetrievalService.retrieve(userMessage.getText());
+        String context;
+        try {
+            context = productRetrievalService.retrieve(userMessage.getText());
+        } catch (Exception e) {
+            log.warn("[상품 검색 Advisor] 상품 검색 실패, 스킵: {}", e.getMessage());
+            return request;
+        }
 
         if (context.isEmpty()) {
             log.info("[상품 검색 Advisor] 관련 상품 없음 → 스킵");

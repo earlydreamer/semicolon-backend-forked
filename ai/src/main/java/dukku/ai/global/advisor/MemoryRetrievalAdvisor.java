@@ -35,8 +35,14 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        String memoryContext = userMemoryReadService.retrieveMemoryContext(
-                userUuid, userMessage.getText());
+        String memoryContext;
+        try {
+            memoryContext = userMemoryReadService.retrieveMemoryContext(
+                    userUuid, userMessage.getText());
+        } catch (Exception e) {
+            log.warn("[장기 기억] 조회 실패 (embedding/DB 오류), 스킵: {}", e.getMessage());
+            return request;
+        }
 
         if (memoryContext.isEmpty()) {
             log.info("[장기 기억] userUuid={} — 관련 기억 없음", userUuid);
