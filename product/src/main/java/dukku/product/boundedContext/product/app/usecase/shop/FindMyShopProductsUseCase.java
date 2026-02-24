@@ -8,7 +8,6 @@ import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.common.shared.product.dto.shop.ShopProductListResponse;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
-import dukku.common.shared.product.exception.ProductSellerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Component;
@@ -21,33 +20,35 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FindMyShopProductsUseCase {
 
-    private final ProductSellerRepository productSellerRepository;
-    private final ProductRepository productRepository;
+        private final ProductSellerRepository productSellerRepository;
+        private final ProductRepository productRepository;
 
-    @Transactional(readOnly = true)
-    public ShopProductListResponse execute(UUID userUuid, SaleStatus saleStatus, int page, int size) {
+        @Transactional
+        public ShopProductListResponse execute(UUID userUuid, SaleStatus saleStatus, int page, int size) {
 
-        Pageable pageable = PageRequest.of(
-                Math.max(page, 0),
-                Math.min(size, 50),
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+                Pageable pageable = PageRequest.of(
+                                Math.max(page, 0),
+                                Math.min(size, 50),
+                                Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        // 내 상점: userUuid로 ProductSeller 찾고
-        ProductSeller seller = productSellerRepository.findByUserUuid(userUuid)
-                .orElseThrow(ProductSellerNotFoundException::new);
+                // 내 상점 조회: 만약 이벤트 유실이나 레거시 유저 등으로 인해 ProductSeller가 없다면 즉시 생성한다 (Defense in
+                // Depth / Fallback)
+                ProductSeller seller = productSellerRepository.findByUserUuid(userUuid)
+                                .orElseGet(() -> productSellerRepository
+                                                .save(ProductSeller.create(userUuid, "반가워요! 내 상점입니다.")));
 
-        // seller.userUuid == Product.sellerUuid
-        UUID sellerUserUuid = seller.getUserUuid();
+                // seller.userUuid == Product.sellerUuid
+                UUID sellerUserUuid = seller.getUserUuid();
 
-        Page<Product> result = (saleStatus == null)
-                ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUserUuid, pageable)
-                : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(sellerUserUuid, saleStatus, pageable);
+                Page<Product> result = (saleStatus == null)
+                                ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUserUuid, pageable)
+                                : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(sellerUserUuid,
+                                                saleStatus, pageable);
 
-        List<ProductListItemResponse> items = result.getContent().stream()
-                .map(ProductMapper::toListItem)
-                .toList();
+                List<ProductListItemResponse> items = result.getContent().stream()
+                                .map(ProductMapper::toListItem)
+                                .toList();
 
-        return ShopProductListResponse.from(result, items);
-    }
+                return ShopProductListResponse.from(result, items);
+        }
 }

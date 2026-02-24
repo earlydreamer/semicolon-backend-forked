@@ -1,7 +1,6 @@
 package dukku.user.global;
-
-import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
+import dukku.user.boundedContext.user.entity.User;
 import dukku.user.boundedContext.user.out.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,6 @@ public class UserInitData {
                 }
             }
 
-            // [변경] 개발 환경에서 고정된 테스트 데이터 생성 (u1 ~ u20)
             if (isDev) {
                 createFixedUsers();
             }
@@ -47,30 +45,37 @@ public class UserInitData {
     private void createFixedUsers() {
         List<User> users = new ArrayList<>();
 
-        // 1. 관리자 (UUID ...0000)
-        users.add(createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN, 0));
+        addIfPresent(users, createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN, 0));
 
-        // 2. 일반 유저 (u1 ~ u20 -> UUID ...0001 ~ ...0020)
         for (int i = 1; i <= 20; i++) {
-            users.add(createUser("u" + i + "@company.com", "TestUser123!", "u" + i, Role.USER, i));
+            addIfPresent(users, createUser("u" + i + "@company.com", "TestUser123!", "u" + i, Role.USER, i));
+        }
+
+        if (users.isEmpty()) {
+            log.info("고정 테스트 사용자 생성 스킵: 이미 모든 계정이 존재함");
+            return;
         }
 
         userRepository.saveAll(users);
-        log.info("✅ 고정 테스트 유저 (admin, u1~u20) 생성 완료");
+        log.info("고정 테스트 사용자 {}명 생성 완료", users.size());
+    }
+
+    private void addIfPresent(List<User> users, User user) {
+        if (user != null) {
+            users.add(user);
+        }
     }
 
     private User createUser(String email, String rawPassword, String nickname, Role role, int seed) {
-        // 이미 존재하면 생성 안 함
         if (userRepository.findByEmail(email).isPresent()) {
             return null;
         }
 
-        // 고정 UUID 생성 (00000000-0000-0000-0000-0000000000xx)
         String uuidStr = String.format("00000000-0000-0000-0000-%012d", seed);
         java.util.UUID uuid = java.util.UUID.fromString(uuidStr);
 
         return User.builder()
-                .uuid(uuid) // SourceUser 필드에 직접 주입
+                .uuid(uuid)
                 .email(email)
                 .password(passwordEncoder.encode(rawPassword))
                 .nickname(nickname)

@@ -18,6 +18,7 @@ import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.global.event.ProductCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,12 +36,11 @@ public class CreateProductUseCase {
     private final ProductRepository productRepository;
     private final EventPublisher eventPublisher;
 
+    @Transactional
     public ProductDetailResponse execute(UUID sellerUuid, ProductCreateRequest request) {
-        if (!productSupport.existsByCategoryId(request.getCategoryId())) {
-            throw new ProductCategoryNotFoundException();
-        }
-
-        Category category = categoryRepository.getReferenceById(request.getCategoryId());
+        // payload 매핑에서 categoryName 접근 시 LazyInitializationException이 나지 않도록 즉시 로딩한다.
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(ProductCategoryNotFoundException::new);
         Product product = Product.create(
                 sellerUuid,
                 category,

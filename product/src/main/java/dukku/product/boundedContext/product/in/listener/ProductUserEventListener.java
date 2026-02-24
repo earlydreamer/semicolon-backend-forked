@@ -3,12 +3,15 @@ package dukku.product.boundedContext.product.in.listener;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.shared.user.event.UserDepositInitializedEvent;
 import dukku.common.shared.user.event.UserProductInitializationFailedEvent;
+import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.product.boundedContext.product.entity.ProductUser;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -18,18 +21,24 @@ import java.util.UUID;
 public class ProductUserEventListener {
 
     private final ProductUserRepository productUserRepository;
+    private final ProductSellerRepository productSellerRepository;
     private final EventPublisher eventPublisher;
 
     @KafkaListener(topics = "user.deposit-initialized", groupId = "${spring.application.name}-group")
     public void handleDepositInitialized(UserDepositInitializedEvent event) {
         try {
             UUID userUuid = event.userUuid();
+            String nickname = StringUtils.hasText(event.nickname()) ? event.nickname() : "이름없음";
 
-            if (productUserRepository.existsById(userUuid)) {
-                return;
+            if (!productUserRepository.existsById(userUuid)) {
+                productUserRepository.save(ProductUser.create(userUuid, nickname));
             }
 
-            productUserRepository.save(ProductUser.create(userUuid, event.nickname()));
+            // 상점 정보(ProductSeller)도 자동 생성
+            if (!productSellerRepository.findByUserUuid(userUuid).isPresent()) {
+                productSellerRepository.save(ProductSeller.create(userUuid, "반가워요! 내 상점입니다."));
+            }
+
             log.info("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 완료. userUuid={}", userUuid);
         } catch (Exception e) {
             publishProductInitFailed(event, e);
@@ -41,5 +50,4 @@ public class ProductUserEventListener {
         eventPublisher.publish(new UserProductInitializationFailedEvent(event.userUuid(), reason));
         log.error("[UserDepositInitializedEvent] 상품 도메인 유저 초기화 실패. userUuid={}", event.userUuid(), cause);
     }
-
 }

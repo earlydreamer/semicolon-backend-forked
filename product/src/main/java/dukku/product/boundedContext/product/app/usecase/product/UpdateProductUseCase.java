@@ -42,10 +42,8 @@ public class UpdateProductUseCase {
         Category category = null;
 
         if (!product.getCategory().getId().equals(request.categoryId())) {
-            if (!categoryRepository.existsById(request.categoryId())) {
-                throw new ProductCategoryNotFoundException();
-            }
-            category = categoryRepository.getReferenceById(request.categoryId());
+            category = categoryRepository.findById(request.categoryId())
+                    .orElseThrow(ProductCategoryNotFoundException::new);
             isCategoryChanged = true;
         }
 

@@ -5,11 +5,11 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     hikari:
-      minimum-idle: 5
-      maximum-pool-size: 30
-      idle-timeout: 30000
-      connection-timeout: 30000
-      max-lifetime: 1800000
+      minimum-idle: ${DB_HIKARI_MINIMUM_IDLE:1}
+      maximum-pool-size: ${DB_HIKARI_MAXIMUM_POOL_SIZE:10}
+      idle-timeout: ${DB_HIKARI_IDLE_TIMEOUT:30000}
+      connection-timeout: ${DB_HIKARI_CONNECTION_TIMEOUT:30000}
+      max-lifetime: ${DB_HIKARI_MAX_LIFETIME:1800000}
 
   jpa:
     open-in-view: false
@@ -20,6 +20,10 @@ spring:
         show_sql: true              # 부하 테스트 시 반드시 false
         format_sql: false
         use_sql_comments: false
+
+        hbm2ddl:
+          auto: ${HIBERNATE_DDL_AUTO:update}
+
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 100
 

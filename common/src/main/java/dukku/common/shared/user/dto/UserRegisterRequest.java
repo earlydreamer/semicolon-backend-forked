@@ -1,7 +1,11 @@
 package dukku.common.shared.user.dto;
 
-import jakarta.validation.constraints.*;
-import lombok.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 @Data
 @AllArgsConstructor
@@ -14,9 +18,11 @@ public class UserRegisterRequest {
     @NotBlank(message = "비밀번호는 필수입니다.")
     @Pattern(
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d!@#$%^&*()_+]{8,20}$",
-            message = "비밀번호는 8~20자, 영문과 숫자를 포함해야 합니다."
+            message = "비밀번호는 8~20자 영문과 숫자를 포함해야 합니다."
     )
     private String password;
 
+    @NotBlank(message = "닉네임은 필수입니다.")
+    @Size(max = 50, message = "닉네임은 50자 이하여야 합니다.")
     private String nickname;
 }
