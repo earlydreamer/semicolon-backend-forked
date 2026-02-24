@@ -1,8 +1,10 @@
 package dukku.product;
 
+import dukku.product.boundedContext.product.out.ProductSearchRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(properties = {
         "spring.profiles.active=test",
@@ -19,6 +21,8 @@ import org.springframework.test.context.ActiveProfiles;
 })
 @ActiveProfiles("test")
 class ApplicationTests {
+    @MockitoBean
+    private ProductSearchRepository productSearchRepository;
 
     @Test
     void contextLoads() {
