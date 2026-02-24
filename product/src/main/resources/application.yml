@@ -21,6 +21,12 @@ spring:
     socket-timeout: 30s
     connection-timeout: 5s
 
+product:
+  init:
+    enabled: false
+    clear-es-on-startup: false
+  reindex-on-startup: false
+
 management:
   endpoints:
     web:

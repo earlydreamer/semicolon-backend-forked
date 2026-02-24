@@ -11,6 +11,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
+product:
+  init:
+    enabled: false
+    clear-es-on-startup: false
+  reindex-on-startup: false
+
 springdoc:
   api-docs:
     enabled: false
