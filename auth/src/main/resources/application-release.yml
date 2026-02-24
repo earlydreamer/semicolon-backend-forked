@@ -3,6 +3,16 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 jwt:
   access:
     secret:
@@ -15,8 +25,6 @@ crypto:
   key: ${CRYPTO_KEY}
 
 custom:
-  global:
-    internalBackUrl: http://localhost:${server.port:8080}
   security:
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}

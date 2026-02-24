@@ -17,15 +17,9 @@ spring:
       enabled: false
 
   elasticsearch:
-    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
     socket-timeout: 30s
     connection-timeout: 5s
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
 
 management:
   endpoints:

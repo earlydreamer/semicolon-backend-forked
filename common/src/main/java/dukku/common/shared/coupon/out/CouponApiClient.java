@@ -24,7 +24,7 @@ public class CouponApiClient {
 
     private final RestClient restClient;
 
-    public CouponApiClient(@Value("${custom.global.internalBackUrl:http://localhost:8080}") String internalBackUrl) {
+    public CouponApiClient(@Value("${custom.client.coupon.url:${custom.global.internalBackUrl:http://localhost:8080}}") String internalBackUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/internal/coupons")
                 .build();

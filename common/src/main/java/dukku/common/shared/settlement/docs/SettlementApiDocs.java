@@ -17,6 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 정산(Settlement) 관련 Swagger 전용 Meta-Annotation 모음
+ *
  */
 public final class SettlementApiDocs {
 

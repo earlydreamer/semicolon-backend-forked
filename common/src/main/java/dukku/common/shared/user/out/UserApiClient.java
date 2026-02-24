@@ -15,7 +15,7 @@ public class UserApiClient {
     private final RestClient restClient;
     private final RestClient internalRestClient;
 
-    public UserApiClient(@Value("${custom.global.internalBackUrl}") String internalBackUrl) {
+    public UserApiClient(@Value("${custom.client.user.url:${custom.global.internalBackUrl}}") String internalBackUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/users")
                 .build();
