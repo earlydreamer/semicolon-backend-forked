@@ -10,6 +10,9 @@ bootJar {
 
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+    // Flyway migration
+    implementation 'org.flywaydb:flyway-core'
+
     // === DB Drivers (실행 환경에 따라 다를 수 있으므로 서비스별 유지 추천) ===
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'

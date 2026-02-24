@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: create-drop
+        dialect: org.hibernate.dialect.H2Dialect
+  kafka:
+    listener:
+      auto-startup: false
+    bootstrap-servers: localhost:9092
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  main:
+    allow-bean-definition-overriding: true
+
+# AWS test stubs (moved from application-test.properties)
+cloud:
+  aws:
+    credentials:
+      access-key: "dummy-access-key"
+      secret-key: "dummy-secret-key"
+    region:
+      static: "ap-northeast-2"
+    s3:
+      bucket: "test-bucket"
+      enabled: false
+
+jwt:
+  access:
+    secret:
+      key: dGhpcy1rZXktaXMtdGVzdC1rZXktYWNjZXNzLTAxMjM=
+  refresh:
+    secret:
+      key: dGhpcy1rZXktaXMtdGVzdC1rZXktcmVmcmVzaC0wMTI=
+crypto:
+  key: dGhpcy1rZXktaXMtdGVzdC1rZXktY3J5cHRvLTAxMjM=
+# third-party test stubs
+toss:
+  api:
+    secret-key: test-key
