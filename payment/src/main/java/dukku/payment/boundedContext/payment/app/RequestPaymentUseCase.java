@@ -6,10 +6,13 @@ import dukku.common.shared.coupon.exception.CouponUseNotAllowedException;
 import dukku.common.shared.coupon.out.CouponApiClient;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.deposit.out.depositApiClient.DepositApiClient;
+import dukku.common.shared.order.dto.OrderResponse;
+import dukku.common.shared.order.out.OrderApiClient;
 import dukku.common.shared.payment.dto.PaymentRequest;
 import dukku.common.shared.payment.dto.PaymentResponse;
 import dukku.common.shared.payment.exception.AmountMismatchException;
 import dukku.common.shared.payment.exception.DepositShortageException;
+import dukku.common.shared.payment.exception.PaymentExpiredException;
 import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentType;
 import dukku.payment.boundedContext.payment.entity.Payment;
@@ -20,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +44,13 @@ public class RequestPaymentUseCase {
     @Value("${toss.callback.base-url}")
     private String tossCallbackBaseUrl;
 
+    @Value("${payment.pending-expiration.minutes:5}")
+    private long pendingExpirationMinutes;
+
     private final PaymentSupport support;
     private final DepositApiClient depositApiClient;
     private final CouponApiClient couponApiClient;
+    private final OrderApiClient orderApiClient;
 
     /**
      * 결제 요청(준비) 실행
@@ -66,6 +74,8 @@ public class RequestPaymentUseCase {
         if (cachedResponse.isPresent()) {
             return cachedResponse.get();
         }
+
+        validateOrderNotExpired(request.getOrderUuid());
 
         // 2. 정렬 + 서버 상품총액 계산/검증
         List<PaymentRequest.PaymentRequestItem> sortedItems = request.getItems().stream()
@@ -415,5 +425,16 @@ public class RequestPaymentUseCase {
     private String generateTossOrderId(UUID paymentUuid) {
         String datePart = LocalDateTime.now().toLocalDate().toString().replace("-", "");
         return "TOSS_" + paymentUuid.toString().substring(0, 8) + "_" + datePart;
+    }
+
+    // 결제 준비 시 주문 생성 시각 기준 만료 시간을 초과했는지 검증한다.
+    private void validateOrderNotExpired(UUID orderUuid) {
+        OrderResponse order = orderApiClient.findOrderByUuid(orderUuid);
+        LocalDateTime orderedAt = order.getOrderedAt();
+        LocalDateTime expiresAt = orderedAt.plusMinutes(pendingExpirationMinutes);
+        if (LocalDateTime.now().isAfter(expiresAt)) {
+            long orderAgeMinutes = ChronoUnit.MINUTES.between(orderedAt, LocalDateTime.now());
+            throw new PaymentExpiredException(orderAgeMinutes, pendingExpirationMinutes);
+        }
     }
 }

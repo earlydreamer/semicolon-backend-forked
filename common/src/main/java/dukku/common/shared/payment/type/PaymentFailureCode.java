@@ -5,6 +5,7 @@ package dukku.common.shared.payment.type;
  */
 public enum PaymentFailureCode {
     PAYMENT_STATUS_INVALID, // PENDING 상태 아님
+    PAYMENT_EXPIRED, // 결제 가능 시간 만료
     AMOUNT_MISMATCH, // PG 금액 불일치
     DUPLICATE_PAYMENT_KEY, // PG 결제 키 중복
     PG_CONFIRM_FAILED, // PG 승인 실패 응답

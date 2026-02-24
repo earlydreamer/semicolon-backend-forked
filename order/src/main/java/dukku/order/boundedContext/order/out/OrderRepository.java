@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -37,4 +39,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer>, CustomOr
             OrderStatus status,
             Pageable pageable
     );
+
+    // 만료 스케줄러에서 기준 시각 이전 PENDING 주문을 일괄 조회한다.
+    List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime createdAt);
 }

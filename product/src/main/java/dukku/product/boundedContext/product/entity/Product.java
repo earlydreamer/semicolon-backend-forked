@@ -4,6 +4,7 @@ import dukku.common.global.jpa.entity.BaseIdAndUUIDAndTime;
 import dukku.common.shared.product.dto.product.ProductListItemResponse;
 import dukku.common.shared.product.dto.product.ProductListResponse;
 import dukku.common.shared.product.dto.product.ProductPayload;
+import dukku.common.shared.product.exception.ProductReservationConflictException;
 import dukku.common.shared.product.type.ConditionStatus;
 import dukku.common.shared.product.type.ProductEventType;
 import dukku.common.shared.product.type.SaleStatus;
@@ -128,9 +129,23 @@ public class Product extends BaseIdAndUUIDAndTime {
                 .build();
     }
 
+    // 동일 주문 재요청은 허용하고, 타 주문의 예약 요청은 충돌 예외로 차단한다.
     public void reserve(UUID orderUuid) {
-        this.saleStatus = SaleStatus.RESERVED;
-        this.reservedOrderUuid = orderUuid;
+        if (this.saleStatus == SaleStatus.ON_SALE) {
+            this.saleStatus = SaleStatus.RESERVED;
+            this.reservedOrderUuid = orderUuid;
+            return;
+        }
+
+        if (this.saleStatus == SaleStatus.RESERVED) {
+            if (this.reservedOrderUuid != null && this.reservedOrderUuid.equals(orderUuid)) {
+                // 동일 주문의 재요청은 멱등하게 통과
+                return;
+            }
+            throw new ProductReservationConflictException("이미 다른 주문에서 예약 중인 상품입니다.");
+        }
+
+        throw new ProductReservationConflictException("판매 완료된 상품은 예약할 수 없습니다.");
     }
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
