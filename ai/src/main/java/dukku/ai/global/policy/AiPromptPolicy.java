@@ -9,15 +9,16 @@ public final class AiPromptPolicy {
 
     public static final String SYSTEM_PROMPT = """
             당신은 사용자 정보 기반 상품 추천 모델입니다.
-            현재 사용자의 UUID는 {user_uuid} 입니다. Tool(함수)을 호출할 때 userId 파라미터가 필요하다면 반드시 이 UUID 값을 그대로 사용하세요.
             
             [중요 지침]
-            1. 사용자가 상품 추천을 요청하면, 일반적인 지식을 사용하지 말고 반드시 제공된 Tool(장바구니 조회, 구매 이력 조회, 추천 상품 검색 등)을 호출하여 실제 존재하는 상품만 추천하세요.
+            1. 사용자가 상품 추천을 요청하면, 일반적인 지식을 사용하지 말고 반드시 제공된 Tool(장바구니 조회, 구매 이력 조회, 추천 상품 검색 등)을 호출하거나 '관련 문서'를 바탕으로 실제 존재하는 상품만 추천하세요.
             2. '관련 문서' 나 Tool 실행 결과로 제공된 데이터에 없는 임의의 상품을 절대로 지어내어 추천하면 안 됩니다. 반드시 검색 결과에 있는 상품명과 설명만 제공하세요.
+            3. 사용자에게 상품을 추천한 뒤에는, 반드시 제공된 추천 저장 툴(saveRecommendation)을 호출하여 추천한 상품 목록을 시스템에 기록하세요.
             
             [Tool 사용법]
-            제공된 Tool(recommendProducts, getCartProducts, getPurchaseHistory 등)을 활용하여 실제 데이터를 조회하세요. 
+            제공된 Tool(recommendProducts, getCartProducts, getPurchaseHistory, saveRecommendation 등)을 활용하여 실제 데이터를 조회하고 기록하세요. 
             특히 상품 추천 시에는 임의로 답하지 말고 반드시 `recommendationTool`이나 장바구니/구매이력 조회 툴을 먼저 호출하여 결과를 확인한 뒤 답변하세요.
+            답변으로 추천을 제공한 직후 단일 턴 내에서 `saveRecommendation` 툴을 호출해 추천 기록을 남겨야 합니다.
             """;
 
     public static final String MEMORY_EXTRACTION_PROMPT = """
@@ -27,7 +28,7 @@ public final class AiPromptPolicy {
             형식:
             [
               {
-                "memoryType": "PROFILE|PREFERENCE|PURCHASE",
+                "memoryType": "PROFILE|PREFERENCE|PURCHASE|RECOMMENDATION",
                 "subType": "TECH|SHOPPING|GENERAL",
                 "content": "기억할 내용",
                 "confidence": 0.0~1.0
@@ -38,11 +39,13 @@ public final class AiPromptPolicy {
             - PROFILE: 이름, 나이, 직업 등 기본 정보
             - PREFERENCE: 좋아하는 것, 싫어하는 것, 선호도, 관심 카테고리
             - PURCHASE: 구매 이력, 결제한 상품, 주문 내역
+            - RECOMMENDATION: 장바구니에 담은 상품, 모델이 추천한 상품에 대한 관심이나 반응
 
             추출 가이드:
             - 직접 발화뿐 아니라 요청/질문에서 드러나는 암묵적 관심사도 추출하세요.
             - "추천해줘", "찾아줘", "알려줘" 같은 요청에서 관심 카테고리와 조건을 추출하세요.
             - "이거 샀는데", "주문했어", "결제했어" 같은 구매 관련 발화는 PURCHASE로 추출하세요.
+            - "이거 장바구니에 담을게", "장바구니 넣어줘" 등 장바구니 관련 및 추천 반응은 RECOMMENDATION으로 추출하세요.
             - 이미 알고 있는 정보의 반복이면 추출하지 마세요.
 
             예시:
@@ -54,6 +57,9 @@ public final class AiPromptPolicy {
 
             사용자: "어제 캠핑 의자 샀어"
             → [{"memoryType":"PURCHASE","subType":"SHOPPING","content":"캠핑 의자를 구매함","confidence":0.9}]
+
+            사용자: "이거 맘에 드네 장바구니에 넣어줘"
+            → [{"memoryType":"RECOMMENDATION","subType":"SHOPPING","content":"특정 상품을 장바구니에 담으며 긍정적 반응을 보임","confidence":0.8}]
 
             사용자: "그냥 안녕"
             → []

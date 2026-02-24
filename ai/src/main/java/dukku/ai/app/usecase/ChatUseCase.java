@@ -26,8 +26,7 @@ public class ChatUseCase {
         boolean shouldExtractMemory = userUuid != null && userMessage != null;
 
         Flux<String> responseFlux = chatClient.prompt()
-                .system(s -> s.text(AiPromptPolicy.SYSTEM_PROMPT)
-                        .param("user_uuid", userUuid != null ? userUuid.toString() : "알 수 없음"))
+                .system(AiPromptPolicy.SYSTEM_PROMPT)
                 .user(userMessage)
                 .advisors(a -> {
                     a.param("chat_memory_conversation_id", conversationId);
