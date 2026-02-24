@@ -47,6 +47,10 @@ public class ChatUseCase {
                         AiGuardException guard = extractGuardException(e);
                         log.info("[Guard] 입력 검증 차단 → AI 응답으로 반환: {}", guard.getDetails());
                         return Flux.just(guard.getDetails());
+                    })
+                    .onErrorResume(e -> {
+                        log.error("[ChatUseCase] AI 응답 생성 실패: {}", e.getMessage(), e);
+                        return Flux.just("죄송합니다. 현재 AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해 주세요.");
                     });
         }
 
@@ -70,6 +74,10 @@ public class ChatUseCase {
                         AiGuardException guard = extractGuardException(e);
                         log.info("[Guard] 입력 검증 차단 → AI 응답으로 반환: {}", guard.getDetails());
                         return Flux.just(guard.getDetails());
+                    })
+                    .onErrorResume(e -> {
+                        log.error("[ChatUseCase] AI 응답 생성 실패: {}", e.getMessage(), e);
+                        return Flux.just("죄송합니다. 현재 AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해 주세요.");
                     });
         });
     }
