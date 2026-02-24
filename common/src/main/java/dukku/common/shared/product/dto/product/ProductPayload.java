@@ -16,6 +16,7 @@ public record ProductPayload (
         Integer categoryId,
         String categoryName,
         List<String> tags,
-        SaleStatus saleStatus
+        SaleStatus saleStatus,
+        String productUrl
 ) {
 }
