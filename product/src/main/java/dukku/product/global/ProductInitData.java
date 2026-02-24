@@ -230,7 +230,7 @@ public class ProductInitData {
         userMap.put(uId, uuid);
 
         // 2. ProductSeller 저장
-        if (!productSellerRepository.existsByUuid(uuid)) {
+        if (!productSellerRepository.existsByUserUuid(uuid)) {
             ProductSeller seller = ProductSeller.create(uuid, intro, sales, active);
             // 평점 등 추가 세팅이 필요하다면 여기서 setter 사용 (Entity에 setter가 있다면) 
             // 현재 create factory method는 rating을 초기화하므로, rating을 반영하려면 별도 메서드 필요하거나 무시
