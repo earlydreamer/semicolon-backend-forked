@@ -11,6 +11,7 @@ import dukku.common.shared.product.dto.cart.CartItemInternalDto;
 import dukku.common.shared.product.out.CartApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.ResourceAccessException;
 
 @Slf4j
 @Component
@@ -30,6 +31,9 @@ public class CartHistoryTool {
                     .stream()
                     .map(CartItemInternalDto::productTitle)
                     .toList();
+        } catch (ResourceAccessException e) {
+            log.warn("[CartHistoryTool] 장바구니 조회 타임아웃/연결 실패: userId={}, error={}", userId, e.getMessage());
+            return List.of();
         } catch (Exception e) {
             log.warn("[CartHistoryTool] 장바구니 조회 실패: userId={}, error={}", userId, e.getMessage());
             return List.of();

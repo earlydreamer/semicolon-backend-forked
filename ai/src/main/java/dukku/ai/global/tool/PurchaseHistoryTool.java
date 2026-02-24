@@ -11,6 +11,7 @@ import dukku.common.shared.order.dto.OrderListResponse;
 import dukku.common.shared.order.out.OrderApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.ResourceAccessException;
 
 @Slf4j
 @Component
@@ -31,6 +32,9 @@ public class PurchaseHistoryTool {
                     .map(OrderListResponse.SimpleOrderItemResponse::getProductName)
                     .toList();
             return productNames;
+        } catch (ResourceAccessException e) {
+            log.warn("[PurchaseHistoryTool] 주문 이력 조회 타임아웃/연결 실패: userId={}, error={}", userId, e.getMessage());
+            return List.of();
         } catch (Exception e) {
             log.warn("[PurchaseHistoryTool] 주문 이력 조회 실패: userId={}, error={}", userId, e.getMessage());
             return List.of();

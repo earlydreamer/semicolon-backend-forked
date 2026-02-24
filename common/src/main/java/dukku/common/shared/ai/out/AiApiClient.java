@@ -7,9 +7,11 @@ import dukku.common.shared.ai.dto.UpdateAiUserMemoryRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.List;
 
 @Component
@@ -18,8 +20,12 @@ public class AiApiClient {
     private final RestClient restClient;
 
     public AiApiClient(@Value("${custom.client.ai.url:${custom.global.internalBackUrl:http://localhost:8080}}") String internalBackUrl) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(3));
+        factory.setReadTimeout(Duration.ofSeconds(30));
         this.restClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/ai")
+                .requestFactory(factory)
                 .build();
     }
 
