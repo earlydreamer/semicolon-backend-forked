@@ -57,10 +57,13 @@ class ProductEventListenerTest {
     @DisplayName("product.created 이벤트 수신 시 상품을 조회해 ES 동기화를 호출한다")
     void syncCreateDelegatesToSaveUseCase() {
         Product product = mock(Product.class);
-        when(productRepository.findById(1)).thenReturn(Optional.of(product));
+        when(productRepository.findByIdWithImagesAndCategory(1)).thenReturn(Optional.of(product));
+        when(productRepository.preloadProductTagsByProductId(1)).thenReturn(List.of(1L));
+        when(product.getTagNames()).thenReturn(List.of("tag"));
 
         listener.syncCreate(new ProductCreatedEvent(1));
 
+        verify(productRepository).preloadProductTagsByProductId(1);
         verify(saveToElasticSearchUseCase).execute(product, true);
     }
 
@@ -68,10 +71,13 @@ class ProductEventListenerTest {
     @DisplayName("product.updated 이벤트 수신 시 category 변경 여부를 함께 전달한다")
     void syncUpdateDelegatesWithCategoryChangedFlag() {
         Product product = mock(Product.class);
-        when(productRepository.findById(2)).thenReturn(Optional.of(product));
+        when(productRepository.findByIdWithImagesAndCategory(2)).thenReturn(Optional.of(product));
+        when(productRepository.preloadProductTagsByProductId(2)).thenReturn(List.of(1L));
+        when(product.getTagNames()).thenReturn(List.of("tag"));
 
         listener.syncUpdate(new ProductUpdatedEvent(2, false));
 
+        verify(productRepository).preloadProductTagsByProductId(2);
         verify(saveToElasticSearchUseCase).execute(product, false);
     }
 

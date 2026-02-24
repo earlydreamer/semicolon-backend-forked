@@ -46,3 +46,8 @@ crypto:
 toss:
   api:
     secret-key: test-key
+
+product:
+  init:
+    enabled: false
+  reindex-on-startup: false

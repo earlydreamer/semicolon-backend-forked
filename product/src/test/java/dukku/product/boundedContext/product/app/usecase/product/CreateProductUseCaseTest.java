@@ -96,7 +96,11 @@ class CreateProductUseCaseTest {
 
         when(categoryRepository.findById(3)).thenReturn(Optional.of(category));
         when(productTagSupport.getOrCreateTags(List.of())).thenReturn(List.of());
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> {
+            Product saved = invocation.getArgument(0);
+            saved.prePersist();
+            return saved;
+        });
 
         useCase.execute(sellerUuid, request);
 
