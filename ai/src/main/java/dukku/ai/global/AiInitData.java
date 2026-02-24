@@ -1,7 +1,9 @@
 package dukku.ai.global;
 
+import dukku.ai.app.dto.HybridSearchResult;
 import dukku.ai.entity.AiUserMemory;
 import dukku.ai.out.AiUserMemoryRepository;
+import dukku.ai.out.HybridSearchRepository;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class AiInitData {
     private final AiUserMemoryRepository aiUserMemoryRepository;
     private final VectorStore vectorStore;
     private final JdbcTemplate jdbcTemplate;
+    private final HybridSearchRepository hybridSearchRepository;
 
     private static final UUID USER_1_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID USER_2_UUID = UUID.fromString("00000000-0000-0000-0000-000000000002");
@@ -45,11 +48,11 @@ public class AiInitData {
                 ensureVectorDimensions();
 
                 if (aiUserMemoryRepository.count() > 0) {
-                    log.info("📌 [AiInitData] 기존 AI 메모리 데이터 존재 — 초기화 스킵");
+                    log.info("[AiInitData] 기존 AI 메모리 데이터 존재 — 초기화 스킵");
                     return;
                 }
 
-                log.info("🚀 [AiInitData] AI 메모리 초기화 시작");
+                log.info("[AiInitData] AI 메모리 초기화 시작");
 
                 // ===== User 1 (세미콜론) =====
                 // 프로필
@@ -107,12 +110,32 @@ public class AiInitData {
                 vectorStore.add(products);
                 log.info(" [AiInitData] VectorStore 상품 데이터 {}건 upsert 완료", products.size());
 
+                // product_search 테이블에도 샘플 데이터 삽입
+                log.info("[AiInitData] product_search 샘플 데이터 삽입 시작");
+                for (Document doc : products) {
+                    float[] embedding = hybridSearchRepository.embed(doc.getText());
+                    hybridSearchRepository.upsert(
+                            UUID.fromString(doc.getId()),
+                            doc.getText(),
+                            "{}",
+                            embedding);
+                }
+                log.info("[AiInitData] product_search 샘플 데이터 {}건 삽입 완료", products.size());
+
                 // VectorStore 검증
                 List<Document> verify = vectorStore.similaritySearch(
                         SearchRequest.builder().query("캠핑 의자").topK(3).similarityThreshold(0.0).build()
                 );
                 log.info("[AiInitData] VectorStore 검증: '캠핑 의자' 검색 → {}건 (threshold=0.0)", verify.size());
                 verify.forEach(doc -> log.info("  - [score={}] {}", String.format("%.4f", doc.getScore()), doc.getText()));
+
+                // 하이브리드 검색 검증
+                List<HybridSearchResult> hybridVerify = hybridSearchRepository.search("캠핑 의자", 3, 0.0);
+                log.info("[AiInitData] 하이브리드 검색 검증: '캠핑 의자' → {}건", hybridVerify.size());
+                hybridVerify.forEach(r -> log.info("  - [rrf={}, vector={}] {}",
+                        String.format("%.4f", r.rrfScore()),
+                        String.format("%.4f", r.vectorScore()),
+                        r.content()));
             }
         };
     }
@@ -133,6 +156,21 @@ public class AiInitData {
         jdbcTemplate.execute(
                 "CREATE INDEX IF NOT EXISTS spring_ai_vector_index ON vector_store USING HNSW (embedding vector_cosine_ops)");
         log.info("[AiInitData] vector_store 테이블 재생성 ({}차원)", dim);
+
+        // product_search: 하이브리드 검색 전용 테이블 (PGroonga + pgvector)
+        jdbcTemplate.execute("DROP TABLE IF EXISTS product_search");
+        jdbcTemplate.execute(String.format("""
+                CREATE TABLE product_search (
+                    id UUID PRIMARY KEY,
+                    content TEXT NOT NULL,
+                    metadata JSONB,
+                    embedding vector(%d)
+                )""", dim));
+        jdbcTemplate.execute(
+                "CREATE INDEX IF NOT EXISTS idx_product_search_content ON product_search USING pgroonga (content)");
+        jdbcTemplate.execute(
+                "CREATE INDEX IF NOT EXISTS idx_product_search_embedding ON product_search USING HNSW (embedding vector_cosine_ops)");
+        log.info("[AiInitData] product_search 테이블 생성 + PGroonga/HNSW 인덱스 ({}차원)", dim);
 
         // ai_memory: Hibernate ddl-auto=update는 기존 컬럼 타입을 변경하지 않으므로 수동 ALTER
         try {

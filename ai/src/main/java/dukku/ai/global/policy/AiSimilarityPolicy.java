@@ -21,4 +21,7 @@ public final class AiSimilarityPolicy {
     public static final double RECOMMENDATION_SIMILARITY_THRESHOLD = 0.3;
 
     public static final int EMBEDDING_DIMENSION = 1536;
+
+    // RRF (Reciprocal Rank Fusion) 하이브리드 검색
+    public static final int RRF_K = 60;
 }

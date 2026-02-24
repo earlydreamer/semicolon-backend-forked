@@ -1,5 +1,6 @@
 package dukku.ai.app.usecase;
 
+import dukku.ai.out.HybridSearchRepository;
 import dukku.common.shared.product.dto.product.ProductPayload;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class ProductVectorSyncUseCase {
 
     private final VectorStore vectorStore;
+    private final HybridSearchRepository hybridSearchRepository;
 
     public void upsertProduct(ProductPayload payload) {
         String documentId = payload.productUuid().toString();
@@ -33,11 +35,17 @@ public class ProductVectorSyncUseCase {
         Document document = new Document(documentId, content, metadata);
         vectorStore.add(List.of(document));
 
+        // product_search 테이블에도 동기화
+        float[] embedding = hybridSearchRepository.embed(content);
+        String metadataJson = toJsonString(metadata);
+        hybridSearchRepository.upsert(payload.productUuid(), content, metadataJson, embedding);
+
         log.info("[ProductVectorSync] 상품 동기화 완료: productUuid={}", documentId);
     }
 
     public void deleteProduct(UUID productUuid) {
         vectorStore.delete(List.of(productUuid.toString()));
+        hybridSearchRepository.delete(productUuid);
         log.info("[ProductVectorSync] 상품 삭제 완료: productUuid={}", productUuid);
     }
 
@@ -66,5 +74,23 @@ public class ProductVectorSyncUseCase {
             metadata.put("tags", String.join(",", payload.tags()));
         }
         return metadata;
+    }
+
+    private String toJsonString(Map<String, Object> metadata) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : metadata.entrySet()) {
+            if (!first) sb.append(",");
+            sb.append("\"").append(entry.getKey()).append("\":");
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                sb.append("\"").append(((String) value).replace("\"", "\\\"")).append("\"");
+            } else {
+                sb.append(value);
+            }
+            first = false;
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }

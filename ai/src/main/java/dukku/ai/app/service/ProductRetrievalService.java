@@ -3,13 +3,12 @@ package dukku.ai.app.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import dukku.ai.app.dto.HybridSearchResult;
 import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.ai.global.policy.AiSimilarityPolicy;
+import dukku.ai.out.HybridSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProductRetrievalService {
 
-    private final VectorStore vectorStore;
+    private final HybridSearchRepository hybridSearchRepository;
 
     public String retrieve(String userMessage) {
         if (!requiresRetrieval(userMessage)) {
@@ -30,26 +29,26 @@ public class ProductRetrievalService {
                 .filter(userMessage::contains)
                 .findFirst()
                 .orElse("?");
-        log.info("[상품 검색] 키워드 감지: '{}' → 검색 실행", matchedKeyword);
+        log.info("[상품 검색] 키워드 감지: '{}' → 하이브리드 검색 실행", matchedKeyword);
 
-        SearchRequest request = SearchRequest.builder()
-                .query(userMessage)
-                .topK(AiSimilarityPolicy.DOCUMENT_TOP_K)
-                .similarityThreshold(AiSimilarityPolicy.DOCUMENT_SIMILARITY_THRESHOLD)
-                .build();
+        log.info("[상품 검색] 하이브리드 검색 실행: query={}, topK={}", userMessage, AiSimilarityPolicy.DOCUMENT_TOP_K);
 
-        log.info("[상품 검색] query={}, topK={}, threshold={}", userMessage, AiSimilarityPolicy.DOCUMENT_TOP_K, AiSimilarityPolicy.DOCUMENT_SIMILARITY_THRESHOLD);
+        List<HybridSearchResult> results = hybridSearchRepository.search(
+                userMessage,
+                AiSimilarityPolicy.DOCUMENT_TOP_K,
+                AiSimilarityPolicy.DOCUMENT_SIMILARITY_THRESHOLD);
 
-        List<Document> docs = vectorStore.similaritySearch(request);
-
-        if (docs.isEmpty()) {
+        if (results.isEmpty()) {
             log.info("[상품 검색] 검색 결과 없음");
             return "";
         }
 
-        log.info("[상품 검색] {}건 검색 완료", docs.size());
-        docs.forEach(doc -> log.info("[상품 검색]   - [score={}] {}", String.format("%.4f", doc.getScore()), doc.getText()));
-        return formatDocuments(docs);
+        log.info("[상품 검색] {}건 검색 완료", results.size());
+        results.forEach(r -> log.info("[상품 검색]   - [rrf={}, vector={}] {}",
+                String.format("%.4f", r.rrfScore()),
+                String.format("%.4f", r.vectorScore()),
+                r.content()));
+        return formatResults(results);
     }
 
     private boolean requiresRetrieval(String userMessage) {
@@ -60,9 +59,9 @@ public class ProductRetrievalService {
                 .anyMatch(userMessage::contains);
     }
 
-    private String formatDocuments(List<Document> docs) {
-        return docs.stream()
-                .map(doc -> "- " + doc.getText())
+    private String formatResults(List<HybridSearchResult> results) {
+        return results.stream()
+                .map(r -> "- " + r.content())
                 .collect(Collectors.joining("\n", "## 관련 문서\n", ""));
     }
 }
