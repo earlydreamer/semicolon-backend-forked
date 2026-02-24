@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import dukku.ai.app.service.UserMemoryWriteService;
 import dukku.ai.global.policy.AiPromptPolicy;
+import dukku.common.shared.ai.exception.AiGuardException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,12 @@ public class ChatUseCase {
                 .content();
 
         if (!shouldExtractMemory) {
-            return responseFlux;
+            return responseFlux
+                    .onErrorResume(e -> extractGuardException(e) != null, e -> {
+                        AiGuardException guard = extractGuardException(e);
+                        log.info("[Guard] 입력 검증 차단 → AI 응답으로 반환: {}", guard.getDetails());
+                        return Flux.just(guard.getDetails());
+                    });
         }
 
         return Flux.defer(() -> {
@@ -56,8 +62,29 @@ public class ChatUseCase {
                             log.info("장기 기억 추출 트리거: userUuid={}", userUuid);
                         }
                     })
-                    .doOnError(e -> log.warn("스트리밍 오류로 장기 기억 추출 건너뜀: {}", e.getMessage()));
+                    .doOnError(e -> {
+                        if (extractGuardException(e) == null) {
+                            log.warn("스트리밍 오류로 장기 기억 추출 건너뜀: {}", e.getMessage());
+                        }
+                    })
+                    .onErrorResume(e -> extractGuardException(e) != null, e -> {
+                        AiGuardException guard = extractGuardException(e);
+                        log.info("[Guard] 입력 검증 차단 → AI 응답으로 반환: {}", guard.getDetails());
+                        return Flux.just(guard.getDetails());
+                    });
         });
     }
+
+        private static AiGuardException extractGuardException(Throwable e) {
+        Throwable current = e;
+        while (current != null) {
+            if (current instanceof AiGuardException guard) {
+                return guard;
+            }
+            current = current.getCause();
+        }
+        return null;
+    }
+
 
 }
