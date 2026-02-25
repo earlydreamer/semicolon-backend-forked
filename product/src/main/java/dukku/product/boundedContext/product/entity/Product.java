@@ -22,8 +22,12 @@ import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(
@@ -165,14 +169,49 @@ public class Product extends BaseIdAndUUIDAndTime {
     @Builder.Default
     private List<ProductTag> productTags = new ArrayList<>();
 
-    // 태그 교체 (기존 싹 지우고 갈아끼우기)
+    // 태그 교체: 동일 태그 재삽입으로 인한 unique 충돌을 막기 위해 차집합만 반영
     public void replaceTags(List<Tag> tags) {
-        this.productTags.clear(); // orphanRemoval=true로 인해 DB에서도 삭제됨
-        if (tags != null && !tags.isEmpty()) {
-            for (Tag tag : tags) {
+        if (tags == null) {
+            this.productTags.clear();
+            return;
+        }
+
+        List<Tag> normalizedTags = tags.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(
+                                Product::tagKey,
+                                tag -> tag,
+                                (first, ignored) -> first,
+                                LinkedHashMap::new
+                        ),
+                        map -> new ArrayList<>(map.values())
+                ));
+
+        Set<String> desiredKeys = normalizedTags.stream()
+                .map(Product::tagKey)
+                .collect(Collectors.toSet());
+
+        this.productTags.removeIf(productTag -> !desiredKeys.contains(tagKey(productTag.getTag())));
+
+        Set<String> existingKeys = this.productTags.stream()
+                .map(productTag -> tagKey(productTag.getTag()))
+                .collect(Collectors.toSet());
+
+        for (Tag tag : normalizedTags) {
+            String key = tagKey(tag);
+            if (!existingKeys.contains(key)) {
                 this.productTags.add(ProductTag.create(this, tag));
+                existingKeys.add(key);
             }
         }
+    }
+
+    private static String tagKey(Tag tag) {
+        if (tag.getId() != null) {
+            return "id:" + tag.getId();
+        }
+        return "name:" + tag.getName();
     }
 
     // 읽기 전용으로 태그 이름 목록 반환 (ES 동기화용)
