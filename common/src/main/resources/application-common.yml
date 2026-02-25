@@ -113,7 +113,7 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:redpanda:9092}
 
   elasticsearch:
-    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
+    uris: ${ELASTICSEARCH_URL:http://elasticsearch:9200}
 
   data:
     redis:
