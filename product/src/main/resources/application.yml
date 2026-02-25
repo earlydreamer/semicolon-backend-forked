@@ -20,12 +20,15 @@ spring:
     uris: ${ELASTICSEARCH_URL:http://elasticsearch:9200}
     socket-timeout: 30s
     connection-timeout: 5s
+  kafka:
+    listener:
+      auto-startup: true
 
 product:
   init:
     enabled: false
     clear-es-on-startup: false
-  reindex-on-startup: false
+  reindex-on-startup: true
 
 management:
   endpoints:

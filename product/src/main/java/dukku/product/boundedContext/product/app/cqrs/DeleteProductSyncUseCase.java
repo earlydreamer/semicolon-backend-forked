@@ -7,6 +7,7 @@ import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.boundedContext.product.out.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 public class DeleteProductSyncUseCase {
     private final ProductSearchRepository productSearchRepository;
     private final ProductRepository productRepository;
+    private final ElasticsearchOperations elasticsearchOperations;
 
     @Transactional(readOnly = true)
     public void deletedProductToElasticsearch(Long productId) {
@@ -26,7 +28,7 @@ public class DeleteProductSyncUseCase {
 
         Optional<ProductDocument> existingDocument = productSearchRepository.findById(documentId);
         if (existingDocument.isEmpty()) {
-            log.info("Skip ES soft delete sync because document does not exist. productId={}", productId);
+            log.info("ES 문서가 없어 소프트 삭제 동기화를 건너뜁니다. productId={}", productId);
             return;
         }
 
@@ -35,8 +37,9 @@ public class DeleteProductSyncUseCase {
 
         ProductDocument updatedDocument = toSoftDeleted(existingDocument.get(), deletedAt);
         productSearchRepository.save(updatedDocument);
+        elasticsearchOperations.indexOps(ProductDocument.class).refresh();
 
-        log.info("Soft-deleted product document in Elasticsearch. productId={}", productId);
+        log.info("Elasticsearch 상품 문서를 소프트 삭제로 동기화했습니다. productId={}", productId);
     }
 
     private ProductDocument toSoftDeleted(ProductDocument source, LocalDateTime deletedAt) {

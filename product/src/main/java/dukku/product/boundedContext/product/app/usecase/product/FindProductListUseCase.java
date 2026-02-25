@@ -25,7 +25,8 @@ public class FindProductListUseCase {
         if (categoryId == null) {
             result = productRepository.findByVisibilityStatusAndDeletedAtIsNull(VisibilityStatus.VISIBLE, pageable);
         } else {
-            List<Integer> categoryIds = categoryRepository.findCategoryPathIds(categoryId);
+            // ES와 동일하게 "선택 카테고리 + 하위 카테고리" 범위로 조회한다.
+            List<Integer> categoryIds = categoryRepository.findCategoryTreeIds(categoryId);
             result = productRepository.findByCategory_IdInAndVisibilityStatusAndDeletedAtIsNull(categoryIds, VisibilityStatus.VISIBLE, pageable);
         }
 
