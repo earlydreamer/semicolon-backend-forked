@@ -158,9 +158,14 @@ jobs:
             $K -n "$NS" get deploy -o wide
             
             echo "[3] rollout sequential (Resource-Saving Mode): scale 0 -> set image -> scale 1 -> wait"
-            for m in $MODS; do
               img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
               echo ">>> Deploying ${m} (Image: ${img}) <<<"
+            
+              # 배포 존재 여부 확인 (신규 모듈 대응)
+              if ! $K -n "$NS" get deploy/${m} > /dev/null 2>&1; then
+                echo " - [SKIP] Deployment '${m}' not found in namespace ${NS}. Please run 'kubectl apply' manually on the server for the first time."
+                continue
+              fi
             
               # [순차 기동 핵심] 자원 겹침을 방지하기 위해 기존 Pod를 먼저 완전히 종료
               echo " - Scaling down ${m} to 0..."
