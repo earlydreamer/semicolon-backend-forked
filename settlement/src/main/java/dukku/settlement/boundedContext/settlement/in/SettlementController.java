@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/admin/settlements")
+@RequestMapping("/api/v1/admin/settlements")
 @RequiredArgsConstructor
 @SettlementApiDocs.SettlementTag
 public class SettlementController {
