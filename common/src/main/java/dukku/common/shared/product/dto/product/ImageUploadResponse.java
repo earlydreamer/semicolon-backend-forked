@@ -1,0 +1,11 @@
+package dukku.common.shared.product.dto.product;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class ImageUploadResponse {
+    private String url;
+}
+

@@ -10,6 +10,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * 전역 예외 처리 클래스.
@@ -62,6 +65,40 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestPartException(
+            MissingServletRequestPartException ex
+    ) {
+        log.error("MissingServletRequestPartException: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "필수 파일 파트가 누락되었습니다.",
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex
+    ) {
+        log.error("MaxUploadSizeExceededException: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.PAYLOAD_TOO_LARGE.getReasonPhrase(),
+                "업로드 가능한 파일 크기를 초과했습니다.",
+                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(errorResponse);
+    }
+
     /**
      * BaseException 계열 예외 처리.
      * 커스텀 예외에서 제공하는 상태 코드, 에러 코드, 메시지, 상세 정보를 포함하여 응답 생성.
@@ -76,6 +113,21 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(ex.getCode(), ex.getMessage(), ex.getStatus().value(), ex.getDetails());
 
         return ResponseEntity.status(ex.getStatus())
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        log.error("ResponseStatusException [{}]: {}", status.value(), ex.getReason(), ex);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                status.getReasonPhrase(),
+                ex.getReason() == null ? "요청 처리 중 오류가 발생했습니다." : ex.getReason(),
+                status.value()
+        );
+
+        return ResponseEntity.status(status)
                 .body(errorResponse);
     }
 
