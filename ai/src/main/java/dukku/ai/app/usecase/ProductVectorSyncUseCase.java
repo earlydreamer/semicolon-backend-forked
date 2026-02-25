@@ -6,12 +6,9 @@ import dukku.common.shared.product.dto.product.ProductPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,31 +17,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductVectorSyncUseCase {
 
-    private final VectorStore vectorStore;
     private final HybridSearchRepository hybridSearchRepository;
 
     public void upsertProduct(ProductPayload payload) {
-        String documentId = payload.productUuid().toString();
-
-        // 기존 문서 삭제 후 재추가 (upsert)
-        vectorStore.delete(List.of(documentId));
-
         String content = buildContent(payload);
         Map<String, Object> metadata = buildMetadata(payload);
 
-        Document document = new Document(documentId, content, metadata);
-        vectorStore.add(List.of(document));
-
-        // product_search 테이블에도 동기화
         float[] embedding = hybridSearchRepository.embed(content);
         String metadataJson = toJsonString(metadata);
         hybridSearchRepository.upsert(payload.productUuid(), content, metadataJson, embedding);
 
-        log.info("[ProductVectorSync] 상품 동기화 완료: productUuid={}", documentId);
+        log.info("[ProductVectorSync] 상품 동기화 완료: productUuid={}", payload.productUuid());
     }
 
     public void deleteProduct(UUID productUuid) {
-        vectorStore.delete(List.of(productUuid.toString()));
         hybridSearchRepository.delete(productUuid);
         log.info("[ProductVectorSync] 상품 삭제 완료: productUuid={}", productUuid);
     }
