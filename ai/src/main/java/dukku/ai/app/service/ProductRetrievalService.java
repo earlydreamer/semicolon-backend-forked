@@ -62,7 +62,7 @@ public class ProductRetrievalService {
 
     private String formatResults(List<HybridSearchResult> results) {
         return results.stream()
-                .map(r -> "- " + r.content())
+                .map(r -> "- " + r.contentWithUrl())
                 .collect(Collectors.joining("\n", "## 관련 문서\n", ""));
     }
 }

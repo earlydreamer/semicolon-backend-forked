@@ -59,6 +59,9 @@ public class ProductVectorSyncUseCase {
         if (payload.tags() != null) {
             metadata.put("tags", String.join(",", payload.tags()));
         }
+        if (payload.productUrl() != null) {
+            metadata.put("productUrl", payload.productUrl());
+        }
         return metadata;
     }
 

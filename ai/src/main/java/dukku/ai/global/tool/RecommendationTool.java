@@ -37,7 +37,7 @@ public class RecommendationTool {
                     AiSimilarityPolicy.RECOMMENDATION_SIMILARITY_THRESHOLD);
 
             List<String> productTexts = results.stream()
-                    .map(HybridSearchResult::content)
+                    .map(HybridSearchResult::contentWithUrl)
                     .toList();
 
             log.info("[RecommendationTool] 하이브리드 검색 {}건 완료", productTexts.size());
