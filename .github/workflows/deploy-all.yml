@@ -1,8 +1,8 @@
-name: Deploy to k3s (EC2)
+name: Deploy ALL to k3s (EC2)
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 env:
@@ -13,82 +13,12 @@ env:
   K8S_NAMESPACE: semicolon
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      any_changed: ${{ steps.set-matrix.outputs.any_changed }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            common:
-              - 'common/**'
-              - 'build.gradle'
-              - 'settings.gradle'
-              - 'k8s/**'
-              - '.github/workflows/**'
-              - 'Dockerfile'
-            auth: 'auth/**'
-            user: 'user/**'
-            product: 'product/**'
-            order: 'order/**'
-            coupon: 'coupon/**'
-            payment: 'payment/**'
-            deposit: 'deposit/**'
-            settlement: 'settlement/**'
-            ai: 'ai/**'
-      
-      - id: set-matrix
-        run: |
-          # 1. Start with an empty JSON array
-          MATRIX="[]"
-          ANY_CHANGED="false"
-          
-          # 2. If 'common' (or root configs) changed, deploy everything
-          if [[ "${{ steps.filter.outputs.common }}" == 'true' ]]; then
-            echo "Common configuration or library changed. Deploying all modules."
-            MATRIX='["auth", "user", "product", "order", "coupon", "payment", "deposit", "settlement", "ai"]'
-            ANY_CHANGED="true"
-          else
-            # 3. Otherwise, collect only changed modules
-            MODS=()
-            for m in auth user product order coupon payment deposit settlement ai; do
-              # We dynamically check the output format of dorny/paths-filter
-              CHANGED=$(jq -r ".${m}" <<< '${{ toJson(steps.filter.outputs) }}')
-              if [[ "$CHANGED" == "true" ]]; then
-                MODS+=("$m")
-              fi
-            done
-            
-            if [ ${#MODS[@]} -gt 0 ]; then
-              # Convert bash array to JSON array
-              MATRIX=$(printf '%s\n' "${MODS[@]}" | jq -R . | jq -s .)
-              ANY_CHANGED="true"
-            else
-              echo "No module changes detected."
-              # Safe fallback to prevent JSON array evaluation error when skipped
-              MATRIX='["none"]'
-              ANY_CHANGED="false"
-            fi
-          fi
-          
-          # Minify JSON to a single line for GitHub Actions output
-          MATRIX_MIN=$(echo "$MATRIX" | jq -c .)
-          
-          echo "matrix=${MATRIX_MIN}" >> $GITHUB_OUTPUT
-          echo "any_changed=${ANY_CHANGED}" >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
   build-and-push:
-    needs: changes
-    if: ${{ needs.changes.outputs.any_changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        module: ${{ fromJson(needs.changes.outputs.matrix) }}
+        module: [ auth, user, product, order, coupon, payment, deposit, settlement, ai ]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -117,17 +47,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.module }}
 
   deploy:
-    needs: [changes, build-and-push]
-    if: ${{ needs.changes.outputs.any_changed == 'true' }}
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Pass Dynamic Matrix to Env
-        run: |
-          # The JSON array matrix is passed from the changes job
-          # Convert JSON array to space-separated string for bash script
-          MODS_STR=$(echo '${{ needs.changes.outputs.matrix }}' | jq -r '.[]' | tr '\n' ' ')
-          echo "MODS_TO_DEPLOY=${MODS_STR}" >> $GITHUB_ENV
-
       - name: Deploy to EC2 (k3s) via SSH - set image by sha
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -147,8 +69,7 @@ jobs:
             REPO="${{ github.repository }}"
             RUN_ID="${{ github.run_id }}"
             
-            # Using the dynamically generated list of modules
-            MODS="${{ env.MODS_TO_DEPLOY }}"
+            MODS="auth user product order coupon payment deposit settlement ai"
             
             echo "[1] Pre-Cleanup: Remove dangling containers"
             docker container prune -f || true
