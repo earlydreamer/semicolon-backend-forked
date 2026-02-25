@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: log-consumer
-          image: ${{ secrets.DOCKER_USERNAME }}/semicolon-log-consumer:latest
+          image: dukku/semicolon-log-consumer:latest
           envFrom:
             - secretRef:
                 name: semicolon-env

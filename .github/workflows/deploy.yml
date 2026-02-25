@@ -40,6 +40,7 @@ jobs:
             deposit: 'deposit/**'
             settlement: 'settlement/**'
             ai: 'ai/**'
+            log-consumer: 'monitoring/log-consumer/**'
       
       - id: set-matrix
         run: |
@@ -50,12 +51,12 @@ jobs:
           # 2. If 'common' (or root configs) changed, deploy everything
           if [[ "${{ steps.filter.outputs.common }}" == 'true' ]]; then
             echo "Common configuration or library changed. Deploying all modules."
-            MATRIX='["auth", "user", "product", "order", "coupon", "payment", "deposit", "settlement", "ai"]'
+            MATRIX='["auth", "user", "product", "order", "coupon", "payment", "deposit", "settlement", "ai", "log-consumer"]'
             ANY_CHANGED="true"
           else
             # 3. Otherwise, collect only changed modules
             MODS=()
-            for m in auth user product order coupon payment deposit settlement ai; do
+            for m in auth user product order coupon payment deposit settlement ai log-consumer; do
               # We dynamically check the output format of dorny/paths-filter
               CHANGED=$(jq -r ".${m}" <<< '${{ toJson(steps.filter.outputs) }}')
               if [[ "$CHANGED" == "true" ]]; then

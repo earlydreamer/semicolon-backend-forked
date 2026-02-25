@@ -1,3 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning-datasources
+  namespace: semicolon
+data:
+  prometheus.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: PBFA97CFB590B2093
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        jsonData:
+          timeInterval: 15s
+  log-api.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Log-API
+        type: yesoreyeram-infinity-datasource
+        uid: PCA84556805E1F3AF
+        access: proxy
+        url: http://log-consumer-service:9000
+        jsonData:
+          url: http://log-consumer-service:9000
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,22 +65,28 @@ spec:
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: "Viewer"
-            - name: GF_USERS_ALLOW_SIGN_UP
-              value: "false"
             - name: GF_DATE_FORMATS_DEFAULT_TIMEZONE
-              value: "Asia/Seoul"
-            - name: GF_FEATURE_TOGGLES_ENABLE
-              value: "publicDashboards"
-            - name: GF_SECURITY_ALLOW_EMBEDDING
-              value: "true"
+              value: Asia/Seoul
             - name: GF_INSTALL_PLUGINS
               value: "yesoreyeram-infinity-datasource"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           volumeMounts:
             - name: grafana-storage
               mountPath: /var/lib/grafana
+            - name: provisioning-datasources
+              mountPath: /etc/grafana/provisioning/datasources
       volumes:
         - name: grafana-storage
-          emptyDir: {} # TODO: 실운영 시 PVC로 교체 권장
+          emptyDir: {}
+        - name: provisioning-datasources
+          configMap:
+            name: grafana-provisioning-datasources
 
 ---
 apiVersion: v1
