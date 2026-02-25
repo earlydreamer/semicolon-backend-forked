@@ -83,23 +83,15 @@ services:
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     ports:
       - "19200:9200" # Spring 앱은 19200 포트로 연결
     volumes:
       - ./data/elasticsearch:/usr/share/elasticsearch/data
-    # 플러그인 확인 후 없으면 설치하고 실행하는 스크립트
-    command: >
-      /bin/sh -c "
-        if ! ./bin/elasticsearch-plugin list | grep -q analysis-nori; then
-          ./bin/elasticsearch-plugin install analysis-nori;
-        fi;
-        /usr/local/bin/docker-entrypoint.sh elasticsearch
-      "
     deploy:
       resources:
         limits:
-          memory: 3G
+          memory: 1.5G
 
   # ---------------------------------------------------------------------------
   # [데이터베이스] PostgreSQL 18.1

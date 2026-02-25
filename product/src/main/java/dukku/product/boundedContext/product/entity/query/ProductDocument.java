@@ -41,11 +41,11 @@ public class ProductDocument {
     @Field(type = FieldType.Integer)
     private Integer saleSortPriority;
 
-    // --- 검색 필드 (형태소 분석 적용) ---
-    @Field(type = FieldType.Text, analyzer = "korean_analyzer", searchAnalyzer = "korean_analyzer")
+    // --- 검색 필드 (기본 Standard Analyzer 적용: 형태소 분석 불가능) ---
+    @Field(type = FieldType.Text)
     private String title;
 
-    @Field(type = FieldType.Text, analyzer = "korean_analyzer", searchAnalyzer = "korean_analyzer")
+    @Field(type = FieldType.Text)
     private String description;
 
     // --- 필터링 필드 (정확히 일치해야 함 -> Keyword) ---

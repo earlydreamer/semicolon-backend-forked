@@ -11,14 +11,7 @@ services:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
-    # 플러그인 설치 명령어 (그대로 유지)
-    command: >
-      /bin/sh -c "
-        if ! ./bin/elasticsearch-plugin list | grep -q analysis-nori; then
-          ./bin/elasticsearch-plugin install analysis-nori;
-        fi;
-        /usr/local/bin/docker-entrypoint.sh elasticsearch
-      "
+
   redis:
     image: redis:7.2
     container_name: team05-redis
