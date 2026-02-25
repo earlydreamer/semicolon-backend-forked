@@ -11,7 +11,6 @@ import dukku.product.boundedContext.product.entity.query.ProductDocument;
 import dukku.product.boundedContext.product.out.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -34,8 +33,6 @@ public class ProductInitData {
     private final CategoryRepository categoryRepository;
     private final ProductUserRepository productUserRepository;
     private final ProductSearchRepository productSearchRepository;
-    @Value("${product.init.clear-es-on-startup:false}")
-    private boolean clearEsOnStartup;
 
     private final Map<String, UUID> userMap = new HashMap<>();
     private final Map<String, UUID> sellerMap = new HashMap<>();
@@ -62,8 +59,6 @@ public class ProductInitData {
             public void run(String... args) throws Exception {
                 log.info("🚀 [InitData] Data Initialization Started");
 
-                clearSearchIndexIfNeeded();
-
                 userMap.clear();
                 sellerMap.clear();
                 productMap.clear();
@@ -77,18 +72,6 @@ public class ProductInitData {
                 log.info("✅ [InitData] Initialization Completed.");
             }
         };
-    }
-
-    private void clearSearchIndexIfNeeded() {
-        if (!clearEsOnStartup) {
-            return;
-        }
-        try {
-            productSearchRepository.deleteAll();
-            log.info("[InitData] Elasticsearch index cleared.");
-        } catch (Exception e) {
-            log.warn("[InitData] Failed to clear Elasticsearch index: {}", e.getMessage());
-        }
     }
 
     private void initCategoryHierarchy() {
