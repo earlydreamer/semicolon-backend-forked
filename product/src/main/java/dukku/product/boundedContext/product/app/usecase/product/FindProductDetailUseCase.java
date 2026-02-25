@@ -37,26 +37,27 @@ public class FindProductDetailUseCase {
 
         Product product = productRepository.findByUuidWithImagesAndCategory(productUuid)
                 .or(() -> {
-                    log.warn("[FindProductDetailUseCase] 패치 조인 쿼리로 상품 조회 실패. 기본 조회(findByUuid)를 시도합니다. productUuid={}",
-                            productUuid);
+                    log.warn("[FindProductDetailUseCase] 패치 조인 조회 실패, 기본 조회로 재시도. productUuid={}", productUuid);
                     return productRepository.findByUuid(productUuid);
                 })
                 .orElseThrow(() -> {
-                    log.error("[FindProductDetailUseCase] 어떤 방식으로도 상품을 찾을 수 없습니다. productUuid={}", productUuid);
+                    log.error("[FindProductDetailUseCase] 상품을 찾을 수 없습니다. productUuid={}", productUuid);
                     return new ProductNotFoundException();
                 });
 
-        log.info("[FindProductDetailUseCase] 상품 조회 성공. title={}, sellerUuid={}", product.getTitle(),
-                product.getSellerUuid());
+        log.info("[FindProductDetailUseCase] 상품 조회 성공. title={}, sellerUuid={}", product.getTitle(), product.getSellerUuid());
 
         productStatsRedisSupport.incrementView(product.getId());
 
-        // 상점 정보 조회: 이벤트 지연/누락으로 ProductSeller가 없으면 즉시 생성
-        ProductSeller seller = productSellerRepository.findByUserUuid(product.getSellerUuid())
+        // Product.sellerUuid는 seller UUID이므로 sellerUuid 기준으로 먼저 조회한다.
+        ProductSeller seller = productSellerRepository.findBySellerUuid(product.getSellerUuid())
+                // 과거 데이터 호환: sellerUuid에 userUuid가 들어간 레코드도 허용
+                .or(() -> productSellerRepository.findByUserUuid(product.getSellerUuid()))
                 .orElseGet(() -> {
-                    log.warn("[FindProductDetailUseCase] 상점 정보(ProductSeller)가 없어 자동 생성합니다. userUuid={}, productUuid={}",
+                    // 상세 조회(GET)에서 DB write를 유발하지 않도록 비영속 기본값만 사용한다.
+                    log.warn("[FindProductDetailUseCase] 상점 정보 누락. 기본값으로 응답합니다. sellerUuid={}, productUuid={}",
                             product.getSellerUuid(), productUuid);
-                    return productSellerRepository.save(ProductSeller.create(product.getSellerUuid(), "반가워요! 내 상점입니다."));
+                    return ProductSeller.create(product.getSellerUuid(), "판매 중인 상점입니다.");
                 });
 
         log.info("[FindProductDetailUseCase] 상점 정보 조회 성공. sellerUserUuid={}", seller.getUserUuid());
@@ -93,7 +94,7 @@ public class FindProductDetailUseCase {
 
             return nickname;
         } catch (Exception e) {
-            log.warn("[FindProductDetailUseCase] 유저 프로필 조회 실패로 기본 닉네임 사용. userUuid={}", userUuid, e);
+            log.warn("[FindProductDetailUseCase] 사용자 프로필 조회 실패로 기본 닉네임 사용. userUuid={}", userUuid, e);
             return "이름없음";
         }
     }
