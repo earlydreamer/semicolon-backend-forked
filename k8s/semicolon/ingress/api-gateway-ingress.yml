@@ -169,7 +169,7 @@ spec:
                   number: 80
 
           # =====================
-          # AI
+          # MONITORING
           # =====================
           - path: /api/v1/logs
             pathType: Prefix
