@@ -26,7 +26,7 @@ import java.util.UUID;
 /**
  * AI 모듈 이벤트 리스너
  * - 장바구니 이벤트: CartSyncEvent를 수신하여 AI 추천을 비동기로 트리거
- * - 상품 이벤트: ProductSyncEvent를 수신하여 VectorStore에 상품 데이터 동기화
+ * - 상품 이벤트: ProductSyncEvent를 수신하여 product_search 테이블에 상품 데이터 동기화
  */
 @Slf4j
 @Component
