@@ -16,9 +16,11 @@ spec:
       maxUnavailable: 25%
     type: RollingUpdate
   template:
-    metadata:
       annotations:
         kubectl.kubernetes.io/restartedAt: "2026-02-18T05:16:37+09:00"
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8084"
       labels:
         app: order
     spec:

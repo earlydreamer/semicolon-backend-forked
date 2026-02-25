@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: semicolon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7.0
+          command: ["mongod", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+          ports:
+            - containerPort: 27017
+          environment:
+            - name: MONGO_INITDB_DATABASE
+              value: log_service
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+            - name: mongodb-init
+              mountPath: /docker-entrypoint-initdb.d/init-mongo.js
+              subPath: init-mongo.js
+      volumes:
+        - name: mongodb-data
+          emptyDir: {}
+        - name: mongodb-init
+          configMap:
+            name: mongodb-init-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-init-config
+  namespace: semicolon
+  labels:
+    app: mongodb
+data:
+  init-mongo.js: |
+    db = db.getSiblingDB('log_service');
+    db.createCollection('service_logs');
+    print('MongoDB initialized: log_service database created');
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  namespace: semicolon
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
