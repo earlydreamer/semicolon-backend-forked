@@ -71,12 +71,14 @@ public class SaveToElasticSearchUseCase {
 
         // 전체 저장은 Repository가 편합니다.
         productSearchRepository.save(document);
+        refreshProductIndex();
         log.info("[ES 동기화] 전체 저장 완료. productId={}", product.getId());
     }
 
     // [Case 2] 부분 업데이트 (ElasticsearchOperations 사용)
     private void updatePartialDocument(Product product) {
         String docId = String.valueOf(product.getId());
+        List<Integer> categoryPathIds = categoryRepository.findCategoryPathIds(product.getCategory().getId());
 
         if (!productSearchRepository.existsById(docId)) {
             log.warn("[ES 동기화] 부분 업데이트 대상 문서 없음 -> 전체 저장으로 전환. productId={}", product.getId());
@@ -88,6 +90,9 @@ public class SaveToElasticSearchUseCase {
         int sortPriority = (product.getSaleStatus() == SaleStatus.SOLD_OUT) ? 1 : 0;
 
         Document document = Document.create();
+        document.put("productUuid", product.getUuid().toString());
+        document.put("sellerUuid", product.getSellerUuid().toString());
+        document.put("categoryIds", categoryPathIds);
         document.put("title", product.getTitle());
         document.put("description", product.getDescription());
         document.put("price", product.getPrice());
@@ -109,8 +114,13 @@ public class SaveToElasticSearchUseCase {
                 updateQuery,
                 elasticsearchOperations.getIndexCoordinatesFor(ProductDocument.class)
         );
+        refreshProductIndex();
 
         log.info("[ES 동기화] 부분 업데이트 완료. productId={}", product.getId());
+    }
+
+    private void refreshProductIndex() {
+        elasticsearchOperations.indexOps(ProductDocument.class).refresh();
     }
 
     private String getThumbnailUrl(Product product) {
