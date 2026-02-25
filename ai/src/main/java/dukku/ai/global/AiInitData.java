@@ -59,8 +59,17 @@ public class AiInitData {
     private void ensureVectorDimensions() {
         int dim = AiSimilarityPolicy.EMBEDDING_DIMENSION;
 
+        // PGroonga 확장 (미설치 환경에서는 키워드 검색 없이 벡터 검색만 동작)
+        boolean pgroongaAvailable = false;
+        try {
+            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS pgroonga");
+            pgroongaAvailable = true;
+            log.info("[AiInitData] PGroonga 확장 활성화 완료");
+        } catch (Exception e) {
+            log.warn("[AiInitData] PGroonga 확장 없음 — 키워드 검색 비활성 (벡터 검색만 동작): {}", e.getMessage());
+        }
+
         // product_search: CREATE IF NOT EXISTS (비파괴적)
-        jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS pgroonga");
         jdbcTemplate.execute(String.format("""
                 CREATE TABLE IF NOT EXISTS product_search (
                     id UUID PRIMARY KEY,
@@ -68,8 +77,15 @@ public class AiInitData {
                     metadata JSONB,
                     embedding vector(%d)
                 )""", dim));
-        jdbcTemplate.execute(
-                "CREATE INDEX IF NOT EXISTS idx_product_search_content ON product_search USING pgroonga (content)");
+
+        if (pgroongaAvailable) {
+            try {
+                jdbcTemplate.execute(
+                        "CREATE INDEX IF NOT EXISTS idx_product_search_content ON product_search USING pgroonga (content)");
+            } catch (Exception e) {
+                log.warn("[AiInitData] PGroonga 인덱스 생성 실패 (무시): {}", e.getMessage());
+            }
+        }
         jdbcTemplate.execute(
                 "CREATE INDEX IF NOT EXISTS idx_product_search_embedding ON product_search USING HNSW (embedding vector_cosine_ops)");
         log.info("[AiInitData] product_search 테이블 확인 완료 ({}차원)", dim);

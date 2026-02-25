@@ -10,6 +10,33 @@ spec:
     requests:
       storage: 1Gi # 로컬 환경 메모리 절약을 위해 최소 사양
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: semicolon
+data:
+  init-databases.sh: |
+    #!/bin/bash
+    set -e
+
+    DATABASES="ai_service auth_service user_service product_service order_service payment_service deposit_service coupon_service settlement_service"
+
+    for DB in $DATABASES; do
+        echo "Creating database: $DB"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+            CREATE DATABASE $DB;
+    EOSQL
+
+        echo "Installing extensions on: $DB"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB" <<-EOSQL
+            CREATE EXTENSION IF NOT EXISTS vector;
+            CREATE EXTENSION IF NOT EXISTS pgroonga;
+    EOSQL
+    done
+
+    echo "All databases and extensions created successfully."
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,10 +54,10 @@ spec:
     spec:
       containers:
       - name: postgres
-        # pgvector와 pgroonga가 포함된 이미지를 사용하거나, 
-        # 프로젝트 내 Dockerfile로 수동 빌드한 이미지를 사용하는 것이 정석입니다.
-        # 여기서는 가장 안정적인 pgvector 공식 이미지를 사용합니다.
-        image: pgvector/pgvector:pg17 
+        # PGroonga + pgvector 커스텀 이미지 (postgres/Dockerfile에서 빌드)
+        # 빌드: docker build -t <DOCKER_USERNAME>/semicolon-postgres:latest ./postgres
+        # 푸시: docker push <DOCKER_USERNAME>/semicolon-postgres:latest
+        image: dukku/semicolon-postgres:latest
         ports:
         - containerPort: 5432
         env:
@@ -43,7 +70,14 @@ spec:
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
       volumes:
       - name: postgres-storage
         persistentVolumeClaim:
           claimName: postgres-pvc
+      - name: init-scripts
+        configMap:
+          name: postgres-init-scripts
+          defaultMode: 0755
