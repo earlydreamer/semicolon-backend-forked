@@ -50,6 +50,7 @@ public class SecurityReleaseConfig {
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(SecurityWhitelist.COMMON_PUBLIC)
                                         .permitAll()
+                                .requestMatchers("/error").permitAll()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
 //                        .requestMatchers("/actuator/**")
 //                        .access((auth, ctx) ->
