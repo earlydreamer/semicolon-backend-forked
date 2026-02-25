@@ -58,7 +58,7 @@ jobs:
             MODS=()
             for m in auth user product order coupon payment deposit settlement ai log-consumer; do
               # We dynamically check the output format of dorny/paths-filter
-              CHANGED=$(jq -r ".${m}" <<< '${{ toJson(steps.filter.outputs) }}')
+              CHANGED=$(jq -r ".[\"${m}\"]" <<< '${{ toJson(steps.filter.outputs) }}')
               if [[ "$CHANGED" == "true" ]]; then
                 MODS+=("$m")
               fi
