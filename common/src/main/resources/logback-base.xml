@@ -106,15 +106,12 @@
         </logger>
 
         <logger name="org.apache.kafka" level="WARN"/>
-
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
-        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
-        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+        <logger name="org.springframework.kafka" level="WARN"/>
     </springProfile>
 
     <!-- RELEASE/PROD 환경: 콘솔 + 파일 + Kafka -->
     <springProfile name="release,prod">
-        <root level="INFO">
+        <root level="WARN">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
         </root>
@@ -122,11 +119,6 @@
         <logger name="dukku" level="INFO" additivity="true">
             <appender-ref ref="ASYNC_KAFKA"/>
         </logger>
-
-        <logger name="org.apache.kafka" level="WARN"/>
-
-        <logger name="org.hibernate.SQL" level="WARN"/>
-        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>
     </springProfile>
 
     <!-- TEST 환경: Kafka 비활성화 -->
