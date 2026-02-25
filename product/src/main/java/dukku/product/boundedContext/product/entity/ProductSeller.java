@@ -30,7 +30,6 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductSeller extends BaseIdAndUUIDAndTime {
-
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "seller_uuid", nullable = false, columnDefinition = "uuid", comment = "판매자 UUID")
     private UUID sellerUuid;
