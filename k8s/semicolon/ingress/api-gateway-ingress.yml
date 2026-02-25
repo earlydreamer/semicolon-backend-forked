@@ -158,6 +158,17 @@ spec:
                   number: 80
 
           # =====================
+          # AI
+          # =====================
+          - path: /api/v1/ai
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-service
+                port:
+                  number: 80
+
+          # =====================
           # ADMIN — 서비스별 분기
           # =====================
           - path: /api/v1/admin/users
