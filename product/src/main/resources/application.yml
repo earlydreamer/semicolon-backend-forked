@@ -17,7 +17,7 @@ spring:
       enabled: false
 
   elasticsearch:
-    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
+    uris: ${ELASTICSEARCH_URL:http://elasticsearch:9200}
     socket-timeout: 30s
     connection-timeout: 5s
 

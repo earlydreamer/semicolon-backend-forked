@@ -27,7 +27,7 @@ crypto:
 
 slack:
   webhook:
-    url: ${SLACK_WEBHOOK_URL_SETTLEMENT}
+    url: ${SLACK_WEBHOOK_URL_SETTLEMENT:}
 
 custom:
   security:
