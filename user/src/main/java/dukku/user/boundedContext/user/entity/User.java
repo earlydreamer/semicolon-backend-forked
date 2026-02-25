@@ -6,24 +6,20 @@ import dukku.common.shared.user.dto.UserDto;
 import dukku.common.shared.user.dto.UserRegisterRequest;
 import dukku.common.shared.user.dto.UserResponse;
 import dukku.common.shared.user.dto.UserUpdateRequest;
-import dukku.common.shared.user.type.Role;
-import dukku.common.shared.user.type.UserStatus;
 import dukku.common.shared.user.exception.UserAlreadyWithdrawException;
 import dukku.common.shared.user.exception.UserWithdrawRestoreNotAllowedException;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import dukku.common.shared.user.type.Role;
+import dukku.common.shared.user.type.UserStatus;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -36,11 +32,11 @@ public class User extends SourceUser {
     private String password;
 
     @Convert(converter = AesGcmConverter.class)
-    @Column(name = "withdrawal_email_backup", length = 255)
+    @Column(name = "withdrawal_email_backup", length = 255, comment = "탈퇴 시 백업된 이메일(암호화)")
     private String withdrawalEmailBackup;
 
     @Convert(converter = AesGcmConverter.class)
-    @Column(name = "withdrawal_nickname_backup", length = 100)
+    @Column(name = "withdrawal_nickname_backup", length = 100, comment = "탈퇴 시 백업된 닉네임(암호화)")
     private String withdrawalNicknameBackup;
 
     @OneToMany(mappedBy = "user")

@@ -18,7 +18,6 @@ import lombok.experimental.SuperBuilder;
 
 public abstract class BaseUser extends BaseEntity<Integer> {
 
-
     @Column(length = 100, unique = true, nullable = false, comment = "이메일 (로그인 ID)")
     @Setter(AccessLevel.PROTECTED)
     private String email;
