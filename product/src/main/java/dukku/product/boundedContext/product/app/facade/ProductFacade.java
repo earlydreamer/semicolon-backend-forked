@@ -12,6 +12,7 @@ import dukku.product.boundedContext.product.app.usecase.product.FindCategoryList
 import dukku.product.boundedContext.product.app.usecase.product.FindFeaturedProductsUseCase;
 import dukku.product.boundedContext.product.app.usecase.product.FindProductDetailUseCase;
 import dukku.product.boundedContext.product.app.usecase.product.FindProductListUseCase;
+import dukku.product.boundedContext.product.app.usecase.product.ReleaseProductReservationUseCase;
 import dukku.product.boundedContext.product.app.usecase.product.ReserveProductUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class ProductFacade {
     private final FindProductListUseCase findProductListUseCase;
     private final FindProductDetailUseCase findProductDetailUseCase;
     private final ReserveProductUseCase reserveProductUseCase;
+    private final ReleaseProductReservationUseCase releaseProductReservationUseCase;
     private final SearchProductUseCase searchProductUseCase;
 
     public List<CategoryCreateResponse> findCategories() {
@@ -83,5 +85,9 @@ public class ProductFacade {
 
     public void reserveProducts(ProductReserveRequest request) {
         reserveProductUseCase.execute(request);
+    }
+
+    public void releaseProducts(ProductReserveRequest request) {
+        releaseProductReservationUseCase.execute(request.orderUuid(), request.productUuids());
     }
 }
