@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users/me/addresses")
@@ -31,16 +30,17 @@ public class AddressController {
 
     @GetMapping
     @AddressApiDocs.GetMyAddresses
-    public List<AddressResponse> getMyAddresses() {
+    public org.springframework.data.domain.Page<AddressResponse> getMyAddresses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         UUID userUuid = UserUtil.getUserId();
-        return findAddressUseCase.execute(userUuid);
+        return findAddressUseCase.execute(userUuid, org.springframework.data.domain.PageRequest.of(page, size));
     }
 
     @PostMapping
     @AddressApiDocs.AddAddress
     public AddressResponse addAddress(
-            @RequestBody @Valid AddressRequest request
-    ) {
+            @RequestBody @Valid AddressRequest request) {
         UUID userUuid = UserUtil.getUserId();
         return addAddressUseCase.add(userUuid, request);
     }
@@ -49,8 +49,7 @@ public class AddressController {
     @AddressApiDocs.UpdateAddress
     public AddressResponse updateAddress(
             @PathVariable Long addressId,
-            @RequestBody @Valid AddressRequest request
-    ) {
+            @RequestBody @Valid AddressRequest request) {
         UUID userUuid = UserUtil.getUserId();
         return updateAddressUseCase.execute(userUuid, addressId, request);
     }

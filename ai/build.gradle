@@ -37,9 +37,7 @@ dependencies {
     // Spring AI
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
 
-    // Spring AI Chat Memory & Vector Store
-    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
-    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+    // Spring AI Chat Memory
     implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
 
     // Hibernate Vector (pgvector support)

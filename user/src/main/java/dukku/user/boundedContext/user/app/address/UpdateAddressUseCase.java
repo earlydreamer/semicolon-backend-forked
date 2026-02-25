@@ -21,7 +21,13 @@ public class UpdateAddressUseCase {
         Address address = addressRepository.findByIdAndUser_Uuid(addressId, userUuid)
                 .orElseThrow(UserAddressNotFoundException::new);
 
-        address.update(request.getAddress(), request.getZonecode());
+        address.update(
+                request.getName(),
+                request.getRecipient(),
+                request.getPhone(),
+                request.getAddress(),
+                request.getDetailAddress(),
+                request.getZonecode());
 
         return AddressResponse.from(address);
     }

@@ -104,7 +104,7 @@ spec:
                   number: 80
 
           # =====================
-          # ORDER / PAYMENT / COUPON / DEPOSIT / SETTLEMENT
+          # ORDER
           # =====================
           - path: /api/v1/orders
             pathType: Prefix
@@ -114,6 +114,17 @@ spec:
                 port:
                   number: 80
 
+          - path: /api/v1/returns
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 80
+
+          # =====================
+          # PAYMENT / COUPON / DEPOSIT / SETTLEMENT
+          # =====================
           - path: /api/v1/payments
             pathType: Prefix
             backend:
