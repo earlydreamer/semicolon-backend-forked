@@ -22,5 +22,11 @@ public class FindAddressUseCase {
                 .map(AddressResponse::from)
                 .toList();
     }
-}
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<AddressResponse> execute(UUID userUuid,
+            org.springframework.data.domain.Pageable pageable) {
+        return addressRepository.findByUser_UuidOrderByIsDefaultDescIdDesc(userUuid, pageable)
+                .map(AddressResponse::from);
+    }
+}
