@@ -4,6 +4,7 @@ import dukku.common.shared.order.event.OrderItemCanceledEvent;
 import dukku.common.shared.payment.dto.PaymentRefundRequest;
 import dukku.common.shared.payment.exception.PaymentNotFoundException;
 import dukku.common.shared.payment.exception.PaymentOrderItemNotFoundException;
+import dukku.common.shared.payment.type.PaymentHistoryType;
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.payment.boundedContext.payment.entity.Payment;
 import dukku.payment.boundedContext.payment.entity.PaymentOrderItem;
@@ -24,48 +25,72 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HandleOrderItemCanceledEventUseCase {
 
-        private final PaymentSupport support;
-        private final RefundPaymentUseCase refundPaymentUseCase;
+    private final PaymentSupport support;
+    private final RefundPaymentUseCase refundPaymentUseCase;
 
-        @Transactional
-        public void execute(OrderItemCanceledEvent event) {
-                log.info("주문 상품 취소 이벤트 처리 시작 - orderItemUuid: {}", event.orderItemUuid());
+    @Transactional
+    public void execute(OrderItemCanceledEvent event) {
+        log.info("주문 상품 취소 이벤트 처리 시작 - orderItemUuid: {}", event.orderItemUuid());
 
-                // 1. 해당 주문 상품(OrderItemUuid)이 포함된 결제 내역 조회
-                Payment payment = support.findPaymentByOrderItemUuid(event.orderItemUuid())
-                                .orElseThrow(() -> {
-                                        log.error("해당 주문 상품에 대한 결제 내역을 찾을 수 없습니다. orderItemUuid: {}",
-                                                        event.orderItemUuid());
-                                        return new PaymentNotFoundException();
-                                });
+        // 1. 해당 주문 상품(OrderItemUuid)이 포함된 결제 내역 조회
+        Payment payment = support.findPaymentByOrderItemUuid(event.orderItemUuid())
+                .orElseThrow(() -> {
+                    log.error("해당 주문 상품에 대한 결제 내역을 찾을 수 없습니다. orderItemUuid: {}",
+                            event.orderItemUuid());
+                    return new PaymentNotFoundException();
+                });
 
-                // 2. 환불 가능 상태 확인 (이미 취소된 경우 중복 처리 방지)
-                if (payment.getPaymentStatus() == PaymentStatus.CANCELED) {
-                        log.warn("이미 전체 취소된 결제입니다. skip 처리. paymentUuid: {}", payment.getUuid());
-                        return;
-                }
-
-                // 3. 결제 항목 중 해당 OrderItem 찾기
-                PaymentOrderItem targetItem = payment.getItems().stream()
-                                .filter(item -> item.getOrderItemUuid().equals(event.orderItemUuid()))
-                                .findFirst()
-                                .orElseThrow(PaymentOrderItemNotFoundException::new);
-
-                // 4. 환불 요청 생성 (단일 상품 취소이므로 해당 상품 금액만큼)
-                PaymentRefundRequest request = PaymentRefundRequest.builder()
-                                .paymentUuid(payment.getUuid())
-                                .orderUuid(payment.getOrderUuid())
-                                .refundAmount(targetItem.getPrice())
-                                .reason("주문 전 상품 취소 (Item: " + event.orderItemUuid() + ")")
-                                .items(List.of(new PaymentRefundRequest.RefundItemInfo(
-                                                targetItem.getOrderItemUuid(),
-                                                targetItem.getPrice())))
-                                .build();
-
-                // 5. 환불 실행 (멱등성 키로 orderItemUuid 사용)
-                refundPaymentUseCase.execute(request, "CANCEL_" + event.orderItemUuid());
-
-                log.info("주문 상품 취소에 따른 환불 트리거 완료 - orderItemUuid: {}, paymentUuid: {}",
-                                event.orderItemUuid(), payment.getUuid());
+        // 2. 이미 전체 취소된 결제는 중복 처리하지 않는다.
+        if (payment.getPaymentStatus() == PaymentStatus.CANCELED) {
+            log.warn("이미 전체 취소된 결제입니다. skip 처리. paymentUuid: {}", payment.getUuid());
+            return;
         }
+
+        // 3. PENDING 상태는 승인 전이므로 환불 플로우 없이 즉시 취소 처리한다.
+        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            PaymentStatus originStatus = payment.getPaymentStatus();
+            Long originAmountPg = payment.getAmountPg();
+            Long originDeposit = payment.getPaymentDeposit();
+
+            payment.cancel();
+            support.savePayment(payment);
+            support.createHistory(payment, PaymentHistoryType.ORDER_CANCEL_SUCCESS,
+                    originStatus, originAmountPg, originDeposit);
+
+            log.info("승인 전 결제를 즉시 취소 처리했습니다. orderItemUuid: {}, paymentUuid: {}",
+                    event.orderItemUuid(), payment.getUuid());
+            return;
+        }
+
+        // 4. 환불 플로우는 DONE/PARTIAL_CANCELED 상태에서만 진행한다.
+        if (payment.getPaymentStatus() != PaymentStatus.DONE
+                && payment.getPaymentStatus() != PaymentStatus.PARTIAL_CANCELED) {
+            log.warn("환불 불가 상태입니다. skip 처리. paymentUuid: {}, status: {}",
+                    payment.getUuid(), payment.getPaymentStatus());
+            return;
+        }
+
+        // 5. 결제 항목 중 해당 OrderItem 찾기
+        PaymentOrderItem targetItem = payment.getItems().stream()
+                .filter(item -> item.getOrderItemUuid().equals(event.orderItemUuid()))
+                .findFirst()
+                .orElseThrow(PaymentOrderItemNotFoundException::new);
+
+        // 6. 환불 요청 생성 (단일 상품 취소이므로 해당 상품 금액만큼)
+        PaymentRefundRequest request = PaymentRefundRequest.builder()
+                .paymentUuid(payment.getUuid())
+                .orderUuid(payment.getOrderUuid())
+                .refundAmount(targetItem.getPrice())
+                .reason("주문 상품 취소 (Item: " + event.orderItemUuid() + ")")
+                .items(List.of(new PaymentRefundRequest.RefundItemInfo(
+                        targetItem.getOrderItemUuid(),
+                        targetItem.getPrice())))
+                .build();
+
+        // 7. 환불 실행 (멱등성 키로 orderItemUuid 사용)
+        refundPaymentUseCase.execute(request, "CANCEL_" + event.orderItemUuid());
+
+        log.info("주문 상품 취소에 따른 환불 트리거 완료 - orderItemUuid: {}, paymentUuid: {}",
+                event.orderItemUuid(), payment.getUuid());
+    }
 }
