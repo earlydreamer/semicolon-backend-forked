@@ -32,6 +32,17 @@ public class AiInitData {
     private static final UUID USER_1_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID USER_2_UUID = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+    /**
+     * 스키마 보정: 모든 프로필에서 실행 (비파괴적)
+     */
+    @Bean
+    public CommandLineRunner ensureSchema() {
+        return args -> ensureVectorDimensions();
+    }
+
+    /**
+     * 샘플 데이터: dev 프로필에서만 실행
+     */
     @Bean
     @Profile("dev")
     public CommandLineRunner initAiMemories() {
@@ -39,7 +50,6 @@ public class AiInitData {
             @Override
             @Transactional
             public void run(String... args) {
-                ensureVectorDimensions();
                 initMemories();
                 initProductData();
             }
@@ -49,10 +59,10 @@ public class AiInitData {
     private void ensureVectorDimensions() {
         int dim = AiSimilarityPolicy.EMBEDDING_DIMENSION;
 
-        // product_search: 하이브리드 검색 전용 테이블 (PGroonga + pgvector)
-        jdbcTemplate.execute("DROP TABLE IF EXISTS product_search");
+        // product_search: CREATE IF NOT EXISTS (비파괴적)
+        jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS pgroonga");
         jdbcTemplate.execute(String.format("""
-                CREATE TABLE product_search (
+                CREATE TABLE IF NOT EXISTS product_search (
                     id UUID PRIMARY KEY,
                     content TEXT NOT NULL,
                     metadata JSONB,
@@ -62,16 +72,25 @@ public class AiInitData {
                 "CREATE INDEX IF NOT EXISTS idx_product_search_content ON product_search USING pgroonga (content)");
         jdbcTemplate.execute(
                 "CREATE INDEX IF NOT EXISTS idx_product_search_embedding ON product_search USING HNSW (embedding vector_cosine_ops)");
-        log.info("[AiInitData] product_search 테이블 생성 + PGroonga/HNSW 인덱스 ({}차원)", dim);
+        log.info("[AiInitData] product_search 테이블 확인 완료 ({}차원)", dim);
 
-        // ai_memory: Hibernate ddl-auto=update는 기존 컬럼 타입을 변경하지 않으므로 수동 ALTER
+        // ai_memory: 차원 불일치 시에만 ALTER
         try {
-            jdbcTemplate.execute("UPDATE ai_memory SET embedding = NULL WHERE embedding IS NOT NULL");
-            jdbcTemplate.execute(String.format(
-                    "ALTER TABLE ai_memory ALTER COLUMN embedding TYPE vector(%d)", dim));
-            log.info("[AiInitData] ai_memory.embedding 차원 업데이트 ({}차원)", dim);
+            Integer currentDim = jdbcTemplate.queryForObject("""
+                    SELECT atttypmod FROM pg_attribute
+                    WHERE attrelid = 'ai_memory'::regclass
+                      AND attname = 'embedding'
+                    """, Integer.class);
+            if (currentDim != null && currentDim != dim) {
+                jdbcTemplate.execute("UPDATE ai_memory SET embedding = NULL WHERE embedding IS NOT NULL");
+                jdbcTemplate.execute(String.format(
+                        "ALTER TABLE ai_memory ALTER COLUMN embedding TYPE vector(%d)", dim));
+                log.info("[AiInitData] ai_memory.embedding 차원 변경: {} → {}", currentDim, dim);
+            } else {
+                log.info("[AiInitData] ai_memory.embedding 차원 정상 ({}차원)", dim);
+            }
         } catch (Exception e) {
-            // 첫 실행 시 테이블 미존재 또는 이미 올바른 차원 — 무시
+            log.warn("[AiInitData] ai_memory.embedding 차원 확인 실패 (무시): {}", e.getMessage());
         }
     }
 
