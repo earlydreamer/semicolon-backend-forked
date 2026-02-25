@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import dukku.ai.app.dto.HybridSearchResult;
+import dukku.common.shared.ai.dto.HybridSearchResult;
 import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.ai.out.HybridSearchRepository;

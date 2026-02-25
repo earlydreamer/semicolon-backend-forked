@@ -9,7 +9,8 @@ import org.springframework.ai.chat.model.ToolContext;
 
 import org.springframework.stereotype.Component;
 
-import dukku.ai.app.dto.HybridSearchResult;
+import dukku.common.shared.ai.dto.HybridSearchResult;
+import dukku.common.shared.ai.dto.ProductSearchFilter;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.ai.out.HybridSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,25 +23,34 @@ public class RecommendationTool {
 
     private final HybridSearchRepository hybridSearchRepository;
 
-    @Tool(description = "사용자가 요청한 검색 키워드(또는 선호도/구매이력)를 기반으로 관련 상품을 검색합니다")
+    @Tool(description = "사용자가 요청한 검색 키워드(또는 선호도/구매이력)를 기반으로 관련 상품을 검색합니다. " +
+            "가격 조건이 있으면 minPrice, maxPrice를 설정하세요.")
     public List<String> recommendProducts(
             ToolContext context,
-            @ToolParam(description = "사용자가 찾고자 하는 상품의 검색 키워드 (예: 캠핑 의자, 텐트 등)") String searchKeyword) {
+            @ToolParam(description = "사용자가 찾고자 하는 상품의 검색 키워드 (예: 캠핑 의자, 텐트 등)") String searchKeyword,
+            @ToolParam(description = "최소 가격 (원). 가격 하한이 없으면 0", required = false) Long minPrice,
+            @ToolParam(description = "최대 가격 (원). 가격 상한이 없으면 null", required = false) Long maxPrice) {
         String userId = context.getContext().get("userId").toString();
-        log.info("[Tool 호출] 상품 추천: userId={}, keyword={}", userId, searchKeyword);
+        log.info("[Tool 호출] 상품 추천: userId={}, keyword={}, minPrice={}, maxPrice={}",
+                userId, searchKeyword, minPrice, maxPrice);
         try {
             UUID userUuid = UUID.fromString(userId);
+
+            ProductSearchFilter filter = new ProductSearchFilter(
+                    minPrice != null && minPrice > 0 ? minPrice : null,
+                    maxPrice);
 
             List<HybridSearchResult> results = hybridSearchRepository.search(
                     searchKeyword,
                     AiSimilarityPolicy.RECOMMENDATION_TOP_K,
-                    AiSimilarityPolicy.RECOMMENDATION_SIMILARITY_THRESHOLD);
+                    AiSimilarityPolicy.RECOMMENDATION_SIMILARITY_THRESHOLD,
+                    filter);
 
             List<String> productTexts = results.stream()
                     .map(HybridSearchResult::contentWithUrl)
                     .toList();
 
-            log.info("[RecommendationTool] 하이브리드 검색 {}건 완료", productTexts.size());
+            log.info("[RecommendationTool] 하이브리드 검색 {}건 완료 (filter: {})", productTexts.size(), filter);
             return productTexts;
         } catch (IllegalArgumentException e) {
             log.warn("[RecommendationTool] 상품 추천 실패: userId={}, error=Invalid UUID string: {}", userId, userId);

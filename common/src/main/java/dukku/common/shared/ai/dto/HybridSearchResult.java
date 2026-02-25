@@ -1,4 +1,4 @@
-package dukku.ai.app.dto;
+package dukku.common.shared.ai.dto;
 
 import java.util.UUID;
 import java.util.regex.Matcher;

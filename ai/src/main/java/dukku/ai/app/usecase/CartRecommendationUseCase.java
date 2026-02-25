@@ -7,7 +7,7 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import dukku.ai.app.dto.HybridSearchResult;
+import dukku.common.shared.ai.dto.HybridSearchResult;
 import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.ai.out.AiUserMemoryRepository;
