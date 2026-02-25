@@ -1,9 +1,9 @@
-name: Deploy AI Only to k3s (EC2)
+name: Deploy to k3s (EC2)
 
 on:
   push:
-    branches: [ "dev" ] # dev 브랜치 푸시 시 자동 배포
-  workflow_dispatch: # 모든 브랜치에서 수동 실행 가능
+    branches: [ "dev" ]
+  workflow_dispatch:
 
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -15,6 +15,10 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [ auth, user, product, order, coupon, payment, deposit, settlement, ai ]
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -28,32 +32,32 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push AI (sha + latest)
+      - name: Build and Push (sha + latest)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/semicolon-ai:${{ github.sha }}
-            ${{ env.DOCKER_USERNAME }}/semicolon-ai:latest
+            ${{ env.DOCKER_USERNAME }}/semicolon-${{ matrix.module }}:${{ github.sha }}
+            ${{ env.DOCKER_USERNAME }}/semicolon-${{ matrix.module }}:latest
           build-args: |
-            MODULE_NAME=ai
-          cache-from: type=gha,scope=ai
-          cache-to: type=gha,mode=max,scope=ai
+            MODULE_NAME=${{ matrix.module }}
+          cache-from: type=gha,scope=${{ matrix.module }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.module }}
 
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy AI to EC2 (k3s) via SSH
+      - name: Deploy to EC2 (k3s) via SSH - set image by sha
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USERNAME }}
           key: ${{ env.EC2_SSH_KEY }}
           port: 22
-          command_timeout: 10m
+          command_timeout: 20m
           script: |
             set -euo pipefail
             
@@ -62,40 +66,80 @@ jobs:
             DOCKER_USERNAME="${{ env.DOCKER_USERNAME }}"
             K="sudo kubectl"
             
-            m="ai"
-            img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
+            REPO="${{ github.repository }}"
+            RUN_ID="${{ github.run_id }}"
             
-            echo ">>> Deploying ${m} (Image: ${img}) <<<"
+            MODS="auth user product order coupon payment deposit settlement ai"
             
-            # [기동 핵심] 자원 절약을 위한 Scale down -> Update -> Scale up
-            echo " - Scaling down ${m} to 0..."
-            $K -n "$NS" scale deploy/${m} --replicas=0
-            sleep 5
+            echo "[1] Pre-Cleanup: Remove dangling containers"
+            docker container prune -f || true
             
-            echo " - Updating image to ${img}..."
-            $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
+            echo "[2] cluster check"
+            $K -n "$NS" get deploy -o wide
             
-            echo " - Updating metadata..."
-            $K -n "$NS" patch "deploy/${m}" -p "{
-              \"spec\": {
-                \"template\": {
-                  \"metadata\": {
-                    \"annotations\": {
-                      \"deploy.git.sha\": \"${SHA}\",
-                      \"deploy.git.time\": \"$(date +'%Y-%m-%dT%H:%M:%S%z')\"
+            echo "[3] rollout sequential (Resource-Saving Mode): scale 0 -> set image -> scale 1 -> wait"
+            for m in $MODS; do
+              img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
+              echo ">>> Deploying ${m} (Image: ${img}) <<<"
+            
+              # [순차 기동 핵심] 자원 겹침을 방지하기 위해 기존 Pod를 먼저 완전히 종료
+              echo " - Scaling down ${m} to 0..."
+              $K -n "$NS" scale deploy/${m} --replicas=0
+              sleep 5
+            
+              # 이미지 및 어노테이션 업데이트
+              echo " - Updating image and metadata..."
+              $K -n "$NS" set image "deploy/${m}" "${m}=${img}"
+            
+              # [설정 동기화] K8s 클러스터의 Probe 설정을 코드 사양에 맞게 강제 업데이트
+              echo " - Patching health probes for stability..."
+              $K -n "$NS" patch deploy/${m} --type='json' -p='[
+                {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/timeoutSeconds", "value": 5},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/timeoutSeconds", "value": 5},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/initialDelaySeconds", "value": 150},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/initialDelaySeconds", "value": 40},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/failureThreshold", "value": 5},
+                {"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/failureThreshold", "value": 5}
+              ]' || true
+
+              $K -n "$NS" patch "deploy/${m}" -p "{
+                \"spec\": {
+                  \"template\": {
+                    \"metadata\": {
+                      \"annotations\": {
+                        \"deploy.git.sha\": \"${SHA}\",
+                        \"deploy.git.repo\": \"${REPO}\",
+                        \"deploy.git.run\": \"https://github.com/${REPO}/actions/runs/${RUN_ID}\"
+                      }
                     }
                   }
                 }
-              }
-            }"
+              }"
             
-            echo " - Scaling up ${m} to 1..."
-            $K -n "$NS" scale deploy/${m} --replicas=1
+              # 새 버전 기동
+              echo " - Scaling up ${m} to 1..."
+              $K -n "$NS" scale deploy/${m} --replicas=1
             
-            echo " - Waiting for rollout status..."
-            $K -n "$NS" rollout status "deploy/${m}" --timeout=300s
+              # 완전히 뜰 때까지 대기
+              echo " - Waiting for ${m} to be ready..."
+              $K -n "$NS" rollout status "deploy/${m}" --timeout=600s
             
-            echo "[Final Status]"
-            $K -n "$NS" get pods -l app=${m}
+              # 서버 부하 전이를 막기 위한 짧은 안정화 시간
+              echo " - Wait 10s for stability..."
+              sleep 10
+            done
+            
+            echo "[3] current images (sanity check)"
+            for m in $MODS; do
+              $K -n "$NS" get deploy "${m}" -o jsonpath='{.metadata.name}{" -> "}{.spec.template.spec.containers[0].image}{"\n"}'
+            done
+            
+            echo "[4] result"
+            $K -n "$NS" get deploy -o wide
+            $K -n "$NS" get pods -o wide
+            $K -n "$NS" get rs -o wide
+            
+            echo "[6] Post-Cleanup: Remove unused images"
+            docker image prune -f || true
             
             echo "Done!"
