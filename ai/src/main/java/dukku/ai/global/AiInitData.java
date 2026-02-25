@@ -145,9 +145,10 @@ public class AiInitData {
         // 하이브리드 검색 검증
         List<HybridSearchResult> verify = hybridSearchRepository.search("캠핑 의자", 3, 0.0);
         log.info("[AiInitData] 하이브리드 검색 검증: '캠핑 의자' → {}건", verify.size());
-        verify.forEach(r -> log.info("  - [rrf={}, vector={}] {}",
+        verify.forEach(r -> log.info("  - [rrf={}, vector={}, keyword={}] {}",
                 String.format("%.4f", r.rrfScore()),
                 String.format("%.4f", r.vectorScore()),
+                String.format("%.4f", r.keywordScore()),
                 r.content()));
     }
 

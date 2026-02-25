@@ -44,9 +44,10 @@ public class ProductRetrievalService {
         }
 
         log.info("[상품 검색] {}건 검색 완료", results.size());
-        results.forEach(r -> log.info("[상품 검색]   - [rrf={}, vector={}] {}",
+        results.forEach(r -> log.info("[상품 검색]   - [rrf={}, vector={}, keyword={}] {}",
                 String.format("%.4f", r.rrfScore()),
                 String.format("%.4f", r.vectorScore()),
+                String.format("%.4f", r.keywordScore()),
                 r.content()));
         return formatResults(results);
     }

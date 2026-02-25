@@ -27,6 +27,7 @@ public class HybridSearchRepository {
             rs.getString("content"),
             rs.getString("metadata"),
             rs.getDouble("vector_score"),
+            rs.getDouble("keyword_score"),
             rs.getDouble("rrf_score")
     );
 
@@ -45,6 +46,7 @@ public class HybridSearchRepository {
         String sql = """
                 WITH keyword AS (
                     SELECT id, content, metadata::text AS metadata,
+                           pgroonga_score(tableoid, ctid) AS score,
                            ROW_NUMBER() OVER (ORDER BY pgroonga_score(tableoid, ctid) DESC) AS rank
                     FROM product_search
                     WHERE content &@~ ?
@@ -62,6 +64,7 @@ public class HybridSearchRepository {
                        COALESCE(k.content, s.content) AS content,
                        COALESCE(k.metadata, s.metadata) AS metadata,
                        COALESCE(s.score, 0) AS vector_score,
+                       COALESCE(k.score, 0) AS keyword_score,
                        COALESCE(1.0 / (? + k.rank), 0) + COALESCE(1.0 / (? + s.rank), 0) AS rrf_score
                 FROM keyword k
                 FULL OUTER JOIN semantic s ON k.id = s.id
