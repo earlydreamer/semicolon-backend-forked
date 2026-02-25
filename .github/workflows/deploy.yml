@@ -158,6 +158,7 @@ jobs:
             $K -n "$NS" get deploy -o wide
             
             echo "[3] rollout sequential (Resource-Saving Mode): scale 0 -> set image -> scale 1 -> wait"
+            for m in $MODS; do
               img="${DOCKER_USERNAME}/semicolon-${m}:${SHA}"
               echo ">>> Deploying ${m} (Image: ${img}) <<<"
             
