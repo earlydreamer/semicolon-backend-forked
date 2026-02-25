@@ -11,6 +11,9 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
 
     List<Address> findByUser_UuidOrderByIsDefaultDescIdDesc(UUID userUuid);
 
+    org.springframework.data.domain.Page<Address> findByUser_UuidOrderByIsDefaultDescIdDesc(UUID userUuid,
+            org.springframework.data.domain.Pageable pageable);
+
     Optional<Address> findByIdAndUser_Uuid(Long id, UUID userUuid);
 
     Optional<Address> findByUser_UuidAndIsDefaultTrue(UUID userUuid);

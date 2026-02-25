@@ -29,7 +29,11 @@ public class AddAddressUseCase {
 
         Address address = Address.builder()
                 .user(user)
+                .name(request.getName())
+                .recipient(request.getRecipient())
+                .phone(request.getPhone())
                 .address(request.getAddress())
+                .detailAddress(request.getDetailAddress())
                 .zonecode(request.getZonecode())
                 .isDefault(isFirstAddress)
                 .build();

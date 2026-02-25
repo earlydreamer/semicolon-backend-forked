@@ -21,53 +21,54 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@Profile({"dev", "test"})  // 개발 환경 + 테스트 환경
+@Profile({ "dev", "test" }) // 개발 환경 + 테스트 환경
 public class SecurityDevConfig {
-    @Value("${custom.security.cors.allowed-origins}")
-    private String[] allowedOrigins;
+        @Value("${custom.security.cors.allowed-origins}")
+        private String[] allowedOrigins;
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final AuthenticationEntryPoint authenticationEntryPoint;
 
-    /**
-     * CSRF는 서버가 브라우저의 세션/쿠키를 신뢰할 때 공격 위험이 생김.
-     * JWT는 Authorization 헤더에 직접 담기 때문에 쿠키 자동 전송과 무관 → CSRF 공격 불가능.
-     * REST API + JWT 조합은 주로 비동기 호출(fetch, axios) 사용.
-     * 브라우저 폼 기반 요청이 아니므로 CSRF 보호 대상 아님.
-     */
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                /*
-                  RESTful API는 무상태(stateless) 원칙
-                  JWT 기반 인증에서는 서버가 상태(session)를 보존하지 않음 → 클라이언트가 JWT를 매 요청마다 전송
-                  그러므로 세션은 필요없음
-                 */
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // 개발 환경: 모든 요청 허용
-                )
-                .cors(cors -> cors.configurationSource(request -> {
-                    var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.setAllowedOrigins(
-                            Arrays.asList(allowedOrigins)
-                    );
-                    corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
-                    corsConfig.setAllowedHeaders(Arrays.asList("Authorization","Content-Type", "Idempotency-Key"));
-                    corsConfig.setAllowCredentials(true);
-                    return corsConfig;
-                }))
-                .exceptionHandling(e -> e // 인증 실패시 예외 처리
-                        .authenticationEntryPoint(authenticationEntryPoint))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        /**
+         * CSRF는 서버가 브라우저의 세션/쿠키를 신뢰할 때 공격 위험이 생김.
+         * JWT는 Authorization 헤더에 직접 담기 때문에 쿠키 자동 전송과 무관 → CSRF 공격 불가능.
+         * REST API + JWT 조합은 주로 비동기 호출(fetch, axios) 사용.
+         * 브라우저 폼 기반 요청이 아니므로 CSRF 보호 대상 아님.
+         */
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                /*
+                                 * RESTful API는 무상태(stateless) 원칙
+                                 * JWT 기반 인증에서는 서버가 상태(session)를 보존하지 않음 → 클라이언트가 JWT를 매 요청마다 전송
+                                 * 그러므로 세션은 필요없음
+                                 */
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .anyRequest().permitAll() // 개발 환경: 모든 요청 허용
+                                )
+                                .cors(cors -> cors.configurationSource(request -> {
+                                        var corsConfig = new org.springframework.web.cors.CorsConfiguration();
+                                        corsConfig.setAllowedOrigins(
+                                                        Arrays.asList(allowedOrigins));
+                                        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH",
+                                                        "DELETE", "OPTIONS"));
+                                        corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type",
+                                                        "Idempotency-Key"));
+                                        corsConfig.setAllowCredentials(true);
+                                        return corsConfig;
+                                }))
+                                .exceptionHandling(e -> e // 인증 실패시 예외 처리
+                                                .authenticationEntryPoint(authenticationEntryPoint))
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }

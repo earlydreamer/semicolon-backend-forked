@@ -5,8 +5,19 @@ import lombok.Getter;
 
 @Getter
 public class AddressRequest {
+    private String name;
+
+    @NotBlank
+    private String recipient;
+
+    @NotBlank
+    private String phone;
+
     @NotBlank
     private String address;
+
+    @NotBlank
+    private String detailAddress;
 
     @NotBlank
     private String zonecode;

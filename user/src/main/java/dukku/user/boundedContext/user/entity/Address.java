@@ -27,8 +27,20 @@ public class Address {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(length = 50, comment = "배송지명")
+    private String name;
+
+    @Column(length = 50, comment = "수령인")
+    private String recipient;
+
+    @Column(length = 50, comment = "연락처")
+    private String phone;
+
     @Column(nullable = false)
     private String address;
+
+    @Column
+    private String detailAddress;
 
     @Column(nullable = false, length = 10)
     private String zonecode;
@@ -39,12 +51,19 @@ public class Address {
     @Builder
     public Address(
             User user,
+            String name,
+            String recipient,
+            String phone,
             String address,
+            String detailAddress,
             String zonecode,
-            boolean isDefault
-    ) {
+            boolean isDefault) {
         this.user = user;
+        this.name = name;
+        this.recipient = recipient;
+        this.phone = phone;
         this.address = address;
+        this.detailAddress = detailAddress;
         this.zonecode = zonecode;
         this.isDefault = isDefault;
     }
@@ -54,10 +73,17 @@ public class Address {
     }
 
     public void update(
+            String name,
+            String recipient,
+            String phone,
             String address,
-            String zonecode
-    ) {
+            String detailAddress,
+            String zonecode) {
+        this.name = name;
+        this.recipient = recipient;
+        this.phone = phone;
         this.address = address;
+        this.detailAddress = detailAddress;
         this.zonecode = zonecode;
     }
 }
