@@ -1,5 +1,7 @@
 package dukku.order.boundedContext.order.app;
 
+import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
 import dukku.common.shared.order.exception.OrderRefundAmountOutOfRangeException;
 import dukku.common.shared.order.exception.OrderRefundRequestInvalidException;
 import dukku.common.shared.order.type.OrderItemStatus;
@@ -23,6 +25,7 @@ public class UpdateOrderRefundStatusUseCase {
 
     private final OrderSupport orderSupport;
     private final ReturnRequestRepository returnRequestRepository;
+    private final EventPublisher eventPublisher;
 
     /**
      * 환불 완료 이벤트 반영 처리
@@ -69,6 +72,7 @@ public class UpdateOrderRefundStatusUseCase {
 
         if (order.getRefundedAmount() >= order.getTotalAmount()) {
             order.updateOrderStatus(OrderStatus.CANCELED);
+            eventPublisher.publish(new OrderProductSaleReleasedEvent(order.getUuid(), order.getProductUuids()));
             return;
         }
 
