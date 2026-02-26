@@ -229,51 +229,14 @@ public class AiInitData {
             Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM product_search", Integer.class);
             if (count != null && count > 0) {
                 log.info("[AiInitData] 기존 product_search 데이터 존재 — 초기화 스킵 ({}건)", count);
-                return;
+            } else {
+                log.info("[AiInitData] product_search 테이블이 비어 있습니다. Product 서비스의 InitData에서 ProductSyncEvent를 통해 자동으로 동기화됩니다.");
             }
         } catch (Exception e) {
             log.warn("[AiInitData] product_search 개수 확인 실패: {}", e.getMessage());
         }
 
-        // [안내] 아래 초기화 코드는 초기 개발/테스트용 샘플 데이터입니다.
-        // 실제 환경에서는 ProductVectorSyncService를 통한 이벤트 기반 동기화를 사용합니다.
-        String baseUrl = "https://semicolon.shop/products/";
-        // {content, slug, price}
-        String[][] products = {
-                {"스노우피크 랜드록 텐트 - 캠핑용 거실형 텐트, 4-6인용", "snowpeak-landrock", "1890000"},
-                {"스노우피크 티타늄 싱글머그 450 - 초경량 캠핑용 머그컵", "snowpeak-titanium-mug", "45000"},
-                {"힐레베르그 아틀라스 4인용 - 돔형 캠핑 텐트", "hilleberg-atlas", "2100000"},
-                {"헬리녹스 체어제로 블랙 - 초경량 백패킹 캠핑 의자", "helinox-chair-zero", "189000"},
-                {"소니 WH-1000XM5 무선 헤드폰 - 노이즈캔슬링, 블루투스 헤드셋", "sony-wh1000xm5", "349000"},
-                {"소니 WF-1000XM5 무선이어폰 - 노이즈캔슬링, 인이어 이어폰", "sony-wf1000xm5", "279000"},
-                {"에어팟 맥스 스페이스그레이 - 애플 오버이어 헤드폰, 노이즈캔슬링", "airpods-max", "769000"},
-                {"젠하이저 HD660S2 - 오픈형 레퍼런스 유선 헤드폰", "sennheiser-hd660s2", "599000"},
-                {"맥북 프로 14인치 M3 Pro - 애플 노트북, 영상 및 개발용", "macbook-pro-14-m3", "2390000"},
-                {"맥북 에어 M2 - 애플 경량 노트북, 휴대용", "macbook-air-m2", "1390000"},
-                {"아이패드 프로 12.9 M2 - 애플 태블릿, 드로잉 및 영상 감상용", "ipad-pro-129-m2", "1549000"},
-                {"LG 그램 17인치 2024 - 초경량 대화면 노트북, 사무용", "lg-gram-17-2024", "1890000"},
-        };
-
-        log.info("[AiInitData] product_search 샘플 데이터 삽입 시작");
-        for (String[] product : products) {
-            String text = product[0];
-            String slug = product[1];
-            String price = product[2];
-            UUID id = UUID.nameUUIDFromBytes(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            float[] embedding = hybridSearchRepository.embed(text);
-            String metadata = "{\"productUrl\":\"" + baseUrl + slug + "\",\"price\":" + price + ",\"saleStatus\":\"ON_SALE\"}";
-            hybridSearchRepository.upsert(id, text, metadata, embedding);
-        }
-        log.info("[AiInitData] product_search 샘플 데이터 {}건 삽입 완료", products.length);
-
-        // 하이브리드 검색 검증
-        List<HybridSearchResult> verify = hybridSearchRepository.search("캠핑 의자", 3, 0.0);
-        log.info("[AiInitData] 하이브리드 검색 검증: '캠핑 의자' → {}건", verify.size());
-        verify.forEach(r -> log.info("  - [rrf={}, vector={}, keyword={}] {}",
-                String.format("%.4f", r.rrfScore()),
-                String.format("%.4f", r.vectorScore()),
-                String.format("%.4f", r.keywordScore()),
-                r.contentWithUrl()));
+        // [안내] 제품 데이터는 Product 서비스에서 ProductSyncEvent를 통해 자동으로 동기화됩니다.
     }
 
     private boolean isTableAvailable(String tableName) {

@@ -13,6 +13,11 @@ import dukku.common.shared.product.dto.product.ProductPayload;
 
 import dukku.common.shared.user.event.UserAiInitializationFailedEvent;
 import dukku.common.shared.user.event.UserProductInitializedEvent;
+import dukku.common.shared.product.event.CartSyncEvent;
+import dukku.common.shared.product.type.CartEventType;
+import dukku.common.shared.product.dto.cart.CartItemAddedPayload;
+import dukku.common.shared.product.event.ProductSyncEvent;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,43 +58,31 @@ public class AiEventListener {
     }
 
     @KafkaListener(topics = "cart-events", groupId = "${spring.application.name}-group")
-    public void handleCartEvent(String eventJson) {
+    public void handleCartEvent(CartSyncEvent event) {
         try {
-            JsonNode root = objectMapper.readTree(eventJson);
-            String eventType = root.get("eventType").asText();
-
-            if (!"ITEM_ADDED".equals(eventType)) {
+            if (event.eventType() != CartEventType.ITEM_ADDED) {
                 return;
             }
 
-            JsonNode payload = root.get("payload");
-            UUID userUuid = UUID.fromString(payload.get("userUuid").asText());
-            String productTitle = payload.get("productTitle").asText();
+            if (event.payload() instanceof CartItemAddedPayload payload) {
+                UUID userUuid = payload.userUuid();
+                String productTitle = payload.productTitle();
 
-            log.info("[CartEventListener] 장바구니 추가 이벤트 수신: userId={}, product={}", userUuid, productTitle);
+                log.info("[CartEventListener] 장바구니 추가 이벤트 수신: userId={}, product={}", userUuid, productTitle);
 
-            // 비동기로 추천 생성
-            cartRecommendationUseCase.generateRecommendation(userUuid, productTitle);
-
+                // 비동기로 추천 생성
+                cartRecommendationUseCase.generateRecommendation(userUuid, productTitle);
+            }
         } catch (Exception e) {
             log.error("[CartEventListener] 장바구니 이벤트 처리 실패: {}", e.getMessage(), e);
         }
     }
 
     @KafkaListener(topics = "order.paid", groupId = "${spring.application.name}-group")
-    public void handleOrderPaidEvent(String eventJson) {
+    public void handleOrderPaidEvent(OrderPaidEvent event) {
         try {
-            JsonNode root = objectMapper.readTree(eventJson);
-            UUID userUuid = UUID.fromString(root.get("userUuid").asText());
-
-            List<OrderPaidEvent.PaidItem> items = new ArrayList<>();
-            for (JsonNode itemNode : root.get("items")) {
-                items.add(new OrderPaidEvent.PaidItem(
-                        UUID.fromString(itemNode.get("productUuid").asText()),
-                        itemNode.get("productName").asText(),
-                        itemNode.get("productPrice").asInt()
-                ));
-            }
+            UUID userUuid = event.userUuid();
+            List<OrderPaidEvent.PaidItem> items = event.items();
 
             log.info("[OrderPaidEvent] 결제 완료 이벤트 수신: userUuid={}, itemCount={}", userUuid, items.size());
 
@@ -101,15 +94,11 @@ public class AiEventListener {
     }
 
     @KafkaListener(topics = "product-events", groupId = "${spring.application.name}-group")
-    public void handleProductSyncEvent(String eventJson) {
+    public void handleProductSyncEvent(ProductSyncEvent event) {
         try {
-            JsonNode root = objectMapper.readTree(eventJson);
-            JsonNode payload = root.get("payload");
-
-            String eventType = payload.get("eventType").asText();
-            UUID productUuid = UUID.fromString(payload.get("productUuid").asText());
-
-            ProductPayload productPayload = objectMapper.treeToValue(payload, ProductPayload.class);
+            ProductPayload productPayload = event.payload();
+            String eventType = productPayload.eventType().name();
+            UUID productUuid = productPayload.productUuid();
 
             switch (eventType) {
                 case "CREATED", "UPDATED" -> productVectorSyncUseCase.upsertProduct(productPayload);
