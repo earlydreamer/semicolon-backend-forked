@@ -82,7 +82,12 @@ class SaveToElasticSearchUseCaseTest {
     @DisplayName("부분 업데이트 후 ES index refresh를 호출한다")
     void refreshAfterPartialUpdate() {
         Product product = mock(Product.class);
+        Category category = mock(Category.class);
+        when(category.getId()).thenReturn(10);
         when(product.getId()).thenReturn(42);
+        when(product.getUuid()).thenReturn(UUID.randomUUID());
+        when(product.getSellerUuid()).thenReturn(UUID.randomUUID());
+        when(product.getCategory()).thenReturn(category);
         when(product.getTitle()).thenReturn("title");
         when(product.getDescription()).thenReturn("desc");
         when(product.getPrice()).thenReturn(1000L);
@@ -93,6 +98,7 @@ class SaveToElasticSearchUseCaseTest {
         when(product.getImages()).thenReturn(List.of());
         when(product.getTagNames()).thenReturn(List.of());
 
+        when(categoryRepository.findCategoryPathIds(10)).thenReturn(List.of(10));
         when(productSearchRepository.existsById("42")).thenReturn(true);
         when(elasticsearchOperations.getIndexCoordinatesFor(ProductDocument.class))
                 .thenReturn(IndexCoordinates.of("products_v1"));
