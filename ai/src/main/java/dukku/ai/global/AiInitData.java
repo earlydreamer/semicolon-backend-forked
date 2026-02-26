@@ -58,6 +58,10 @@ public class AiInitData {
 
     private void ensureVectorDimensions() {
         int dim = AiSimilarityPolicy.EMBEDDING_DIMENSION;
+        if (!isVectorTypeAvailable()) {
+            log.warn("[AiInitData] vector 타입 미지원 DB 환경 - AI 벡터 스키마 보정을 건너뜁니다.");
+            return;
+        }
 
         // PGroonga 확장 (미설치 환경에서는 키워드 검색 없이 벡터 검색만 동작)
         boolean pgroongaAvailable = false;
@@ -107,6 +111,19 @@ public class AiInitData {
             }
         } catch (Exception e) {
             log.warn("[AiInitData] ai_memory.embedding 차원 확인 실패 (무시): {}", e.getMessage());
+        }
+    }
+
+    private boolean isVectorTypeAvailable() {
+        try {
+            Integer exists = jdbcTemplate.queryForObject(
+                    "SELECT 1 FROM pg_type WHERE typname = 'vector' LIMIT 1",
+                    Integer.class
+            );
+            return exists != null && exists == 1;
+        } catch (Exception e) {
+            log.warn("[AiInitData] vector 타입 확인 실패 (무시): {}", e.getMessage());
+            return false;
         }
     }
 
