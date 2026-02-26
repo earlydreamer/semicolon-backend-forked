@@ -30,7 +30,7 @@ spring:
 
 product:
   init:
-    enabled: false
+    enabled: true
     clear-es-on-startup: false
   reindex-on-startup: true
 

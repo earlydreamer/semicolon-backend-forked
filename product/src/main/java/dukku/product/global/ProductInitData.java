@@ -1,6 +1,10 @@
 package dukku.product.global;
 
+import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.product.dto.product.ProductPayload;
+import dukku.common.shared.product.event.ProductSyncEvent;
 import dukku.common.shared.product.type.ConditionStatus;
+import dukku.common.shared.product.type.ProductEventType;
 import dukku.common.shared.product.type.SaleStatus;
 import dukku.common.shared.product.type.VisibilityStatus;
 import dukku.product.boundedContext.product.entity.Category;
@@ -22,6 +26,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static dukku.product.boundedContext.product.entity.Product.toProductPayload;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -33,6 +39,7 @@ public class ProductInitData {
     private final CategoryRepository categoryRepository;
     private final ProductUserRepository productUserRepository;
     private final ProductSearchRepository productSearchRepository;
+    private final EventPublisher eventPublisher;
 
     private final Map<String, UUID> userMap = new HashMap<>();
     private final Map<String, UUID> sellerMap = new HashMap<>();
@@ -235,6 +242,32 @@ public class ProductInitData {
         saveProduct("p19", "tent", "s4", "스노우피크 랜드록 텐트", "패밀리 캠핑 최고.", 1800000L, 0L, ConditionStatus.MINOR_WEAR, SaleStatus.ON_SALE, 356, 10, 3, 15, catNameMap, IMG_TENT);
         saveProduct("p37", "album", "s6", "뉴진스 2nd EP Get Up 미개봉", "한정판 버니.", 35000L, 2000L, ConditionStatus.SEALED, SaleStatus.ON_SALE, 456, 10, 3, 10, catNameMap, IMG_ALBUM);
         saveProduct("p46", "digital-camera", "s7", "소니 A7IV 바디 셔터 1만컷", "풀프레임 미러리스.", 2200000L, 0L, ConditionStatus.MINOR_WEAR, SaleStatus.ON_SALE, 178, 6, 2, 9, catNameMap, IMG_CAMERA);
+
+        // 기존 제품들에 대해서도 AI 동기화 이벤트 발행
+        syncExistingProductsToAi();
+    }
+
+    private void syncExistingProductsToAi() {
+        log.info("[InitData] 기존 제품들에 대한 AI 동기화 시작");
+        List<Product> allProducts = productRepository.findAll();
+        int syncCount = 0;
+
+        for (Product product : allProducts) {
+            try {
+                // 태그 정보 preload (Lazy Loading 방지)
+                productRepository.preloadProductTagsByProductId(product.getId());
+                product.getTagNames();
+
+                // AI 서비스로 동기화 이벤트 발행
+                ProductPayload payload = toProductPayload(product, ProductEventType.CREATED);
+                eventPublisher.publish(new ProductSyncEvent(payload));
+                syncCount++;
+            } catch (Exception e) {
+                log.warn("[InitData] 제품 동기화 실패: productId={}, error={}", product.getId(), e.getMessage());
+            }
+        }
+
+        log.info("[InitData] AI 동기화 완료: {}건 발행", syncCount);
     }
 
     private void saveProduct(String pId, String catCode, String sId, String title, String desc, Long price, Long shipFee, ConditionStatus condition, SaleStatus saleStatus, int view, int like, int comment, int daysAgo, Map<String, String> catNameMap, String imageUrl) {
@@ -269,6 +302,11 @@ public class ProductInitData {
         product.addImage(imageUrl);
         Product savedProduct = productRepository.save(product);
         productMap.put(pId, savedProduct);
+
+        // AI 서비스로 제품 동기화 이벤트 발행
+        ProductPayload payload = toProductPayload(savedProduct, ProductEventType.CREATED);
+        eventPublisher.publish(new ProductSyncEvent(payload));
+        log.info("[InitData] ProductSyncEvent 발행: productUuid={}, title={}", savedProduct.getUuid(), savedProduct.getTitle());
 
         List<Integer> categoryPath = getCategoryPath(savedProduct.getCategory());
         ProductDocument document = ProductDocument.builder()
