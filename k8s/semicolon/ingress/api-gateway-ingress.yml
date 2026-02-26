@@ -111,6 +111,14 @@ spec:
                 port:
                   number: 80
 
+          - path: /api/v1/seller/products
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
           # =====================
           # ORDER
           # =====================
