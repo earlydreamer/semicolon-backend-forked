@@ -39,7 +39,14 @@ public class ChatUseCase {
                 })
                 .toolContext(java.util.Map.of("userId", userUuid != null ? userUuid.toString() : ""))
                 .stream()
-                .content();
+                .chatResponse()
+                .map(response -> {
+                    if (response.getResult() == null || response.getResult().getOutput() == null) {
+                        return "";
+                    }
+                    String content = response.getResult().getOutput().getText();
+                    return content != null ? content : "";
+                });
 
         if (!shouldExtractMemory) {
             return responseFlux
