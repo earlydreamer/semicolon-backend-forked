@@ -110,6 +110,10 @@ public class ReturnRequest extends BaseIdAndUUIDAndTime {
         this.status = ReturnStatus.RETURN_SHIPPED;
     }
 
+    public void markReceivedBySeller() {
+        this.status = ReturnStatus.RETURN_RECEIVED;
+    }
+
     /**
      * 판매자 최종 승인 상태 전이
      */
