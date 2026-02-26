@@ -1,5 +1,6 @@
 package dukku.common.shared.settlement.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.settlement.dto.SettlementDetailResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,16 +21,28 @@ public class SettlementApiClient {
     }
 
     public SettlementDetailResponse getSettlement(UUID settlementUuid) {
-        return restClient.get()
-                .uri("/{settlementUuid}", settlementUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/{settlementUuid}", settlementUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(SettlementDetailResponse.class);
     }
 
     public SettlementDetailResponse[] getSettlementsBySeller(UUID sellerUuid) {
-        return restClient.get()
-                .uri("?sellerUuid={sellerUuid}", sellerUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("?sellerUuid={sellerUuid}", sellerUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(SettlementDetailResponse[].class);
     }
 }

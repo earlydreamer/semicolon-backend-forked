@@ -1,5 +1,6 @@
 package dukku.common.shared.product.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.product.dto.cart.CartInternalResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -28,9 +29,15 @@ public class CartApiClient {
      * 특정 사용자의 장바구니 목록을 조회합니다. (AI 추천용)
      */
     public CartInternalResponse findCartByUserUuid(UUID userUuid) {
-        return restClient.get()
-                .uri("/internal/{userUuid}", userUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/internal/{userUuid}", userUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(CartInternalResponse.class);
     }
 }

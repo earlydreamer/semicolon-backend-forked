@@ -1,5 +1,6 @@
 package dukku.common.shared.ai.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.ai.dto.AiUserMemoryResponse;
 import dukku.common.shared.ai.dto.ChatRequest;
 import dukku.common.shared.ai.dto.CreateAiUserMemoryRequest;
@@ -30,50 +31,86 @@ public class AiApiClient {
     }
 
     public String chat(ChatRequest request) {
-        return restClient.post()
+        RestClient.RequestBodySpec requestSpec = restClient.post()
                 .uri("/chat")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.body(request)
                 .retrieve()
                 .body(String.class);
     }
 
     public List<AiUserMemoryResponse> findAllMemories() {
-        return restClient.get()
-                .uri("/ai-memories")
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/ai-memories");
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(new ParameterizedTypeReference<>() {});
     }
 
     public AiUserMemoryResponse findMemoryById(Integer aiMemoryId) {
-        return restClient.get()
-                .uri("/ai-memories/{id}", aiMemoryId)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/ai-memories/{id}", aiMemoryId);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(AiUserMemoryResponse.class);
     }
 
     public AiUserMemoryResponse createMemory(CreateAiUserMemoryRequest request) {
-        return restClient.post()
+        RestClient.RequestBodySpec requestSpec = restClient.post()
                 .uri("/ai-memories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.body(request)
                 .retrieve()
                 .body(AiUserMemoryResponse.class);
     }
 
     public AiUserMemoryResponse updateMemory(Integer aiMemoryId, UpdateAiUserMemoryRequest request) {
-        return restClient.patch()
+        RestClient.RequestBodySpec requestSpec = restClient.patch()
                 .uri("/ai-memories/{id}", aiMemoryId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.body(request)
                 .retrieve()
                 .body(AiUserMemoryResponse.class);
     }
 
     public void deleteMemory(Integer aiMemoryId) {
-        restClient.delete()
-                .uri("/ai-memories/{id}", aiMemoryId)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.delete()
+                .uri("/ai-memories/{id}", aiMemoryId);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        requestSpec.retrieve()
                 .toBodilessEntity();
     }
 }

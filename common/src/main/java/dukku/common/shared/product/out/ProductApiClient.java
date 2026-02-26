@@ -1,5 +1,6 @@
 package dukku.common.shared.product.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.product.dto.product.ProductReserveRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -26,10 +27,16 @@ public class ProductApiClient {
     public void reserveProducts(UUID orderUuid, List<UUID> productUuids) {
         ProductReserveRequest request = new ProductReserveRequest(orderUuid, productUuids);
 
-        restClient.post()
+        RestClient.RequestBodySpec requestSpec = restClient.post()
                 .uri("/internal/reserve") // Controller에 정의한 경로
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        requestSpec.body(request)
                 .retrieve()
                 .toBodilessEntity(); // 응답 본문이 없을 때 사용 (void)
     }

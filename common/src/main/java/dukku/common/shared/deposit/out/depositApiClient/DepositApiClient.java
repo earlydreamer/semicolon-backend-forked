@@ -1,5 +1,6 @@
 package dukku.common.shared.deposit.out.depositApiClient;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.deposit.dto.DepositAccountResponse;
 import dukku.common.shared.deposit.dto.DepositBalanceResponse;
 import dukku.common.shared.deposit.dto.DepositChargeForSettlementRequest;
@@ -33,9 +34,15 @@ public class DepositApiClient {
      * 판매자 예치금 계좌 UUID 조회 (관리자/내부 용도)
      */
     public UUID getDepositUuid(UUID userUuid) {
-        DepositAccountResponse response = adminClient.get()
-                .uri("/{userUuid}/account", userUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = adminClient.get()
+                .uri("/{userUuid}/account", userUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        DepositAccountResponse response = requestSpec.retrieve()
                 .body(DepositAccountResponse.class);
 
         if (response != null && response.getData() != null) {
@@ -48,9 +55,15 @@ public class DepositApiClient {
      * 사용자 예치금 잔액 조회 (Internal API)
      */
     public Long getBalance(UUID userUuid) {
-        DepositBalanceResponse response = internalClient.get()
-                .uri("/{userUuid}/balance", userUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = internalClient.get()
+                .uri("/{userUuid}/balance", userUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        DepositBalanceResponse response = requestSpec.retrieve()
                 .body(DepositBalanceResponse.class);
 
         if (response != null && response.getData() != null) {
@@ -72,10 +85,16 @@ public class DepositApiClient {
                 .settlementUuid(settlementUuid)
                 .build();
 
-        return internalClient.post()
+        RestClient.RequestBodySpec requestSpec = internalClient.post()
                 .uri("/{userUuid}/charge", userUuid)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.body(request)
                 .retrieve()
                 .body(DepositChargeForSettlementResponse.class);
     }

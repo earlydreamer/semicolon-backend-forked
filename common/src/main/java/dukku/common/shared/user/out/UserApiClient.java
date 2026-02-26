@@ -1,5 +1,6 @@
 package dukku.common.shared.user.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.dto.UserProfileResponse;
 import dukku.common.shared.user.dto.UserUuidResponse;
@@ -32,36 +33,60 @@ public class UserApiClient {
     }
 
     public UserUuidResponse getUserUuidByRole(Role role) {
-        return internalRestClient.get()
+        RestClient.RequestHeadersSpec<?> requestSpec = internalRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/uuid")
                         .queryParam("role", role)
-                        .build())
-                .retrieve()
+                        .build());
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(UserUuidResponse.class);
     }
 
     public UserUuidResponse getUserUuidByEmail(String email) {
-        return internalRestClient.get()
+        RestClient.RequestHeadersSpec<?> requestSpec = internalRestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/uuid")
                         .queryParam("email", email)
-                        .build())
-                .retrieve()
+                        .build());
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(UserUuidResponse.class);
     }
 
     public UserProfileResponse getUserProfile(UUID userUuid) {
-        return internalRestClient.get()
-                .uri("/{userUuid}/profile", userUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = internalRestClient.get()
+                .uri("/{userUuid}/profile", userUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(UserProfileResponse.class);
     }
 
     public UserAdminProfileResponse getUserAdminProfile(UUID userUuid) {
-        return internalRestClient.get()
-                .uri("/{userUuid}/admin", userUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = internalRestClient.get()
+                .uri("/{userUuid}/admin", userUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(UserAdminProfileResponse.class);
     }
 }

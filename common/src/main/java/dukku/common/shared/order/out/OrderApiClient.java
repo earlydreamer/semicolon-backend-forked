@@ -1,5 +1,6 @@
 package dukku.common.shared.order.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.common.shared.order.dto.OrderListResponse;
 import dukku.common.shared.order.dto.OrderResponse;
@@ -34,42 +35,64 @@ public class OrderApiClient {
             LocalDateTime startDateTime,
             LocalDateTime endDateTime
     ) {
-        return restClient.get()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/items/confirmed")
                         .queryParam("startDateTime", startDateTime)
                         .queryParam("endDateTime", endDateTime)
-                        .build()
-                )
-                .retrieve()
+                        .build());
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(new ParameterizedTypeReference<>() {
                 });
     }
     // 결제 도메인에서 주문 만료 검증에 사용할 주문 상세 정보를 조회한다.
     public OrderResponse findOrderByUuid(UUID orderUuid) {
-        return restClient.get()
-                .uri("/{orderUuid}/detail", orderUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/{orderUuid}/detail", orderUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(OrderResponse.class);
     }
 
     public void expireOrder(UUID orderUuid) {
-        restClient.post()
-                .uri("/{orderUuid}/expire", orderUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.post()
+                .uri("/{orderUuid}/expire", orderUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        requestSpec.retrieve()
                 .toBodilessEntity();
     }
 
     // 특정 사용자의 주문 이력 조회 (AI 추천용)
     public List<OrderListResponse> findOrdersByUserUuid(UUID userUuid, String status, int limit) {
-        return restClient.get()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/{userUuid}")
                         .queryParam("status", status)
                         .queryParam("limit", limit)
-                        .build(userUuid)
-                )
-                .retrieve()
+                        .build(userUuid));
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(new ParameterizedTypeReference<>() {
                 });
     }

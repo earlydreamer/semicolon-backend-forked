@@ -1,5 +1,6 @@
 package dukku.common.shared.payment.out;
 
+import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
 import dukku.common.shared.payment.dto.PaymentInternalResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,9 +23,15 @@ public class PaymentApiClient {
      * 결제 UUID로 내부 결제 정보 조회
      */
     public PaymentInternalResponse getPaymentByUuid(UUID paymentUuid) {
-        return restClient.get()
-                .uri("/{paymentUuid}", paymentUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/{paymentUuid}", paymentUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(PaymentInternalResponse.class);
     }
 
@@ -32,9 +39,15 @@ public class PaymentApiClient {
      * 주문 UUID로 내부 결제 정보 조회
      */
     public PaymentInternalResponse getPaymentByOrderUuid(UUID orderUuid) {
-        return restClient.get()
-                .uri("/orders/{orderUuid}", orderUuid)
-                .retrieve()
+        RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
+                .uri("/orders/{orderUuid}", orderUuid);
+
+        String authorization = RequestAuthorizationHeaderResolver.resolve();
+        if (authorization != null) {
+            requestSpec = requestSpec.header("Authorization", authorization);
+        }
+
+        return requestSpec.retrieve()
                 .body(PaymentInternalResponse.class);
     }
 }
