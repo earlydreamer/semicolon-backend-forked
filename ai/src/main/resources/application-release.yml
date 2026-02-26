@@ -4,6 +4,8 @@ ai:
 
 spring:
   datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:ai_service}?sslmode=${DB_SSLMODE:disable}
+    driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   ai:
@@ -12,6 +14,11 @@ spring:
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
 
   jpa:
     hibernate:
