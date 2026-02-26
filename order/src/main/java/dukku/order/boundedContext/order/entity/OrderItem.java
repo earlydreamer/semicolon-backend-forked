@@ -118,7 +118,7 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
             case CONFIRMED -> {
                 // 배송 완료 상태가 아니면 구매 확정 불가
                 if (this.status != OrderItemStatus.DELIVERED) {
-                    throw new ConflictException("배송이 완료된 상품만 구매 확정할 수 있습니다.");
+                    throw new ConflictException("배송 완료 상태인 상품만 구매 확정할 수 있습니다.");
                 }
 
                 this.confirmedAt = LocalDateTime.now();
