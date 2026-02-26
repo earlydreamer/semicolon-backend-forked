@@ -35,7 +35,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     );
 
     @Query("SELECT u FROM User u WHERE " +
-           "(:keyword IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "(:keyword IS NULL OR CAST(u.email AS string) LIKE CONCAT('%', :keyword, '%') OR CAST(u.nickname AS string) LIKE CONCAT('%', :keyword, '%')) " +
            "AND (:status IS NULL OR u.status = :status)")
     Page<User> searchUsers(
             @Param("keyword") String keyword, 
