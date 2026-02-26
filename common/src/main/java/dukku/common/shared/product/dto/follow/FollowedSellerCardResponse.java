@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record FollowedSellerCardResponse(
         UUID sellerUuid,
+        UUID shopUuid,
         String nickname,
         String intro,
         BigDecimal averageRating,

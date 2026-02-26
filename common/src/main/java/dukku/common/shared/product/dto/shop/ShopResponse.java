@@ -10,6 +10,7 @@ import java.util.UUID;
 @Builder
 public class ShopResponse {
     private UUID shopUuid;              // ProductSeller.uuid
+    private UUID sellerUuid;            // ProductSeller.sellerUuid (== seller userUuid)
     private String nickname;
     private String intro;
     private int salesCount;

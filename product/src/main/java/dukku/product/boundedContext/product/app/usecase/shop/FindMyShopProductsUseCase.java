@@ -37,13 +37,21 @@ public class FindMyShopProductsUseCase {
                                 .orElseGet(() -> productSellerRepository
                                                 .save(ProductSeller.create(userUuid, "반가워요! 내 상점입니다.")));
 
-                // seller.userUuid == Product.sellerUuid
+                UUID sellerUuid = seller.getSellerUuid();
                 UUID sellerUserUuid = seller.getUserUuid();
 
                 Page<Product> result = (saleStatus == null)
-                                ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUserUuid, pageable)
-                                : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(sellerUserUuid,
+                                ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUuid, pageable)
+                                : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(sellerUuid,
                                                 saleStatus, pageable);
+
+                // 레거시 호환: 과거 데이터 중 product.sellerUuid=userUuid로 저장된 경우 fallback
+                if (result.isEmpty() && !sellerUuid.equals(sellerUserUuid)) {
+                        result = (saleStatus == null)
+                                        ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUserUuid, pageable)
+                                        : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(sellerUserUuid,
+                                                        saleStatus, pageable);
+                }
 
                 List<ProductListItemResponse> items = result.getContent().stream()
                                 .map(ProductMapper::toListItem)

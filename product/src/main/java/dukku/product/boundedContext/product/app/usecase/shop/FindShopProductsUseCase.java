@@ -36,16 +36,27 @@ public class FindShopProductsUseCase {
         ProductSeller seller = productSellerRepository.findByUuid(shopUuid)
                 .orElseThrow(ProductSellerNotFoundException::new);
 
-        // seller.userUuid == Product.sellerUuid
+        UUID sellerUuid = seller.getSellerUuid();
         UUID sellerUserUuid = seller.getUserUuid();
 
         Page<Product> result = (saleStatus == null)
-                ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUserUuid, pageable)
+                ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUuid, pageable)
                 : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(
-                sellerUserUuid,
+                sellerUuid,
                 saleStatus,
                 pageable
         );
+
+        // 레거시 호환: 과거 데이터 중 product.sellerUuid=userUuid로 저장된 경우 fallback
+        if (result.isEmpty() && !sellerUuid.equals(sellerUserUuid)) {
+            result = (saleStatus == null)
+                    ? productRepository.findBySellerUuidAndDeletedAtIsNull(sellerUserUuid, pageable)
+                    : productRepository.findBySellerUuidAndSaleStatusAndDeletedAtIsNull(
+                    sellerUserUuid,
+                    saleStatus,
+                    pageable
+            );
+        }
 
         List<ProductListItemResponse> items = result.getContent().stream()
                 .map(ProductMapper::toListItem)
