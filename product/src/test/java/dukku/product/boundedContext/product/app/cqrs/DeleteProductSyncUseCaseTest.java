@@ -8,6 +8,8 @@ import dukku.product.boundedContext.product.out.ProductSearchRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,6 +32,12 @@ class DeleteProductSyncUseCaseTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private ElasticsearchOperations elasticsearchOperations;
+
+    @Mock
+    private IndexOperations indexOperations;
+
     @InjectMocks
     private DeleteProductSyncUseCase useCase;
 
@@ -49,6 +57,7 @@ class DeleteProductSyncUseCaseTest {
 
         when(productSearchRepository.findById("42")).thenReturn(Optional.of(existing));
         when(productRepository.findById(42)).thenReturn(Optional.of(product));
+        when(elasticsearchOperations.indexOps(ProductDocument.class)).thenReturn(indexOperations);
 
         useCase.deletedProductToElasticsearch(42L);
 
@@ -59,6 +68,7 @@ class DeleteProductSyncUseCaseTest {
         assertThat(saved.getId()).isEqualTo("42");
         assertThat(saved.getVisibilityStatus()).isEqualTo(VisibilityStatus.HIDDEN);
         assertThat(saved.getDeletedAt()).isEqualTo(deletedAt);
+        verify(indexOperations).refresh();
     }
 
     @Test
@@ -70,5 +80,6 @@ class DeleteProductSyncUseCaseTest {
 
         verify(productRepository, never()).findById(42);
         verify(productSearchRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(elasticsearchOperations, never()).indexOps(ProductDocument.class);
     }
 }

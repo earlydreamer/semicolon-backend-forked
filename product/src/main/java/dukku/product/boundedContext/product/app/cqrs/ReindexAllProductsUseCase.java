@@ -2,6 +2,7 @@ package dukku.product.boundedContext.product.app.cqrs;
 
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.ProductRepository;
+import dukku.product.boundedContext.product.out.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ public class ReindexAllProductsUseCase {
     private static final int BATCH_SIZE = 200;
 
     private final ProductRepository productRepository;
+    private final ProductSearchRepository productSearchRepository;
     private final SaveToElasticSearchUseCase saveToElasticSearchUseCase;
 
     @Transactional(readOnly = true)
@@ -26,6 +28,10 @@ public class ReindexAllProductsUseCase {
         int fail = 0;
 
         log.info("[Reindex] 전체 재색인 시작");
+
+        // 카테고리/검색 불일치를 막기 위해 기존 ES 문서를 먼저 정리한다.
+        productSearchRepository.deleteAll();
+        log.info("[Reindex] 기존 ES 문서 삭제 완료");
 
         while (true) {
             Pageable pageable = PageRequest.of(pageNo, BATCH_SIZE);
