@@ -63,13 +63,23 @@ public class UpdateOrderItemStatusUseCase {
             return;
         }
 
-        if (!orderItem.getOrder().getUserUuid().equals(UserUtil.getUserId())) {
-            throw new OrderAccessDeniedException();
+        UUID userId = UserUtil.getUserId();
+
+        if (orderItem.getOrder().getUserUuid().equals(userId)) {
+            if (!OrderItemStatus.isUserActionAllowed(newStatus)) {
+                throw new OrderItemActionNotAllowedException();
+            }
+            return;
         }
 
-        if (!OrderItemStatus.isUserActionAllowed(newStatus)) {
-            throw new OrderItemActionNotAllowedException();
+        if (orderItem.getSellerUuid().equals(userId)) {
+            if (!OrderItemStatus.isSellerActionAllowed(newStatus)) {
+                throw new OrderItemActionNotAllowedException();
+            }
+            return;
         }
+
+        throw new OrderAccessDeniedException();
     }
 
     private void publishEvent(OrderItem orderItem, OrderItemStatus newStatus) {

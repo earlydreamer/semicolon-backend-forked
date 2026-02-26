@@ -12,6 +12,7 @@ import dukku.order.boundedContext.order.app.FinalRejectReturnUseCase;
 import dukku.order.boundedContext.order.app.RegisterReturnTrackingUseCase;
 import dukku.order.boundedContext.order.app.RequestReturnUseCase;
 import dukku.order.boundedContext.order.app.SellerApproveReturnUseCase;
+import dukku.order.boundedContext.order.app.SellerReceiveReturnUseCase;
 import dukku.order.boundedContext.order.app.SellerRejectReturnUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,7 @@ public class ReturnController {
     private final RequestReturnUseCase requestReturnUseCase;
     private final RegisterReturnTrackingUseCase registerReturnTrackingUseCase;
     private final SellerApproveReturnUseCase sellerApproveReturnUseCase;
+    private final SellerReceiveReturnUseCase sellerReceiveReturnUseCase;
     private final SellerRejectReturnUseCase sellerRejectReturnUseCase;
     private final ApproveReturnUseCase approveReturnUseCase;
     private final FinalRejectReturnUseCase finalRejectReturnUseCase;
@@ -94,6 +96,15 @@ public class ReturnController {
             @RequestBody ReturnTrackingRegisterDto requestDto) {
         UUID userUuid = UserUtil.getUserId();
         ReturnResponse response = registerReturnTrackingUseCase.execute(userUuid, returnRequestUuid, requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{returnRequestUuid}/seller-receive")
+    public ResponseEntity<ReturnResponse> receiveBySeller(
+            @PathVariable UUID returnRequestUuid
+    ) {
+        UUID sellerUuid = UserUtil.getUserId();
+        ReturnResponse response = sellerReceiveReturnUseCase.execute(sellerUuid, returnRequestUuid);
         return ResponseEntity.ok(response);
     }
 

@@ -33,8 +33,8 @@ public class FinalRejectReturnUseCase {
 
         validateSellerOwnership(sellerUuid, returnRequest);
 
-        if (returnRequest.getStatus() != ReturnStatus.RETURN_SHIPPED) {
-            throw new ReturnRequestStatusInvalidException(returnRequest.getStatus(), ReturnStatus.RETURN_SHIPPED.name());
+        if (returnRequest.getStatus() != ReturnStatus.RETURN_RECEIVED) {
+            throw new ReturnRequestStatusInvalidException(returnRequest.getStatus(), ReturnStatus.RETURN_RECEIVED.name());
         }
 
         returnRequest.rejectAfterShipment(rejectionReason);

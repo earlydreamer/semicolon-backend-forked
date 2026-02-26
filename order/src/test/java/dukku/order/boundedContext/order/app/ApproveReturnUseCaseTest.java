@@ -80,7 +80,7 @@ class ApproveReturnUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(sellerUuid, returnRequest.getUuid()))
                 .isInstanceOf(ReturnApprovalAccessDeniedException.class);
 
-        assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_SHIPPED);
+        assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_RECEIVED);
         verify(eventPublisher, never()).publish(any());
     }
 
@@ -122,7 +122,7 @@ class ApproveReturnUseCaseTest {
                 .order(order)
                 .userUuid(buyerUuid)
                 .reason("단순 변심")
-                .status(ReturnStatus.RETURN_SHIPPED)
+                .status(ReturnStatus.RETURN_RECEIVED)
                 .build();
 
         returnRequest.addReturnItem(ReturnItem.create(firstItem, 10_000));

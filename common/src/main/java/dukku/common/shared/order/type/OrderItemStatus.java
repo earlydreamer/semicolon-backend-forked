@@ -35,4 +35,9 @@ public enum OrderItemStatus {
                 || status == CANCEL_REQUESTED
                 || status == REFUND_REQUESTED;
     }
+
+    public static boolean isSellerActionAllowed(OrderItemStatus status) {
+        return status == PREPARING_SHIPMENT
+                || status == SHIPPED;
+    }
 }

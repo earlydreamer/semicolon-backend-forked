@@ -70,6 +70,9 @@ class ReturnRefundFlowIntegrationTest {
     private OrderEventListener orderEventListener;
 
     @Autowired
+    private SellerReceiveReturnUseCase sellerReceiveReturnUseCase;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
@@ -115,10 +118,14 @@ class ReturnRefundFlowIntegrationTest {
                         .trackingNumber("1234567890")
                         .build());
         assertThat(shipped.getStatus()).isEqualTo(ReturnStatus.RETURN_SHIPPED);
+        ReturnResponse received = sellerReceiveReturnUseCase.execute(
+                fixture.sellerUuid(),
+                requested.getReturnRequestUuid());
+        assertThat(received.getStatus()).isEqualTo(ReturnStatus.RETURN_RECEIVED);
 
         Order requestedOrder = orderRepository.findByUuidWithItems(fixture.orderUuid()).orElseThrow();
         assertThat(requestedOrder.getOrderItems()).hasSize(1);
-        assertThat(requestedOrder.getOrderItems().get(0).getStatus()).isEqualTo(OrderItemStatus.REFUND_REQUESTED);
+        assertThat(requestedOrder.getOrderItems().get(0).getStatus()).isEqualTo(OrderItemStatus.REFUND_IN_PROGRESS);
 
         ReturnResponse approved = approveReturnUseCase.execute(fixture.sellerUuid(), requested.getReturnRequestUuid());
         assertThat(approved.getStatus()).isEqualTo(ReturnStatus.RETURN_APPROVED);
@@ -182,9 +189,13 @@ class ReturnRefundFlowIntegrationTest {
                 requested.getReturnRequestUuid(),
                 ReturnTrackingRegisterDto.builder()
                         .carrierName("CJ")
-                        .carrierCode("04")
-                        .trackingNumber("1234567890")
-                        .build());
+                .carrierCode("04")
+                .trackingNumber("1234567890")
+                .build());
+        ReturnResponse received2 = sellerReceiveReturnUseCase.execute(
+                fixture.sellerUuid(),
+                requested.getReturnRequestUuid());
+        assertThat(received2.getStatus()).isEqualTo(ReturnStatus.RETURN_RECEIVED);
 
         ReturnResponse approved = approveReturnUseCase.execute(fixture.sellerUuid(), requested.getReturnRequestUuid());
         assertThat(approved.getStatus()).isEqualTo(ReturnStatus.RETURN_APPROVED);

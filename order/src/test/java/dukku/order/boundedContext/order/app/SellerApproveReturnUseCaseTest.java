@@ -45,6 +45,25 @@ class SellerApproveReturnUseCaseTest {
         useCase.execute(sellerUuid, returnRequest.getUuid());
 
         assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_SELLER_APPROVED);
+        assertThat(returnRequest.getReturnItems())
+                .extracting(item -> item.getOrderItem().getStatus())
+                .containsOnly(OrderItemStatus.REFUND_IN_PROGRESS);
+    }
+
+    @Test
+    @DisplayName("이미 판매자 승인 상태여도 재호출 시 주문 아이템 상태를 반품 진행중으로 보정한다")
+    void reconcileOrderItemStatusWhenAlreadySellerApproved() {
+        UUID sellerUuid = UUID.randomUUID();
+        ReturnRequest returnRequest = createReturnRequest(sellerUuid, ReturnStatus.RETURN_SELLER_APPROVED);
+
+        when(returnRequestRepository.findByUuid(returnRequest.getUuid())).thenReturn(Optional.of(returnRequest));
+
+        useCase.execute(sellerUuid, returnRequest.getUuid());
+
+        assertThat(returnRequest.getStatus()).isEqualTo(ReturnStatus.RETURN_SELLER_APPROVED);
+        assertThat(returnRequest.getReturnItems())
+                .extracting(item -> item.getOrderItem().getStatus())
+                .containsOnly(OrderItemStatus.REFUND_IN_PROGRESS);
     }
 
     @Test

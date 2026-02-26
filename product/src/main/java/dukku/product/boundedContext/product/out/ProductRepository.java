@@ -77,6 +77,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, Cust
     Page<Product> findBySellerUuidAndSaleStatusAndDeletedAtIsNull(
             UUID sellerUuid, SaleStatus saleStatus, Pageable pageable);
 
+    @Query("""
+            select pt.product.id, t.name
+            from ProductTag pt
+            join pt.tag t
+            where pt.product.id in :productIds
+            """)
+    List<Object[]> findTagNamesByProductIds(@Param("productIds") List<Integer> productIds);
+
     // 1. 카테고리별 조회 (Fallback용) - 인덱스 필수! (category_id)
     Page<Product> findByCategory_IdInAndVisibilityStatusAndDeletedAtIsNull(
             List<Integer> categoryIds,

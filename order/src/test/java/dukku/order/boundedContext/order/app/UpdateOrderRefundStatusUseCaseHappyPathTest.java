@@ -1,7 +1,6 @@
 package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.eventPublisher.EventPublisher;
-import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
 import dukku.common.shared.order.exception.OrderRefundAmountOutOfRangeException;
 import dukku.common.shared.order.exception.OrderRefundRequestInvalidException;
 import dukku.common.shared.order.type.OrderItemStatus;
@@ -12,7 +11,6 @@ import dukku.order.boundedContext.order.out.ReturnRequestRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,8 +42,8 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
     private UpdateOrderRefundStatusUseCase useCase;
 
     @Test
-    @DisplayName("전액 환불 시 환불 누적액이 갱신되고 상태가 CANCELED로 변경되며 판매 복구 이벤트를 발행한다")
-    void fullRefundPublishesSaleReleaseEvent() {
+    @DisplayName("전액 환불 시 환불 금액이 반영되고 주문 상태는 CANCELED가 된다")
+    void fullRefundUpdatesOrderAsCanceled() {
         // given: 전액 환불 이벤트와 PAID 상태 주문을 준비한다.
         UUID refundUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
@@ -61,17 +59,11 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
         verify(orderSupport).findOrderByUuidWithItems(orderUuid);
         assertThat(order.getRefundedAmount()).isEqualTo(12_000);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
-
-        ArgumentCaptor<OrderProductSaleReleasedEvent> eventCaptor =
-                ArgumentCaptor.forClass(OrderProductSaleReleasedEvent.class);
-        verify(eventPublisher).publish(eventCaptor.capture());
-        assertThat(eventCaptor.getValue().orderUuid()).isEqualTo(orderUuid);
-        assertThat(eventCaptor.getValue().productUuids())
-                .containsExactly(order.getOrderItems().get(0).getProductUuid());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
-    @DisplayName("부분 환불 시 환불 누적액이 갱신되고 상태가 PARTIAL_REFUNDED로 변경되며 판매 복구 이벤트는 발행되지 않는다")
+    @DisplayName("부분 환불 시 주문 상태는 PARTIAL_REFUNDED가 되고 판매 복구 이벤트는 발행되지 않는다")
     void partialRefundDoesNotPublishSaleReleaseEvent() {
         // given: 부분 환불 이벤트와 PAID 상태 주문을 준비한다.
         UUID refundUuid = UUID.randomUUID();
@@ -92,7 +84,7 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
     }
 
     @Test
-    @DisplayName("환불 금액이 int 범위를 초과하면 OrderRefundAmountOutOfRangeException이 발생한다")
+    @DisplayName("환불 금액이 int 범위를 넘으면 OrderRefundAmountOutOfRangeException이 발생한다")
     void refundAmountOverIntThrowsException() {
         // given: int 범위를 초과하는 환불 금액을 준비한다.
         UUID refundUuid = UUID.randomUUID();
@@ -116,7 +108,7 @@ class UpdateOrderRefundStatusUseCaseHappyPathTest {
     }
 
     @Test
-    @DisplayName("이미 처리된 환불 이벤트는 무시된다")
+    @DisplayName("이미 처리된 환불 이벤트는 무시한다")
     void duplicateRefundEventIsIgnored() {
         // given: 이미 처리된 환불 이벤트로 표시되도록 준비한다.
         UUID refundUuid = UUID.randomUUID();

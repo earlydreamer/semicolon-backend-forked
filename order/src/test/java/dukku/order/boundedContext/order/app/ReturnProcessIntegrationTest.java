@@ -67,6 +67,9 @@ class ReturnProcessIntegrationTest {
     private FinalRejectReturnUseCase finalRejectReturnUseCase;
 
     @Autowired
+    private SellerReceiveReturnUseCase sellerReceiveReturnUseCase;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
@@ -109,6 +112,11 @@ class ReturnProcessIntegrationTest {
                         .build());
         assertThat(shipped.getStatus()).isEqualTo(ReturnStatus.RETURN_SHIPPED);
         assertThat(shipped.getTrackingNumber()).isEqualTo("1234567890");
+
+        ReturnResponse received = sellerReceiveReturnUseCase.execute(
+                fixture.firstSellerUuid(),
+                requested.getReturnRequestUuid());
+        assertThat(received.getStatus()).isEqualTo(ReturnStatus.RETURN_RECEIVED);
 
         ReturnResponse finalApproved = approveReturnUseCase.execute(fixture.firstSellerUuid(), requested.getReturnRequestUuid());
         assertThat(finalApproved.getStatus()).isEqualTo(ReturnStatus.RETURN_APPROVED);
@@ -184,9 +192,14 @@ class ReturnProcessIntegrationTest {
                 requested.getReturnRequestUuid(),
                 ReturnTrackingRegisterDto.builder()
                         .carrierName("CJ대한통운")
-                        .carrierCode("04")
-                        .trackingNumber("9999999999")
-                        .build());
+                .carrierCode("04")
+                .trackingNumber("9999999999")
+                .build());
+
+        ReturnResponse received = sellerReceiveReturnUseCase.execute(
+                fixture.firstSellerUuid(),
+                requested.getReturnRequestUuid());
+        assertThat(received.getStatus()).isEqualTo(ReturnStatus.RETURN_RECEIVED);
 
         ReturnResponse rejected = finalRejectReturnUseCase.execute(
                 fixture.firstSellerUuid(),

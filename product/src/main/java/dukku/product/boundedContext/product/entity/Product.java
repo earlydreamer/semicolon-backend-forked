@@ -40,6 +40,14 @@ import java.util.stream.Collectors;
                 @Index(
                         name = "idx_products_cat_vis_sale_like",
                         columnList = "category_id, visibility_status, sale_status, like_count"
+                ),
+                @Index(
+                        name = "idx_products_seller_deleted_created",
+                        columnList = "seller_uuid, deleted_at, created_at"
+                ),
+                @Index(
+                        name = "idx_products_seller_sale_deleted_created",
+                        columnList = "seller_uuid, sale_status, deleted_at, created_at"
                 )
         }
 )
@@ -146,7 +154,7 @@ public class Product extends BaseIdAndUUIDAndTime {
                 // 동일 주문의 재요청은 멱등하게 통과
                 return;
             }
-            throw new ProductReservationConflictException("이미 다른 주문에서 예약 중인 상품입니다.");
+            throw new ProductReservationConflictException("이미 다른 주문에서 거래 중인 상품입니다.");
         }
 
         throw new ProductReservationConflictException("판매 완료된 상품은 예약할 수 없습니다.");

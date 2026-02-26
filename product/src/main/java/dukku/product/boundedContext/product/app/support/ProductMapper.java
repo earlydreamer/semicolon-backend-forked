@@ -13,6 +13,10 @@ import java.util.List;
 public class ProductMapper {
 
     public static ProductListItemResponse toListItem(Product p) {
+        return toListItem(p, p.getTagNames());
+    }
+
+    public static ProductListItemResponse toListItem(Product p, List<String> tagNames) {
         String thumb = p.getImages().stream().min(Comparator.comparingInt(ProductImage::getSortOrder))
                 .map(ProductImage::getImageUrl)
                 .orElse(null);
@@ -27,7 +31,7 @@ public class ProductMapper {
                 .likeCount(p.getLikeCount())
                 .viewCount(p.getViewCount())
                 .commentCount(p.getCommentCount())
-                .tagNames(p.getTagNames())
+                .tagNames(tagNames)
                 .build();
     }
 

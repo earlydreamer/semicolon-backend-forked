@@ -30,7 +30,9 @@ public class SellerReturnResponse {
     @Builder
     public static class ReturnItemSummary {
         private UUID orderItemUuid;  // 주문 아이템 UUID
+        private UUID productUuid;
         private String productName;  // 상품명
+        private String imageUrl;
         private int refundAmount;    // 환불 금액
     }
 }

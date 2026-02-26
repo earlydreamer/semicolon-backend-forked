@@ -38,7 +38,7 @@ class FinalRejectReturnUseCaseTest {
     @DisplayName("반품 발송 이후 판매자 최종 거절 시 거절 상태로 변경되고 아이템은 배송완료로 복구된다")
     void finalRejectSuccess() {
         UUID sellerUuid = UUID.randomUUID();
-        ReturnRequest returnRequest = createReturnRequest(sellerUuid, ReturnStatus.RETURN_SHIPPED, OrderItemStatus.REFUND_REQUESTED);
+        ReturnRequest returnRequest = createReturnRequest(sellerUuid, ReturnStatus.RETURN_RECEIVED, OrderItemStatus.REFUND_REQUESTED);
 
         when(returnRequestRepository.findByUuid(returnRequest.getUuid())).thenReturn(Optional.of(returnRequest));
 
@@ -75,7 +75,7 @@ class FinalRejectReturnUseCaseTest {
     @DisplayName("타 판매자 요청은 판매자 최종 거절을 처리할 수 없다")
     void failWhenSellerOwnershipInvalid() {
         UUID sellerUuid = UUID.randomUUID();
-        ReturnRequest returnRequest = createReturnRequest(UUID.randomUUID(), ReturnStatus.RETURN_SHIPPED, OrderItemStatus.REFUND_REQUESTED);
+        ReturnRequest returnRequest = createReturnRequest(UUID.randomUUID(), ReturnStatus.RETURN_RECEIVED, OrderItemStatus.REFUND_REQUESTED);
 
         when(returnRequestRepository.findByUuid(returnRequest.getUuid())).thenReturn(Optional.of(returnRequest));
 

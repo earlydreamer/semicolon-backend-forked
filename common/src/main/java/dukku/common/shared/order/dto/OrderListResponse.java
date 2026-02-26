@@ -3,6 +3,7 @@ package dukku.common.shared.order.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
+import dukku.common.shared.order.type.ReturnStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,11 +15,14 @@ import java.util.UUID;
 @Builder
 public class OrderListResponse {
     private UUID orderUuid;           // 주문 ID
+    private UUID returnRequestUuid;
+    private ReturnStatus returnStatus;
+    private String returnCarrierName;
+    private String returnTrackingNumber;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;  // 주문 날짜
     private OrderStatus status;       // 주문 전체 상태 (예: 결제완료)
     private int totalAmount;          // 총 결제 금액
-
     private List<SimpleOrderItemResponse> items;
 
     @Getter
