@@ -12,12 +12,15 @@ import dukku.product.boundedContext.product.entity.ProductUser;
 import dukku.product.boundedContext.product.out.ProductRepository;
 import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
+import dukku.product.boundedContext.product.out.SellerReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +32,7 @@ public class FindProductDetailUseCase {
     private final ProductStatsRedisSupport productStatsRedisSupport;
     private final ProductSellerRepository productSellerRepository;
     private final ProductUserRepository productUserRepository;
+    private final SellerReviewRepository sellerReviewRepository;
     private final UserApiClient userApiClient;
 
     @Transactional
@@ -63,10 +67,14 @@ public class FindProductDetailUseCase {
         log.info("[FindProductDetailUseCase] 상점 정보 조회 성공. sellerUserUuid={}", seller.getUserUuid());
 
         String nickname = resolveNicknameWithBackfill(seller.getUserUuid());
+        long reviewCountLong = sellerReviewRepository.countBySellerUuidAndDeletedAtIsNull(seller.getSellerUuid());
+        int reviewCount = Math.toIntExact(reviewCountLong);
+        BigDecimal averageRating = BigDecimal.valueOf(sellerReviewRepository.avgRating(seller.getSellerUuid()))
+                .setScale(2, RoundingMode.HALF_UP);
 
         log.info("[FindProductDetailUseCase] 최종 조회 완료. nickname={}", nickname);
 
-        return ProductMapper.toDetail(product, seller, nickname);
+        return ProductMapper.toDetail(product, seller, nickname, averageRating, reviewCount);
     }
 
     private String resolveNicknameWithBackfill(UUID userUuid) {
