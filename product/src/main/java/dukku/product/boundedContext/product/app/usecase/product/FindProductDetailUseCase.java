@@ -35,48 +35,65 @@ public class FindProductDetailUseCase {
     private final SellerReviewRepository sellerReviewRepository;
     private final UserApiClient userApiClient;
 
+    // 상품 상세 조회 + 통계 캐시 반영 + 응답 DTO 조립
     @Transactional
     public ProductDetailResponse execute(UUID productUuid) {
-        log.info("[FindProductDetailUseCase] 상품 상세 조회 시작. productUuid={}", productUuid);
+        log.info("[FindProductDetailUseCase] Find product detail. productUuid={}", productUuid);
 
         Product product = productRepository.findByUuidWithImagesAndCategory(productUuid)
                 .or(() -> {
-                    log.warn("[FindProductDetailUseCase] 패치 조인 조회 실패, 기본 조회로 재시도. productUuid={}", productUuid);
+                    log.warn("[FindProductDetailUseCase] fallback fetch by uuid. productUuid={}", productUuid);
                     return productRepository.findByUuid(productUuid);
                 })
                 .orElseThrow(() -> {
-                    log.error("[FindProductDetailUseCase] 상품을 찾을 수 없습니다. productUuid={}", productUuid);
+                    log.error("[FindProductDetailUseCase] product not found. productUuid={}", productUuid);
                     return new ProductNotFoundException();
                 });
 
-        log.info("[FindProductDetailUseCase] 상품 조회 성공. title={}, sellerUuid={}", product.getTitle(), product.getSellerUuid());
+        log.info("[FindProductDetailUseCase] found product. title={}, sellerUuid={}", product.getTitle(), product.getSellerUuid());
 
         productStatsRedisSupport.incrementView(product.getId());
+        Long redisViewCount = productStatsRedisSupport.getViewCount(product.getId());
+        Long redisLikeCount = productStatsRedisSupport.getLikeCount(product.getId());
 
-        // Product.sellerUuid는 seller UUID이므로 sellerUuid 기준으로 먼저 조회한다.
         ProductSeller seller = productSellerRepository.findBySellerUuid(product.getSellerUuid())
-                // 과거 데이터 호환: sellerUuid에 userUuid가 들어간 레코드도 허용
                 .or(() -> productSellerRepository.findByUserUuid(product.getSellerUuid()))
                 .orElseGet(() -> {
-                    // 상세 조회(GET)에서 DB write를 유발하지 않도록 비영속 기본값만 사용한다.
-                    log.warn("[FindProductDetailUseCase] 상점 정보 누락. 기본값으로 응답합니다. sellerUuid={}, productUuid={}",
+                    log.warn("[FindProductDetailUseCase] seller not found, fallback. sellerUuid={}, productUuid={}",
                             product.getSellerUuid(), productUuid);
-                    return ProductSeller.create(product.getSellerUuid(), "판매 중인 상점입니다.");
+                    return ProductSeller.create(product.getSellerUuid(), "default-nickname");
                 });
 
-        log.info("[FindProductDetailUseCase] 상점 정보 조회 성공. sellerUserUuid={}", seller.getUserUuid());
+        log.info("[FindProductDetailUseCase] seller found. sellerUserUuid={}", seller.getUserUuid());
 
+        // 판매자 닉네임 조회 실패 시 사용자 서비스 조회로 보강
         String nickname = resolveNicknameWithBackfill(seller.getUserUuid());
         long reviewCountLong = sellerReviewRepository.countBySellerUuidAndDeletedAtIsNull(seller.getSellerUuid());
         int reviewCount = Math.toIntExact(reviewCountLong);
         BigDecimal averageRating = BigDecimal.valueOf(sellerReviewRepository.avgRating(seller.getSellerUuid()))
                 .setScale(2, RoundingMode.HALF_UP);
 
-        log.info("[FindProductDetailUseCase] 최종 조회 완료. nickname={}", nickname);
+        int resolvedLikeCount = redisLikeCount == null
+                ? product.getLikeCount()
+                : redisLikeCount.intValue();
+        int resolvedViewCount = redisViewCount == null
+                ? product.getViewCount()
+                : redisViewCount.intValue();
 
-        return ProductMapper.toDetail(product, seller, nickname, averageRating, reviewCount);
+        log.info("[FindProductDetailUseCase] completed. nickname={}", nickname);
+
+        return ProductMapper.toDetail(
+                product,
+                seller,
+                nickname,
+                averageRating,
+                reviewCount,
+                resolvedLikeCount,
+                resolvedViewCount
+        );
     }
 
+    // 로컬 사용자 테이블에 닉네임이 없으면 사용자 API로 보강 조회
     private String resolveNicknameWithBackfill(UUID userUuid) {
         return productUserRepository.findById(userUuid)
                 .map(ProductUser::getNickname)
@@ -84,26 +101,27 @@ public class FindProductDetailUseCase {
                 .orElseGet(() -> fetchAndBackfillNickname(userUuid));
     }
 
+    // 사용자 API에서 닉네임 조회, 실패 시 기본값 반환
     private String fetchAndBackfillNickname(UUID userUuid) {
         try {
             UserProfileResponse profile = userApiClient.getUserProfile(userUuid);
             String nickname = profile == null ? null : profile.getNickname();
             if (!StringUtils.hasText(nickname)) {
-                return "이름없음";
+                return "anonymous";
             }
 
             if (!productUserRepository.existsById(userUuid)) {
                 try {
                     productUserRepository.save(ProductUser.create(userUuid, nickname));
                 } catch (Exception e) {
-                    log.warn("[FindProductDetailUseCase] ProductUser 보정 저장 실패. userUuid={}", userUuid, e);
+                    log.warn("[FindProductDetailUseCase] ProductUser save failed. userUuid={}", userUuid, e);
                 }
             }
 
             return nickname;
         } catch (Exception e) {
-            log.warn("[FindProductDetailUseCase] 사용자 프로필 조회 실패로 기본 닉네임 사용. userUuid={}", userUuid, e);
-            return "이름없음";
+            log.warn("[FindProductDetailUseCase] lookup user profile failed. userUuid={}", userUuid, e);
+            return "anonymous";
         }
     }
 }
