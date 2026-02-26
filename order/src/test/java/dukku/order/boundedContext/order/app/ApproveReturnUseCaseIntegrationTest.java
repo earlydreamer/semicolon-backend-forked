@@ -72,6 +72,7 @@ class ApproveReturnUseCaseIntegrationTest {
     void approvesWhenSellerOwnsAllItems() {
         UUID sellerUuid = UUID.randomUUID();
         ReturnRequest returnRequest = createReturnRequest(sellerUuid, sellerUuid);
+        returnRequest.markReceivedBySeller();
 
         useCase.execute(sellerUuid, returnRequest.getUuid());
 

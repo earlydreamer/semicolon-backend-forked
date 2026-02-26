@@ -13,7 +13,11 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -23,7 +27,7 @@ public class FindMyShopProductsUseCase {
         private final ProductSellerRepository productSellerRepository;
         private final ProductRepository productRepository;
 
-        @Transactional
+        @Transactional(readOnly = true)
         public ShopProductListResponse execute(UUID userUuid, SaleStatus saleStatus, int page, int size) {
 
                 Pageable pageable = PageRequest.of(
@@ -53,10 +57,32 @@ public class FindMyShopProductsUseCase {
                                                         saleStatus, pageable);
                 }
 
+                Map<Integer, List<String>> tagNamesByProductId = buildTagMap(result.getContent());
+
                 List<ProductListItemResponse> items = result.getContent().stream()
-                                .map(ProductMapper::toListItem)
+                                .map(product -> ProductMapper.toListItem(
+                                                product,
+                                                tagNamesByProductId.getOrDefault(product.getId(), Collections.emptyList())))
                                 .toList();
 
                 return ShopProductListResponse.from(result, items);
+        }
+
+        private Map<Integer, List<String>> buildTagMap(List<Product> products) {
+                if (products.isEmpty()) {
+                        return Collections.emptyMap();
+                }
+
+                List<Integer> productIds = products.stream()
+                                .map(Product::getId)
+                                .toList();
+
+                Map<Integer, List<String>> tagsByProductId = new HashMap<>();
+                for (Object[] row : productRepository.findTagNamesByProductIds(productIds)) {
+                        Integer productId = (Integer) row[0];
+                        String tagName = (String) row[1];
+                        tagsByProductId.computeIfAbsent(productId, ignored -> new ArrayList<>()).add(tagName);
+                }
+                return tagsByProductId;
         }
 }

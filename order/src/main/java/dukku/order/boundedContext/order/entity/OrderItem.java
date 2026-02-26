@@ -74,8 +74,9 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
         this.carrierName = request.getCarrierName();
         this.carrierCode = request.getCarrierCode();
         this.trackingNumber = request.getTrackingNumber();
-        this.status = OrderItemStatus.SHIPPED;
-        this.deliveryDate = LocalDateTime.now();
+        if (this.status == null || this.status == OrderItemStatus.PAYMENT_COMPLETED) {
+            this.status = OrderItemStatus.PREPARING_SHIPMENT;
+        }
     }
 
     public void updateOrderStatus(OrderItemStatus newStatus) {
@@ -84,6 +85,22 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
 
         validateStateTransition(newStatus);
         this.status = newStatus;
+        if (newStatus == OrderItemStatus.SHIPPED) {
+            this.deliveryDate = LocalDateTime.now();
+        }
+    }
+
+    public void forceUpdateOrderStatusForAdmin(OrderItemStatus newStatus) {
+        if (newStatus == null || this.status == newStatus) {
+            return;
+        }
+        this.status = newStatus;
+        if (newStatus == OrderItemStatus.SHIPPED) {
+            this.deliveryDate = LocalDateTime.now();
+        }
+        if (newStatus == OrderItemStatus.CONFIRMED && this.confirmedAt == null) {
+            this.confirmedAt = LocalDateTime.now();
+        }
     }
 
     private void validateStateTransition(OrderItemStatus newStatus) {
@@ -101,7 +118,7 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
             case CONFIRMED -> {
                 // 배송 완료 상태가 아니면 구매 확정 불가
                 if (this.status != OrderItemStatus.DELIVERED) {
-                    throw new ConflictException("배송이 완료된 상품만 구매 확정할 수 있습니다.");
+                    throw new ConflictException("배송 완료 상태인 상품만 구매 확정할 수 있습니다.");
                 }
 
                 this.confirmedAt = LocalDateTime.now();

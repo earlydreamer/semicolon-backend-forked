@@ -3,6 +3,7 @@ package dukku.order.boundedContext.order.app;
 import dukku.common.global.auth.detail.CustomUserDetails;
 import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.common.global.exception.ConflictException;
+import dukku.common.shared.order.event.OrderItemConfirmedEvent;
 import dukku.common.shared.order.event.OrderItemCanceledEvent;
 import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
 import dukku.common.shared.order.exception.OrderAccessDeniedException;
@@ -53,7 +54,7 @@ class UpdateOrderItemStatusUseCaseTest {
     }
 
     @Test
-    @DisplayName("owner가 아닌 사용자는 상태 변경할 수 없다")
+    @DisplayName("Owner cannot modify other users order item status")
     void failWhenNotOwner() {
         UUID orderItemUuid = UUID.randomUUID();
         OrderItem orderItem = createOrderItem(orderItemUuid, UUID.randomUUID(), OrderItemStatus.DELIVERED);
@@ -68,7 +69,7 @@ class UpdateOrderItemStatusUseCaseTest {
     }
 
     @Test
-    @DisplayName("일반 사용자가 허용되지 않은 상태를 요청하면 실패한다")
+    @DisplayName("Requesting a forbidden user status should fail")
     void failWhenUserRequestsDisallowedStatus() {
         UUID userUuid = UUID.randomUUID();
         UUID orderItemUuid = UUID.randomUUID();
@@ -83,8 +84,25 @@ class UpdateOrderItemStatusUseCaseTest {
         verifyNoInteractions(eventPublisher);
     }
 
+
     @Test
-    @DisplayName("배송 시작 전 CANCEL_REQUESTED는 즉시 CANCELED로 전환되고 취소 이벤트를 발행한다")
+    @DisplayName("Confirm from delivered status")
+    void confirmFromDelivered() {
+        UUID userUuid = UUID.randomUUID();
+        UUID orderItemUuid = UUID.randomUUID();
+        OrderItem orderItem = createOrderItem(orderItemUuid, userUuid, OrderItemStatus.DELIVERED);
+
+        authenticate(userUuid, "USER");
+        when(orderItemRepository.findByUuid(orderItemUuid)).thenReturn(Optional.of(orderItem));
+
+        useCase.execute(orderItemUuid, OrderItemStatus.CONFIRMED);
+
+        assertThat(orderItem.getStatus()).isEqualTo(OrderItemStatus.CONFIRMED);
+        verify(eventPublisher).publish(any(OrderItemConfirmedEvent.class));
+    }
+
+    @Test
+    @DisplayName("Cancelled before shipment request should be immediately canceled")
     void cancelRequestedBeforeShipmentIsAppliedAsCanceled() {
         UUID userUuid = UUID.randomUUID();
         UUID orderItemUuid = UUID.randomUUID();
@@ -101,8 +119,8 @@ class UpdateOrderItemStatusUseCaseTest {
         verify(eventPublisher).publish(any(OrderProductSaleReleasedEvent.class));
     }
 
+    @DisplayName("Some items canceled should not cancel whole order")
     @Test
-    @DisplayName("여러 상품 중 일부만 취소되면 주문 상태는 유지된다")
     void keepOrderStatusWhenOnlySomeItemsCanceled() {
         UUID userUuid = UUID.randomUUID();
         UUID targetOrderItemUuid = UUID.randomUUID();
@@ -112,7 +130,7 @@ class UpdateOrderItemStatusUseCaseTest {
                 .uuid(UUID.randomUUID())
                 .productUuid(UUID.randomUUID())
                 .sellerUuid(UUID.randomUUID())
-                .productName("추가 상품")
+                .productName("additional item")
                 .productPrice(20_000)
                 .status(OrderItemStatus.PAYMENT_COMPLETED)
                 .build();
@@ -131,7 +149,7 @@ class UpdateOrderItemStatusUseCaseTest {
     }
 
     @Test
-    @DisplayName("배송 시작 후 CANCEL_REQUESTED는 즉시 취소 시도되어 충돌 예외가 발생한다")
+    @DisplayName("Cancellation request after shipment is finished should fail with conflict")
     void cancelRequestedAfterShipmentFailsWithConflict() {
         UUID userUuid = UUID.randomUUID();
         UUID orderItemUuid = UUID.randomUUID();
@@ -166,8 +184,8 @@ class UpdateOrderItemStatusUseCaseTest {
                 .userUuid(userUuid)
                 .status(OrderStatus.PAID)
                 .totalAmount(10_000)
-                .address("서울")
-                .recipient("구매자")
+                .address("sample-address")
+                .recipient("recipient")
                 .contactNumber("010-0000-0000")
                 .refundedAmount(0)
                 .build();
@@ -176,7 +194,7 @@ class UpdateOrderItemStatusUseCaseTest {
                 .uuid(orderItemUuid)
                 .productUuid(UUID.randomUUID())
                 .sellerUuid(UUID.randomUUID())
-                .productName("테스트 상품")
+                .productName("sample-item")
                 .productPrice(10_000)
                 .status(currentStatus)
                 .build();
