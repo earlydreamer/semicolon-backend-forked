@@ -35,7 +35,7 @@ public class DecreaseDepositUseCase {
      */
     @Transactional
     public void decrease(UUID userUuid, Long amount, DepositHistoryType type, UUID orderItemUuid) {
-        Deposit deposit = findDepositUseCase.findOrCreate(userUuid);
+        Deposit deposit = findDepositUseCase.findOrCreateForUpdate(userUuid);
         deposit.subtractBalance(amount);
 
         DepositHistory history = DepositHistory.create(

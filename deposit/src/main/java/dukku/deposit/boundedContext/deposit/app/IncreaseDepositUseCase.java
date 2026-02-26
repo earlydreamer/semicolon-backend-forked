@@ -30,7 +30,7 @@ public class IncreaseDepositUseCase {
      */
     @Transactional
     public void increase(UUID userUuid, Long amount, DepositHistoryType type, UUID orderItemUuid) {
-        Deposit deposit = findDepositUseCase.findOrCreate(userUuid);
+        Deposit deposit = findDepositUseCase.findOrCreateForUpdate(userUuid);
         deposit.addBalance(amount);
 
         DepositHistory history = DepositHistory.create(

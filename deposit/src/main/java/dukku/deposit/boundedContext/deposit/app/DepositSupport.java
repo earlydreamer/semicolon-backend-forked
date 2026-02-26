@@ -26,6 +26,10 @@ public class DepositSupport {
         return depositRepository.findByUserUuid(userUuid);
     }
 
+    public Optional<Deposit> findByUserUuidForUpdate(UUID userUuid) {
+        return depositRepository.findByUserUuidForUpdate(userUuid);
+    }
+
     public Optional<Deposit> findByDepositUuid(UUID depositUuid) {
         return depositRepository.findByDepositUuid(depositUuid);
     }
