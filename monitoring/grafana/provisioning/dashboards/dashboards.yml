@@ -47,28 +47,6 @@ providers:
       path: /var/lib/grafana/dashboards/deposit
       foldersFromFilesStructure: false
 
-  - name: 'User'
-    orgId: 1
-    folder: 'User'
-    type: file
-    disableDeletion: false
-    updateIntervalSeconds: 30
-    allowUiUpdates: true
-    options:
-      path: /var/lib/grafana/dashboards/user
-      foldersFromFilesStructure: false
-
-  - name: 'Payment'
-    orgId: 1
-    folder: 'Payment'
-    type: file
-    disableDeletion: false
-    updateIntervalSeconds: 30
-    allowUiUpdates: true
-    options:
-      path: /var/lib/grafana/dashboards/payment
-      foldersFromFilesStructure: false
-
   - name: 'Infrastructure'
     orgId: 1
     folder: 'Infrastructure'
@@ -78,15 +56,4 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards/infra
-      foldersFromFilesStructure: false
-
-  - name: 'Logs'
-    orgId: 1
-    folder: 'Logs'
-    type: file
-    disableDeletion: false
-    updateIntervalSeconds: 30
-    allowUiUpdates: true
-    options:
-      path: /var/lib/grafana/dashboards/logs
       foldersFromFilesStructure: false
