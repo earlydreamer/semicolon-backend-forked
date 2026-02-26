@@ -222,6 +222,14 @@ spec:
                 port:
                   number: 80
 
+          - path: /api/v1/admin/categories
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+
           - path: /api/v1/admin/orders
             pathType: Prefix
             backend:
