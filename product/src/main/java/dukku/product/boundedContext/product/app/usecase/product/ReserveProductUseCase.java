@@ -2,8 +2,10 @@ package dukku.product.boundedContext.product.app.usecase.product;
 
 import dukku.common.shared.product.dto.product.ProductReserveRequest;
 import dukku.common.shared.product.exception.PartialProductsNotFoundException;
+import dukku.common.global.eventPublisher.EventPublisher;
 import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.out.ProductRepository;
+import dukku.product.global.event.ProductUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReserveProductUseCase {
     private final ProductRepository productRepository;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public void execute(ProductReserveRequest request) {
@@ -33,6 +36,7 @@ public class ReserveProductUseCase {
         // TODO: 이미 판매 또는 예약된 경우라면?
         for (Product product : products) {
             product.reserve(request.orderUuid());
+            eventPublisher.publish(new ProductUpdatedEvent(product.getId(), false));
         }
     }
 }
