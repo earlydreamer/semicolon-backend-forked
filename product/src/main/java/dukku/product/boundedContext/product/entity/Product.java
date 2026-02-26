@@ -255,6 +255,7 @@ public class Product extends BaseIdAndUUIDAndTime {
 
     public void suspend() {
         this.visibilityStatus = VisibilityStatus.BLOCKED;
+        this.saleStatus = SaleStatus.BLOCKED;
     }
 
     public void replaceImages(List<String> newImageUrls) {
