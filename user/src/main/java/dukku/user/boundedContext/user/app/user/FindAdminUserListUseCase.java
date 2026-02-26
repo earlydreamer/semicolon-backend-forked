@@ -17,6 +17,7 @@ public class FindAdminUserListUseCase {
     private final UserRepository userRepository;
 
     public Page<User> execute(String keyword, UserStatus status, Pageable pageable) {
-        return userRepository.searchUsers(keyword, status, pageable);
+        String searchKeyword = (keyword == null || keyword.trim().isEmpty()) ? "" : "%" + keyword.trim() + "%";
+        return userRepository.searchUsers(searchKeyword, status, pageable);
     }
 }
