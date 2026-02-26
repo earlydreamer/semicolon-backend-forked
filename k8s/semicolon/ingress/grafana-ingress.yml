@@ -10,10 +10,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - grafana.dukku.shop
-      secretName: grafana-dukku-shop-tls
+        - grafana.api.dukku.shop
+      secretName: grafana-api-dukku-shop-tls
   rules:
-    - host: grafana.dukku.shop
+    - host: grafana.api.dukku.shop
       http:
         paths:
           - path: /
