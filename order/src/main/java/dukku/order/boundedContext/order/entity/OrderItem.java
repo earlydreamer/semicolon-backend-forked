@@ -74,8 +74,9 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
         this.carrierName = request.getCarrierName();
         this.carrierCode = request.getCarrierCode();
         this.trackingNumber = request.getTrackingNumber();
-        this.status = OrderItemStatus.SHIPPED;
-        this.deliveryDate = LocalDateTime.now();
+        if (this.status == null || this.status == OrderItemStatus.PAYMENT_COMPLETED) {
+            this.status = OrderItemStatus.PREPARING_SHIPMENT;
+        }
     }
 
     public void updateOrderStatus(OrderItemStatus newStatus) {
@@ -84,6 +85,22 @@ public class OrderItem extends BaseIdAndUUIDAndTime {
 
         validateStateTransition(newStatus);
         this.status = newStatus;
+        if (newStatus == OrderItemStatus.SHIPPED) {
+            this.deliveryDate = LocalDateTime.now();
+        }
+    }
+
+    public void forceUpdateOrderStatusForAdmin(OrderItemStatus newStatus) {
+        if (newStatus == null || this.status == newStatus) {
+            return;
+        }
+        this.status = newStatus;
+        if (newStatus == OrderItemStatus.SHIPPED) {
+            this.deliveryDate = LocalDateTime.now();
+        }
+        if (newStatus == OrderItemStatus.CONFIRMED && this.confirmedAt == null) {
+            this.confirmedAt = LocalDateTime.now();
+        }
     }
 
     private void validateStateTransition(OrderItemStatus newStatus) {
