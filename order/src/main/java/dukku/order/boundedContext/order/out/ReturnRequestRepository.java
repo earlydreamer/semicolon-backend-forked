@@ -29,6 +29,18 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Lo
     @EntityGraph(attributePaths = {"returnItems", "returnItems.orderItem"})
     List<ReturnRequest> findByOrderUuid(UUID orderUuid);
 
+    @Query("""
+            SELECT rr FROM ReturnRequest rr
+            JOIN FETCH rr.order o
+            WHERE rr.userUuid = :userUuid
+              AND o.uuid IN :orderUuids
+            ORDER BY rr.createdAt DESC
+            """)
+    List<ReturnRequest> findAllByUserUuidAndOrderUuidInOrderByCreatedAtDesc(
+            @Param("userUuid") UUID userUuid,
+            @Param("orderUuids") List<UUID> orderUuids
+    );
+
     /**
      * 판매자 UUID 기준으로 본인 상품에 접수된 반품 요청 목록을 최신순으로 조회한다.
      */

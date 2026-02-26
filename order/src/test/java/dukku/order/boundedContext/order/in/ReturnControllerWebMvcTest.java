@@ -12,6 +12,7 @@ import dukku.order.boundedContext.order.app.FinalRejectReturnUseCase;
 import dukku.order.boundedContext.order.app.RegisterReturnTrackingUseCase;
 import dukku.order.boundedContext.order.app.RequestReturnUseCase;
 import dukku.order.boundedContext.order.app.SellerApproveReturnUseCase;
+import dukku.order.boundedContext.order.app.SellerReceiveReturnUseCase;
 import dukku.order.boundedContext.order.app.SellerRejectReturnUseCase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,9 @@ class ReturnControllerWebMvcTest {
 
     @Mock
     private SellerApproveReturnUseCase sellerApproveReturnUseCase;
+
+    @Mock
+    private SellerReceiveReturnUseCase sellerReceiveReturnUseCase;
 
     @Mock
     private SellerRejectReturnUseCase sellerRejectReturnUseCase;
@@ -160,6 +164,21 @@ class ReturnControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("판매자 수령 확인 API는 판매자 UUID를 유즈케이스로 전달한다")
+    void sellerReceiveApi() throws Exception {
+        UUID returnRequestUuid = UUID.randomUUID();
+
+        when(sellerReceiveReturnUseCase.execute(eq(userUuid), eq(returnRequestUuid)))
+                .thenReturn(response(returnRequestUuid, UUID.randomUUID(), ReturnStatus.RETURN_RECEIVED));
+
+        mockMvc.perform(post("/api/v1/returns/{returnRequestUuid}/seller-receive", returnRequestUuid))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(ReturnStatus.RETURN_RECEIVED.name()));
+
+        verify(sellerReceiveReturnUseCase).execute(eq(userUuid), eq(returnRequestUuid));
+    }
+
+    @Test
     @DisplayName("최종 승인 API는 판매자 UUID를 유스케이스로 전달한다")
     void finalApproveApi() throws Exception {
         UUID returnRequestUuid = UUID.randomUUID();
@@ -191,6 +210,7 @@ class ReturnControllerWebMvcTest {
 
         verify(finalRejectReturnUseCase).execute(eq(userUuid), eq(returnRequestUuid), eq(rejectReason));
     }
+
 
     private ReturnResponse response(UUID returnRequestUuid, UUID orderUuid, ReturnStatus status) {
         return ReturnResponse.builder()

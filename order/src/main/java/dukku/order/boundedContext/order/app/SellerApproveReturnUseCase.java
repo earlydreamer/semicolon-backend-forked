@@ -4,6 +4,7 @@ import dukku.common.shared.order.dto.ReturnResponse;
 import dukku.common.shared.order.exception.ReturnApprovalAccessDeniedException;
 import dukku.common.shared.order.exception.ReturnRequestNotFoundException;
 import dukku.common.shared.order.exception.ReturnRequestStatusInvalidException;
+import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.ReturnStatus;
 import dukku.order.boundedContext.order.entity.ReturnRequest;
 import dukku.order.boundedContext.order.out.ReturnRequestRepository;
@@ -32,11 +33,16 @@ public class SellerApproveReturnUseCase {
 
         validateSellerOwnership(sellerUuid, returnRequest);
 
-        if (returnRequest.getStatus() != ReturnStatus.RETURN_REQUESTED) {
+        if (returnRequest.getStatus() != ReturnStatus.RETURN_REQUESTED
+                && returnRequest.getStatus() != ReturnStatus.RETURN_SELLER_APPROVED) {
             throw new ReturnRequestStatusInvalidException(returnRequest.getStatus(), ReturnStatus.RETURN_REQUESTED.name());
         }
 
-        returnRequest.approveBySeller();
+        if (returnRequest.getStatus() == ReturnStatus.RETURN_REQUESTED) {
+            returnRequest.approveBySeller();
+        }
+        returnRequest.getReturnItems()
+                .forEach(item -> item.getOrderItem().updateOrderStatus(OrderItemStatus.REFUND_IN_PROGRESS));
         return returnRequest.toResponse();
     }
 
