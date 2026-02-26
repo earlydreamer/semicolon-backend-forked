@@ -17,6 +17,7 @@ public class UserResponse {
     private UUID userUuid;
     private String email;
     private String nickname;
+    private String intro;
     private Role role;
     private UserStatus status;
     private String statusLabel;
