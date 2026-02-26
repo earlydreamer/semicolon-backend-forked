@@ -15,6 +15,6 @@ public class FindOrderByUuidUseCase {
 
     @Transactional(readOnly = true)
     public Order execute(UUID orderUuid) {
-        return orderSupport.findOrderByUuid(orderUuid);
+        return orderSupport.findOrderByUuidWithItems(orderUuid);
     }
 }

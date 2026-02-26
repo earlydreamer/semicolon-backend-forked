@@ -119,6 +119,7 @@ spring:
     redis:
       host: ${REDIS_HOST:redis}
 
+custom:
   global:
     internalBackUrl: ${INTERNAL_BACK_URL:http://auth:8081}
   client:

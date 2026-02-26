@@ -53,6 +53,13 @@ public class OrderApiClient {
                 .body(OrderResponse.class);
     }
 
+    public void expireOrder(UUID orderUuid) {
+        restClient.post()
+                .uri("/{orderUuid}/expire", orderUuid)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
     // 특정 사용자의 주문 이력 조회 (AI 추천용)
     public List<OrderListResponse> findOrdersByUserUuid(UUID userUuid, String status, int limit) {
         return restClient.get()

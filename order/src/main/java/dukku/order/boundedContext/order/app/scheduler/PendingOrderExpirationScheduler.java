@@ -27,11 +27,15 @@ public class PendingOrderExpirationScheduler {
     @Scheduled(cron = "${order.pending-expiration.cron:0 */5 * * * *}")
     // 만료 기준을 지난 PENDING 주문을 실패 처리해 예약 상품을 해제한다.
     public void expirePendingOrders() {
+        expirePendingOrdersNow();
+    }
+
+    public int expirePendingOrdersNow() {
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(pendingExpirationMinutes);
         List<Order> expiredPendingOrders = orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING, cutoff);
 
         if (expiredPendingOrders.isEmpty()) {
-            return;
+            return 0;
         }
 
         log.info("[PendingOrderExpiration] expiring {} orders. cutoff={}", expiredPendingOrders.size(), cutoff);
@@ -43,5 +47,7 @@ public class PendingOrderExpirationScheduler {
                 log.error("[PendingOrderExpiration] failed to expire orderUuid={}", order.getUuid(), e);
             }
         }
+
+        return expiredPendingOrders.size();
     }
 }

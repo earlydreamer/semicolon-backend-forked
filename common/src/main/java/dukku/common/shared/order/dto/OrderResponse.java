@@ -3,8 +3,10 @@ package dukku.common.shared.order.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import dukku.common.shared.order.type.OrderItemStatus;
 import dukku.common.shared.order.type.OrderStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.UUID;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderResponse {
     private UUID orderUuid; // 주문 UUID
     private UUID userUuid; // 구매자 UUID
@@ -27,6 +31,8 @@ public class OrderResponse {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class OrderItemResponse {
         private UUID orderItemUuid; // 주문 상품 UUID
         private UUID productUuid;   // 상품 UUID
