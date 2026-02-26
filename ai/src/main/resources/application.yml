@@ -10,14 +10,6 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
-ai:
-  init:
-    enabled: ${AI_INIT_ENABLED:true}
-
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ai_service}?sslmode=${DB_SSLMODE:disable}
-    driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -46,6 +38,9 @@ ai:
         repository:
           jdbc:
             initialize-schema: always
+ai:
+  init:
+    enabled: ${AI_INIT_ENABLED:true}
 
 management:
   endpoints:
