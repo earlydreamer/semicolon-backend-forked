@@ -171,18 +171,6 @@ public class AiInitData {
         }
     }
 
-    private boolean isVectorTypeAvailable() {
-        try {
-            Integer exists = jdbcTemplate.queryForObject(
-                    "SELECT 1 FROM pg_type WHERE typname = 'vector' LIMIT 1",
-                    Integer.class
-            );
-            return exists != null && exists == 1;
-        } catch (Exception e) {
-            log.warn("[AiInitData] vector 타입 확인 실패 (무시): {}", e.getMessage());
-            return false;
-        }
-    }
 
     private void initMemories() {
         if (aiUserMemoryRepository.count() > 0) {
