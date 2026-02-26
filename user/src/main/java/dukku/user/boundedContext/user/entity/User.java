@@ -39,6 +39,9 @@ public class User extends SourceUser {
     @Column(name = "withdrawal_nickname_backup", length = 100, comment = "탈퇴 시 백업된 닉네임(암호화)")
     private String withdrawalNicknameBackup;
 
+    @Column(length = 1000, comment = "유저 소개")
+    private String intro;
+
     @OneToMany(mappedBy = "user")
     private List<Address> addresses = new ArrayList<>();
 
@@ -54,6 +57,7 @@ public class User extends SourceUser {
 
     public void updateUser(UserUpdateRequest req) {
         this.setNickname(req.getName());
+        this.intro = req.getIntro();
     }
 
     public void updateRole(Role role) {
@@ -115,6 +119,7 @@ public class User extends SourceUser {
                 user.getUuid(),
                 user.getEmail(),
                 user.getNickname(),
+                user.getIntro(),
                 user.getRole(),
                 user.getStatus(),
                 user.getStatus().getLabel(),
