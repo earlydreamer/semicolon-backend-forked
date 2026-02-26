@@ -55,6 +55,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 25
+          cache: 'gradle'
 
       - name: Create docker-compose.ci.yml
         run: |
