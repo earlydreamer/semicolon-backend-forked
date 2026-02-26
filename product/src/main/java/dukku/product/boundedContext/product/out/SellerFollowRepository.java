@@ -20,10 +20,15 @@ public interface SellerFollowRepository extends JpaRepository<SellerFollow, Inte
     @Query("""
                 select new dukku.common.shared.product.dto.follow.FollowedSellerCardResponse(
                     sf.sellerUuid,
+                    ps.uuid,
                     pu.nickname,
                     ps.intro,
-                    ps.averageRating,
-                    ps.reviewCount,
+                    (select coalesce(avg(sr.rating), 0)
+                     from SellerReview sr
+                     where sr.sellerUuid = ps.sellerUuid and sr.deletedAt is null),
+                    (select count(sr2)
+                     from SellerReview sr2
+                     where sr2.sellerUuid = ps.sellerUuid and sr2.deletedAt is null),
                     (select count(sf2) from SellerFollow sf2 where sf2.sellerUuid = ps.sellerUuid),
                     true
                 )

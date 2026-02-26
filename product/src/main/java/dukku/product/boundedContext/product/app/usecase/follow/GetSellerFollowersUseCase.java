@@ -1,9 +1,9 @@
 package dukku.product.boundedContext.product.app.usecase.follow;
 
-import dukku.product.boundedContext.product.out.ProductSellerRepository;
-import dukku.product.boundedContext.product.out.SellerFollowRepository;
 import dukku.common.shared.product.dto.follow.FollowerUserCardResponse;
 import dukku.common.shared.product.exception.ProductSellerNotFoundException;
+import dukku.product.boundedContext.product.out.ProductSellerRepository;
+import dukku.product.boundedContext.product.out.SellerFollowRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +20,7 @@ public class GetSellerFollowersUseCase {
 
     @Transactional(readOnly = true)
     public List<FollowerUserCardResponse> execute(UUID sellerUuid) {
-        // 판매자 존재 검증(없으면 404)
-        productSellerRepository.findByUserUuid(sellerUuid)
+        productSellerRepository.findBySellerUuid(sellerUuid)
                 .orElseThrow(ProductSellerNotFoundException::new);
 
         return sellerFollowRepository.findFollowerUserCards(sellerUuid);

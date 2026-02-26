@@ -48,6 +48,7 @@ public class ProductDetailResponse {
     @Getter
     @Builder
     public static class Seller {
+        private UUID shopUuid;
         private UUID sellerUuid;
         private String nickname;
         private BigDecimal averageRating;

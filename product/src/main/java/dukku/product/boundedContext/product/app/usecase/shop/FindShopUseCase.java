@@ -8,12 +8,15 @@ import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.product.boundedContext.product.entity.ProductUser;
 import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
+import dukku.product.boundedContext.product.out.SellerReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Slf4j
@@ -23,6 +26,7 @@ public class FindShopUseCase {
 
     private final ProductSellerRepository productSellerRepository;
     private final ProductUserRepository productUserRepository;
+    private final SellerReviewRepository sellerReviewRepository;
     private final UserApiClient userApiClient;
 
     @Transactional
@@ -31,8 +35,21 @@ public class FindShopUseCase {
                 .orElseThrow(ProductSellerNotFoundException::new);
 
         String nickname = resolveNicknameWithBackfill(seller.getUserUuid());
+        long reviewCountLong = sellerReviewRepository.countBySellerUuidAndDeletedAtIsNull(seller.getSellerUuid());
+        int reviewCount = Math.toIntExact(reviewCountLong);
+        BigDecimal averageRating = BigDecimal.valueOf(sellerReviewRepository.avgRating(seller.getSellerUuid()))
+                .setScale(2, RoundingMode.HALF_UP);
 
-        return ProductSeller.from(seller, nickname);
+        return ShopResponse.builder()
+                .shopUuid(seller.getUuid())
+                .sellerUuid(seller.getSellerUuid())
+                .nickname(nickname)
+                .intro(seller.getIntro())
+                .salesCount(seller.getSalesCount())
+                .activeListingCount(seller.getActiveListingCount())
+                .averageRating(averageRating)
+                .reviewCount(reviewCount)
+                .build();
     }
 
     private String resolveNicknameWithBackfill(UUID userUuid) {

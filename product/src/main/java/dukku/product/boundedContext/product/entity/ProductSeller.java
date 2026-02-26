@@ -76,6 +76,7 @@ public class ProductSeller extends BaseIdAndUUIDAndTime {
     public static ShopResponse from(ProductSeller seller, String nickname) {
         return ShopResponse.builder()
                 .shopUuid(seller.getUuid())
+                .sellerUuid(seller.getSellerUuid())
                 .nickname(nickname)
                 .intro(seller.getIntro())
                 .salesCount(seller.getSalesCount())

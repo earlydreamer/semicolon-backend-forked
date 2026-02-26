@@ -6,6 +6,7 @@ import dukku.product.boundedContext.product.entity.Product;
 import dukku.product.boundedContext.product.entity.ProductImage;
 import dukku.product.boundedContext.product.entity.ProductSeller;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 
@@ -35,10 +36,27 @@ public class ProductMapper {
     }
 
     public static ProductDetailResponse toDetail(Product p, ProductSeller seller, String nickname) {
+        return toDetail(p, seller, nickname, null, null);
+    }
+
+    public static ProductDetailResponse toDetail(
+            Product p,
+            ProductSeller seller,
+            String nickname,
+            BigDecimal averageRating,
+            Integer reviewCount
+    ) {
         List<String> imageUrls = p.getImages().stream()
                 .sorted(Comparator.comparingInt(ProductImage::getSortOrder))
                 .map(ProductImage::getImageUrl)
                 .toList();
+
+        BigDecimal resolvedAverageRating = averageRating != null
+                ? averageRating
+                : seller == null ? null : seller.getAverageRating();
+        int resolvedReviewCount = reviewCount != null
+                ? reviewCount
+                : seller == null ? 0 : seller.getReviewCount();
 
         return ProductDetailResponse.builder()
                 .productId(p.getId())
@@ -60,10 +78,11 @@ public class ProductMapper {
                         .depth(p.getCategory().getDepth())
                         .build())
                 .seller(seller == null ? null : ProductDetailResponse.Seller.builder()
-                        .sellerUuid(seller.getUserUuid())
+                        .shopUuid(seller.getUuid())
+                        .sellerUuid(seller.getSellerUuid())
                         .nickname(nickname)
-                        .averageRating(seller.getAverageRating())
-                        .reviewCount(seller.getReviewCount())
+                        .averageRating(resolvedAverageRating)
+                        .reviewCount(resolvedReviewCount)
                         .build())
                 .createdAt(p.getCreatedAt())
                 .tagNames(p.getTagNames())
