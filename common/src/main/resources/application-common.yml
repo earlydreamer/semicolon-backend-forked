@@ -121,21 +121,21 @@ spring:
 
 custom:
   global:
-    internalBackUrl: ${INTERNAL_BACK_URL:http://auth:8081}
+    internalBackUrl: ${INTERNAL_BACK_URL:http://auth-service}
   client:
     user:
-      url: ${CUSTOM_CLIENT_USER_URL:http://user:8082}
+      url: ${CUSTOM_CLIENT_USER_URL:http://user-service}
     product:
-      url: ${CUSTOM_CLIENT_PRODUCT_URL:http://product:8083}
+      url: ${CUSTOM_CLIENT_PRODUCT_URL:http://product-service}
     settlement:
-      url: ${CUSTOM_CLIENT_SETTLEMENT_URL:http://settlement:8088}
+      url: ${CUSTOM_CLIENT_SETTLEMENT_URL:http://settlement-service}
     order:
-      url: ${CUSTOM_CLIENT_ORDER_URL:http://order:8084}
+      url: ${CUSTOM_CLIENT_ORDER_URL:http://order-service}
     payment:
-      url: ${CUSTOM_CLIENT_PAYMENT_URL:http://payment:8086}
+      url: ${CUSTOM_CLIENT_PAYMENT_URL:http://payment-service}
     coupon:
-      url: ${CUSTOM_CLIENT_COUPON_URL:http://coupon:8085}
+      url: ${CUSTOM_CLIENT_COUPON_URL:http://coupon-service}
     deposit:
-      url: ${CUSTOM_CLIENT_DEPOSIT_URL:http://deposit:8087}
+      url: ${CUSTOM_CLIENT_DEPOSIT_URL:http://deposit-service}
     ai:
-      url: ${CUSTOM_CLIENT_AI_URL:http://ai:8089}
+      url: ${CUSTOM_CLIENT_AI_URL:http://ai-service}
