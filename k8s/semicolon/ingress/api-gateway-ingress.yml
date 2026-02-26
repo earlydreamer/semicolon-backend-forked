@@ -27,6 +27,14 @@ spec:
                 port:
                   number: 80
 
+          - path: /api/v1/admin/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+
           # Social Login callback paths (Spring Security OAuth2)
           - path: /oauth2/
             pathType: Prefix
