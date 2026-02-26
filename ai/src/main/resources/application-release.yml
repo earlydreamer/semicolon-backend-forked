@@ -1,3 +1,7 @@
+ai:
+  init:
+    enabled: ${AI_INIT_ENABLED:true}
+
 spring:
   datasource:
     username: ${DB_USERNAME}
