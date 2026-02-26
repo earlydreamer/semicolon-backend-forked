@@ -3,6 +3,7 @@ package dukku.deposit.boundedContext.deposit.app;
 import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -33,5 +34,23 @@ public class FindDepositUseCase {
                     Deposit newDeposit = Deposit.create(userUuid);
                     return depositSupport.save(newDeposit);
                 });
+    }
+
+    /**
+     * 예치금 조회/생성 + 쓰기 잠금 획득.
+     */
+    @Transactional
+    public Deposit findOrCreateForUpdate(UUID userUuid) {
+        return depositSupport.findByUserUuidForUpdate(userUuid)
+                .orElseGet(() -> createAndRefetchWithLock(userUuid));
+    }
+
+    private Deposit createAndRefetchWithLock(UUID userUuid) {
+        try {
+            return depositSupport.save(Deposit.create(userUuid));
+        } catch (DataIntegrityViolationException ex) {
+            return depositSupport.findByUserUuidForUpdate(userUuid)
+                    .orElseThrow(() -> ex);
+        }
     }
 }

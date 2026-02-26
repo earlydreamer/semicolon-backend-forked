@@ -173,6 +173,11 @@ public class AiInitData {
 
 
     private void initMemories() {
+        if (!isTableAvailable("ai_user_memory")) {
+            log.warn("[AiInitData] ai_user_memory 테이블 없음 — AI 메모리 초기화를 건너뜁니다.");
+            return;
+        }
+
         if (aiUserMemoryRepository.count() > 0) {
             log.info("[AiInitData] 기존 AI 메모리 데이터 존재 — 초기화 스킵");
             return;
@@ -214,6 +219,11 @@ public class AiInitData {
     }
 
     private void initProductData() {
+        if (!isTableAvailable("product_search")) {
+            log.warn("[AiInitData] product_search 테이블 없음 — 샘플 상품 초기화를 건너뜁니다.");
+            return;
+        }
+
         // product_search 테이블 데이터 개수 확인
         try {
             Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM product_search", Integer.class);
@@ -264,6 +274,17 @@ public class AiInitData {
                 String.format("%.4f", r.vectorScore()),
                 String.format("%.4f", r.keywordScore()),
                 r.contentWithUrl()));
+    }
+
+    private boolean isTableAvailable(String tableName) {
+        try {
+            String sql = "SELECT to_regclass('public." + tableName + "')";
+            String table = jdbcTemplate.queryForObject(sql, String.class);
+            return table != null && !table.isBlank();
+        } catch (Exception e) {
+            log.warn("[AiInitData] 테이블 존재 여부 확인 실패 (table={}): {}", tableName, e.getMessage());
+            return false;
+        }
     }
 
     private void saveMemory(UUID userUuid, MemoryType memoryType, MemorySubType subType,

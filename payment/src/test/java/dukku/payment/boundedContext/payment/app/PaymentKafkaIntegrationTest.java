@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import dukku.common.shared.payment.dto.PaymentConfirmRequest;
 import dukku.common.shared.payment.dto.PaymentRefundRequest;
+import dukku.common.shared.order.dto.OrderResponse;
+import dukku.common.shared.order.out.OrderApiClient;
 import dukku.common.shared.payment.type.PaymentStatus;
 import dukku.common.shared.payment.type.PaymentType;
 import dukku.payment.boundedContext.payment.entity.Payment;
@@ -32,6 +34,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +106,9 @@ class PaymentKafkaIntegrationTest {
     @MockitoBean
     private TossPaymentClient tossPaymentClient;
 
+    @MockitoBean
+    private OrderApiClient orderApiClient;
+
     private TransactionTemplate transactionTemplate;
 
     @BeforeEach
@@ -111,6 +117,11 @@ class PaymentKafkaIntegrationTest {
         paymentHistoryRepository.deleteAll();
         refundRepository.deleteAll();
         paymentRepository.deleteAll();
+
+        when(orderApiClient.findOrderByUuid(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(OrderResponse.builder()
+                        .orderedAt(LocalDateTime.now())
+                        .build());
     }
 
     @Test

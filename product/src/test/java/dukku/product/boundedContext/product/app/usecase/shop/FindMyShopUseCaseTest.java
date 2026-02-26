@@ -7,6 +7,7 @@ import dukku.product.boundedContext.product.entity.ProductSeller;
 import dukku.product.boundedContext.product.entity.ProductUser;
 import dukku.product.boundedContext.product.out.ProductSellerRepository;
 import dukku.product.boundedContext.product.out.ProductUserRepository;
+import dukku.product.boundedContext.product.out.SellerReviewRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,9 @@ class FindMyShopUseCaseTest {
     @Mock
     private UserApiClient userApiClient;
 
+    @Mock
+    private SellerReviewRepository sellerReviewRepository;
+
     @InjectMocks
     private FindMyShopUseCase useCase;
 
@@ -48,6 +52,8 @@ class FindMyShopUseCaseTest {
 
         when(productSellerRepository.findByUserUuid(userUuid)).thenReturn(Optional.of(seller));
         when(productUserRepository.findById(userUuid)).thenReturn(Optional.of(productUser));
+        when(sellerReviewRepository.countBySellerUuidAndDeletedAtIsNull(seller.getSellerUuid())).thenReturn(0L);
+        when(sellerReviewRepository.avgRating(seller.getSellerUuid())).thenReturn(0.0);
 
         ShopResponse response = useCase.execute(userUuid);
 
@@ -66,6 +72,8 @@ class FindMyShopUseCaseTest {
         when(userApiClient.getUserProfile(userUuid))
                 .thenReturn(UserProfileResponse.builder().userUuid(userUuid).nickname("api-name").build());
         when(productUserRepository.existsById(userUuid)).thenReturn(false);
+        when(sellerReviewRepository.countBySellerUuidAndDeletedAtIsNull(seller.getSellerUuid())).thenReturn(0L);
+        when(sellerReviewRepository.avgRating(seller.getSellerUuid())).thenReturn(0.0);
 
         ShopResponse response = useCase.execute(userUuid);
 

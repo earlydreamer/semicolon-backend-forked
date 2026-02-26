@@ -6,6 +6,8 @@ import dukku.common.shared.coupon.exception.CouponUseNotAllowedException;
 import dukku.common.shared.coupon.out.CouponApiClient;
 import dukku.common.shared.coupon.type.CouponStatus;
 import dukku.common.shared.deposit.out.depositApiClient.DepositApiClient;
+import dukku.common.shared.order.dto.OrderResponse;
+import dukku.common.shared.order.out.OrderApiClient;
 import dukku.common.shared.payment.dto.PaymentRequest;
 import dukku.common.shared.payment.exception.AmountMismatchException;
 import dukku.common.shared.payment.exception.DepositShortageException;
@@ -26,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -76,6 +79,9 @@ class RequestPaymentUseCaseTest {
     @MockitoBean
     private CouponApiClient couponApiClient;
 
+    @MockitoBean
+    private OrderApiClient orderApiClient;
+
     private UUID userUuid;
 
     @BeforeEach
@@ -87,6 +93,11 @@ class RequestPaymentUseCaseTest {
                 null,
                 userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        when(orderApiClient.findOrderByUuid(any()))
+                .thenReturn(OrderResponse.builder()
+                        .orderedAt(LocalDateTime.now())
+                        .build());
     }
 
     @AfterEach
