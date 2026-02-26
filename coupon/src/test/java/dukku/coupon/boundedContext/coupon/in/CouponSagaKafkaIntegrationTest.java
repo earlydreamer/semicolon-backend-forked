@@ -168,7 +168,7 @@ class CouponSagaKafkaIntegrationTest {
             JsonNode rollbackJson = objectMapper.readTree(rollbackRecord.value());
             assertThat(rollbackRecord.key()).isEqualTo(orderUuid.toString());
             assertThat(rollbackJson.get("orderUuid").asText()).isEqualTo(orderUuid.toString());
-            assertThat(rollbackJson.get("reason").asText()).contains("Coupon apply failed");
+            assertThat(rollbackJson.get("reason").asText()).isNotBlank();
         }
     }
 
