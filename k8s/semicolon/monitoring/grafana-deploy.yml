@@ -81,12 +81,42 @@ spec:
               mountPath: /var/lib/grafana
             - name: provisioning-datasources
               mountPath: /etc/grafana/provisioning/datasources
+            - name: provisioning-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-settlement
+              mountPath: /var/lib/grafana/dashboards/settlement
+            - name: dashboard-order
+              mountPath: /var/lib/grafana/dashboards/order
+            - name: dashboard-product
+              mountPath: /var/lib/grafana/dashboards/product
+            - name: dashboard-deposit
+              mountPath: /var/lib/grafana/dashboards/deposit
+            - name: dashboard-infra
+              mountPath: /var/lib/grafana/dashboards/infra
       volumes:
         - name: grafana-storage
           emptyDir: {}
         - name: provisioning-datasources
           configMap:
             name: grafana-provisioning-datasources
+        - name: provisioning-dashboards
+          configMap:
+            name: grafana-provisioning-dashboards
+        - name: dashboard-settlement
+          configMap:
+            name: grafana-dashboard-settlement
+        - name: dashboard-order
+          configMap:
+            name: grafana-dashboard-order
+        - name: dashboard-product
+          configMap:
+            name: grafana-dashboard-product
+        - name: dashboard-deposit
+          configMap:
+            name: grafana-dashboard-deposit
+        - name: dashboard-infra
+          configMap:
+            name: grafana-dashboard-infra
 
 ---
 apiVersion: v1

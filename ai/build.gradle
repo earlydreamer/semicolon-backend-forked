@@ -18,9 +18,6 @@ dependencies {
     // ★ 핵심: 공통 모듈 연결 (Web, Security, JPA, JWT, Swagger 등 포함됨)
     implementation project(':common')
 
-    // Flyway migration
-    implementation 'org.flywaydb:flyway-core'
-    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
     // === DB Drivers (실행 환경에 따라 다를 수 있으므로 서비스별 유지 추천) ===
     runtimeOnly 'org.postgresql:postgresql'

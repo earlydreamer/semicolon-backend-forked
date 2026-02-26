@@ -27,18 +27,8 @@ public class UserInitData {
     @Bean
     public CommandLineRunner initUsers() {
         return args -> {
-            String[] activeProfiles = env.getActiveProfiles();
-            boolean isDev = false;
-            for (String profile : activeProfiles) {
-                if (profile.equals("dev") || profile.equals("local")) {
-                    isDev = true;
-                    break;
-                }
-            }
-
-            if (isDev) {
-                createFixedUsers();
-            }
+            log.info("🚀 [UserInitData] 데이터 초기화 시작");
+            createFixedUsers();
         };
     }
 

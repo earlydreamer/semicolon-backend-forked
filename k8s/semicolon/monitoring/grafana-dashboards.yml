@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning-dashboards
+  namespace: semicolon
+data:
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: 'Settlement'
+        orgId: 1
+        folder: 'Settlement'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/settlement
+          foldersFromFilesStructure: false
+      - name: 'Order'
+        orgId: 1
+        folder: 'Order'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/order
+          foldersFromFilesStructure: false
+      - name: 'Product'
+        orgId: 1
+        folder: 'Product'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/product
+          foldersFromFilesStructure: false
+      - name: 'Deposit'
+        orgId: 1
+        folder: 'Deposit'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/deposit
+          foldersFromFilesStructure: false
+      - name: 'Infrastructure'
+        orgId: 1
+        folder: 'Infrastructure'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/infra
+          foldersFromFilesStructure: false
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-settlement
+  namespace: semicolon
+data:
+  settlement-overview.json: |
+    {
+      "title": "Settlement Overview",
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "graphTooltip": 1,
+      "time": { "from": "now-6h", "to": "now" },
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "title": "마지막 배치 처리 시간",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 0, "w": 4, "h": 5 },
+          "targets": [{ "expr": "business_settlement_last_duration_seconds{application=\"settlement\"}", "refId": "A" }],
+          "fieldConfig": { "defaults": { "unit": "s" } }
+        },
+        {
+          "id": 3,
+          "title": "정산 생성/재처리/Skip 추이",
+          "type": "timeseries",
+          "gridPos": { "x": 4, "y": 0, "w": 20, "h": 5 },
+          "targets": [
+            { "expr": "sum(increase(business_settlement_created_total{application=\"settlement\"}[1h]))", "legendFormat": "Created" },
+            { "expr": "sum(increase(business_settlement_retry_total{application=\"settlement\"}[1h]))", "legendFormat": "Retry" },
+            { "expr": "sum(increase(business_settlement_skip_total{application=\"settlement\"}[1h]))", "legendFormat": "Skip" }
+          ]
+        }
+      ],
+      "uid": "settlement-overview",
+      "version": 1
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-order
+  namespace: semicolon
+data:
+  order-overview.json: |
+    {
+      "title": "Order Overview",
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "uid": "order-overview",
+      "panels": [
+        {
+          "id": 1,
+          "title": "주문 생성 건수",
+          "type": "timeseries",
+          "targets": [{ "expr": "sum(rate(business_order_created_total{application=\"order\"}[1h]))" }]
+        }
+      ]
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-product
+  namespace: semicolon
+data:
+  product-overview.json: |
+    {
+      "title": "Product Overview",
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "uid": "product-overview",
+      "panels": [
+        {
+          "id": 1,
+          "title": "상품 조회 API 응답 시간",
+          "type": "timeseries",
+          "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application=\"product\",uri=\"/api/v1/products\"}[1m])) by (le))" }]
+        }
+      ]
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-deposit
+  namespace: semicolon
+data:
+  deposit-overview.json: |
+    {
+      "title": "Deposit Overview",
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "uid": "deposit-overview",
+      "panels": [
+        {
+          "id": 1,
+          "title": "예치금 충전 성공률",
+          "type": "stat",
+          "targets": [{ "expr": "rate(business_deposit_charge_success_total{application=\"deposit\"}[5m]) / (rate(business_deposit_charge_success_total{application=\"deposit\"}[5m]) + rate(business_deposit_charge_failed_total{application=\"deposit\"}[5m])) * 100" }]
+        }
+      ]
+    }

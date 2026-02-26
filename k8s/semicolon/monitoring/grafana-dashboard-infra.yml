@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-infra
+  namespace: semicolon
+data:
+  spring-boot-system-monitor.json: |
+    {
+      "annotations": { "list": [ { "builtIn": 1, "datasource": "-- Grafana --", "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" } ] },
+      "description": "Dashboard for Spring Boot2.1 Statistics",
+      "editable": false, "gnetId": 11378, "graphTooltip": 0, "id": null, "links": [],
+      "panels": [
+        {
+          "title": "Basic Statistics", "type": "row", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+        },
+        {
+          "title": "Uptime", "type": "singlestat", "gridPos": { "h": 3, "w": 5, "x": 0, "y": 1 },
+          "targets": [{ "expr": "process_uptime_seconds{application=\"$application\", instance=\"$instance\"}" }]
+        },
+        {
+          "title": "CPU Usage", "type": "graph", "gridPos": { "h": 7, "w": 12, "x": 0, "y": 7 },
+          "targets": [
+            { "expr": "system_cpu_usage{instance=\"$instance\", application=\"$application\"}", "legendFormat": "System CPU" },
+            { "expr": "process_cpu_usage{instance=\"$instance\", application=\"$application\"}", "legendFormat": "Process CPU" }
+          ]
+        }
+      ],
+      "templating": {
+        "list": [
+          { "name": "application", "query": "label_values(application)", "type": "query", "datasource": "Prometheus" },
+          { "name": "instance", "query": "label_values(jvm_classes_loaded_classes{application=\"$application\"}, instance)", "type": "query", "datasource": "Prometheus" }
+        ]
+      },
+      "uid": "spring_boot_21",
+      "version": 1,
+      "title": "Spring Boot 2.1 System Monitor"
+    }
