@@ -125,7 +125,7 @@ public class Order extends BaseIdAndUUIDAndTime {
     // 주문 상품 UUID 목록 추출
     public List<UUID> getProductUuids() {
         return orderItems.stream()
-                .map(BaseIdAndUUIDAndTime::getUuid)
+                .map(OrderItem::getProductUuid)
                 .toList();
     }
 

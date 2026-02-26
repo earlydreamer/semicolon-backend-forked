@@ -54,4 +54,9 @@ public class ProductController {
     public void reserveProducts(@RequestBody ProductReserveRequest request) {
         productFacade.reserveProducts(request);
     }
+
+    @PostMapping("/products/internal/release")
+    public void releaseProducts(@RequestBody ProductReserveRequest request) {
+        productFacade.releaseProducts(request);
+    }
 }

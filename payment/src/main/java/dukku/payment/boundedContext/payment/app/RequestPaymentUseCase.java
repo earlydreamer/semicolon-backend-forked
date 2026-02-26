@@ -433,6 +433,11 @@ public class RequestPaymentUseCase {
         LocalDateTime orderedAt = order.getOrderedAt();
         LocalDateTime expiresAt = orderedAt.plusMinutes(pendingExpirationMinutes);
         if (LocalDateTime.now().isAfter(expiresAt)) {
+            try {
+                orderApiClient.expireOrder(orderUuid);
+            } catch (Exception e) {
+                log.warn("만료 주문 즉시 종료 호출 실패. orderUuid={}", orderUuid, e);
+            }
             long orderAgeMinutes = ChronoUnit.MINUTES.between(orderedAt, LocalDateTime.now());
             throw new PaymentExpiredException(orderAgeMinutes, pendingExpirationMinutes);
         }

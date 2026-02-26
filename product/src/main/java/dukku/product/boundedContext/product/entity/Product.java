@@ -229,10 +229,10 @@ public class Product extends BaseIdAndUUIDAndTime {
         }
     }
 
-    // 예약 해제 (RESERVED -> ON_SALE)
+    // 예약 해제 (RESERVED/SOLD_OUT -> ON_SALE)
     public void releaseReservation(UUID orderUuid) {
         // 내 주문이 맞는지 검증
-        if (this.saleStatus == SaleStatus.RESERVED &&
+        if ((this.saleStatus == SaleStatus.RESERVED || this.saleStatus == SaleStatus.SOLD_OUT) &&
                 this.reservedOrderUuid != null &&
                 this.reservedOrderUuid.equals(orderUuid)) {
 
