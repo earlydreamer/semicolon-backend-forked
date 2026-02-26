@@ -2,13 +2,16 @@ package dukku.order.boundedContext.order.app;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.order.event.OrderItemCanceledEvent;
+import dukku.common.shared.order.event.OrderItemConfirmedEvent;
+import dukku.common.shared.order.event.OrderProductSaleReleasedEvent;
+import dukku.common.shared.order.event.OrderItemRefundRequestedEvent;
 import dukku.common.shared.order.exception.OrderAccessDeniedException;
 import dukku.common.shared.order.exception.OrderItemActionNotAllowedException;
 import dukku.common.shared.order.exception.OrderItemNotFoundException;
-import dukku.common.shared.order.event.OrderItemCanceledEvent;
-import dukku.common.shared.order.event.OrderItemConfirmedEvent;
-import dukku.common.shared.order.event.OrderItemRefundRequestedEvent;
 import dukku.common.shared.order.type.OrderItemStatus;
+import dukku.common.shared.order.type.OrderStatus;
+import dukku.order.boundedContext.order.entity.Order;
 import dukku.order.boundedContext.order.entity.OrderItem;
 import dukku.order.boundedContext.order.out.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -34,31 +38,35 @@ public class UpdateOrderItemStatusUseCase {
         OrderItem orderItem = orderItemRepository.findByUuid(orderItemUuid)
                 .orElseThrow(OrderItemNotFoundException::new);
 
-        // 1) 권한 검증 (관리자 프리패스, 사용자 엄격 검증)
         checkPermission(orderItem, newStatus);
 
-        // 2) 상태 변경 (엔티티 내부에서 흐름 검증 수행 -> 실패 시 예외 발생)
-        orderItem.updateOrderStatus(newStatus);
+        // 배송 전 사용자 취소 요청(CANCEL_REQUESTED)은 즉시 취소(CANCELED)로 처리한다.
+        OrderItemStatus targetStatus = resolveTargetStatus(orderItem, newStatus);
 
-        // 3) 변경된 상태에 맞는 이벤트 발행 (알림, 정산, 재고 복구 등)
-        publishEvent(orderItem, newStatus);
+        orderItem.updateOrderStatus(targetStatus);
+        syncOrderStatusIfAllItemsCanceled(orderItem, targetStatus);
+        publishEvent(orderItem, targetStatus);
 
-        log.info("주문 상품 상태 변경 완료: uuid={}, status={}", orderItemUuid, newStatus);
+        log.info("Order item status updated. orderItemUuid={}, requestedStatus={}, appliedStatus={}",
+                orderItemUuid, newStatus, targetStatus);
+    }
+
+    private OrderItemStatus resolveTargetStatus(OrderItem orderItem, OrderItemStatus requestedStatus) {
+        if (requestedStatus == OrderItemStatus.CANCEL_REQUESTED) {
+            return OrderItemStatus.CANCELED;
+        }
+        return requestedStatus;
     }
 
     private void checkPermission(OrderItem orderItem, OrderItemStatus newStatus) {
-        // 관리자는 모든 권한 허용 (단, 엔티티의 논리적 흐름 검증은 통과해야 함)
         if (UserUtil.isAdmin()) {
             return;
         }
 
-        // 본인 주문 확인
         if (!orderItem.getOrder().getUserUuid().equals(UserUtil.getUserId())) {
             throw new OrderAccessDeniedException();
         }
 
-        // 사용자가 요청할 수 있는 상태인지 확인 (Enum 내 정의된 리스트 체크)
-        // ex: 사용자가 갑자기 status를 'SHIPPING(배송중)'으로 바꾸는 해킹 시도 방어
         if (!OrderItemStatus.isUserActionAllowed(newStatus)) {
             throw new OrderItemActionNotAllowedException();
         }
@@ -66,15 +74,36 @@ public class UpdateOrderItemStatusUseCase {
 
     private void publishEvent(OrderItem orderItem, OrderItemStatus newStatus) {
         switch (newStatus) {
-            case CANCELED ->
-                // 주문 취소: 상품 서비스에 '재고 복구(Increase Stock)' 요청 및 결제 서비스에 환불 로직 트리거
-                    eventPublisher.publish(new OrderItemCanceledEvent(orderItem.getUuid()));
-            case CONFIRMED ->
-                // 구매 확정: 정산 서비스에 '판매자 정산 대기' 등록 및 사용자에게 포인트 적립 트리거
-                    eventPublisher.publish(new OrderItemConfirmedEvent(orderItem.getUuid()));
-            case REFUND_REQUESTED ->
-                // 환불/반품 신청: 판매자에게 '반품 요청 알림' 발송 및 관리자 환불 검토 리스트 진입
-                    eventPublisher.publish(new OrderItemRefundRequestedEvent(orderItem.getUuid()));
+            case CANCELED -> {
+                eventPublisher.publish(new OrderItemCanceledEvent(orderItem.getUuid()));
+                // 배송 전 취소 시 상품 판매 상태를 즉시 복구한다.
+                eventPublisher.publish(new OrderProductSaleReleasedEvent(
+                        orderItem.getOrder().getUuid(),
+                        List.of(orderItem.getProductUuid())
+                ));
+            }
+            case CONFIRMED -> eventPublisher.publish(new OrderItemConfirmedEvent(orderItem.getUuid()));
+            case REFUND_REQUESTED -> eventPublisher.publish(new OrderItemRefundRequestedEvent(orderItem.getUuid()));
         }
+    }
+
+    private void syncOrderStatusIfAllItemsCanceled(OrderItem orderItem, OrderItemStatus targetStatus) {
+        if (targetStatus != OrderItemStatus.CANCELED) {
+            return;
+        }
+
+        Order order = orderItem.getOrder();
+        boolean allItemsCanceled = order.getOrderItems().stream()
+                .allMatch(item -> item.getStatus() == OrderItemStatus.CANCELED);
+
+        if (!allItemsCanceled) {
+            return;
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            return;
+        }
+
+        order.updateOrderStatus(OrderStatus.CANCELED);
     }
 }
