@@ -45,6 +45,20 @@ public class AdminCouponController {
         couponFacade.activateCoupon(couponUuid);
     }
 
+    // 쿠폰 비활성화 (관리자)
+    @PostMapping("/{couponUuid}/deactivate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deactivateCoupon(@PathVariable UUID couponUuid) {
+        couponFacade.deactivateCoupon(couponUuid);
+    }
+
+    // 쿠폰 삭제 (관리자)
+    @DeleteMapping("/{couponUuid}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCoupon(@PathVariable UUID couponUuid) {
+        couponFacade.deleteCoupon(couponUuid);
+    }
+
     // 전체 쿠폰 리스트 (관리자)
     @GetMapping
     public List<CouponResponse> findAllCoupons() {

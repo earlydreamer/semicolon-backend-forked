@@ -4,6 +4,10 @@ import dukku.user.boundedContext.user.entity.User;
 import dukku.common.shared.user.type.Role;
 import dukku.common.shared.user.type.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,5 +32,14 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     List<User> findByStatusInAndDeletedAtBefore(
             List<UserStatus> statuses,
             LocalDateTime deletedAt
+    );
+
+    @Query("SELECT u FROM User u WHERE " +
+           "(:keyword IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:status IS NULL OR u.status = :status)")
+    Page<User> searchUsers(
+            @Param("keyword") String keyword, 
+            @Param("status") UserStatus status, 
+            Pageable pageable
     );
 }

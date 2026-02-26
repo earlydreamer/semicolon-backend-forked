@@ -19,6 +19,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import dukku.common.shared.user.type.UserStatus;
+import dukku.common.shared.user.dto.UserResponse;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -64,5 +71,14 @@ public class AdminUserController {
     @GetMapping("/{userUuid}/sanctions")
     public ResponseEntity<List<AdminUserSanctionResponse>> getUserSanctionHistory(@PathVariable UUID userUuid) {
         return ResponseEntity.ok(userSanctionFacade.getHistory(userUuid));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<UserResponse>> getAdminUserList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UserStatus status,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(userFacade.findAdminUserList(keyword, status, pageable));
     }
 }

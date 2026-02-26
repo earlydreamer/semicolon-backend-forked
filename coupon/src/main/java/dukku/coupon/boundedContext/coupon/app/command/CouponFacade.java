@@ -16,6 +16,8 @@ public class CouponFacade {
     private final ActivateCouponUseCase activateCouponUseCase;
     private final IssueCouponUseCase issueCouponUseCase;
     private final UseCouponUseCase useCouponUseCase;
+    private final DeactivateCouponUseCase deactivateCouponUseCase;
+    private final DeleteCouponUseCase deleteCouponUseCase;
 
     // 쿠폰을 생성한다
     public CouponResponse createCoupon(CouponCreateRequest request) {
@@ -45,6 +47,14 @@ public class CouponFacade {
     // 결제 실패 시 사용했던 쿠폰을 복구한다.
     public void rollbackCouponUseForPayment(UUID userUuid, UUID couponUuid) {
         useCouponUseCase.rollbackForPayment(userUuid, couponUuid);
+    }
+
+    public void deactivateCoupon(UUID couponUuid) {
+        deactivateCouponUseCase.execute(couponUuid);
+    }
+
+    public void deleteCoupon(UUID couponUuid) {
+        deleteCouponUseCase.execute(couponUuid);
     }
 
 }

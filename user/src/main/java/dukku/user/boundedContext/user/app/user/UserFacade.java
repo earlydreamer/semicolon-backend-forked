@@ -10,7 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import dukku.common.shared.user.type.UserStatus;
+
 import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +28,7 @@ public class UserFacade {
     private final ChangePasswordUseCase changePassword;
     private final WithdrawUserUseCase withdrawUserUseCase;
     private final RestoreWithdrawnUserUseCase restoreWithdrawnUserUseCase;
+    private final FindAdminUserListUseCase findAdminUserListUseCase;
 
     public UserResponse registerUser(UserRegisterRequest req, Role role, String idempotencyKey) {
         return User.toUserResponse(registerUser.execute(req, role, idempotencyKey));
@@ -47,5 +53,11 @@ public class UserFacade {
 
     public void restoreWithdrawnUser(UUID userUuid, String newPassword) {
         restoreWithdrawnUserUseCase.restore(userUuid, newPassword);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponse> findAdminUserList(String keyword, UserStatus status, Pageable pageable) {
+        return findAdminUserListUseCase.execute(keyword, status, pageable)
+                .map(User::toUserResponse);
     }
 }
