@@ -2,11 +2,11 @@ package dukku.deposit.boundedContext.deposit.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import dukku.deposit.boundedContext.deposit.entity.Deposit;
 import dukku.deposit.boundedContext.deposit.out.DepositHistoryRepository;
 import dukku.deposit.boundedContext.deposit.out.DepositRepository;
 import dukku.deposit.global.SystemDepositInitData;
-import dukku.common.shared.payment.event.PaymentSuccessEvent;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -78,8 +78,9 @@ class DeductDepositForPaymentUseCaseKafkaIntegrationTest {
     }
 
     @Test
-    @DisplayName("사용자 잔액 부족이면 deduction failed 이벤트가 Kafka로 발행된다")
+    @DisplayName("사용자 잔액이 부족하면 deduction failed 이벤트가 Kafka로 발행된다")
     void failSendsEvent() throws Exception {
+        // given: 사용자 지갑 잔액이 부족한 상태다.
         UUID userUuid = UUID.randomUUID();
         UUID orderUuid = UUID.randomUUID();
         UUID paymentUuid = UUID.randomUUID();
@@ -91,11 +92,13 @@ class DeductDepositForPaymentUseCaseKafkaIntegrationTest {
         List<PaymentSuccessEvent.ItemDepositUsage> usages = List.of(
                 new PaymentSuccessEvent.ItemDepositUsage(orderItemUuid, 3000L));
 
+        // when: 결제 성공 후 예치금 차감을 실행한다.
         assertThatCode(() -> useCase.execute(userUuid, 3000L, orderUuid, paymentUuid, usages))
                 .doesNotThrowAnyException();
 
         Consumer<String, String> consumer = createConsumer(DEDUCT_FAIL_TOPIC);
         try {
+            // then: 실패 이벤트가 발행되고, 잔액/이력은 롤백 상태를 유지한다.
             ConsumerRecord<String, String> record = waitForRecord(consumer, DEDUCT_FAIL_TOPIC);
             JsonNode payload = objectMapper.readTree(record.value());
 
@@ -108,12 +111,42 @@ class DeductDepositForPaymentUseCaseKafkaIntegrationTest {
             assertThat(payload.get("retryable").asBoolean()).isFalse();
 
             assertThat(depositRepository.findByUserUuid(userUuid).orElseThrow().getBalance()).isEqualTo(1000L);
-            assertThat(
-                    depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID).orElseThrow().getBalance())
-                    .isEqualTo(1_000_000L);
+            assertThat(depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                    .orElseThrow().getBalance()).isEqualTo(1_000_000L);
             assertThat(historyRepository.findByUserUuidOrderByCreatedAtDesc(userUuid)).isEmpty();
             assertThat(historyRepository.findByUserUuidOrderByCreatedAtDesc(SystemDepositInitData.SYSTEM_USER_UUID))
                     .isEmpty();
+        } finally {
+            consumer.close();
+        }
+    }
+
+    @Test
+    @DisplayName("사용자 잔액이 충분하면 deduction failed 이벤트는 발행되지 않는다")
+    void successDoesNotSendFailEvent() {
+        // given: 사용자 지갑 잔액이 충분한 상태다.
+        UUID userUuid = UUID.randomUUID();
+        UUID orderUuid = UUID.randomUUID();
+        UUID paymentUuid = UUID.randomUUID();
+        UUID orderItemUuid = UUID.randomUUID();
+
+        saveDeposit(userUuid, 5000L);
+        saveDeposit(SystemDepositInitData.SYSTEM_USER_UUID, 1_000_000L);
+
+        List<PaymentSuccessEvent.ItemDepositUsage> usages = List.of(
+                new PaymentSuccessEvent.ItemDepositUsage(orderItemUuid, 3000L));
+
+        Consumer<String, String> consumer = createConsumerFromLatest(DEDUCT_FAIL_TOPIC);
+
+        // when: 결제 성공 후 예치금 차감을 실행한다.
+        useCase.execute(userUuid, 3000L, orderUuid, paymentUuid, usages);
+
+        try {
+            // then: 실패 이벤트는 발행되지 않고, 잔액은 정상 반영된다.
+            assertThat(hasAnyRecord(consumer, DEDUCT_FAIL_TOPIC, Duration.ofSeconds(2))).isFalse();
+            assertThat(depositRepository.findByUserUuid(userUuid).orElseThrow().getBalance()).isEqualTo(2000L);
+            assertThat(depositRepository.findByUserUuid(SystemDepositInitData.SYSTEM_USER_UUID)
+                    .orElseThrow().getBalance()).isEqualTo(1_003_000L);
         } finally {
             consumer.close();
         }
@@ -145,6 +178,26 @@ class DeductDepositForPaymentUseCaseKafkaIntegrationTest {
         consumer.seekToBeginning(partitions);
 
         return consumer;
+    }
+
+    private Consumer<String, String> createConsumerFromLatest(String topic) {
+        Consumer<String, String> consumer = createConsumer(topic);
+        List<TopicPartition> partitions = List.of(new TopicPartition(topic, 0));
+        consumer.seekToEnd(partitions);
+        return consumer;
+    }
+
+    private boolean hasAnyRecord(Consumer<String, String> consumer, String topic, Duration timeout) {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (System.currentTimeMillis() <= deadline) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(200));
+            for (ConsumerRecord<String, String> record : records) {
+                if (record.topic().equals(topic)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private ConsumerRecord<String, String> waitForRecord(Consumer<String, String> consumer, String topic) {
