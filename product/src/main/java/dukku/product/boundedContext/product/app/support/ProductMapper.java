@@ -12,10 +12,12 @@ import java.util.List;
 
 public class ProductMapper {
 
+    // 리스트 조회용 DTO 매핑(태그 기본 적용)
     public static ProductListItemResponse toListItem(Product p) {
         return toListItem(p, p.getTagNames());
     }
 
+    // 리스트 조회용 DTO 매핑(태그 목록 override)
     public static ProductListItemResponse toListItem(Product p, List<String> tagNames) {
         String thumb = p.getImages().stream().min(Comparator.comparingInt(ProductImage::getSortOrder))
                 .map(ProductImage::getImageUrl)
@@ -35,20 +37,36 @@ public class ProductMapper {
                 .build();
     }
 
+    // 상세 정보 매핑 (기본 스펙)
     public static ProductDetailResponse toDetail(Product p) {
         return toDetail(p, null, null);
     }
 
+    // 상세 정보 매핑 (판매자/닉네임 포함)
     public static ProductDetailResponse toDetail(Product p, ProductSeller seller, String nickname) {
         return toDetail(p, seller, nickname, null, null);
     }
 
+    // 상세 정보 매핑 (평점/리뷰 수 포함)
     public static ProductDetailResponse toDetail(
             Product p,
             ProductSeller seller,
             String nickname,
             BigDecimal averageRating,
             Integer reviewCount
+    ) {
+        return toDetail(p, seller, nickname, averageRating, reviewCount, null, null);
+    }
+
+    // 상세 정보 매핑 (좋아요/조회수 override 허용)
+    public static ProductDetailResponse toDetail(
+            Product p,
+            ProductSeller seller,
+            String nickname,
+            BigDecimal averageRating,
+            Integer reviewCount,
+            Integer likeCount,
+            Integer viewCount
     ) {
         List<String> imageUrls = p.getImages().stream()
                 .sorted(Comparator.comparingInt(ProductImage::getSortOrder))
@@ -70,8 +88,8 @@ public class ProductMapper {
                 .description(p.getDescription())
                 .price(p.getPrice())
                 .shippingFee(p.getShippingFee())
-                .likeCount(p.getLikeCount())
-                .viewCount(p.getViewCount())
+                .likeCount(likeCount != null ? likeCount : p.getLikeCount())
+                .viewCount(viewCount != null ? viewCount : p.getViewCount())
                 .imageUrls(imageUrls)
                 .conditionStatus(p.getConditionStatus())
                 .saleStatus(p.getSaleStatus())
@@ -93,18 +111,18 @@ public class ProductMapper {
                 .build();
     }
 
-    // 환경 변수 FRONTEND_BASE_URL 또는 시스템 속성 frontend.base.url을 사용해
-    // 상품 상세 페이지 URL을 생성합니다.
-    // 예: https://dukku.shop/products/{productUuid}
+    // 공유 URL 생성용 기본 도메인 조립
     public static String buildProductUrl(java.util.UUID productUuid) {
         String base = System.getenv("FRONTEND_BASE_URL");
         if (base == null || base.isBlank()) {
             base = System.getProperty("frontend.base.url");
         }
         if (base == null || base.isBlank()) {
-            base = "https://dukku.shop"; // 기본 폴백
+            base = "https://dukku.shop";
         }
-        if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
-        return base + "/products/" + productUuid.toString();
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        return base + "/products/" + productUuid;
     }
 }
