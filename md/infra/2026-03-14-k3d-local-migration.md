@@ -105,3 +105,26 @@
 ### 다음 단계
 
 - K8s 내부 `cloudflared` 경로와 `ENABLE_EDGE` 토글을 제거하고, host-level `cloudflared` 기준으로 스크립트와 문서를 다시 정리한다.
+
+## 5차 커밋 예정 범위
+
+### 의도
+
+- `cloudflared`를 K8s 내부가 아니라 맥북 host 서비스로 고정하고, 클러스터 매니페스트와 스크립트에서 남아 있는 edge 의존을 제거한다.
+- 일상 배포 경로가 `Tunnel SSH -> apply -> rollout`만 바라보도록 시크릿 템플릿과 스크립트 인터페이스를 단순화한다.
+
+### 변경
+
+- `k8s/semicolon/edge/cloudflared-deploy.yml`을 삭제해 K8s 내부 `cloudflared` 배포 경로를 제거했다.
+- `scripts/apply.sh`, `scripts/restore.sh`에서 `ENABLE_EDGE` 토글과 edge apply 흐름을 제거했다.
+- `k8s/semicolon/secrets/.env.template`에서 `CLOUDFLARE_TUNNEL_TOKEN` 기본 키를 제거했다.
+- `deploy-m1-tunnel.yml`에서 K8s Secret 렌더링용 터널 토큰 주입을 제거해 host-level `cloudflared`와 책임을 분리했다.
+
+### 검증
+
+- `bash -n`으로 `scripts/apply.sh`, `scripts/restore.sh` 문법을 다시 확인한다.
+- `python3` YAML 파싱으로 `deploy-m1-tunnel.yml` 변경 후 문법을 재검증한다.
+
+### 다음 단계
+
+- `k8s/README.md`와 작업 로그에 host-level `cloudflared`, Cloudflare Access SSH, 초기 bootstrap 절차를 문서화한다.

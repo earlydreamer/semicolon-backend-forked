@@ -167,7 +167,6 @@ jobs:
           GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
           SLACK_WEBHOOK_URL_SETTLEMENT: ${{ secrets.SLACK_WEBHOOK_URL_SETTLEMENT }}
           SLACK_WEBHOOK_URL_GRAFANA: ${{ secrets.SLACK_WEBHOOK_URL_GRAFANA }}
-          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
         run: |
           required_vars=(
             DB_USERNAME DB_PASSWORD
@@ -257,7 +256,6 @@ jobs:
               f"GRAFANA_ADMIN_USER={os.environ['GRAFANA_ADMIN_USER']}",
               f"GRAFANA_ADMIN_PASSWORD={os.environ['GRAFANA_ADMIN_PASSWORD']}",
               "GRAFANA_UPSTREAM=http://grafana:3000",
-              f"CLOUDFLARE_TUNNEL_TOKEN={os.environ.get('CLOUDFLARE_TUNNEL_TOKEN', '')}",
           ]
           with open(".deploy/semicolon.env", "w", encoding="utf-8") as handle:
               handle.write("\n".join(lines) + "\n")

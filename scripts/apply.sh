@@ -8,7 +8,6 @@ K="${K:-kubectl}"
 NS="${NS:-semicolon}"
 INGRESS_MODE="${INGRESS_MODE:-local}"
 ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
-ENABLE_EDGE="${ENABLE_EDGE:-false}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
 
 apply_recursive() {
@@ -48,10 +47,6 @@ case "$INGRESS_MODE" in
     exit 1
     ;;
 esac
-
-if [ "$ENABLE_EDGE" = "true" ]; then
-  apply_recursive k8s/semicolon/edge
-fi
 
 # shellcheck disable=SC2086
 $K -n "$NS" get deploy -o wide
