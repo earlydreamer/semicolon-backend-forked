@@ -81,3 +81,27 @@
 - `INGRESS_MODE=local ENABLE_EDGE=false bash scripts/apply.sh`
 - `bash scripts/restore.sh`
 - 필요 시 `ENABLE_EDGE=true` 와 실제 `CLOUDFLARE_TUNNEL_TOKEN` 으로 `cloudflared` Pod Ready 확인
+
+## 4차 커밋 예정 범위
+
+### 의도
+
+- EC2 SSH 전용 GitHub Actions 배포 경로를 제거하고, M1 맥북 host로 향하는 Tunnel SSH 배포 경로를 새 표준으로 전환한다.
+- 빌드는 GitHub-hosted runner에서 수행하고, 원격 맥북에서는 매니페스트 동기화와 변경 모듈 롤아웃만 수행하도록 역할을 분리한다.
+
+### 변경
+
+- `.github/workflows/deploy.yml`, `.github/workflows/deploy-all.yml`을 삭제해 EC2 배포 잔재를 제거했다.
+- `.github/workflows/deploy-m1-tunnel.yml`을 추가해 `dev` push 시 `linux/arm64` 이미지를 빌드하고 Tunnel SSH로 M1 맥북에 배포하도록 구성했다.
+- `scripts/remote-deploy.sh`를 추가해 원격 맥북에서 Secret 생성, `apply.sh`, 이미지 롤아웃 흐름을 한 번에 실행하도록 정리했다.
+- `scripts/rollout-images.sh`를 추가해 변경된 모듈만 `kubectl set image -> annotation patch -> rollout status` 순서로 배포하도록 분리했다.
+
+### 검증
+
+- `python3` YAML 파싱으로 `deploy-m1-tunnel.yml` 문법을 확인했다.
+- `bash -n`으로 `scripts/remote-deploy.sh`, `scripts/rollout-images.sh` 문법을 확인했다.
+- `cloudflared access tcp` 도움말을 확인해 Service Token 기반 SSH 포워딩 인자 구성을 검증했다.
+
+### 다음 단계
+
+- K8s 내부 `cloudflared` 경로와 `ENABLE_EDGE` 토글을 제거하고, host-level `cloudflared` 기준으로 스크립트와 문서를 다시 정리한다.

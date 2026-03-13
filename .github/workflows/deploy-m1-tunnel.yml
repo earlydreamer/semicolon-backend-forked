@@ -1,0 +1,322 @@
+name: Deploy to M1 via Tunnel SSH
+
+on:
+  push:
+    branches: ["dev"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-m1-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
+  REMOTE_WORKSPACE: ${{ vars.REMOTE_WORKSPACE }}
+  CLOUDFLARED_VERSION: "2026.3.0"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      any_changed: ${{ steps.set-matrix.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            common:
+              - 'common/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'Dockerfile'
+              - 'k8s/**'
+              - 'scripts/**'
+              - '.github/workflows/**'
+            auth: 'auth/**'
+            user: 'user/**'
+            product: 'product/**'
+            order: 'order/**'
+            coupon: 'coupon/**'
+            payment: 'payment/**'
+            deposit: 'deposit/**'
+            settlement: 'settlement/**'
+            ai: 'ai/**'
+            log-consumer: 'monitoring/log-consumer/**'
+
+      - id: set-matrix
+        run: |
+          MATRIX="[]"
+          ANY_CHANGED="false"
+
+          if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
+            MATRIX='["auth", "user", "product", "order", "coupon", "payment", "deposit", "settlement", "ai", "log-consumer"]'
+            ANY_CHANGED="true"
+          else
+            MODS=()
+            for m in auth user product order coupon payment deposit settlement ai log-consumer; do
+              CHANGED=$(jq -r ".[\"${m}\"]" <<< '${{ toJson(steps.filter.outputs) }}')
+              if [[ "$CHANGED" == "true" ]]; then
+                MODS+=("$m")
+              fi
+            done
+
+            if [ ${#MODS[@]} -gt 0 ]; then
+              MATRIX=$(printf '%s\n' "${MODS[@]}" | jq -R . | jq -s .)
+              ANY_CHANGED="true"
+            else
+              MATRIX='["none"]'
+              ANY_CHANGED="false"
+            fi
+          fi
+
+          MATRIX_MIN=$(echo "$MATRIX" | jq -c .)
+          echo "matrix=${MATRIX_MIN}" >> "$GITHUB_OUTPUT"
+          echo "any_changed=${ANY_CHANGED}" >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    needs: changes
+    if: ${{ needs.changes.outputs.any_changed == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.changes.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/semicolon-${{ matrix.module }}:${{ github.sha }}
+            ${{ env.DOCKER_USERNAME }}/semicolon-${{ matrix.module }}:latest
+          build-args: |
+            MODULE_NAME=${{ matrix.module }}
+          cache-from: type=gha,scope=${{ matrix.module }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.module }}
+
+  deploy:
+    needs: [changes, build-and-push]
+    if: ${{ needs.changes.outputs.any_changed == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pass Dynamic Matrix to Env
+        run: |
+          MODS_STR=$(echo '${{ needs.changes.outputs.matrix }}' | jq -r '.[]' | tr '\n' ' ' | xargs)
+          echo "MODS_TO_DEPLOY=${MODS_STR}" >> "$GITHUB_ENV"
+
+      - name: Install cloudflared CLI
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64" \
+            -o "$HOME/.local/bin/cloudflared"
+          chmod +x "$HOME/.local/bin/cloudflared"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare SSH materials
+        env:
+          M1_DEPLOY_SSH_KEY: ${{ secrets.M1_DEPLOY_SSH_KEY }}
+          M1_DEPLOY_KNOWN_HOSTS: ${{ secrets.M1_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p .deploy/ssh
+          printf '%s\n' "$M1_DEPLOY_SSH_KEY" > .deploy/ssh/id_ed25519
+          printf '%s\n' "$M1_DEPLOY_KNOWN_HOSTS" > .deploy/ssh/known_hosts
+          chmod 600 .deploy/ssh/id_ed25519 .deploy/ssh/known_hosts
+
+      - name: Render semicolon env file
+        env:
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
+          INTERNAL_SERVICE_TOKEN: ${{ secrets.INTERNAL_SERVICE_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
+          TOSS_API_SECRET_KEY: ${{ secrets.TOSS_API_SECRET_KEY }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          GRAFANA_ADMIN_USER: ${{ secrets.GRAFANA_ADMIN_USER }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          SLACK_WEBHOOK_URL_SETTLEMENT: ${{ secrets.SLACK_WEBHOOK_URL_SETTLEMENT }}
+          SLACK_WEBHOOK_URL_GRAFANA: ${{ secrets.SLACK_WEBHOOK_URL_GRAFANA }}
+          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+        run: |
+          required_vars=(
+            DB_USERNAME DB_PASSWORD
+            JWT_ACCESS_SECRET JWT_REFRESH_SECRET CRYPTO_KEY
+            INTERNAL_SERVICE_TOKEN
+            OPENAI_API_KEY
+            SYSTEM_DEPOSIT_PASSWORD
+            TOSS_API_SECRET_KEY
+            AWS_ACCESS_KEY AWS_SECRET_KEY AWS_REGION AWS_S3_BUCKET
+            GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET
+            GRAFANA_ADMIN_USER GRAFANA_ADMIN_PASSWORD
+            SLACK_WEBHOOK_URL_SETTLEMENT SLACK_WEBHOOK_URL_GRAFANA
+          )
+
+          for var_name in "${required_vars[@]}"; do
+            if [ -z "${!var_name:-}" ]; then
+              echo "::error::Missing required secret ${var_name}"
+              exit 1
+            fi
+          done
+
+          python3 - <<'PY'
+          import os
+          lines = [
+              "SPRING_PROFILES_ACTIVE=release",
+              "DB_HOST=postgres",
+              "DB_PORT=5432",
+              "DB_NAME=",
+              f"DB_USERNAME={os.environ['DB_USERNAME']}",
+              f"DB_PASSWORD={os.environ['DB_PASSWORD']}",
+              "DB_SSLMODE=disable",
+              "REDIS_HOST=redis",
+              "REDIS_PORT=6379",
+              "REDIS_PASSWORD=",
+              "KAFKA_BOOTSTRAP_SERVERS=redpanda:9092",
+              "ELASTICSEARCH_URL=http://elasticsearch:9200",
+              "MONGO_HOST=mongodb-service",
+              "MONGO_PORT=27017",
+              f"JWT_ACCESS_SECRET={os.environ['JWT_ACCESS_SECRET']}",
+              f"JWT_REFRESH_SECRET={os.environ['JWT_REFRESH_SECRET']}",
+              f"CRYPTO_KEY={os.environ['CRYPTO_KEY']}",
+              f"INTERNAL_SERVICE_TOKEN={os.environ['INTERNAL_SERVICE_TOKEN']}",
+              "CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost:3000,http://127.0.0.1:3000,http://localhost:8080",
+              "INTERNAL_BACK_URL=http://auth-service",
+              "FRONTEND_BASE_URL=http://localhost:3000",
+              f"OPENAI_API_KEY={os.environ['OPENAI_API_KEY']}",
+              "OPENAI_CHAT_MODEL=gpt-4o-mini",
+              "AI_INIT_ENABLED=false",
+              f"SLACK_WEBHOOK_URL_SETTLEMENT={os.environ['SLACK_WEBHOOK_URL_SETTLEMENT']}",
+              f"SLACK_WEBHOOK_URL_GRAFANA={os.environ['SLACK_WEBHOOK_URL_GRAFANA']}",
+              "MAIL_HOST=localhost",
+              "MAIL_PORT=1025",
+              "MAIL_USERNAME=local-mail-user",
+              "EMAIL_PASSWORD=local-mail-password",
+              "EMAIL_VERIFICATION_BASE_URL=http://localhost:8080",
+              "EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL=http://localhost:3000/email/verify",
+              f"GOOGLE_OAUTH_CLIENT_ID={os.environ['GOOGLE_OAUTH_CLIENT_ID']}",
+              f"GOOGLE_OAUTH_CLIENT_SECRET={os.environ['GOOGLE_OAUTH_CLIENT_SECRET']}",
+              "GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google",
+              "GOOGLE_OAUTH_SUCCESS_REDIRECT_URI=http://localhost:3000/oauth/google/callback",
+              "GOOGLE_OAUTH_SUCCESS_REDIRECT_URL=http://localhost:3000/oauth/google/callback",
+              f"SYSTEM_DEPOSIT_PASSWORD={os.environ['SYSTEM_DEPOSIT_PASSWORD']}",
+              f"TOSS_API_SECRET_KEY={os.environ['TOSS_API_SECRET_KEY']}",
+              "TOSS_CALLBACK_BASE_URL=http://localhost:8080",
+              f"AWS_ACCESS_KEY={os.environ['AWS_ACCESS_KEY']}",
+              f"AWS_REGION={os.environ['AWS_REGION']}",
+              f"AWS_S3_BUCKET={os.environ['AWS_S3_BUCKET']}",
+              f"AWS_SECRET_KEY={os.environ['AWS_SECRET_KEY']}",
+              "PRODUCT_INIT_CLEAR_ES_ON_STARTUP=false",
+              "PRODUCT_INIT_ENABLED=false",
+              "PRODUCT_REINDEX_ON_STARTUP=false",
+              "CUSTOM_CLIENT_AI_URL=",
+              "CUSTOM_CLIENT_COUPON_URL=",
+              "CUSTOM_CLIENT_DEPOSIT_URL=",
+              "CUSTOM_CLIENT_ORDER_URL=",
+              "CUSTOM_CLIENT_PAYMENT_URL=",
+              "CUSTOM_CLIENT_PRODUCT_URL=",
+              "CUSTOM_CLIENT_SETTLEMENT_URL=",
+              "CUSTOM_CLIENT_USER_URL=",
+              "SERVICE_USER_URL=",
+              "DB_HIKARI_CONNECTION_TIMEOUT=",
+              "DB_HIKARI_IDLE_TIMEOUT=",
+              "DB_HIKARI_MAX_LIFETIME=",
+              "DB_HIKARI_MAXIMUM_POOL_SIZE=",
+              "DB_HIKARI_MINIMUM_IDLE=",
+              "HIBERNATE_DDL_AUTO=",
+              f"GRAFANA_ADMIN_USER={os.environ['GRAFANA_ADMIN_USER']}",
+              f"GRAFANA_ADMIN_PASSWORD={os.environ['GRAFANA_ADMIN_PASSWORD']}",
+              "GRAFANA_UPSTREAM=http://grafana:3000",
+              f"CLOUDFLARE_TUNNEL_TOKEN={os.environ.get('CLOUDFLARE_TUNNEL_TOKEN', '')}",
+          ]
+          with open(".deploy/semicolon.env", "w", encoding="utf-8") as handle:
+              handle.write("\n".join(lines) + "\n")
+          PY
+
+      - name: Create deployment bundle
+        run: tar czf .deploy/semicolon-bundle.tgz k8s scripts
+
+      - name: Start Cloudflare Tunnel TCP proxy
+        env:
+          M1_DEPLOY_SSH_HOSTNAME: ${{ secrets.M1_DEPLOY_SSH_HOSTNAME }}
+          CF_ACCESS_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_SERVICE_TOKEN_ID }}
+          CF_ACCESS_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_SERVICE_TOKEN_SECRET }}
+        run: |
+          set -euo pipefail
+
+          cloudflared access tcp \
+            --hostname "$M1_DEPLOY_SSH_HOSTNAME" \
+            --url localhost:2222 \
+            --service-token-id "$CF_ACCESS_SERVICE_TOKEN_ID" \
+            --service-token-secret "$CF_ACCESS_SERVICE_TOKEN_SECRET" \
+            > .deploy/cloudflared.log 2>&1 &
+
+          echo $! > .deploy/cloudflared.pid
+          timeout 30 bash -c 'until (echo >/dev/tcp/127.0.0.1/2222) >/dev/null 2>&1; do sleep 1; done'
+
+      - name: Upload deployment assets
+        env:
+          M1_DEPLOY_USER: ${{ secrets.M1_DEPLOY_USER }}
+        run: |
+          REMOTE_PATH="${REMOTE_WORKSPACE:-deploy/semicolon-backend}"
+          NS="${K8S_NAMESPACE:-semicolon}"
+
+          SSH_OPTS=(
+            -i .deploy/ssh/id_ed25519
+            -o UserKnownHostsFile=.deploy/ssh/known_hosts
+            -o StrictHostKeyChecking=yes
+            -p 2222
+          )
+          SCP_OPTS=(
+            -i .deploy/ssh/id_ed25519
+            -o UserKnownHostsFile=.deploy/ssh/known_hosts
+            -o StrictHostKeyChecking=yes
+            -P 2222
+          )
+
+          ssh "${SSH_OPTS[@]}" "${M1_DEPLOY_USER}@127.0.0.1" "mkdir -p '$REMOTE_PATH'"
+          scp "${SCP_OPTS[@]}" .deploy/semicolon-bundle.tgz "${M1_DEPLOY_USER}@127.0.0.1:$REMOTE_PATH/semicolon-bundle.tgz"
+          scp "${SCP_OPTS[@]}" .deploy/semicolon.env "${M1_DEPLOY_USER}@127.0.0.1:$REMOTE_PATH/semicolon.env"
+
+          ssh "${SSH_OPTS[@]}" "${M1_DEPLOY_USER}@127.0.0.1" \
+            "rm -rf '$REMOTE_PATH/k8s' '$REMOTE_PATH/scripts' && tar xzf '$REMOTE_PATH/semicolon-bundle.tgz' -C '$REMOTE_PATH' && chmod +x '$REMOTE_PATH'/scripts/*.sh '$REMOTE_PATH'/scripts/k3d/*.sh '$REMOTE_PATH'/k8s/semicolon/secrets/create-secrets.sh"
+
+          ssh "${SSH_OPTS[@]}" "${M1_DEPLOY_USER}@127.0.0.1" \
+            "REMOTE_WORKSPACE='$REMOTE_PATH' NS='$NS' DOCKER_USERNAME='${DOCKER_USERNAME}' IMAGE_TAG='${GITHUB_SHA}' REPO='${GITHUB_REPOSITORY}' RUN_ID='${GITHUB_RUN_ID}' MODS='${MODS_TO_DEPLOY}' bash '$REMOTE_PATH/scripts/remote-deploy.sh'"
+
+      - name: Stop Cloudflare Tunnel TCP proxy
+        if: always()
+        run: |
+          if [ -f .deploy/cloudflared.pid ]; then
+            kill "$(cat .deploy/cloudflared.pid)" >/dev/null 2>&1 || true
+          fi
