@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redpanda-pvc
+  namespace: semicolon
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redpanda
+  namespace: semicolon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redpanda
+  template:
+    metadata:
+      labels:
+        app: redpanda
+    spec:
+      containers:
+        - name: redpanda
+          image: docker.redpanda.com/redpandadata/redpanda:v25.3.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - redpanda
+            - start
+            - --mode
+            - dev-container
+            - --smp
+            - "1"
+            - --memory
+            - 1G
+            - --reserve-memory
+            - 0M
+            - --overprovisioned
+            - --node-id
+            - "0"
+            - --check=false
+            - --kafka-addr
+            - internal://0.0.0.0:9092
+            - --advertise-kafka-addr
+            - internal://redpanda:9092
+            - --pandaproxy-addr
+            - internal://0.0.0.0:8082
+            - --advertise-pandaproxy-addr
+            - internal://redpanda:8082
+            - --schema-registry-addr
+            - internal://0.0.0.0:8081
+            - --rpc-addr
+            - 0.0.0.0:33145
+            - --advertise-rpc-addr
+            - redpanda:33145
+          ports:
+            - containerPort: 9092
+              protocol: TCP
+            - containerPort: 9644
+              protocol: TCP
+            - containerPort: 8081
+              protocol: TCP
+            - containerPort: 8082
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1536Mi
+          volumeMounts:
+            - name: redpanda-storage
+              mountPath: /var/lib/redpanda/data
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - rpk cluster health -X brokers=127.0.0.1:9092
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - rpk cluster health -X brokers=127.0.0.1:9092
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: redpanda-storage
+          persistentVolumeClaim:
+            claimName: redpanda-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda
+  namespace: semicolon
+spec:
+  selector:
+    app: redpanda
+  ports:
+    - name: kafka
+      port: 9092
+      targetPort: 9092
+    - name: admin
+      port: 9644
+      targetPort: 9644
+    - name: schema-registry
+      port: 8081
+      targetPort: 8081
+    - name: pandaproxy
+      port: 8082
+      targetPort: 8082
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: semicolon
+spec:
+  selector:
+    app: redpanda
+  ports:
+    - name: kafka
+      port: 9092
+      targetPort: 9092
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: team05-redpanda
+  namespace: semicolon
+spec:
+  selector:
+    app: redpanda
+  ports:
+    - name: kafka
+      port: 9092
+      targetPort: 9092
