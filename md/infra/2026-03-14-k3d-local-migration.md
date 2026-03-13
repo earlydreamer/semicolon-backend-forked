@@ -128,3 +128,31 @@
 ### 다음 단계
 
 - `k8s/README.md`와 작업 로그에 host-level `cloudflared`, Cloudflare Access SSH, 초기 bootstrap 절차를 문서화한다.
+
+## 6차 커밋 예정 범위
+
+### 의도
+
+- 현재 자동 배포 경로와 맥북 bootstrap 절차를 문서로 고정한다.
+- 기존 EC2 handover 문서는 히스토리로 남기되, 현재 기준 문서가 아님을 명확히 표시한다.
+
+### 변경
+
+- `k8s/README.md`를 host-level `cloudflared`, Cloudflare Access SSH, GitHub-hosted runner 배포 기준으로 전면 갱신했다.
+- `restore.sh`는 최초 bootstrap/복구 전용이고, 일상 배포는 `deploy-m1-tunnel.yml`이 수행한다는 흐름을 문서화했다.
+- `deployment_handover.md` 상단에 EC2 기록 문서라는 경고를 추가했다.
+
+### 검증
+
+- 문서에 적은 스크립트 이름, 환경변수 이름, 워크플로 이름이 현재 Git 트리와 일치하는지 `rg`로 재확인한다.
+- 실제 `Tunnel SSH`와 `k3d` 런타임 검증은 맥북 host 준비 이후 수동으로 진행한다.
+
+### 현재 기준 남은 수동 검증
+
+- 맥북 host에서 `cloudflared service install <TUNNEL_TOKEN>`
+- Cloudflare Dashboard에서 앱 hostname을 `http://localhost:8080`, SSH hostname을 `ssh://localhost:22`로 연결
+- `bash scripts/k3d/create-local-cluster.sh`
+- `bash k8s/semicolon/secrets/create-secrets.sh`
+- `APP_SET=all bash scripts/restore.sh`
+- `cloudflared access tcp --hostname <ssh-host> --url localhost:2222` 뒤 `ssh -p 2222 <user>@127.0.0.1 "echo ok"`
+- 단일 모듈 변경을 `dev`에 push해 GitHub Actions incremental deploy 확인
