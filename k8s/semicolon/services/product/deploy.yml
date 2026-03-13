@@ -30,6 +30,7 @@ spec:
                 name: semicolon-env
             - secretRef:
                 name: product-db
+                optional: true
           image: dukku/semicolon-product:latest
           imagePullPolicy: IfNotPresent
           name: product

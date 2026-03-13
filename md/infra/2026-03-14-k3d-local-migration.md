@@ -29,3 +29,29 @@
 ### 다음 단계
 
 - 서비스별 `envFrom` 완화와 `.env.template`, `create-secrets.sh`, `apply.sh`, `restore.sh`, `k3d` 스크립트를 정리한다.
+
+## 2차 커밋 예정 범위
+
+### 의도
+
+- 로컬 `k3d` 부트스트랩에 필요한 시크릿 주입 방식과 복구 스크립트를 정리한다.
+- 기존 서비스 매니페스트가 실제로 `kubectl apply` 가능한 형태가 되도록 `template.metadata`와 `secretRef` 구조를 정상화한다.
+
+### 변경
+
+- `create-secrets.sh`에 `K`, `NAMESPACE`, `SECRET_NAME`, `ENV_FILE` 주입 옵션을 추가하고, 빈 env 키를 Secret 생성에서 제외하도록 바꿨다.
+- `.env.template`을 `release` 기준 로컬 기본값과 placeholder 중심으로 다시 구성했다.
+- `scripts/apply.sh`를 local/prod ingress, monitoring, edge, cert-manager 토글 방식으로 재작성했다.
+- `scripts/restore.sh`를 `APP_SET=core|all` 기반 복구 흐름으로 재작성했다.
+- `scripts/k3d/create-local-cluster.sh`, `scripts/k3d/delete-local-cluster.sh`를 추가했다.
+- 서비스 Deployment의 `template.metadata` 누락을 보정하고, 서비스별 `*-db` secret을 `optional: true`로 완화했다.
+
+### 검증
+
+- `bash -n`으로 `create-secrets.sh`, `apply.sh`, `restore.sh`, `scripts/k3d/*.sh` 문법을 확인했다.
+- `python3` YAML 파싱으로 `k8s/semicolon` 하위 YAML 42개를 모두 확인했다.
+- 현재 작업 환경에는 `k3d` 바이너리가 없어 실제 로컬 클러스터 기동 검증은 아직 수행하지 못했다.
+
+### 다음 단계
+
+- `k8s/README.md`를 로컬 `k3d` 기준으로 다시 쓰고, 남은 수동 검증 절차와 제약사항을 작업 로그에 정리한다.

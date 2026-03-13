@@ -16,6 +16,7 @@ spec:
       maxUnavailable: 25%
     type: RollingUpdate
   template:
+    metadata:
       annotations:
         kubectl.kubernetes.io/restartedAt: "2026-02-23T00:00:00+09:00"
         prometheus.io/scrape: "true"
