@@ -55,3 +55,29 @@
 ### 다음 단계
 
 - `k8s/README.md`를 로컬 `k3d` 기준으로 다시 쓰고, 남은 수동 검증 절차와 제약사항을 작업 로그에 정리한다.
+
+## 3차 커밋 예정 범위
+
+### 의도
+
+- 로컬 `k3d` 사용법과 prod/local 차이를 문서로 고정한다.
+- 이번 세션에서 실제로 검증된 범위와 아직 남은 수동 검증 범위를 명확히 남긴다.
+
+### 변경
+
+- `k8s/README.md`를 `dependencies`, `services`, `monitoring`, `ingress`, `edge`, `secrets` 기준으로 다시 정리했다.
+- 로컬 `k3d` 생성, Secret 생성, apply, restore, delete 절차를 명령 예시와 함께 문서화했다.
+- `cloudflared`는 토큰 기반 실행만 지원하고, 공개 도메인과 라우팅은 Cloudflare 원격 설정에서 관리한다는 원칙을 명시했다.
+
+### 검증
+
+- 문서에 기술한 스크립트 이름, 기본 환경변수 이름, ingress/cloudflared 정책이 현재 Git 트리와 일치하는지 재확인했다.
+- `k3d` 바이너리가 없는 환경이라 실제 `k3d create -> kubectl apply -> restore` 런타임 검증은 아직 수행하지 못했다.
+
+### 남은 수동 검증
+
+- `k3d` 설치 후 `bash scripts/k3d/create-local-cluster.sh`
+- `bash k8s/semicolon/secrets/create-secrets.sh`
+- `INGRESS_MODE=local ENABLE_EDGE=false bash scripts/apply.sh`
+- `bash scripts/restore.sh`
+- 필요 시 `ENABLE_EDGE=true` 와 실제 `CLOUDFLARE_TUNNEL_TOKEN` 으로 `cloudflared` Pod Ready 확인
