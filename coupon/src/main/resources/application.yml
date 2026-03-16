@@ -1,3 +1,4 @@
+# coupon 서비스의 기본 실행 설정입니다.
 server:
   port: 8085
 
@@ -8,7 +9,7 @@ spring:
     name: coupon
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:coupon_service}?sslmode=${DB_SSLMODE:disable}
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:coupon_service}?sslmode=${DB_SSLMODE:disable}
 
 management:
   endpoints:

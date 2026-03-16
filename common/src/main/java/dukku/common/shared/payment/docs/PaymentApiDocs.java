@@ -58,8 +58,8 @@ public final class PaymentApiDocs {
                         "orderId": "TOSS_9a5be1c6_20260114_001",
                         "amount": 9000,
                         "orderName": "상품명 외 2건",
-                        "successUrl": "https://localhost:3000/payments/success?paymentUuid=...",
-                        "failUrl": "https://localhost:3000/payments/fail?paymentUuid=..."
+                        "successUrl": "https://dukku.earlydreamer.dev/payments/success?paymentUuid=...",
+                        "failUrl": "https://dukku.earlydreamer.dev/payments/fail?paymentUuid=..."
                       },
                       "amounts": {
                         "finalPayAmount": 13500,

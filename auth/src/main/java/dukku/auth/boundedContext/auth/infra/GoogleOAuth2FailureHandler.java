@@ -14,9 +14,12 @@ import java.io.IOException;
 
 @Slf4j
 @Component
+/**
+ * 구글 OAuth2 로그인 실패를 프런트 콜백 URL로 전달하는 핸들러입니다.
+ */
 public class GoogleOAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    @Value("${custom.auth.oauth2.success-redirect-url:http://localhost:3000/oauth/google/callback}")
+    @Value("${custom.auth.oauth2.success-redirect-url:https://dukku.earlydreamer.dev/oauth/google/callback}")
     private String successRedirectUrl;
 
     @Override

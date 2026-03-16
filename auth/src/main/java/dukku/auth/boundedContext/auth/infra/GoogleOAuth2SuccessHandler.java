@@ -19,9 +19,12 @@ import java.io.IOException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+/**
+ * 구글 OAuth2 로그인 성공 시 토큰을 프런트 콜백 URL로 전달하는 핸들러입니다.
+ */
 public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    @Value("${custom.auth.oauth2.success-redirect-url:http://localhost:3000/oauth/google/callback}")
+    @Value("${custom.auth.oauth2.success-redirect-url:https://dukku.earlydreamer.dev/oauth/google/callback}")
     private String successRedirectUrl;
 
     private final AuthService authService;

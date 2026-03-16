@@ -14,11 +14,14 @@ import org.springframework.web.client.RestClient;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+/**
+ * auth 서비스에서 user 서비스의 내부 인증 API를 호출하는 클라이언트입니다.
+ */
 public class UserClient {
 
     private final RestClient restClient;
 
-    @Value("${service.user.url:http://localhost:8082}")
+    @Value("${service.user.url:http://localhost}")
     private String userServiceUrl;
 
     public UserVerificationResponse verifyUser(String email, String password) {

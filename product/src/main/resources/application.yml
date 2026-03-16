@@ -1,3 +1,4 @@
+# product 서비스의 기본 실행 설정입니다.
 server:
   port: 8083
 
@@ -12,7 +13,7 @@ spring:
       max-request-size: 20MB
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:product_service}?sslmode=${DB_SSLMODE:disable}
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:product_service}?sslmode=${DB_SSLMODE:disable}
 
   batch:
     jdbc:
@@ -30,9 +31,9 @@ spring:
 
 product:
   init:
-    enabled: true
-    clear-es-on-startup: false
-  reindex-on-startup: true
+    enabled: ${PRODUCT_INIT_ENABLED:false}
+    clear-es-on-startup: ${PRODUCT_INIT_CLEAR_ES_ON_STARTUP:false}
+  reindex-on-startup: ${PRODUCT_REINDEX_ON_STARTUP:false}
 
 management:
   endpoints:

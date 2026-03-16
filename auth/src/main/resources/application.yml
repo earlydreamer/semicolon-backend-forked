@@ -1,3 +1,4 @@
+# auth 서비스의 기본 실행 설정입니다.
 server:
   port: 8081
 
@@ -11,7 +12,7 @@ spring:
     name: auth
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:auth_service}?sslmode=${DB_SSLMODE:disable}
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:auth_service}?sslmode=${DB_SSLMODE:disable}
   security:
     oauth2:
       client:
@@ -23,7 +24,7 @@ spring:
               - openid
               - profile
               - email
-            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:https://localhost:8081/login/oauth2/code/google}
+            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:https://dukku.earlydreamer.dev/login/oauth2/code/google}
 
 management:
   endpoints:
@@ -40,4 +41,4 @@ management:
 custom:
   auth:
     oauth2:
-      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:${GOOGLE_OAUTH_SUCCESS_REDIRECT_URI:https://localhost:3000/oauth/google/callback}}
+      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:${GOOGLE_OAUTH_SUCCESS_REDIRECT_URI:https://dukku.earlydreamer.dev/oauth/google/callback}}

@@ -9,7 +9,7 @@ metadata:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-    - host: user.api.dukku.shop
+    - host: user.api.dukku.earlydreamer.dev
       http:
         paths:
           - path: /

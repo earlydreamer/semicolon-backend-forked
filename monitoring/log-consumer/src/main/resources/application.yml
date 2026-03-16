@@ -1,3 +1,4 @@
+# log-consumer 서비스의 기본 실행 설정입니다.
 server:
   port: 9000
 
@@ -7,12 +8,12 @@ spring:
 
   data:
     mongodb:
-      host: ${MONGO_HOST:localhost}
+      host: ${MONGO_HOST:mongodb-service}
       port: ${MONGO_PORT:27017}
       database: log_service
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     consumer:
       group-id: log-consumer-group
       auto-offset-reset: earliest
@@ -33,4 +34,3 @@ management:
         enabled: true
     tags:
       application: ${spring.application.name}
-

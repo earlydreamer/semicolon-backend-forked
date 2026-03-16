@@ -1,3 +1,4 @@
+# 운영 Grafana 공개 도메인을 grafana-service로 라우팅하는 인그레스입니다.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -10,10 +11,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - grafana.api.dukku.shop
-      secretName: grafana-api-dukku-shop-tls
+        - grafana.api.dukku.earlydreamer.dev
+      secretName: grafana-api-dukku-earlydreamer-dev-tls
   rules:
-    - host: grafana.api.dukku.shop
+    - host: grafana.api.dukku.earlydreamer.dev
       http:
         paths:
           - path: /

@@ -7,12 +7,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
 @Configuration
+/**
+ * log-consumer가 환경별 MongoDB 연결 대상을 해석하도록 하는 설정입니다.
+ */
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
-    @Value("${spring.data.mongodb.host:${MONGO_HOST:localhost}}")
+    @Value("${spring.data.mongodb.host:${MONGO_HOST:mongodb-service}}")
     private String host;
 
-    @Value("${spring.data.mongodb.port:27017}")
+    @Value("${spring.data.mongodb.port:${MONGO_PORT:27017}}")
     private int port;
 
     @Value("${spring.data.mongodb.database:log_service}")

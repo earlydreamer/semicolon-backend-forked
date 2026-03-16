@@ -7,7 +7,7 @@ COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.local.nginx.yml"
 CERTS_DIR="${SCRIPT_DIR}/nginx-conf/certs"
 CERT_FULLCHAIN="${CERTS_DIR}/fullchain.pem"
 CERT_PRIVKEY="${CERTS_DIR}/privkey.pem"
-NETWORK_NAME="${BACKEND_DOCKER_NETWORK:-beadv4_4_semicolon_be_default}"
+NETWORK_NAME="${BACKEND_DOCKER_NETWORK:-dukku-network}"
 COMPOSE_MODE=""
 
 ACTION="toggle"
@@ -125,7 +125,7 @@ ensure_certs() {
   if command -v mkcert >/dev/null 2>&1; then
     echo "[${SCRIPT_NAME}] Using mkcert ..."
     mkcert -install >/dev/null 2>&1 || echo "[${SCRIPT_NAME}] mkcert -install failed or requires elevated privileges. Certificate may not be trusted."
-    if ! mkcert -cert-file "$CERT_FULLCHAIN" -key-file "$CERT_PRIVKEY" api.dukku.shop localhost 127.0.0.1 >/dev/null 2>&1; then
+    if ! mkcert -cert-file "$CERT_FULLCHAIN" -key-file "$CERT_PRIVKEY" api.dukku.earlydreamer.dev localhost 127.0.0.1 >/dev/null 2>&1; then
       echo "[${SCRIPT_NAME}] mkcert generation failed." >&2
       return 1
     fi

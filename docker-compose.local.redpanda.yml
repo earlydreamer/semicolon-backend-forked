@@ -7,7 +7,7 @@ services:
   # ============================================
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
-    container_name: team05-redpanda
+    container_name: semicolon-redpanda
     command:
       - redpanda
       - start
@@ -51,14 +51,14 @@ services:
       start_period: 10s
 
     networks:
-      - team05-network
+      - dukku-network
 
   # ============================================
   # Redpanda Console (Kafka UI)
   # ============================================
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:latest
-    container_name: team05-redpanda-console
+    container_name: semicolon-redpanda-console
     ports:
       - "8090:8080"  # 웹 UI 접속: http://localhost:8090
     entrypoint: /bin/sh
@@ -78,7 +78,7 @@ services:
         condition: service_healthy  #  Redpanda 준비 완료 후 시작
 
     networks:
-      - team05-network
+      - dukku-network
 
 # ============================================
 # 볼륨 (데이터 영속성)
@@ -88,8 +88,8 @@ volumes:
     driver: local
 
 # ============================================
-# 네트워크 (기존 서비스와 연결)
+# 네트워크 (없으면 compose가 생성, 있으면 재사용)
 # ============================================
 networks:
-  team05-network:
-    external: true
+  dukku-network:
+    name: ${DOCKER_SHARED_NETWORK:-dukku-network}

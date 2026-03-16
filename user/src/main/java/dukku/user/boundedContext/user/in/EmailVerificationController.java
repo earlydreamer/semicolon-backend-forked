@@ -22,11 +22,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RestController
 @RequestMapping("/api/v1/users/email")
 @RequiredArgsConstructor
+/**
+ * 이메일 검증 링크 처리와 프런트 리다이렉트를 담당하는 컨트롤러입니다.
+ */
 public class EmailVerificationController {
 
     private final EmailVerificationService emailVerificationService;
 
-    @Value("${custom.email.verification.success-redirect-url:https://localhost/email/verify}")
+    @Value("${custom.email.verification.success-redirect-url:https://dukku.earlydreamer.dev/email/verify}")
     private String successRedirectUrl;
 
     @PostMapping("/send")

@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Product 엔티티를 목록/상세 응답 DTO로 변환하는 매퍼입니다.
+ */
 public class ProductMapper {
 
     // 리스트 조회용 DTO 매핑(태그 기본 적용)
@@ -118,7 +121,7 @@ public class ProductMapper {
             base = System.getProperty("frontend.base.url");
         }
         if (base == null || base.isBlank()) {
-            base = "https://dukku.shop";
+            base = "https://dukku.earlydreamer.dev";
         }
         if (base.endsWith("/")) {
             base = base.substring(0, base.length() - 1);

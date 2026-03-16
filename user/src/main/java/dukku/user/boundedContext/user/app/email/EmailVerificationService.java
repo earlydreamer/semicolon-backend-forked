@@ -14,6 +14,9 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * 이메일 검증 링크 발송과 검증 결과 토큰 관리를 담당하는 서비스입니다.
+ */
 public class EmailVerificationService {
 
     private static final String TOKEN_KEY_PREFIX = "email:verify:token:";
@@ -26,7 +29,7 @@ public class EmailVerificationService {
     @Value("${spring.mail.username:}")
     private String mailFrom;
 
-    @Value("${custom.email.verification.base-url:http://localhost:8080}")
+    @Value("${custom.email.verification.base-url:https://dukku.earlydreamer.dev}")
     private String baseUrl;
 
     @Value("${custom.email.verification.token-ttl-seconds:1800}")

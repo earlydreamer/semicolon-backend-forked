@@ -1,3 +1,4 @@
+# 운영 API 공개 도메인을 각 내부 서비스로 라우팅하는 인그레스입니다.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,11 +10,11 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - api.dukku.shop
-      secretName: api-dukku-shop-tls
+        - api.dukku.earlydreamer.dev
+      secretName: api-dukku-earlydreamer-dev-tls
 
   rules:
-    - host: api.dukku.shop
+    - host: api.dukku.earlydreamer.dev
       http:
         paths:
           # =====================

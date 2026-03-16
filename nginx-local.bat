@@ -1,4 +1,5 @@
 ﻿@echo off
+rem 로컬 semicolon-nginx 컨테이너를 켜고 끄는 Windows 헬퍼 스크립트입니다.
 setlocal EnableExtensions EnableDelayedExpansion
 
 rem nginx-local.bat - Windows helper for semicolon-nginx
@@ -10,7 +11,7 @@ set "CERTS_DIR=%SCRIPT_DIR%nginx-conf\certs"
 set "CERT_FULLCHAIN=%CERTS_DIR%\fullchain.pem"
 set "CERT_PRIVKEY=%CERTS_DIR%\privkey.pem"
 set "NETWORK_NAME=%BACKEND_DOCKER_NETWORK%"
-if not defined NETWORK_NAME set "NETWORK_NAME=beadv4_4_semicolon_be_default"
+if not defined NETWORK_NAME set "NETWORK_NAME=dukku-network"
 
 set "COMPOSE_CMD="
 set "ACTION=toggle"
@@ -133,7 +134,7 @@ goto :action_%ACTION%
     if errorlevel 1 (
       echo [nginx-local] mkcert -install failed or requires admin rights. Certificate may not be trusted.
     )
-    mkcert -cert-file "%CERT_FULLCHAIN%" -key-file "%CERT_PRIVKEY%" api.dukku.shop localhost 127.0.0.1
+    mkcert -cert-file "%CERT_FULLCHAIN%" -key-file "%CERT_PRIVKEY%" api.dukku.earlydreamer.dev localhost 127.0.0.1
     if errorlevel 1 (
       echo [nginx-local] mkcert generation failed.
       exit /b 1

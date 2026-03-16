@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- deposit 서비스 로그를 공통 Logback/Kafka 설정에 연결합니다. -->
 <configuration scan="true" scanPeriod="30 seconds">
 
     <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="deposit-service"/>
-    <springProperty scope="context" name="KAFKA_BOOTSTRAP_SERVERS" source="spring.kafka.bootstrap-servers" defaultValue="localhost:19092"/>
+    <springProperty scope="context" name="KAFKA_BOOTSTRAP_SERVERS" source="spring.kafka.bootstrap-servers" defaultValue="kafka:9092"/>
 
     <include resource="logback-base.xml"/>
 
