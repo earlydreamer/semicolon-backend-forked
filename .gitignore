@@ -58,6 +58,9 @@ codex_preset_dukku
 docker-compose.local.elasticsearch.override.yml
 ai/docker-compose.local.db.override.yml
 
+# Internal working notes archive
+/.md/
+
 # k8s legacy / backup (서버 스냅샷, apply 대상 아님)
 k8s/semicolon/legacy/
 k8s/semicolon/ingress/*.bak*
