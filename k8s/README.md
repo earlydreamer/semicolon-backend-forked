@@ -33,7 +33,7 @@
   - `clusterissuer-letsencrypt-prod.yml` : prod 전용
   - `grafana-ingress.yml` : prod 전용
 - `secrets/`
-  - `create-secrets.sh`가 기본으로 읽는 루트 `.env`
+  - `.env.example`를 복사해 생성하는 루트 `.env`
   - `create-secrets.sh`
 
 ## Local M1 Bootstrap
@@ -66,6 +66,15 @@ HTTP_PORT=18080 HTTPS_PORT=18443 bash scripts/k3d/create-local-cluster.sh
 
 ### 3. 공통 Secret 생성
 
+먼저 루트 `.env.example`를 복사해 `.env`를 만들고 값을 채운다.
+
+```bash
+cd /mnt/d/Projects/Programmers/Final-Project-Fork/backend/semicolon-backend-forked
+cp .env.example .env
+```
+
+그 다음 Secret을 생성한다.
+
 ```bash
 cd /mnt/d/Projects/Programmers/Final-Project-Fork/backend/semicolon-backend-forked/k8s/semicolon/secrets
 bash create-secrets.sh
@@ -79,6 +88,7 @@ bash create-secrets.sh
 - `ENV_FILE` 기본값 `backend/semicolon-backend-forked/.env`
 
 빈 값은 Secret 생성에서 제외된다. 따라서 루트 `.env`에서 값을 비워 두면 서비스 기본값 또는 코드 기본값을 사용한다.
+`LOCAL_*` 값은 로컬 IDE/host nginx 실행용이며, `create-secrets.sh`가 Kubernetes Secret 생성 시 자동으로 제외한다.
 
 ### 4. 최초 복구
 
