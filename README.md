@@ -3,12 +3,10 @@
 <div align="center">
 
 ![DUKKU Logo](https://img.shields.io/badge/Service-DUKKU-FF6B6B?style=for-the-badge)
-[![GitHub stars](https://img.shields.io/github/stars/prgrms-be-adv-devcourse/beadv4_4_semicolon_BE?style=for-the-badge)](https://github.com/prgrms-be-adv-devcourse/beadv4_4_semicolon_BE/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/prgrms-be-adv-devcourse/beadv4_4_semicolon_BE?style=for-the-badge)](https://github.com/prgrms-be-adv-devcourse/beadv4_4_semicolon_BE/issues)
 
 **"나만의 굿즈를 더 가치 있게"** **DUKKU는 팬덤 문화를 위한 통합 굿즈 이커머스 및 커뮤니티 플랫폼 백엔드 서비스입니다.**
 
-[서비스 상세 기획 (Notion)](https://www.notion.so/5-DUKKU-2fc15a01205480b0b573fd00f2e0ee23) | [배포 핸드오버](deployment_handover.md)
+[서비스 상세 기획 (Notion)](https://www.notion.so/5-DUKKU-2fc15a01205480b0b573fd00f2e0ee23) | [배포 핸드오버](deployment_handover.md) | [변경 이력](docs/change-history.md)
 
 </div>
 
@@ -67,9 +65,6 @@
 ![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
-![Tailscale](https://img.shields.io/badge/Tailscale-2962FF?style=for-the-badge&logo=tailscale&logoColor=white)
-
-
 </div>
 
 ---
@@ -79,7 +74,7 @@
 멀티 모듈 Gradle 구조를 채택하여 각 디렉토리가 독립적인 서비스 또는 공용 모듈을 나타냅니다.
 
 ```
-beadv4_4_semicolon_BE[dukku]/
+semicolon-backend-forked/
 ├── ai/                            # AI 기능 마이크로서비스
 ├── auth/                          # 인증 및 인가 마이크로서비스
 ├── common/                        # 공통 유틸리티 및 설정 공유 모듈

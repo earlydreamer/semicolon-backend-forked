@@ -1,3 +1,5 @@
+# 로컬 Nginx TLS 인증서 안내
+
 로컬 Nginx HTTPS에서 사용할 TLS 인증서를 이 폴더에 두세요.
 
 - `fullchain.pem`
@@ -12,8 +14,8 @@ docker run --rm -v "$(pwd)/nginx-conf/certs:/out" alpine:3.20 sh -c \
    -keyout /out/privkey.pem \
    -out /out/fullchain.pem \
    -days 365 \
-   -subj '/CN=api.dukku.shop' \
-   -addext 'subjectAltName=DNS:api.dukku.shop,DNS:localhost'"
+   -subj '/CN=api.dukku.earlydreamer.dev' \
+   -addext 'subjectAltName=DNS:api.dukku.earlydreamer.dev,DNS:localhost'"
 ```
 
 참고:

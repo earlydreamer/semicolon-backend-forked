@@ -33,7 +33,7 @@
   - `clusterissuer-letsencrypt-prod.yml` : prod 전용
   - `grafana-ingress.yml` : prod 전용
 - `secrets/`
-  - `.env.template`
+  - `create-secrets.sh`가 기본으로 읽는 루트 `.env`
   - `create-secrets.sh`
 
 ## Local M1 Bootstrap
@@ -76,9 +76,9 @@ bash create-secrets.sh
 - `K` 기본값 `kubectl`
 - `NAMESPACE` 기본값 `semicolon`
 - `SECRET_NAME` 기본값 `semicolon-env`
-- `ENV_FILE` 기본값 `./.env.template`
+- `ENV_FILE` 기본값 `backend/semicolon-backend-forked/.env`
 
-빈 값은 Secret 생성에서 제외된다. 따라서 `.env.template`에 값을 비워 두면 서비스 기본값 또는 코드 기본값을 사용한다.
+빈 값은 Secret 생성에서 제외된다. 따라서 루트 `.env`에서 값을 비워 두면 서비스 기본값 또는 코드 기본값을 사용한다.
 
 ### 4. 최초 복구
 

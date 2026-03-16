@@ -11,7 +11,7 @@
 - 의존성: `common/build.gradle`에 `org.springframework.boot:spring-boot-starter-data-redis` 포함.
 - 클라이언트: 별도의 Jedis 의존성 없음 → Spring Boot 기본인 Lettuce 사용으로 간주.
 - 환경 변수(설정 키): `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` (각 서비스의 `application.yml`에서 사용)
-  - 예: `product/src/main/resources/application.yml`에서 `spring.data.redis.host: ${REDIS_HOST:localhost}` 등.
+  - 예: `product/src/main/resources/application.yml`에서 `spring.data.redis.host: ${REDIS_HOST:redis}` 등.
 
 ## 2) 코드 상 사용처(파일 목록)
 - 공통(레이트리밋)
