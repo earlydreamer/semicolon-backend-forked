@@ -15,9 +15,13 @@ declare -a RENDERED_FILES=()
 cleanup_rendered_files() {
   local rendered_file
 
-  for rendered_file in "${RENDERED_FILES[@]:-}"; do
-    [ -f "$rendered_file" ] && rm -f "$rendered_file"
+  for rendered_file in "${RENDERED_FILES[@]}"; do
+    if [ -n "$rendered_file" ] && [ -f "$rendered_file" ]; then
+      rm -f "$rendered_file"
+    fi
   done
+
+  return 0
 }
 
 read_env_value() {
@@ -81,12 +85,22 @@ render_template() {
   local rendered_file
 
   rendered_file="$(mktemp)"
-  RENDERED_FILES+=("$rendered_file")
 
   perl -pe 's/\$\{([A-Z0-9_]+)\}/exists $ENV{$1} ? $ENV{$1} : die("[fail] missing template variable $1\n")/ge' \
     "$source_file" > "$rendered_file"
 
   echo "$rendered_file"
+}
+
+apply_rendered_template() {
+  local source_file="$1"
+  local rendered_file
+
+  rendered_file="$(render_template "$source_file")"
+  RENDERED_FILES+=("$rendered_file")
+
+  # shellcheck disable=SC2086
+  $K -n "$NS" apply -f "$rendered_file"
 }
 
 read_env_or_default() {
@@ -142,8 +156,7 @@ else
   export SHOWCASE_RESET_SUSPEND="true"
 fi
 
-# shellcheck disable=SC2086
-$K -n "$NS" apply -f "$(render_template k8s/semicolon/templates/showcase-reset.yml.tpl)"
+apply_rendered_template k8s/semicolon/templates/showcase-reset.yml.tpl
 
 case "$INGRESS_MODE" in
   local)
@@ -158,8 +171,7 @@ case "$INGRESS_MODE" in
 
       if [ -n "$local_grafana_host" ]; then
         export PUBLIC_GRAFANA_HOST="$local_grafana_host"
-        # shellcheck disable=SC2086
-        $K -n "$NS" apply -f "$(render_template k8s/semicolon/ingress/grafana-ingress.local.yml)"
+        apply_rendered_template k8s/semicolon/ingress/grafana-ingress.local.yml
       fi
     fi
     ;;
@@ -169,12 +181,10 @@ case "$INGRESS_MODE" in
     load_render_var "PUBLIC_API_TLS_SECRET" "$(derive_tls_secret_name "$PUBLIC_API_HOST")"
     load_render_var "PUBLIC_GRAFANA_TLS_SECRET" "$(derive_tls_secret_name "$PUBLIC_GRAFANA_HOST")"
 
-    # shellcheck disable=SC2086
-    $K -n "$NS" apply -f "$(render_template k8s/semicolon/ingress/api-gateway-ingress.yml)"
+    apply_rendered_template k8s/semicolon/ingress/api-gateway-ingress.yml
 
     if [ "$ENABLE_MONITORING" = "true" ]; then
-      # shellcheck disable=SC2086
-      $K -n "$NS" apply -f "$(render_template k8s/semicolon/ingress/grafana-ingress.yml)"
+      apply_rendered_template k8s/semicolon/ingress/grafana-ingress.yml
     fi
     ;;
   *)
