@@ -16,14 +16,23 @@ env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
   REMOTE_WORKSPACE: ${{ vars.REMOTE_WORKSPACE }}
+  PUBLIC_WEB_HOST: ${{ vars.PUBLIC_WEB_HOST }}
+  PUBLIC_API_HOST: ${{ vars.PUBLIC_API_HOST }}
+  PUBLIC_GRAFANA_HOST: ${{ vars.PUBLIC_GRAFANA_HOST }}
+  CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
+  DEPLOY_INGRESS_MODE: ${{ vars.DEPLOY_INGRESS_MODE }}
+  DEPLOY_ENABLE_MONITORING: ${{ vars.DEPLOY_ENABLE_MONITORING }}
+  DEPLOY_ENABLE_CERT_MANAGER: ${{ vars.DEPLOY_ENABLE_CERT_MANAGER }}
   CLOUDFLARED_VERSION: "2026.3.0"
 
 jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      any_changed: ${{ steps.set-matrix.outputs.any_changed }}
+      build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
+      mods_to_deploy: ${{ steps.set-matrix.outputs.mods_to_deploy }}
+      build_needed: ${{ steps.set-matrix.outputs.build_needed }}
+      deploy_needed: ${{ steps.set-matrix.outputs.deploy_needed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,14 +40,15 @@ jobs:
         id: filter
         with:
           filters: |
-            common:
+            infra:
+              - 'k8s/**'
+              - 'scripts/**'
+              - '.github/workflows/**'
+            shared:
               - 'common/**'
               - 'build.gradle'
               - 'settings.gradle'
               - 'Dockerfile'
-              - 'k8s/**'
-              - 'scripts/**'
-              - '.github/workflows/**'
             auth: 'auth/**'
             user: 'user/**'
             product: 'product/**'
@@ -52,42 +62,56 @@ jobs:
 
       - id: set-matrix
         run: |
-          MATRIX="[]"
-          ANY_CHANGED="false"
+          ALL_MODULES=(auth user product order coupon payment deposit settlement ai log-consumer)
+          BUILD_MATRIX='["none"]'
+          MODS_TO_DEPLOY=""
+          BUILD_NEEDED="false"
+          DEPLOY_NEEDED="false"
 
-          if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
-            MATRIX='["auth", "user", "product", "order", "coupon", "payment", "deposit", "settlement", "ai", "log-consumer"]'
-            ANY_CHANGED="true"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            DEPLOY_NEEDED="true"
           else
             MODS=()
-            for m in auth user product order coupon payment deposit settlement ai log-consumer; do
+            for m in "${ALL_MODULES[@]}"; do
               CHANGED=$(jq -r ".[\"${m}\"]" <<< '${{ toJson(steps.filter.outputs) }}')
               if [[ "$CHANGED" == "true" ]]; then
                 MODS+=("$m")
               fi
             done
 
-            if [ ${#MODS[@]} -gt 0 ]; then
-              MATRIX=$(printf '%s\n' "${MODS[@]}" | jq -R . | jq -s .)
-              ANY_CHANGED="true"
+            if [[ "${{ steps.filter.outputs.shared }}" == "true" ]]; then
+              BUILD_MATRIX=$(printf '%s\n' "${ALL_MODULES[@]}" | jq -R . | jq -s -c .)
+              MODS_TO_DEPLOY="${ALL_MODULES[*]}"
+              BUILD_NEEDED="true"
+              DEPLOY_NEEDED="true"
+            elif [ ${#MODS[@]} -gt 0 ]; then
+              BUILD_MATRIX=$(printf '%s\n' "${MODS[@]}" | jq -R . | jq -s -c .)
+              MODS_TO_DEPLOY="$(printf '%s ' "${MODS[@]}" | xargs)"
+              BUILD_NEEDED="true"
+              DEPLOY_NEEDED="true"
             else
-              MATRIX='["none"]'
-              ANY_CHANGED="false"
+              BUILD_MATRIX='["none"]'
+              MODS_TO_DEPLOY=""
+            fi
+
+            if [[ "${{ steps.filter.outputs.infra }}" == "true" ]]; then
+              DEPLOY_NEEDED="true"
             fi
           fi
 
-          MATRIX_MIN=$(echo "$MATRIX" | jq -c .)
-          echo "matrix=${MATRIX_MIN}" >> "$GITHUB_OUTPUT"
-          echo "any_changed=${ANY_CHANGED}" >> "$GITHUB_OUTPUT"
+          echo "build_matrix=${BUILD_MATRIX}" >> "$GITHUB_OUTPUT"
+          echo "mods_to_deploy=${MODS_TO_DEPLOY}" >> "$GITHUB_OUTPUT"
+          echo "build_needed=${BUILD_NEEDED}" >> "$GITHUB_OUTPUT"
+          echo "deploy_needed=${DEPLOY_NEEDED}" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     needs: changes
-    if: ${{ needs.changes.outputs.any_changed == 'true' }}
+    if: ${{ needs.changes.outputs.build_needed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        module: ${{ fromJson(needs.changes.outputs.matrix) }}
+        module: ${{ fromJson(needs.changes.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -118,15 +142,14 @@ jobs:
 
   deploy:
     needs: [changes, build-and-push]
-    if: ${{ needs.changes.outputs.any_changed == 'true' }}
+    if: ${{ always() && needs.changes.outputs.deploy_needed == 'true' && (needs.changes.outputs.build_needed != 'true' || needs.build-and-push.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pass Dynamic Matrix to Env
+      - name: Pass Deployment Scope to Env
         run: |
-          MODS_STR=$(echo '${{ needs.changes.outputs.matrix }}' | jq -r '.[]' | tr '\n' ' ' | xargs)
-          echo "MODS_TO_DEPLOY=${MODS_STR}" >> "$GITHUB_ENV"
+          echo "MODS_TO_DEPLOY=${{ needs.changes.outputs.mods_to_deploy }}" >> "$GITHUB_ENV"
 
       - name: Install cloudflared CLI
         run: |
@@ -190,8 +213,24 @@ jobs:
 
           python3 - <<'PY'
           import os
+          public_web_host = os.environ.get("PUBLIC_WEB_HOST") or "dukku.earlydreamer.dev"
+          public_api_host = os.environ.get("PUBLIC_API_HOST") or "api-dukku.earlydreamer.dev"
+          public_grafana_host = os.environ.get("PUBLIC_GRAFANA_HOST") or f"grafana.{public_api_host}"
+          frontend_base_url = f"https://{public_web_host}"
+          api_base_url = f"https://{public_api_host}"
+          cors_allowed_origins = (
+              os.environ.get("CORS_ALLOWED_ORIGINS")
+              or ",".join([
+                  frontend_base_url,
+                  f"https://www.{public_web_host}",
+              ])
+          )
+
           lines = [
               "SPRING_PROFILES_ACTIVE=release",
+              f"PUBLIC_WEB_HOST={public_web_host}",
+              f"PUBLIC_API_HOST={public_api_host}",
+              f"PUBLIC_GRAFANA_HOST={public_grafana_host}",
               "DB_HOST=postgres",
               "DB_PORT=5432",
               "DB_NAME=",
@@ -209,9 +248,9 @@ jobs:
               f"JWT_REFRESH_SECRET={os.environ['JWT_REFRESH_SECRET']}",
               f"CRYPTO_KEY={os.environ['CRYPTO_KEY']}",
               f"INTERNAL_SERVICE_TOKEN={os.environ['INTERNAL_SERVICE_TOKEN']}",
-              "CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost:3000,http://127.0.0.1:3000,http://localhost:8080",
+              f"CORS_ALLOWED_ORIGINS={cors_allowed_origins}",
               "INTERNAL_BACK_URL=http://auth-service",
-              "FRONTEND_BASE_URL=http://localhost:3000",
+              f"FRONTEND_BASE_URL={frontend_base_url}",
               f"OPENAI_API_KEY={os.environ['OPENAI_API_KEY']}",
               "OPENAI_CHAT_MODEL=gpt-4o-mini",
               "AI_INIT_ENABLED=false",
@@ -221,16 +260,16 @@ jobs:
               "MAIL_PORT=1025",
               "MAIL_USERNAME=local-mail-user",
               "EMAIL_PASSWORD=local-mail-password",
-              "EMAIL_VERIFICATION_BASE_URL=http://localhost:8080",
-              "EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL=http://localhost:3000/email/verify",
+              f"EMAIL_VERIFICATION_BASE_URL={frontend_base_url}",
+              f"EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL={frontend_base_url}/email/verify",
               f"GOOGLE_OAUTH_CLIENT_ID={os.environ['GOOGLE_OAUTH_CLIENT_ID']}",
               f"GOOGLE_OAUTH_CLIENT_SECRET={os.environ['GOOGLE_OAUTH_CLIENT_SECRET']}",
-              "GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google",
-              "GOOGLE_OAUTH_SUCCESS_REDIRECT_URI=http://localhost:3000/oauth/google/callback",
-              "GOOGLE_OAUTH_SUCCESS_REDIRECT_URL=http://localhost:3000/oauth/google/callback",
+              f"GOOGLE_OAUTH_REDIRECT_URI={api_base_url}/login/oauth2/code/google",
+              f"GOOGLE_OAUTH_SUCCESS_REDIRECT_URI={frontend_base_url}/oauth/google/callback",
+              f"GOOGLE_OAUTH_SUCCESS_REDIRECT_URL={frontend_base_url}/oauth/google/callback",
               f"SYSTEM_DEPOSIT_PASSWORD={os.environ['SYSTEM_DEPOSIT_PASSWORD']}",
               f"TOSS_API_SECRET_KEY={os.environ['TOSS_API_SECRET_KEY']}",
-              "TOSS_CALLBACK_BASE_URL=http://localhost:8080",
+              f"TOSS_CALLBACK_BASE_URL={frontend_base_url}",
               f"AWS_ACCESS_KEY={os.environ['AWS_ACCESS_KEY']}",
               f"AWS_REGION={os.environ['AWS_REGION']}",
               f"AWS_S3_BUCKET={os.environ['AWS_S3_BUCKET']}",
@@ -288,6 +327,9 @@ jobs:
         run: |
           REMOTE_PATH="${REMOTE_WORKSPACE:-deploy/semicolon-backend}"
           NS="${K8S_NAMESPACE:-semicolon}"
+          DEPLOY_INGRESS_MODE="${DEPLOY_INGRESS_MODE:-local}"
+          DEPLOY_ENABLE_MONITORING="${DEPLOY_ENABLE_MONITORING:-true}"
+          DEPLOY_ENABLE_CERT_MANAGER="${DEPLOY_ENABLE_CERT_MANAGER:-false}"
 
           SSH_OPTS=(
             -i .deploy/ssh/id_ed25519
@@ -310,7 +352,7 @@ jobs:
             "rm -rf '$REMOTE_PATH/k8s' '$REMOTE_PATH/scripts' && tar xzf '$REMOTE_PATH/semicolon-bundle.tgz' -C '$REMOTE_PATH' && chmod +x '$REMOTE_PATH'/scripts/*.sh '$REMOTE_PATH'/scripts/k3d/*.sh '$REMOTE_PATH'/k8s/semicolon/secrets/create-secrets.sh"
 
           ssh "${SSH_OPTS[@]}" "${M1_DEPLOY_USER}@127.0.0.1" \
-            "REMOTE_WORKSPACE='$REMOTE_PATH' NS='$NS' DOCKER_USERNAME='${DOCKER_USERNAME}' IMAGE_TAG='${GITHUB_SHA}' REPO='${GITHUB_REPOSITORY}' RUN_ID='${GITHUB_RUN_ID}' MODS='${MODS_TO_DEPLOY}' bash '$REMOTE_PATH/scripts/remote-deploy.sh'"
+            "REMOTE_WORKSPACE='$REMOTE_PATH' NS='$NS' INGRESS_MODE='${DEPLOY_INGRESS_MODE}' ENABLE_MONITORING='${DEPLOY_ENABLE_MONITORING}' ENABLE_CERT_MANAGER='${DEPLOY_ENABLE_CERT_MANAGER}' DOCKER_USERNAME='${DOCKER_USERNAME}' IMAGE_TAG='${GITHUB_SHA}' REPO='${GITHUB_REPOSITORY}' RUN_ID='${GITHUB_RUN_ID}' MODS='${MODS_TO_DEPLOY}' bash '$REMOTE_PATH/scripts/remote-deploy.sh'"
 
       - name: Stop Cloudflare Tunnel TCP proxy
         if: always()

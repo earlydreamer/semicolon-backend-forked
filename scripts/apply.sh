@@ -118,6 +118,19 @@ case "$INGRESS_MODE" in
   local)
     # shellcheck disable=SC2086
     $K -n "$NS" apply -f k8s/semicolon/ingress/api-gateway-ingress.local.yml
+
+    if [ "$ENABLE_MONITORING" = "true" ]; then
+      local_grafana_host="${PUBLIC_GRAFANA_HOST:-}"
+      if [ -z "$local_grafana_host" ]; then
+        local_grafana_host="$(read_env_value PUBLIC_GRAFANA_HOST)"
+      fi
+
+      if [ -n "$local_grafana_host" ]; then
+        export PUBLIC_GRAFANA_HOST="$local_grafana_host"
+        # shellcheck disable=SC2086
+        $K -n "$NS" apply -f "$(render_template k8s/semicolon/ingress/grafana-ingress.local.yml)"
+      fi
+    fi
     ;;
   prod)
     load_render_var "PUBLIC_API_HOST"
