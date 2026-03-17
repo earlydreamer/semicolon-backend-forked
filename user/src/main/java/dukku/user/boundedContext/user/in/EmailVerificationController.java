@@ -29,7 +29,7 @@ public class EmailVerificationController {
 
     private final EmailVerificationService emailVerificationService;
 
-    @Value("${custom.email.verification.success-redirect-url:https://dukku.earlydreamer.dev/email/verify}")
+    @Value("${custom.email.verification.success-redirect-url:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}/email/verify}")
     private String successRedirectUrl;
 
     @PostMapping("/send")

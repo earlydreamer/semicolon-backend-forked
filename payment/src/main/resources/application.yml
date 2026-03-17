@@ -25,4 +25,4 @@ management:
 
 toss:
   callback:
-    base-url: ${TOSS_CALLBACK_BASE_URL:https://dukku.earlydreamer.dev}
+    base-url: ${TOSS_CALLBACK_BASE_URL:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}}

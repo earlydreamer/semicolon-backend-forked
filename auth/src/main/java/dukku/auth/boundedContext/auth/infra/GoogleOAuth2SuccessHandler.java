@@ -24,7 +24,7 @@ import java.io.IOException;
  */
 public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    @Value("${custom.auth.oauth2.success-redirect-url:https://dukku.earlydreamer.dev/oauth/google/callback}")
+    @Value("${custom.auth.oauth2.success-redirect-url:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}/oauth/google/callback}")
     private String successRedirectUrl;
 
     private final AuthService authService;

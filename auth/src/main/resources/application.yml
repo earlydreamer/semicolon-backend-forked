@@ -24,7 +24,7 @@ spring:
               - openid
               - profile
               - email
-            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:https://dukku.earlydreamer.dev/login/oauth2/code/google}
+            redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:https://${PUBLIC_API_HOST:api-dukku.earlydreamer.dev}/login/oauth2/code/google}
 
 management:
   endpoints:
@@ -41,4 +41,4 @@ management:
 custom:
   auth:
     oauth2:
-      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:${GOOGLE_OAUTH_SUCCESS_REDIRECT_URI:https://dukku.earlydreamer.dev/oauth/google/callback}}
+      success-redirect-url: ${GOOGLE_OAUTH_SUCCESS_REDIRECT_URL:${GOOGLE_OAUTH_SUCCESS_REDIRECT_URI:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}/oauth/google/callback}}

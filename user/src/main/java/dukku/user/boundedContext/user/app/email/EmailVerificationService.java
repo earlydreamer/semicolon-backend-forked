@@ -29,7 +29,7 @@ public class EmailVerificationService {
     @Value("${spring.mail.username:}")
     private String mailFrom;
 
-    @Value("${custom.email.verification.base-url:https://dukku.earlydreamer.dev}")
+    @Value("${custom.email.verification.base-url:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}}")
     private String baseUrl;
 
     @Value("${custom.email.verification.token-ttl-seconds:1800}")

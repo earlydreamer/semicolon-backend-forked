@@ -121,6 +121,12 @@ public class ProductMapper {
             base = System.getProperty("frontend.base.url");
         }
         if (base == null || base.isBlank()) {
+            String publicWebHost = System.getenv("PUBLIC_WEB_HOST");
+            if (publicWebHost != null && !publicWebHost.isBlank()) {
+                base = "https://" + publicWebHost;
+            }
+        }
+        if (base == null || base.isBlank()) {
             base = "https://dukku.earlydreamer.dev";
         }
         if (base.endsWith("/")) {
