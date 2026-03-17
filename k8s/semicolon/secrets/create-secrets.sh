@@ -36,26 +36,26 @@ awk '
     value = substr(line, index(line, "=") + 1)
     value = trim(value)
 
-    if (
-      key != "" &&
-      index(key, "LOCAL_") != 1 &&
-      key != "DB_NAME" &&
-      key != "SPRING_PROFILES_ACTIVE" &&
-      key != "INTERNAL_BACK_URL" &&
-      key != "SERVICE_USER_URL" &&
-      key != "CUSTOM_CLIENT_USER_URL" &&
-      key != "CUSTOM_CLIENT_PRODUCT_URL" &&
-      key != "CUSTOM_CLIENT_CART_URL" &&
-      key != "CUSTOM_CLIENT_SETTLEMENT_URL" &&
-      key != "CUSTOM_CLIENT_ORDER_URL" &&
-      key != "CUSTOM_CLIENT_PAYMENT_URL" &&
-      key != "CUSTOM_CLIENT_COUPON_URL" &&
-      key != "CUSTOM_CLIENT_DEPOSIT_URL" &&
-      key != "CUSTOM_CLIENT_AI_URL" &&
-      value != ""
-    ) {
-      print key "=" value
+    if (key == "" ||
+        index(key, "LOCAL_") == 1 ||
+        key == "DB_NAME" ||
+        key == "SPRING_PROFILES_ACTIVE" ||
+        key == "INTERNAL_BACK_URL" ||
+        key == "SERVICE_USER_URL" ||
+        key == "CUSTOM_CLIENT_USER_URL" ||
+        key == "CUSTOM_CLIENT_PRODUCT_URL" ||
+        key == "CUSTOM_CLIENT_CART_URL" ||
+        key == "CUSTOM_CLIENT_SETTLEMENT_URL" ||
+        key == "CUSTOM_CLIENT_ORDER_URL" ||
+        key == "CUSTOM_CLIENT_PAYMENT_URL" ||
+        key == "CUSTOM_CLIENT_COUPON_URL" ||
+        key == "CUSTOM_CLIENT_DEPOSIT_URL" ||
+        key == "CUSTOM_CLIENT_AI_URL" ||
+        value == "") {
+      next
     }
+
+    print key "=" value
   }
 ' "$ENV_FILE" > "$TMP_ENV"
 
