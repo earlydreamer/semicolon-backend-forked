@@ -79,13 +79,22 @@ spec:
           volumeMounts:
             - name: redpanda-storage
               mountPath: /var/lib/redpanda/data
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - rpk cluster info -X brokers=127.0.0.1:9092 >/dev/null
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             exec:
               command:
                 - /bin/sh
                 - -ec
-                - rpk cluster health -X brokers=127.0.0.1:9092
-            initialDelaySeconds: 30
+                - rpk cluster info -X brokers=127.0.0.1:9092 >/dev/null
+            initialDelaySeconds: 10
             periodSeconds: 15
             timeoutSeconds: 5
           readinessProbe:

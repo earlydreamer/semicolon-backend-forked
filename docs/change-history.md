@@ -24,6 +24,7 @@
 - `restore.sh`가 k3d 로컬 bootstrap 시 커스텀 Postgres 이미지를 자동으로 빌드하고 import하도록 보강했습니다.
 - `restore.sh`가 k3d 로컬 bootstrap 시 Spring Boot 앱 이미지(`auth`, `user`, `product`, `order`, `coupon`, `payment`, `deposit`, `settlement`, `ai`, `log-consumer`)도 함께 빌드/import하도록 확장했습니다.
 - `log-consumer` Deployment에 `imagePullPolicy: IfNotPresent`를 추가해 로컬 import 이미지를 재사용하도록 보정했습니다.
+- `redpanda` Deployment의 probe를 단일 노드 bootstrap 기준으로 조정해 startup/liveness/readiness 역할을 분리했습니다.
 
 ### 검증
 - `docker compose config`로 로컬 DB, 로컬 Redpanda, 로컬 모니터링, 로컬 Nginx, prod Compose 구성을 재검증했습니다.
