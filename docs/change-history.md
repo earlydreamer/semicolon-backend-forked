@@ -22,6 +22,8 @@
 - README, handover 문서, k8s 문서, frontend 문서의 오래된 절대 경로와 과거 환경 기준 설명을 현재 워크스페이스와 배포 구조에 맞게 수정했습니다.
 - 루트 `.env.example`를 추가해 초기 bootstrap 시 `cp .env.example .env` 흐름으로 설정을 시작할 수 있게 정리했습니다.
 - `restore.sh`가 k3d 로컬 bootstrap 시 커스텀 Postgres 이미지를 자동으로 빌드하고 import하도록 보강했습니다.
+- `restore.sh`가 k3d 로컬 bootstrap 시 Spring Boot 앱 이미지(`auth`, `user`, `product`, `order`, `coupon`, `payment`, `deposit`, `settlement`, `ai`, `log-consumer`)도 함께 빌드/import하도록 확장했습니다.
+- `log-consumer` Deployment에 `imagePullPolicy: IfNotPresent`를 추가해 로컬 import 이미지를 재사용하도록 보정했습니다.
 
 ### 검증
 - `docker compose config`로 로컬 DB, 로컬 Redpanda, 로컬 모니터링, 로컬 Nginx, prod Compose 구성을 재검증했습니다.

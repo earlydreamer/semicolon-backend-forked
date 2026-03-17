@@ -11,6 +11,7 @@ INGRESS_MODE="${INGRESS_MODE:-local}"
 ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
 ENSURE_LOCAL_DEPENDENCY_IMAGES="${ENSURE_LOCAL_DEPENDENCY_IMAGES:-true}"
+BUILD_LOCAL_APP_IMAGES_MODE="${BUILD_LOCAL_APP_IMAGES_MODE:-always}"
 
 wait_for_api() {
   echo "[wait] kubernetes api ready..."
@@ -63,6 +64,8 @@ if [ "$ENSURE_LOCAL_DEPENDENCY_IMAGES" = "true" ]; then
   K="$K" \
   K3D_CLUSTER_NAME="${K3D_CLUSTER_NAME:-}" \
   FORCE_BUILD_POSTGRES_IMAGE="${FORCE_BUILD_POSTGRES_IMAGE:-false}" \
+  BUILD_LOCAL_APP_IMAGES_MODE="$BUILD_LOCAL_APP_IMAGES_MODE" \
+  LOCAL_APP_MODULES="${LOCAL_APP_MODULES:-auth user product order coupon payment deposit settlement ai log-consumer}" \
   bash scripts/k3d/ensure-local-dependency-images.sh
 fi
 

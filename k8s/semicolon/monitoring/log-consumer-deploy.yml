@@ -20,6 +20,7 @@ spec:
       containers:
         - name: log-consumer
           image: dukku/semicolon-log-consumer:latest
+          imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: semicolon-env
