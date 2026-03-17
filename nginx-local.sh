@@ -8,7 +8,9 @@ CERTS_DIR="${SCRIPT_DIR}/nginx-conf/certs"
 CERT_FULLCHAIN="${CERTS_DIR}/fullchain.pem"
 CERT_PRIVKEY="${CERTS_DIR}/privkey.pem"
 NETWORK_NAME="${BACKEND_DOCKER_NETWORK:-dukku-network}"
+ENV_FILE="${ENV_FILE:-${SCRIPT_DIR}/.env}"
 COMPOSE_MODE=""
+PUBLIC_API_HOST="${PUBLIC_API_HOST:-}"
 
 ACTION="toggle"
 PAUSE_AFTER=1
@@ -29,6 +31,36 @@ fi
 
 is_tty() {
   [[ -t 0 ]]
+}
+
+read_env_value() {
+  local target_key="$1"
+
+  [[ -f "$ENV_FILE" ]] || return 0
+
+  awk -v target_key="$target_key" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+
+    {
+      line = $0
+      sub(/\r$/, "", line)
+
+      split(line, parts, "=")
+      key = trim(parts[1])
+
+      if (key == target_key) {
+        value = substr(line, index(line, "=") + 1)
+        print trim(value)
+        exit
+      }
+    }
+  ' "$ENV_FILE"
 }
 
 compose_cmd() {
@@ -119,13 +151,18 @@ container_running_name() {
 ensure_certs() {
   mkdir -p "$CERTS_DIR"
 
+  if [[ -z "$PUBLIC_API_HOST" ]]; then
+    PUBLIC_API_HOST="$(read_env_value PUBLIC_API_HOST)"
+  fi
+  PUBLIC_API_HOST="${PUBLIC_API_HOST:-localhost}"
+
   rm -f "$CERT_FULLCHAIN" "$CERT_PRIVKEY"
   echo "[${SCRIPT_NAME}] Generating TLS certs..."
 
   if command -v mkcert >/dev/null 2>&1; then
     echo "[${SCRIPT_NAME}] Using mkcert ..."
     mkcert -install >/dev/null 2>&1 || echo "[${SCRIPT_NAME}] mkcert -install failed or requires elevated privileges. Certificate may not be trusted."
-    if ! mkcert -cert-file "$CERT_FULLCHAIN" -key-file "$CERT_PRIVKEY" api.dukku.earlydreamer.dev localhost 127.0.0.1 >/dev/null 2>&1; then
+    if ! mkcert -cert-file "$CERT_FULLCHAIN" -key-file "$CERT_PRIVKEY" "$PUBLIC_API_HOST" localhost 127.0.0.1 >/dev/null 2>&1; then
       echo "[${SCRIPT_NAME}] mkcert generation failed." >&2
       return 1
     fi

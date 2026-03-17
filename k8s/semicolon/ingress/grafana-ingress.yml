@@ -11,10 +11,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - grafana.api.dukku.earlydreamer.dev
-      secretName: grafana-api-dukku-earlydreamer-dev-tls
+        - ${PUBLIC_GRAFANA_HOST}
+      secretName: ${PUBLIC_GRAFANA_TLS_SECRET}
   rules:
-    - host: grafana.api.dukku.earlydreamer.dev
+    - host: ${PUBLIC_GRAFANA_HOST}
       http:
         paths:
           - path: /

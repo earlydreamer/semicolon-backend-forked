@@ -10,11 +10,11 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - api.dukku.earlydreamer.dev
-      secretName: api-dukku-earlydreamer-dev-tls
+        - ${PUBLIC_API_HOST}
+      secretName: ${PUBLIC_API_TLS_SECRET}
 
   rules:
-    - host: api.dukku.earlydreamer.dev
+    - host: ${PUBLIC_API_HOST}
       http:
         paths:
           # =====================

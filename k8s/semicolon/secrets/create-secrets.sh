@@ -57,6 +57,7 @@ awk '
 
     if (key == "" ||
         index(key, "LOCAL_") == 1 ||
+        index(key, "PUBLIC_") == 1 ||
         key == "DB_NAME" ||
         key == "SPRING_PROFILES_ACTIVE" ||
         key == "INTERNAL_BACK_URL" ||

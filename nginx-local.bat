@@ -12,6 +12,7 @@ set "CERT_FULLCHAIN=%CERTS_DIR%\fullchain.pem"
 set "CERT_PRIVKEY=%CERTS_DIR%\privkey.pem"
 set "NETWORK_NAME=%BACKEND_DOCKER_NETWORK%"
 if not defined NETWORK_NAME set "NETWORK_NAME=dukku-network"
+if not defined PUBLIC_API_HOST set "PUBLIC_API_HOST=localhost"
 
 set "COMPOSE_CMD="
 set "ACTION=toggle"
@@ -134,7 +135,7 @@ goto :action_%ACTION%
     if errorlevel 1 (
       echo [nginx-local] mkcert -install failed or requires admin rights. Certificate may not be trusted.
     )
-    mkcert -cert-file "%CERT_FULLCHAIN%" -key-file "%CERT_PRIVKEY%" api.dukku.earlydreamer.dev localhost 127.0.0.1
+    mkcert -cert-file "%CERT_FULLCHAIN%" -key-file "%CERT_PRIVKEY%" %PUBLIC_API_HOST% localhost 127.0.0.1
     if errorlevel 1 (
       echo [nginx-local] mkcert generation failed.
       exit /b 1

@@ -8,14 +8,16 @@
 로컬 테스트용 self-signed 인증서 생성 예시:
 
 ```bash
+PUBLIC_API_HOST="${PUBLIC_API_HOST:-api-dukku.earlydreamer.dev}"
+
 docker run --rm -v "$(pwd)/nginx-conf/certs:/out" alpine:3.20 sh -c \
   "apk add --no-cache openssl >/dev/null && \
    openssl req -x509 -nodes -newkey rsa:2048 \
    -keyout /out/privkey.pem \
    -out /out/fullchain.pem \
    -days 365 \
-   -subj '/CN=api.dukku.earlydreamer.dev' \
-   -addext 'subjectAltName=DNS:api.dukku.earlydreamer.dev,DNS:localhost'"
+   -subj \"/CN=${PUBLIC_API_HOST}\" \
+   -addext \"subjectAltName=DNS:${PUBLIC_API_HOST},DNS:localhost\""
 ```
 
 참고:

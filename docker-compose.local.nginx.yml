@@ -5,6 +5,7 @@ services:
     container_name: semicolon-nginx
     environment:
       - GRAFANA_UPSTREAM=${LOCAL_GRAFANA_UPSTREAM:-host.docker.internal:13000}
+      - PUBLIC_API_HOST=${PUBLIC_API_HOST:-localhost}
     ports:
       - "80:80"
       - "443:443"

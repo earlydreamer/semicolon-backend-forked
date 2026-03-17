@@ -3,7 +3,7 @@
 ## 2026-03-17
 
 ### Cloudflare Tunnel 및 도메인 정리
-- 프로덕션 브라우저 진입 도메인을 `dukku.earlydreamer.dev`로, API 공개 도메인을 `api.dukku.earlydreamer.dev`로 통일했습니다.
+- 프로덕션 브라우저 진입 도메인을 `dukku.earlydreamer.dev`로 고정하고, API/Grafana 공개 도메인은 `PUBLIC_API_HOST`, `PUBLIC_GRAFANA_HOST` 환경변수로 제어하도록 정리했습니다.
 - `dukku.shop`, `api.dukku.shop`, Tailscale IP 기반 기본값을 제거하고 현재 도메인 구조에 맞는 설정으로 정리했습니다.
 
 ### 런타임별 설정 분리
