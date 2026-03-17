@@ -39,6 +39,8 @@ out/
 # Secrets / Env
 .env
 !.env.example
+github-actions-secrets.env
+!github-actions-secrets.example.env
 *.pem
 *.key
 *.crt
