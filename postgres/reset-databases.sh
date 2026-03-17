@@ -4,4 +4,4 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 . "$SCRIPT_DIR/db-common.lib"
 
-initialize_showcase_databases
+reset_showcase_databases

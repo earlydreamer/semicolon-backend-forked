@@ -89,6 +89,22 @@ render_template() {
   echo "$rendered_file"
 }
 
+read_env_or_default() {
+  local key="$1"
+  local fallback="${2:-}"
+  local value="${!key:-}"
+
+  if [ -z "$value" ]; then
+    value="$(read_env_value "$key")"
+  fi
+
+  if [ -z "$value" ]; then
+    value="$fallback"
+  fi
+
+  printf '%s' "$value"
+}
+
 trap cleanup_rendered_files EXIT
 
 apply_recursive() {
@@ -113,6 +129,21 @@ apply_recursive k8s/semicolon/services
 if [ "$ENABLE_MONITORING" = "true" ]; then
   apply_recursive k8s/semicolon/monitoring
 fi
+
+export SHOWCASE_RESET_NAMESPACE="$NS"
+export SHOWCASE_RESET_CRON="$(read_env_or_default SHOWCASE_RESET_CRON '0 0 * * *')"
+export SHOWCASE_RESET_TIMEZONE="$(read_env_or_default SHOWCASE_RESET_TIMEZONE 'Asia/Seoul')"
+export SHOWCASE_RESET_TIMEOUT_SECONDS="$(read_env_or_default SHOWCASE_RESET_TIMEOUT_SECONDS '900')"
+
+showcase_reset_enabled="$(read_env_or_default SHOWCASE_RESET_ENABLED 'true')"
+if [ "$showcase_reset_enabled" = "true" ]; then
+  export SHOWCASE_RESET_SUSPEND="false"
+else
+  export SHOWCASE_RESET_SUSPEND="true"
+fi
+
+# shellcheck disable=SC2086
+$K -n "$NS" apply -f "$(render_template k8s/semicolon/templates/showcase-reset.yml.tpl)"
 
 case "$INGRESS_MODE" in
   local)

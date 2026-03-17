@@ -133,6 +133,26 @@ INGRESS_MODE=local bash scripts/apply.sh
 - `ENABLE_MONITORING` 기본값 `true`
 - `ENABLE_CERT_MANAGER` 기본값 `false`
 
+`apply.sh`는 showcase 운영용 CronJob도 함께 반영합니다.
+
+- `SHOWCASE_RESET_ENABLED` 기본값 `true`
+- `SHOWCASE_RESET_CRON` 기본값 `0 0 * * *` (Asia/Seoul 기준 매일 0시)
+- `SHOWCASE_RESET_TIMEZONE` 기본값 `Asia/Seoul`
+- `SHOWCASE_RESET_TIMEOUT_SECONDS` 기본값 `900`
+
+CronJob 동작:
+
+1. 앱 Deployment를 0 replica로 내림
+2. Postgres 내부 `reset-databases.sh` 실행으로 9개 서비스 DB 재생성
+3. Redis `FLUSHALL`
+4. 앱 Deployment를 다시 1 replica로 올려 각 서비스 InitData 재실행
+
+수동으로 즉시 한 번 실행하려면:
+
+```bash
+kubectl -n semicolon create job --from=cronjob/showcase-db-reset showcase-db-reset-manual-$(date +%s)
+```
+
 ## Host-Level Cloudflare Tunnel
 
 - `cloudflared`는 K8s 내부가 아니라 맥북 host에서 서비스로 실행한다.

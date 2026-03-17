@@ -14,29 +14,100 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: postgres-init-scripts
+  name: postgres-scripts
   namespace: semicolon
 data:
+  db-common.lib: |
+    #!/bin/sh
+    set -eu
+
+    DATABASES="${SHOWCASE_DATABASES:-ai_service auth_service user_service product_service order_service payment_service deposit_service coupon_service settlement_service}"
+
+    database_exists() {
+        db="$1"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres -tAc \
+            "SELECT 1 FROM pg_database WHERE datname = '$db'" | grep -q 1
+    }
+
+    create_database_if_missing() {
+        db="$1"
+
+        if database_exists "$db"; then
+            echo "Database already exists: $db"
+            return 0
+        fi
+
+        echo "Creating database: $db"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres -c "CREATE DATABASE $db"
+    }
+
+    drop_database_if_exists() {
+        db="$1"
+
+        if ! database_exists "$db"; then
+            echo "Database already absent: $db"
+            return 0
+        fi
+
+        echo "Dropping database: $db"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<EOSQL
+    SELECT pg_terminate_backend(pid)
+    FROM pg_stat_activity
+    WHERE datname = '$db'
+      AND pid <> pg_backend_pid();
+    DROP DATABASE IF EXISTS $db;
+    EOSQL
+    }
+
+    recreate_database() {
+        db="$1"
+        drop_database_if_exists "$db"
+        create_database_if_missing "$db"
+    }
+
+    install_extensions() {
+        db="$1"
+
+        echo "Installing extensions on: $db"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<EOSQL
+    CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE EXTENSION IF NOT EXISTS pgroonga;
+    EOSQL
+    }
+
+    initialize_showcase_databases() {
+        for db in $DATABASES; do
+            create_database_if_missing "$db"
+            install_extensions "$db"
+        done
+
+        echo "All showcase databases initialized successfully."
+    }
+
+    reset_showcase_databases() {
+        for db in $DATABASES; do
+            recreate_database "$db"
+            install_extensions "$db"
+        done
+
+        echo "All showcase databases reset successfully."
+    }
   init-databases.sh: |
-    #!/bin/bash
-    set -e
+    #!/bin/sh
+    set -eu
 
-    DATABASES="ai_service auth_service user_service product_service order_service payment_service deposit_service coupon_service settlement_service"
+    SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+    . "$SCRIPT_DIR/db-common.lib"
 
-    for DB in $DATABASES; do
-        echo "Creating database: $DB"
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-            CREATE DATABASE $DB;
-    EOSQL
+    initialize_showcase_databases
+  reset-databases.sh: |
+    #!/bin/sh
+    set -eu
 
-        echo "Installing extensions on: $DB"
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB" <<-EOSQL
-            CREATE EXTENSION IF NOT EXISTS vector;
-            CREATE EXTENSION IF NOT EXISTS pgroonga;
-    EOSQL
-    done
+    SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+    . "$SCRIPT_DIR/db-common.lib"
 
-    echo "All databases and extensions created successfully."
+    reset_showcase_databases
 
 ---
 apiVersion: apps/v1
@@ -84,8 +155,11 @@ spec:
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
-            - name: init-scripts
+            - name: postgres-init-scripts
               mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+            - name: postgres-ops-scripts
+              mountPath: /opt/postgres
               readOnly: true
           livenessProbe:
             exec:
@@ -109,9 +183,18 @@ spec:
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
-        - name: init-scripts
+        - name: postgres-init-scripts
           configMap:
-            name: postgres-init-scripts
+            name: postgres-scripts
+            defaultMode: 0755
+            items:
+              - key: db-common.lib
+                path: db-common.lib
+              - key: init-databases.sh
+                path: 01-init-databases.sh
+        - name: postgres-ops-scripts
+          configMap:
+            name: postgres-scripts
             defaultMode: 0755
 
 ---

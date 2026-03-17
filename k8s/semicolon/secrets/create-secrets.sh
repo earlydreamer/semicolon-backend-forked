@@ -62,6 +62,10 @@ awk '
         key == "DEPLOY_INGRESS_MODE" ||
         key == "DEPLOY_ENABLE_MONITORING" ||
         key == "DEPLOY_ENABLE_CERT_MANAGER" ||
+        key == "SHOWCASE_RESET_ENABLED" ||
+        key == "SHOWCASE_RESET_CRON" ||
+        key == "SHOWCASE_RESET_TIMEZONE" ||
+        key == "SHOWCASE_RESET_TIMEOUT_SECONDS" ||
         index(key, "LOCAL_") == 1 ||
         key == "DB_NAME" ||
         key == "SPRING_PROFILES_ACTIVE" ||
