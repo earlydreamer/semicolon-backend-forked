@@ -163,12 +163,62 @@ jobs:
 
       - name: Prepare SSH materials
         env:
+          M1_DEPLOY_SSH_HOSTNAME: ${{ secrets.M1_DEPLOY_SSH_HOSTNAME }}
           M1_DEPLOY_SSH_KEY: ${{ secrets.M1_DEPLOY_SSH_KEY }}
           M1_DEPLOY_KNOWN_HOSTS: ${{ secrets.M1_DEPLOY_KNOWN_HOSTS }}
         run: |
           mkdir -p .deploy/ssh
-          printf '%s\n' "$M1_DEPLOY_SSH_KEY" > .deploy/ssh/id_ed25519
-          printf '%s\n' "$M1_DEPLOY_KNOWN_HOSTS" > .deploy/ssh/known_hosts
+          python3 - <<'PY'
+          import os
+          import sys
+          from pathlib import Path
+
+          ssh_key = os.environ["M1_DEPLOY_SSH_KEY"].rstrip("\n") + "\n"
+          known_hosts_secret = os.environ["M1_DEPLOY_KNOWN_HOSTS"].strip()
+          ssh_hostname = os.environ.get("M1_DEPLOY_SSH_HOSTNAME", "").strip()
+          proxy_host = "[127.0.0.1]:2222"
+
+          Path(".deploy/ssh/id_ed25519").write_text(ssh_key, encoding="utf-8")
+
+          lines = [line.strip() for line in known_hosts_secret.splitlines() if line.strip()]
+          if not lines:
+              print("::error::M1_DEPLOY_KNOWN_HOSTS is empty.", file=sys.stderr)
+              sys.exit(1)
+
+          def host_field(line: str) -> str:
+              return line.split()[0] if line.split() else ""
+
+          if not any(host_field(line) == proxy_host for line in lines):
+              rewrite_source = None
+              for line in lines:
+                  parts = line.split()
+                  if len(parts) < 3:
+                      continue
+                  host = parts[0]
+                  if host.startswith("|"):
+                      continue
+                  if ssh_hostname and ssh_hostname in host.split(","):
+                      rewrite_source = parts
+                      break
+                  if rewrite_source is None:
+                      rewrite_source = parts
+
+              if rewrite_source is None:
+                  print(
+                      "::error::M1_DEPLOY_KNOWN_HOSTS must include [127.0.0.1]:2222 or a non-hashed host key entry.",
+                      file=sys.stderr,
+                  )
+                  sys.exit(1)
+
+              lines.append(" ".join([proxy_host, *rewrite_source[1:]]))
+
+          Path(".deploy/ssh/known_hosts").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+          if ! ssh-keygen -F '[127.0.0.1]:2222' -f .deploy/ssh/known_hosts >/dev/null; then
+            echo "::error::Missing [127.0.0.1]:2222 entry in .deploy/ssh/known_hosts" >&2
+            exit 1
+          fi
           chmod 600 .deploy/ssh/id_ed25519 .deploy/ssh/known_hosts
 
       - name: Render semicolon env file
