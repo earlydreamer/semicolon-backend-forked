@@ -3,6 +3,7 @@ set -euo pipefail
 
 REMOTE_WORKSPACE="${REMOTE_WORKSPACE:?REMOTE_WORKSPACE is required}"
 NS="${NS:-semicolon}"
+K="${K:-kubectl}"
 DOCKER_USERNAME="${DOCKER_USERNAME:-}"
 IMAGE_TAG="${IMAGE_TAG:-}"
 MODS="${MODS:-}"
@@ -12,12 +13,44 @@ INGRESS_MODE="${INGRESS_MODE:-local}"
 ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
 
+resolve_kubectl() {
+  local candidate
+
+  for candidate in \
+    "$K" \
+    kubectl \
+    /opt/homebrew/bin/kubectl \
+    /usr/local/bin/kubectl \
+    /usr/bin/kubectl \
+    /snap/bin/kubectl; do
+    [ -n "$candidate" ] || continue
+
+    if [[ "$candidate" == */* ]]; then
+      if [ -x "$candidate" ]; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+      continue
+    fi
+
+    if command -v "$candidate" >/dev/null 2>&1; then
+      command -v "$candidate"
+      return 0
+    fi
+  done
+
+  echo "[fail] kubectl 실행 파일을 찾을 수 없습니다. K 환경변수 또는 PATH를 확인하세요." >&2
+  exit 127
+}
+
+K_BIN="$(resolve_kubectl)"
+
 ENV_FILE="${REMOTE_WORKSPACE}/semicolon.env" \
-K=kubectl \
+K="$K_BIN" \
 NAMESPACE="$NS" \
 bash "${REMOTE_WORKSPACE}/k8s/semicolon/secrets/create-secrets.sh"
 
-K=kubectl \
+K="$K_BIN" \
 NS="$NS" \
 ENV_FILE="${REMOTE_WORKSPACE}/semicolon.env" \
 INGRESS_MODE="$INGRESS_MODE" \
@@ -31,7 +64,7 @@ if [ -n "$MODS" ]; then
   : "${REPO:?REPO is required when rolling out images}"
   : "${RUN_ID:?RUN_ID is required when rolling out images}"
 
-  K=kubectl \
+  K="$K_BIN" \
   NS="$NS" \
   DOCKER_USERNAME="$DOCKER_USERNAME" \
   IMAGE_TAG="$IMAGE_TAG" \
