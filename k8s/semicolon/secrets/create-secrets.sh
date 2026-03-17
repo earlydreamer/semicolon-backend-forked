@@ -8,6 +8,7 @@ K="${K:-kubectl}"
 NAMESPACE="${NAMESPACE:-semicolon}"
 SECRET_NAME="${SECRET_NAME:-semicolon-env}"
 ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/../../../.env}"
+NAMESPACE_MANIFEST="${NAMESPACE_MANIFEST:-$SCRIPT_DIR/../00-namespace.yml}"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Env 파일 $ENV_FILE 을(를) 찾을 수 없습니다." >&2
@@ -17,6 +18,24 @@ fi
 TMP_ENV="$(mktemp)"
 TMP_DB_ENV="$(mktemp)"
 trap 'rm -f "$TMP_ENV" "$TMP_DB_ENV"' EXIT
+
+ensure_namespace() {
+  # shellcheck disable=SC2086
+  if $K get namespace "$NAMESPACE" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "네임스페이스 '$NAMESPACE'가 없어 먼저 생성합니다."
+
+  if [ -f "$NAMESPACE_MANIFEST" ]; then
+    # shellcheck disable=SC2086
+    $K apply -f "$NAMESPACE_MANIFEST"
+    return 0
+  fi
+
+  # shellcheck disable=SC2086
+  $K create namespace "$NAMESPACE"
+}
 
 awk '
   function trim(value) {
@@ -100,6 +119,8 @@ read_env_value() {
     }
   ' "$ENV_FILE"
 }
+
+ensure_namespace
 
 # shellcheck disable=SC2086
 $K -n "$NAMESPACE" create secret generic "$SECRET_NAME" \
