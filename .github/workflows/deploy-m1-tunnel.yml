@@ -173,6 +173,7 @@ jobs:
         env:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
           JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
           CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
@@ -218,6 +219,7 @@ jobs:
           public_grafana_host = os.environ.get("PUBLIC_GRAFANA_HOST") or f"grafana.{public_api_host}"
           frontend_base_url = f"https://{public_web_host}"
           api_base_url = f"https://{public_api_host}"
+          redis_password = os.environ.get("REDIS_PASSWORD") or ""
           cors_allowed_origins = (
               os.environ.get("CORS_ALLOWED_ORIGINS")
               or ",".join([
@@ -239,7 +241,6 @@ jobs:
               "DB_SSLMODE=disable",
               "REDIS_HOST=redis",
               "REDIS_PORT=6379",
-              "REDIS_PASSWORD=",
               "KAFKA_BOOTSTRAP_SERVERS=redpanda:9092",
               "ELASTICSEARCH_URL=http://elasticsearch:9200",
               "MONGO_HOST=mongodb-service",
@@ -296,6 +297,10 @@ jobs:
               f"GRAFANA_ADMIN_PASSWORD={os.environ['GRAFANA_ADMIN_PASSWORD']}",
               "GRAFANA_UPSTREAM=http://grafana:3000",
           ]
+
+          if redis_password:
+              lines.append(f"REDIS_PASSWORD={redis_password}")
+
           with open(".deploy/semicolon.env", "w", encoding="utf-8") as handle:
               handle.write("\n".join(lines) + "\n")
           PY
