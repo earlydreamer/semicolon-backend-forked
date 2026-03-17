@@ -108,6 +108,7 @@ cp .env.example .env
 - 배포 기본값은 Kubernetes 서비스 DNS(`postgres`, `redis`, `kafka`, `elasticsearch`, `mongodb-service`) 기준입니다.
 - `k8s/semicolon/secrets/create-secrets.sh`는 루트 `.env`를 읽어 공통 Secret과 서비스별 DB Secret을 생성합니다.
 - 실제 비밀값은 `.env`, GitHub Secrets, Kubernetes Secret에만 두고 `.env.example`에는 placeholder만 남깁니다.
+- GitHub Actions 전용 접속 secret 예시는 루트 [`github-actions-secrets.example.env`](github-actions-secrets.example.env) 에 정리합니다.
 
 ---
 

@@ -56,6 +56,12 @@ awk '
     value = trim(value)
 
     if (key == "" ||
+        key == "DOCKER_SHARED_NETWORK" ||
+        key == "K8S_NAMESPACE" ||
+        key == "REMOTE_WORKSPACE" ||
+        key == "DEPLOY_INGRESS_MODE" ||
+        key == "DEPLOY_ENABLE_MONITORING" ||
+        key == "DEPLOY_ENABLE_CERT_MANAGER" ||
         index(key, "LOCAL_") == 1 ||
         key == "DB_NAME" ||
         key == "SPRING_PROFILES_ACTIVE" ||
