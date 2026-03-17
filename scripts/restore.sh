@@ -10,6 +10,7 @@ APP_SET="${APP_SET:-core}"
 INGRESS_MODE="${INGRESS_MODE:-local}"
 ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
+ENSURE_LOCAL_DEPENDENCY_IMAGES="${ENSURE_LOCAL_DEPENDENCY_IMAGES:-true}"
 
 wait_for_api() {
   echo "[wait] kubernetes api ready..."
@@ -57,6 +58,13 @@ case "$APP_SET" in
 esac
 
 wait_for_api
+
+if [ "$ENSURE_LOCAL_DEPENDENCY_IMAGES" = "true" ]; then
+  K="$K" \
+  K3D_CLUSTER_NAME="${K3D_CLUSTER_NAME:-}" \
+  FORCE_BUILD_POSTGRES_IMAGE="${FORCE_BUILD_POSTGRES_IMAGE:-false}" \
+  bash scripts/k3d/ensure-local-dependency-images.sh
+fi
 
 INGRESS_MODE="$INGRESS_MODE" \
 ENABLE_MONITORING="$ENABLE_MONITORING" \

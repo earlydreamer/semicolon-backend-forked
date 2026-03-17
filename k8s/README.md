@@ -99,10 +99,12 @@ APP_SET=all bash scripts/restore.sh
 
 `restore.sh`는 아래 순서로 리소스를 기동한다.
 
-1. `postgres`, `redis`, `redpanda`, `elasticsearch`, `mongodb`
-2. `prometheus`, `grafana`, `log-consumer`
-3. `auth`, `user`, `product`
-4. `APP_SET=all`일 때 `order`, `payment`, `coupon`, `deposit`, `settlement`, `ai`
+1. 현재 context가 `k3d-*`이면 `scripts/k3d/ensure-local-dependency-images.sh`로 커스텀 Postgres 이미지를 host에서 빌드하고 클러스터에 import
+2. `apply.sh`로 namespace, dependencies, services, monitoring, ingress 반영
+3. `postgres`, `redis`, `redpanda`, `elasticsearch`, `mongodb`
+4. `prometheus`, `grafana`, `log-consumer`
+5. `auth`, `user`, `product`
+6. `APP_SET=all`일 때 `order`, `payment`, `coupon`, `deposit`, `settlement`, `ai`
 
 이 단계는 최초 bootstrap 또는 장애 복구용이다. 일상 배포에서는 GitHub Actions가 `restore.sh`를 호출하지 않는다.
 
