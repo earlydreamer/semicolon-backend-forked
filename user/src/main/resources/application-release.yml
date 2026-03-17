@@ -25,7 +25,7 @@ crypto:
 custom:
   email:
     verification:
-      base-url: ${EMAIL_VERIFICATION_BASE_URL:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}}
+      base-url: ${EMAIL_VERIFICATION_BASE_URL:https://${PUBLIC_API_HOST:api-dukku.earlydreamer.dev}}
       success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}/email/verify}
   security:
     cors:

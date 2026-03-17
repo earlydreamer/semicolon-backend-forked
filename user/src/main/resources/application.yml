@@ -32,6 +32,9 @@ management:
   endpoint:
     prometheus:
       enabled: true
+    health:
+      probes:
+        enabled: true
   metrics:
     tags:
       application: ${spring.application.name}
@@ -40,7 +43,7 @@ custom:
   email:
     verification:
       required: true
-      base-url: ${EMAIL_VERIFICATION_BASE_URL:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}}
+      base-url: ${EMAIL_VERIFICATION_BASE_URL:https://${PUBLIC_API_HOST:api-dukku.earlydreamer.dev}}
       success-redirect-url: ${EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL:https://${PUBLIC_WEB_HOST:dukku.earlydreamer.dev}/email/verify}
       token-ttl-seconds: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:1800}
       verified-ttl-seconds: ${EMAIL_VERIFICATION_VERIFIED_TTL_SECONDS:1800}

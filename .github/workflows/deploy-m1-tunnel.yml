@@ -243,6 +243,10 @@ jobs:
           GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
           SLACK_WEBHOOK_URL_SETTLEMENT: ${{ secrets.SLACK_WEBHOOK_URL_SETTLEMENT }}
           SLACK_WEBHOOK_URL_GRAFANA: ${{ secrets.SLACK_WEBHOOK_URL_GRAFANA }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
           required_vars=(
             DB_USERNAME DB_PASSWORD
@@ -255,6 +259,7 @@ jobs:
             GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET
             GRAFANA_ADMIN_USER GRAFANA_ADMIN_PASSWORD
             SLACK_WEBHOOK_URL_SETTLEMENT SLACK_WEBHOOK_URL_GRAFANA
+            MAIL_HOST MAIL_PORT MAIL_USERNAME EMAIL_PASSWORD
           )
 
           for var_name in "${required_vars[@]}"; do
@@ -309,11 +314,11 @@ jobs:
               "AI_INIT_ENABLED=true",
               f"SLACK_WEBHOOK_URL_SETTLEMENT={os.environ['SLACK_WEBHOOK_URL_SETTLEMENT']}",
               f"SLACK_WEBHOOK_URL_GRAFANA={os.environ['SLACK_WEBHOOK_URL_GRAFANA']}",
-              "MAIL_HOST=localhost",
-              "MAIL_PORT=1025",
-              "MAIL_USERNAME=local-mail-user",
-              "EMAIL_PASSWORD=local-mail-password",
-              f"EMAIL_VERIFICATION_BASE_URL={frontend_base_url}",
+              f"MAIL_HOST={os.environ['MAIL_HOST']}",
+              f"MAIL_PORT={os.environ['MAIL_PORT']}",
+              f"MAIL_USERNAME={os.environ['MAIL_USERNAME']}",
+              f"EMAIL_PASSWORD={os.environ['EMAIL_PASSWORD']}",
+              f"EMAIL_VERIFICATION_BASE_URL={api_base_url}",
               f"EMAIL_VERIFICATION_SUCCESS_REDIRECT_URL={frontend_base_url}/email/verify",
               f"GOOGLE_OAUTH_CLIENT_ID={os.environ['GOOGLE_OAUTH_CLIENT_ID']}",
               f"GOOGLE_OAUTH_CLIENT_SECRET={os.environ['GOOGLE_OAUTH_CLIENT_SECRET']}",
