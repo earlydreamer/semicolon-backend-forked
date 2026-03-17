@@ -108,7 +108,7 @@ APP_SET=all bash scripts/restore.sh
 
 이 단계는 최초 bootstrap 또는 장애 복구용이다. 일상 배포에서는 GitHub Actions가 `restore.sh`를 호출하지 않는다.
 
-`redpanda`는 단일 노드 bootstrap에서 초기 topic/controller 선출 시간이 걸릴 수 있으므로, liveness는 `rpk cluster info`, readiness는 `rpk cluster health` 기준으로 분리해 두었다.
+`redpanda`는 컨테이너 이미지의 기본 `/entrypoint.sh` wrapper를 통해 `rpk redpanda start`가 실행되도록 유지해야 하며, 단일 노드 bootstrap에서는 초기 topic/controller 선출 시간이 걸릴 수 있으므로 liveness는 `rpk cluster info`, readiness는 `rpk cluster health` 기준으로 분리해 두었다.
 
 ## Apply Script
 
