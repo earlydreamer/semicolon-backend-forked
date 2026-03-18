@@ -7,4 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PresignedUrlResponse {
     private String presignedUrl;
+    private String key;
+    private String publicUrl;
 }

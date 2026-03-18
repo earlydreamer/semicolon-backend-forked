@@ -16,15 +16,15 @@ import java.util.UUID;
 public class GeneratePresignedUrlUseCase {
     private final S3Presigner s3Presigner;
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${storage.object.bucket}")
     private String bucketName;
 
-    public String generatePresignedUrl(String extension) {
-        String fileName = createFileName(extension);
+    public PresignedUpload generatePresignedUpload(String extension) {
+        String key = createFileName(extension);
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(fileName)
+                .key(key)
                 .contentType(getContentType(extension))
                 .build();
 
@@ -34,7 +34,7 @@ public class GeneratePresignedUrlUseCase {
                 .build();
 
         PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
-        return presignedRequest.url().toString();
+        return new PresignedUpload(presignedRequest.url().toString(), key);
     }
 
     private String createFileName(String extension) {
@@ -49,5 +49,8 @@ public class GeneratePresignedUrlUseCase {
             case "webp" -> "image/webp";
             default -> "application/octet-stream";
         };
+    }
+
+    public record PresignedUpload(String presignedUrl, String key) {
     }
 }

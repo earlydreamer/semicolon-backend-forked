@@ -34,9 +34,13 @@ public class ProductImageController {
     public PresignedUrlResponse getPresignedUrl(
             @RequestParam(value = "extension", defaultValue = "jpg") String extension
     ) {
-        String url = generatePresignedUrlUseCase.generatePresignedUrl(extension);
+        GeneratePresignedUrlUseCase.PresignedUpload upload = generatePresignedUrlUseCase.generatePresignedUpload(extension);
 
-        return new PresignedUrlResponse(url);
+        return new PresignedUrlResponse(
+                upload.presignedUrl(),
+                upload.key(),
+                buildPublicImageUrl(upload.key())
+        );
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -45,11 +49,7 @@ public class ProductImageController {
     ) {
         UUID userId = UserUtil.getUserId();
         String key = uploadImageUseCase.upload(file, userId);
-        String imageUrl = UriComponentsBuilder.fromPath("/api/v1/products/images/public")
-                .queryParam("key", key)
-                .build()
-                .toUriString();
-        return new ImageUploadResponse(imageUrl);
+        return new ImageUploadResponse(buildPublicImageUrl(key));
     }
 
     @GetMapping("/public")
@@ -71,5 +71,12 @@ public class ProductImageController {
         UUID userId = UserUtil.getUserId();
         uploadImageUseCase.deleteImage(key, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    private String buildPublicImageUrl(String key) {
+        return UriComponentsBuilder.fromPath("/api/v1/products/images/public")
+                .queryParam("key", key)
+                .build()
+                .toUriString();
     }
 }
