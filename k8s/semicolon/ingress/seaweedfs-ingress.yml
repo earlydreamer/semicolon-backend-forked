@@ -1,0 +1,28 @@
+# SeaweedFS S3 API를 외부(Cloudflare Tunnel)에 노출하는 인그레스입니다.
+# 브라우저가 Presigned URL로 SeaweedFS에 직접 PUT 업로드할 때 사용됩니다.
+# Master(9333) / Filer(8888)는 Tailscale 내부망 전용이므로 여기서 노출하지 않습니다.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: seaweedfs-ingress
+  namespace: semicolon
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - ${PUBLIC_STORAGE_HOST}
+      secretName: ${PUBLIC_STORAGE_TLS_SECRET}
+  rules:
+    - host: ${PUBLIC_STORAGE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: seaweedfs-service
+                port:
+                  number: 8333
