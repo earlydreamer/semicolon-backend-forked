@@ -25,15 +25,12 @@ public class UploadImageUseCase {
 
     private final S3Client s3Client;
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${storage.object.bucket}")
     private String bucketName;
 
-    @Value("${cloud.aws.region.static}")
-    private String region;
-
     public String upload(MultipartFile file, UUID userId) {
-        if (!StringUtils.hasText(bucketName) || !StringUtils.hasText(region)) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "S3 configuration is missing");
+        if (!StringUtils.hasText(bucketName)) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Object storage configuration is missing");
         }
 
         if (file == null || file.isEmpty()) {
@@ -66,19 +63,19 @@ public class UploadImageUseCase {
         } catch (S3Exception e) {
             String awsCode = e.awsErrorDetails() == null ? null : e.awsErrorDetails().errorCode();
             String reason = awsCode == null
-                    ? "Failed to upload image to S3"
-                    : "Failed to upload image to S3 (" + awsCode + ")";
+                    ? "Failed to upload image to object storage"
+                    : "Failed to upload image to object storage (" + awsCode + ")";
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, reason, e);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to upload image to S3", e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to upload image to object storage", e);
         }
 
         return key;
     }
 
     public S3ImageObject getImage(String key) {
-        if (!StringUtils.hasText(bucketName) || !StringUtils.hasText(region)) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "S3 configuration is missing");
+        if (!StringUtils.hasText(bucketName)) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Object storage configuration is missing");
         }
 
         if (!StringUtils.hasText(key) || !key.startsWith("products/")) {
@@ -103,17 +100,17 @@ public class UploadImageUseCase {
             }
             String awsCode = e.awsErrorDetails() == null ? null : e.awsErrorDetails().errorCode();
             String reason = awsCode == null
-                    ? "Failed to read image from S3"
-                    : "Failed to read image from S3 (" + awsCode + ")";
+                    ? "Failed to read image from object storage"
+                    : "Failed to read image from object storage (" + awsCode + ")";
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, reason, e);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to read image from S3", e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to read image from object storage", e);
         }
     }
 
     public void deleteImage(String key, UUID userId) {
-        if (!StringUtils.hasText(bucketName) || !StringUtils.hasText(region)) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "S3 configuration is missing");
+        if (!StringUtils.hasText(bucketName)) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Object storage configuration is missing");
         }
 
         if (!StringUtils.hasText(key) || !key.startsWith("products/")) {
@@ -134,11 +131,11 @@ public class UploadImageUseCase {
         } catch (S3Exception e) {
             String awsCode = e.awsErrorDetails() == null ? null : e.awsErrorDetails().errorCode();
             String reason = awsCode == null
-                    ? "Failed to delete image from S3"
-                    : "Failed to delete image from S3 (" + awsCode + ")";
+                    ? "Failed to delete image from object storage"
+                    : "Failed to delete image from object storage (" + awsCode + ")";
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, reason, e);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to delete image from S3", e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to delete image from object storage", e);
         }
     }
 

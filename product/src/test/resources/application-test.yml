@@ -21,17 +21,14 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-# AWS test stubs (moved from application-test.properties)
-cloud:
-  aws:
-    credentials:
-      access-key: "dummy-access-key"
-      secret-key: "dummy-secret-key"
-    region:
-      static: "ap-northeast-2"
-    s3:
-      bucket: "test-bucket"
-      enabled: false
+storage:
+  object:
+    access-key: "dummy-access-key"
+    secret-key: "dummy-secret-key"
+    region: "ap-northeast-2"
+    bucket: "test-bucket"
+    endpoint: ""
+    path-style-access-enabled: false
 
 jwt:
   access:
