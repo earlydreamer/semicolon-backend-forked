@@ -1,4 +1,4 @@
-# product 서비스의 기본 실행 설정입니다.
+# product 서비스의 기본 실행 설정입니다. (Cloudflare R2 오브젝트 스토리지 사용)
 server:
   port: 8083
 
