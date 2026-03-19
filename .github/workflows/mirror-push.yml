@@ -1,0 +1,63 @@
+name: Mirror Push
+
+on:
+  push:
+  create:
+  delete:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-push
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Validate mirror configuration
+        id: config
+        env:
+          MIRROR_REPOSITORY: ${{ secrets.MIRROR_REPOSITORY }}
+          MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
+        run: |
+          if [[ -z "$MIRROR_REPOSITORY" || -z "$MIRROR_REPO_TOKEN" ]]; then
+            echo "::notice::Mirror sync is skipped because MIRROR_REPOSITORY or MIRROR_REPO_TOKEN is not configured."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch source branches and tags into a bare repository
+        if: ${{ steps.config.outputs.configured == 'true' }}
+        env:
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_TOKEN: ${{ github.token }}
+        run: |
+          # Only mirror heads/tags so GitHub-managed refs such as refs/pull/* are excluded.
+          git init --bare repo.git
+          git -C repo.git remote add origin "https://x-access-token:${SOURCE_TOKEN}@github.com/${SOURCE_REPOSITORY}.git"
+          git -C repo.git fetch --prune origin \
+            '+refs/heads/*:refs/heads/*' \
+            '+refs/tags/*:refs/tags/*'
+
+      - name: Push all refs to mirror repository
+        if: ${{ steps.config.outputs.configured == 'true' }}
+        env:
+          MIRROR_REPOSITORY: ${{ secrets.MIRROR_REPOSITORY }}
+          MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
+        run: |
+          git -C repo.git push --mirror "https://x-access-token:${MIRROR_REPO_TOKEN}@github.com/${MIRROR_REPOSITORY}.git"
+
+      - name: Print post-setup reminder
+        if: ${{ steps.config.outputs.configured == 'true' }}
+        env:
+          MIRROR_REPOSITORY: ${{ secrets.MIRROR_REPOSITORY }}
+        run: |
+          echo "Mirror sync completed for ${MIRROR_REPOSITORY}."
+          echo "Set the mirror repository default branch to dev if you want dev commits to count on the contribution graph."

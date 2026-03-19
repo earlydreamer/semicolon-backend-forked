@@ -74,6 +74,8 @@
 - `M1_DEPLOY_KNOWN_HOSTS`
 - `CF_ACCESS_SERVICE_TOKEN_ID`
 - `CF_ACCESS_SERVICE_TOKEN_SECRET`
+- `MIRROR_REPOSITORY`
+- `MIRROR_REPO_TOKEN`
 
 ## 3. create-secrets.sh에서 제외되는 키
 
@@ -96,6 +98,12 @@
   - 빈 문자열을 GitHub Secret에 넣는 방식으로 관리하지 않는다.
 - `PUBLIC_*`
   - ingress 렌더링과 OAuth / redirect 기본값에 함께 영향을 준다.
+- `Mirror Push`
+  - 대상 저장소는 fork가 아닌 별도 저장소로 새로 만든다.
+  - `git push --mirror`를 쓰므로 대상 저장소는 mirror 전용 빈 저장소로 두는 편이 안전하다.
+  - 잔디 반영이 목적이면 대상 저장소의 default branch를 현재 사용하는 브랜치와 맞춘다. 이 저장소 기준으로는 `dev`가 가장 자연스럽다.
+  - 커밋 author email이 GitHub 계정의 verified email과 일치해야 contribution graph에 잡힌다.
+  - private 저장소면 GitHub 프로필의 private contributions 표시 옵션도 켜야 한다.
 - `GitHub Variables`
   - 표준 배포 경로에서는 더 이상 사용하지 않는다.
 
@@ -114,3 +122,4 @@
 - [`github-actions-secrets.example.env`](/mnt/d/Projects/Programmers/Final-Project-Fork/backend/semicolon-backend-forked/github-actions-secrets.example.env)
 - [`deploy-m1-tunnel.yml`](/mnt/d/Projects/Programmers/Final-Project-Fork/backend/semicolon-backend-forked/.github/workflows/deploy-m1-tunnel.yml)
 - [`ci.yml`](/mnt/d/Projects/Programmers/Final-Project-Fork/backend/semicolon-backend-forked/.github/workflows/ci.yml)
+- [`mirror-push.yml`](/mnt/d/Projects/Programmers/Final-Project-Fork/backend/semicolon-backend-forked/.github/workflows/mirror-push.yml)
