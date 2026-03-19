@@ -149,6 +149,9 @@ data:
 
     flush_redis
 
+    log "Enabling storage clear on product startup"
+    kubectl -n "$NS" set env deployment/product PRODUCT_INIT_CLEAR_ES_ON_STARTUP=true
+
     scale_apps 1
 
     for app in $APPS; do
@@ -156,6 +159,9 @@ data:
         wait_for_rollout "$app"
       fi
     done
+
+    log "Restoring product storage clear flag"
+    kubectl -n "$NS" set env deployment/product PRODUCT_INIT_CLEAR_ES_ON_STARTUP-
 
     APPS_SCALED_DOWN="false"
     log "Showcase reset completed"
