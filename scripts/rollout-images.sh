@@ -34,5 +34,5 @@ for module in $MODS; do
     }
   }"
 
-  $K -n "$NS" rollout status "deploy/${module}" --timeout=600s
+  $K -n "$NS" rollout status "deploy/${module}" --timeout=900s
 done
