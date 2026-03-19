@@ -286,6 +286,7 @@ jobs:
           )
 
           lines = [
+              "TZ=Asia/Seoul",
               "SPRING_PROFILES_ACTIVE=release",
               f"PUBLIC_WEB_HOST={public_web_host}",
               f"PUBLIC_API_HOST={public_api_host}",
