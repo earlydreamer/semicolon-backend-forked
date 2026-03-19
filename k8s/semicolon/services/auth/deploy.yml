@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth
@@ -33,7 +33,7 @@ spec:
                 name: auth-db
                 optional: true
           image: dukku/semicolon-auth:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           name: auth
           ports:
             - containerPort: 8081

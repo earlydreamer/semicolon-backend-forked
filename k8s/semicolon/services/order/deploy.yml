@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: order
@@ -33,7 +33,7 @@ spec:
                 name: order-db
                 optional: true
           image: dukku/semicolon-order:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           name: order
           ports:
             - containerPort: 8084

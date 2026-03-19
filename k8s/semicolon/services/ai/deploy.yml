@@ -1,4 +1,4 @@
-# AI 서비스 배포와 공통 Secret 주입 방식을 정의합니다.
+﻿# AI ?쒕퉬??諛고룷? 怨듯넻 Secret 二쇱엯 諛⑹떇???뺤쓽?⑸땲??
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,7 +35,7 @@ spec:
                 name: ai-db
                 optional: true
           image: dukku/semicolon-ai:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           name: ai
           ports:
             - containerPort: 8089

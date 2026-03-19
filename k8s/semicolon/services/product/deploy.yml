@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: product
@@ -32,14 +32,14 @@ spec:
                 name: product-db
                 optional: true
           image: dukku/semicolon-product:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           name: product
           ports:
             - containerPort: 8083
               protocol: TCP
           resources:
             limits:
-              cpu: 1000m  # 초기 구동 속도를 위해 CPU 한도 상향
+              cpu: 1000m  # 珥덇린 援щ룞 ?띾룄瑜??꾪빐 CPU ?쒕룄 ?곹뼢
               memory: 640Mi
             requests:
               cpu: 200m
@@ -47,18 +47,16 @@ spec:
           env:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xmx384m"
-          # startupProbe를 사용하여 앱이 완전히 켜질 때까지 기다림
-          startupProbe:
+          # startupProbe瑜??ъ슜?섏뿬 ?깆씠 ?꾩쟾??耳쒖쭏 ?뚭퉴吏 湲곕떎由?          startupProbe:
             httpGet:
               path: /actuator/health
               port: 8083
             failureThreshold: 30
-            periodSeconds: 10 # 최대 300초 동안 구동 대기
-          livenessProbe:
+            periodSeconds: 10 # 理쒕? 300珥??숈븞 援щ룞 ?湲?          livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8083
-            initialDelaySeconds: 10 # startupProbe 성공 후부터 체크
+            initialDelaySeconds: 10 # startupProbe ?깃났 ?꾨???泥댄겕
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 5
