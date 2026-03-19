@@ -69,6 +69,9 @@ jobs:
           DEPLOY_NEEDED="false"
 
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            BUILD_MATRIX=$(printf '%s\n' "${ALL_MODULES[@]}" | jq -R . | jq -s -c .)
+            MODS_TO_DEPLOY="${ALL_MODULES[*]}"
+            BUILD_NEEDED="true"
             DEPLOY_NEEDED="true"
           else
             MODS=()
