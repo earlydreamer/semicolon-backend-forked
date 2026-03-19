@@ -38,10 +38,10 @@ custom:
 
 storage:
   object:
-    access-key: ${OBJECT_STORAGE_ACCESS_KEY:${AWS_ACCESS_KEY}}
-    secret-key: ${OBJECT_STORAGE_SECRET_KEY:${AWS_SECRET_KEY}}
-    region: ${OBJECT_STORAGE_REGION:${AWS_REGION}}
-    bucket: ${OBJECT_STORAGE_BUCKET:${AWS_S3_BUCKET}}
+    access-key: ${OBJECT_STORAGE_ACCESS_KEY}
+    secret-key: ${OBJECT_STORAGE_SECRET_KEY}
+    region: ${OBJECT_STORAGE_REGION}
+    bucket: ${OBJECT_STORAGE_BUCKET}
     endpoint: ${OBJECT_STORAGE_ENDPOINT:}
     presigned-url-endpoint: ${OBJECT_STORAGE_PRESIGNED_URL_ENDPOINT:}
     path-style-access-enabled: ${OBJECT_STORAGE_PATH_STYLE_ACCESS_ENABLED:false}
