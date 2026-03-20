@@ -108,9 +108,13 @@ bash create-secrets.sh
 - `NAMESPACE` 기본값 `semicolon`
 - `SECRET_NAME` 기본값 `semicolon-env`
 - `ENV_FILE` 기본값 `backend/semicolon-backend-forked/.env`
+- `DOCKER_USERNAME`, `DOCKER_PASSWORD`가 있으면 Docker Hub pull secret도 같이 생성
+- `DOCKER_REGISTRY_SERVER` 기본값 `https://index.docker.io/v1/`
+- `IMAGE_PULL_SECRET_NAME` 기본값 `dockerhub-creds`
 
 빈 값은 Secret 생성에서 제외된다. 따라서 루트 `.env`에서 값을 비워 두면 서비스 기본값 또는 코드 기본값을 사용한다.
 `LOCAL_*` 값은 로컬 IDE/host nginx 실행용이며, `create-secrets.sh`가 Kubernetes Secret 생성 시 자동으로 제외한다.
+클러스터를 새로 만들었거나 노드 이미지 캐시가 비어 있을 때는 Docker Hub pull rate limit을 피하기 위해 `DOCKER_USERNAME`, `DOCKER_PASSWORD`를 함께 제공하는 편이 안전하다.
 
 ### 4. 최초 복구
 
