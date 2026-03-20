@@ -5,6 +5,8 @@ K3D_CLUSTER_NAME="${K3D_CLUSTER_NAME:-semicolon-local}"
 HTTP_PORT="${HTTP_PORT:-8080}"
 HTTPS_PORT="${HTTPS_PORT:-8443}"
 AGENTS="${AGENTS:-0}"
+K3D_SERVERS_MEMORY="${K3D_SERVERS_MEMORY:-}"
+K3D_AGENTS_MEMORY="${K3D_AGENTS_MEMORY:-}"
 
 if ! command -v k3d >/dev/null 2>&1; then
   echo "k3d 가 설치되어 있지 않습니다." >&2
@@ -16,13 +18,31 @@ if k3d cluster list 2>/dev/null | awk 'NR > 1 {print $1}' | grep -Fxq "$K3D_CLUS
   exit 0
 fi
 
-k3d cluster create "$K3D_CLUSTER_NAME" \
-  --servers 1 \
-  --agents "$AGENTS" \
-  --port "${HTTP_PORT}:80@loadbalancer" \
-  --port "${HTTPS_PORT}:443@loadbalancer" \
+CREATE_ARGS=(
+  "$K3D_CLUSTER_NAME"
+  --servers 1
+  --agents "$AGENTS"
+  --port "${HTTP_PORT}:80@loadbalancer"
+  --port "${HTTPS_PORT}:443@loadbalancer"
   --wait
+)
+
+if [ -n "$K3D_SERVERS_MEMORY" ]; then
+  CREATE_ARGS+=(--servers-memory "$K3D_SERVERS_MEMORY")
+fi
+
+if [ "$AGENTS" -gt 0 ] && [ -n "$K3D_AGENTS_MEMORY" ]; then
+  CREATE_ARGS+=(--agents-memory "$K3D_AGENTS_MEMORY")
+fi
+
+k3d cluster create "${CREATE_ARGS[@]}"
 
 echo "k3d 클러스터 '$K3D_CLUSTER_NAME' 를 생성했습니다."
 echo "HTTP ingress:  http://localhost:${HTTP_PORT}"
 echo "HTTPS ingress: https://localhost:${HTTPS_PORT}"
+if [ -n "$K3D_SERVERS_MEMORY" ]; then
+  echo "Server memory limit: ${K3D_SERVERS_MEMORY}"
+fi
+if [ "$AGENTS" -gt 0 ] && [ -n "$K3D_AGENTS_MEMORY" ]; then
+  echo "Agent memory limit: ${K3D_AGENTS_MEMORY}"
+fi

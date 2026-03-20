@@ -57,11 +57,33 @@ bash scripts/k3d/create-local-cluster.sh
 - `K3D_CLUSTER_NAME=semicolon-local`
 - `HTTP_PORT=8080`
 - `HTTPS_PORT=8443`
+- `AGENTS=0`
+- `K3D_SERVERS_MEMORY` 미지정
+- `K3D_AGENTS_MEMORY` 미지정
 
 포트를 바꾸려면 환경변수로 덮어쓴다.
 
 ```bash
 HTTP_PORT=18080 HTTPS_PORT=18443 bash scripts/k3d/create-local-cluster.sh
+```
+
+메모리 여유가 부족한 맥북 환경이라면 k3d 노드 메모리 상한도 함께 지정할 수 있다.
+
+```bash
+K3D_SERVERS_MEMORY=12g bash scripts/k3d/create-local-cluster.sh
+```
+
+agent 노드를 사용하는 경우에는 agent 메모리도 별도로 지정할 수 있다.
+
+```bash
+AGENTS=1 K3D_SERVERS_MEMORY=10g K3D_AGENTS_MEMORY=2g bash scripts/k3d/create-local-cluster.sh
+```
+
+이미 클러스터가 떠 있다면 메모리 상한 변경을 위해 재생성이 필요하다.
+
+```bash
+bash scripts/k3d/delete-local-cluster.sh
+K3D_SERVERS_MEMORY=12g bash scripts/k3d/create-local-cluster.sh
 ```
 
 ### 3. 공통 Secret 생성
