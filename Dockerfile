@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # [Stage 1] 빌드 단계
 FROM public.ecr.aws/docker/library/eclipse-temurin:25-jdk AS builder
 
