@@ -33,7 +33,7 @@ spec:
                 name: deposit-db
                 optional: true
           image: dukku/semicolon-deposit:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: deposit
           ports:
             - containerPort: 8087

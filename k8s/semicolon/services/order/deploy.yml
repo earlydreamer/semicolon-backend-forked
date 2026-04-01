@@ -33,7 +33,7 @@ spec:
                 name: order-db
                 optional: true
           image: dukku/semicolon-order:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: order
           ports:
             - containerPort: 8084

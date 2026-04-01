@@ -33,7 +33,7 @@ spec:
                 name: auth-db
                 optional: true
           image: dukku/semicolon-auth:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: auth
           ports:
             - containerPort: 8081

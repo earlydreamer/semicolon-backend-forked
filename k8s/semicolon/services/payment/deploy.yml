@@ -33,7 +33,7 @@ spec:
                 name: payment-db
                 optional: true
           image: dukku/semicolon-payment:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: payment
           ports:
             - containerPort: 8086

@@ -10,7 +10,7 @@
 ## Current Deployment Topology
 
 - GitHub-hosted runner가 `dev` push를 감지한다.
-- runner가 변경 모듈만 `linux/arm64` 이미지로 빌드해 Docker Hub에 푸시한다.
+- runner가 변경 모듈 이미지를 `linux/amd64,linux/arm64` 멀티아키로 빌드해 Docker Hub에 푸시한다.
 - 같은 runner가 `cloudflared access tcp`로 Cloudflare Access 보호 SSH hostname에 접속한다.
 - 접속 대상은 M1 맥북 host이며, `cloudflared`는 맥북 host 서비스로 실행한다.
 - 맥북 host는 `k3d` 클러스터에 `scripts/apply.sh`를 적용하고, 변경 Deployment만 `set image -> rollout` 한다.
@@ -212,7 +212,7 @@ Cloudflare 측 수동 준비:
 동작 요약:
 
 1. 변경 모듈 계산
-2. 변경 모듈 `linux/arm64` 이미지 빌드 및 Docker Hub 푸시
+2. 변경 모듈 멀티아키(`linux/amd64,linux/arm64`) 이미지 빌드 및 Docker Hub 푸시
 3. Tunnel SSH로 맥북에 배포 번들 업로드
 4. `create-secrets.sh` 실행
 5. `scripts/apply.sh` 실행
