@@ -274,7 +274,7 @@ jobs:
           import os
           public_web_host = os.environ.get("PUBLIC_WEB_HOST") or "dukku.earlydreamer.dev"
           public_api_host = os.environ.get("PUBLIC_API_HOST") or "api-dukku.earlydreamer.dev"
-          public_grafana_host = os.environ.get("PUBLIC_GRAFANA_HOST") or f"grafana.{public_api_host}"
+          public_grafana_host = os.environ.get("PUBLIC_GRAFANA_HOST") or f"grafana-{public_web_host}"
           frontend_base_url = f"https://{public_web_host}"
           api_base_url = f"https://{public_api_host}"
           docker_username = os.environ.get("DOCKER_USERNAME") or ""
