@@ -33,7 +33,7 @@ spec:
                 name: coupon-db
                 optional: true
           image: dukku/semicolon-coupon:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: coupon
           ports:
             - containerPort: 8085

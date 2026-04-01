@@ -33,7 +33,7 @@ spec:
                 name: settlement-db
                 optional: true
           image: dukku/semicolon-settlement:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: settlement
           ports:
             - containerPort: 8088

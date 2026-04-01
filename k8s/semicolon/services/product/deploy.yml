@@ -32,7 +32,7 @@ spec:
                 name: product-db
                 optional: true
           image: dukku/semicolon-product:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: product
           ports:
             - containerPort: 8083
