@@ -62,6 +62,7 @@ ai/docker-compose.local.db.override.yml
 
 # Internal working notes archive
 /.md/
+.worktrees/
 
 # k8s legacy / backup (서버 스냅샷, apply 대상 아님)
 k8s/semicolon/legacy/
