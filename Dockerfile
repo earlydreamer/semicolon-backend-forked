@@ -42,4 +42,4 @@ COPY --from=builder /app/app.jar app.jar
 # 5. 실행
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
-# trigger full arm64 rebuild
+# trigger multi-arch rebuild
