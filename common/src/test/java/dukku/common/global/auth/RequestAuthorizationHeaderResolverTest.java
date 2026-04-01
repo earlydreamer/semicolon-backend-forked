@@ -51,4 +51,12 @@ class RequestAuthorizationHeaderResolverTest {
 
         assertThat(resolved).isEqualTo("Bearer token-value");
     }
+
+    @Test
+    @DisplayName("현재 HTTP 요청 컨텍스트가 없으면 null을 반환한다")
+    void returnsNullWhenNoRequestContext() {
+        String resolved = RequestAuthorizationHeaderResolver.resolve();
+
+        assertThat(resolved).isNull();
+    }
 }

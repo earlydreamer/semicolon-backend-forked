@@ -13,32 +13,22 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  */
 public final class RequestAuthorizationHeaderResolver {
 
-    private static final String ENV_INTERNAL_SERVICE_TOKEN = "INTERNAL_SERVICE_TOKEN";
-
     private RequestAuthorizationHeaderResolver() {
     }
 
     public static String resolve() {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (!(requestAttributes instanceof ServletRequestAttributes servletRequestAttributes)) {
-            return resolveFromEnv();
+            return null;
         }
 
         HttpServletRequest request = servletRequestAttributes.getRequest();
         String authorization = request.getHeader("Authorization");
         if (authorization == null || authorization.isBlank()) {
-            return resolveFromEnv();
+            return null;
         }
 
         return normalizeBearer(authorization);
-    }
-
-    private static String resolveFromEnv() {
-        String token = System.getenv(ENV_INTERNAL_SERVICE_TOKEN);
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-        return normalizeBearer(token);
     }
 
     private static String normalizeBearer(String token) {
