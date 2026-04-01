@@ -1,6 +1,6 @@
 package dukku.common.shared.order.out;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.order.dto.ConfirmedOrderItemResponse;
 import dukku.common.shared.order.dto.OrderListResponse;
 import dukku.common.shared.order.dto.OrderResponse;
@@ -42,9 +42,9 @@ public class OrderApiClient {
                         .queryParam("endDateTime", endDateTime)
                         .build());
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()
@@ -56,9 +56,9 @@ public class OrderApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                 .uri("/{orderUuid}/detail", orderUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()
@@ -69,9 +69,9 @@ public class OrderApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = restClient.post()
                 .uri("/{orderUuid}/expire", orderUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         requestSpec.retrieve()
@@ -87,9 +87,9 @@ public class OrderApiClient {
                         .queryParam("limit", limit)
                         .build(userUuid));
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()

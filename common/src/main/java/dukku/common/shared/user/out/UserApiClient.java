@@ -1,6 +1,6 @@
 package dukku.common.shared.user.out;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.user.dto.UserAdminProfileResponse;
 import dukku.common.shared.user.dto.UserProfileResponse;
 import dukku.common.shared.user.dto.UserUuidResponse;
@@ -39,9 +39,9 @@ public class UserApiClient {
                         .queryParam("role", role)
                         .build());
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()
@@ -55,9 +55,9 @@ public class UserApiClient {
                         .queryParam("email", email)
                         .build());
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()
@@ -68,9 +68,9 @@ public class UserApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = internalRestClient.get()
                 .uri("/{userUuid}/profile", userUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()
@@ -81,9 +81,9 @@ public class UserApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = internalRestClient.get()
                 .uri("/{userUuid}/admin", userUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()

@@ -1,6 +1,6 @@
 package dukku.common.shared.product.out;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.product.dto.cart.CartInternalResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -32,9 +32,9 @@ public class CartApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                 .uri("/internal/{userUuid}", userUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()

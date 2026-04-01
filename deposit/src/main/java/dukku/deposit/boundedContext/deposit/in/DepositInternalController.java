@@ -1,6 +1,7 @@
 package dukku.deposit.boundedContext.deposit.in;
 
 import dukku.deposit.boundedContext.deposit.app.DepositFacade;
+import dukku.common.shared.deposit.dto.DepositAccountResponse;
 import dukku.common.shared.deposit.dto.DepositBalanceResponse;
 import dukku.common.shared.deposit.dto.DepositChargeForSettlementRequest;
 import dukku.common.shared.deposit.dto.DepositChargeForSettlementResponse;
@@ -34,6 +35,25 @@ import java.util.UUID;
 public class DepositInternalController {
 
     private final DepositFacade depositFacade;
+
+    /**
+     * 사용자 예치금 계좌 UUID 조회 (Internal API)
+     */
+    @GetMapping("/{userUuid}/account")
+    public ResponseEntity<DepositAccountResponse> getUserAccountInternal(@PathVariable UUID userUuid) {
+        DepositDto deposit = depositFacade.findDeposit(userUuid);
+
+        DepositAccountResponse response = DepositAccountResponse.builder()
+                .success(true)
+                .code("DEPOSIT_ACCOUNT_RETRIEVED")
+                .message("예치금 계좌 정보를 조회했습니다.")
+                .data(DepositAccountResponse.DepositAccountData.builder()
+                        .depositUuid(deposit.getDepositUuid())
+                        .build())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * 사용자 예치금 잔액 조회 (Internal API)

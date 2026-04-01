@@ -1,5 +1,6 @@
 package dukku.user.global.config;
 
+import dukku.common.global.auth.internal.InternalServiceAuthenticationFilter;
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
 import dukku.common.global.security.SecurityWhitelist;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class SecurityReleaseConfig {
     private String[] allowedOrigins;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final InternalServiceAuthenticationFilter internalServiceAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     /**
@@ -57,6 +59,7 @@ public class SecurityReleaseConfig {
                                 "/api/v1/internal/users/social"
                         )
                                 .permitAll() // 인증 필요없음 -> filter 미실행
+                        .requestMatchers(SecurityWhitelist.SYSTEM_INTERNAL).hasRole("SYSTEM")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")// ADMIN만 접근
 //                        .requestMatchers("/actuator/**")
 //                        .access((auth, ctx) ->
@@ -79,6 +82,7 @@ public class SecurityReleaseConfig {
                 }))
                 .exceptionHandling(e -> e // 인증 실패시 예외 처리
                         .authenticationEntryPoint(authenticationEntryPoint))
+                .addFilterBefore(internalServiceAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

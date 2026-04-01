@@ -1,6 +1,6 @@
 package dukku.common.shared.product.out;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.product.dto.product.ProductReserveRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -31,9 +31,9 @@ public class ProductApiClient {
                 .uri("/internal/reserve") // Controller에 정의한 경로
                 .contentType(MediaType.APPLICATION_JSON);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         requestSpec.body(request)

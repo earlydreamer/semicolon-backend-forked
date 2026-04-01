@@ -1,6 +1,6 @@
 package dukku.common.shared.coupon.out;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.coupon.dto.CouponInternalResponse;
 import dukku.common.shared.coupon.exception.CouponNotFoundException;
 import dukku.common.shared.coupon.exception.CouponUseNotAllowedException;
@@ -54,9 +54,9 @@ public class CouponApiClient {
             RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                     .uri("/{couponUuid}", couponUuid);
 
-            String authorization = RequestAuthorizationHeaderResolver.resolve();
-            if (authorization != null) {
-                requestSpec = requestSpec.header("Authorization", authorization);
+            String internalToken = InternalServiceTokenResolver.resolve();
+            if (internalToken != null) {
+                requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
             }
 
             CouponInternalResponse response = requestSpec.retrieve()

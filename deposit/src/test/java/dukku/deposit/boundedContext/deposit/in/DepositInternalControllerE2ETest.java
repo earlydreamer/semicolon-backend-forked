@@ -115,11 +115,42 @@ class DepositInternalControllerE2ETest {
         assertThat(histories).hasSize(2);
     }
 
+    @Test
+    @DisplayName("내부 계좌 조회 API는 사용자의 depositUuid를 반환한다")
+    void getDepositAccountReturnsDepositUuid() throws Exception {
+        UUID userUuid = UUID.randomUUID();
+        UUID depositUuid = UUID.randomUUID();
+
+        depositRepository.save(Deposit.builder()
+                .userUuid(userUuid)
+                .depositUuid(depositUuid)
+                .balance(5000L)
+                .version(0)
+                .build());
+
+        String url = "http://localhost:" + port + "/api/v1/internal/deposits/" + userUuid + "/account";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = get(client, url);
+        JsonNode json = objectMapper.readTree(response.body());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(json.get("data").get("depositUuid").asText()).isEqualTo(depositUuid.toString());
+    }
+
     private HttpResponse<String> postJson(HttpClient client, String url, String body) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> get(HttpClient client, String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
                 .build();
         return client.send(request, HttpResponse.BodyHandlers.ofString());
     }

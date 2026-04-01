@@ -1,6 +1,6 @@
 package dukku.common.shared.payment.out;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.payment.dto.PaymentInternalResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,9 +26,9 @@ public class PaymentApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                 .uri("/{paymentUuid}", paymentUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()
@@ -42,9 +42,9 @@ public class PaymentApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = restClient.get()
                 .uri("/orders/{orderUuid}", orderUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.retrieve()

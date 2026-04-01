@@ -1,6 +1,6 @@
 package dukku.common.shared.deposit.out.depositApiClient;
 
-import dukku.common.global.auth.RequestAuthorizationHeaderResolver;
+import dukku.common.global.auth.InternalServiceTokenResolver;
 import dukku.common.shared.deposit.dto.DepositAccountResponse;
 import dukku.common.shared.deposit.dto.DepositBalanceResponse;
 import dukku.common.shared.deposit.dto.DepositChargeForSettlementRequest;
@@ -18,13 +18,9 @@ public class DepositApiClient {
 
     // TODO: admin/internal API가 혼재되어 있어 클라이언트를 분리했지만,
     // 추후 API 구조 재정리 시 통합 여부 재검토 필요
-    private final RestClient adminClient;
     private final RestClient internalClient;
 
     public DepositApiClient(@Value("${custom.client.deposit.url:${custom.global.internalBackUrl:http://localhost:8080}}") String internalBackUrl) {
-        this.adminClient = RestClient.builder()
-                .baseUrl(internalBackUrl + "/api/v1/admin/deposits")
-                .build();
         this.internalClient = RestClient.builder()
                 .baseUrl(internalBackUrl + "/api/v1/internal/deposits")
                 .build();
@@ -34,12 +30,12 @@ public class DepositApiClient {
      * 판매자 예치금 계좌 UUID 조회 (관리자/내부 용도)
      */
     public UUID getDepositUuid(UUID userUuid) {
-        RestClient.RequestHeadersSpec<?> requestSpec = adminClient.get()
+        RestClient.RequestHeadersSpec<?> requestSpec = internalClient.get()
                 .uri("/{userUuid}/account", userUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         DepositAccountResponse response = requestSpec.retrieve()
@@ -58,9 +54,9 @@ public class DepositApiClient {
         RestClient.RequestHeadersSpec<?> requestSpec = internalClient.get()
                 .uri("/{userUuid}/balance", userUuid);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         DepositBalanceResponse response = requestSpec.retrieve()
@@ -89,9 +85,9 @@ public class DepositApiClient {
                 .uri("/{userUuid}/charge", userUuid)
                 .contentType(MediaType.APPLICATION_JSON);
 
-        String authorization = RequestAuthorizationHeaderResolver.resolve();
-        if (authorization != null) {
-            requestSpec = requestSpec.header("Authorization", authorization);
+        String internalToken = InternalServiceTokenResolver.resolve();
+        if (internalToken != null) {
+            requestSpec = requestSpec.header(InternalServiceTokenResolver.HEADER_NAME, internalToken);
         }
 
         return requestSpec.body(request)
