@@ -11,6 +11,18 @@ ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 declare -a RENDERED_FILES=()
+APP_DEPLOYMENTS=(
+  "auth:k8s/semicolon/services/auth/deploy.yml"
+  "user:k8s/semicolon/services/user/deploy.yml"
+  "product:k8s/semicolon/services/product/deploy.yml"
+  "order:k8s/semicolon/services/order/deploy.yml"
+  "coupon:k8s/semicolon/services/coupon/deploy.yml"
+  "payment:k8s/semicolon/services/payment/deploy.yml"
+  "deposit:k8s/semicolon/services/deposit/deploy.yml"
+  "settlement:k8s/semicolon/services/settlement/deploy.yml"
+  "ai:k8s/semicolon/services/ai/deploy.yml"
+  "log-consumer:k8s/semicolon/monitoring/log-consumer-deploy.yml"
+)
 
 cleanup_rendered_files() {
   local rendered_file
@@ -99,8 +111,75 @@ apply_rendered_template() {
   rendered_file="$(render_template "$source_file")"
   RENDERED_FILES+=("$rendered_file")
 
-  # shellcheck disable=SC2086
   $K -n "$NS" apply -f "$rendered_file"
+}
+
+resolve_app_image() {
+  local module="$1"
+  local env_key
+  local value
+  local current_image
+
+  env_key="$(printf '%s_IMAGE' "$(printf '%s' "$module" | tr '[:lower:]-' '[:upper:]_')")"
+  value="${!env_key:-}"
+  if [ -n "$value" ]; then
+    printf '%s\n' "$value"
+    return 0
+  fi
+
+  if $K -n "$NS" get deploy/"$module" >/dev/null 2>&1; then
+    current_image="$($K -n "$NS" get deploy/"$module" -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+    if [ -n "$current_image" ]; then
+      printf '%s\n' "$current_image"
+      return 0
+    fi
+  fi
+
+  printf 'dukku/semicolon-%s:latest\n' "$module"
+}
+
+render_app_deployment() {
+  local source_file="$1"
+  local image="$2"
+  local rendered_file
+
+  rendered_file="$(mktemp)"
+  APP_DEPLOY_IMAGE="$image" perl -0pe 'my $img = $ENV{"APP_DEPLOY_IMAGE"}; s{^(\s*image:\s*).*$}{$1.$img}me' \
+    "$source_file" > "$rendered_file"
+
+  echo "$rendered_file"
+}
+
+apply_app_deployments() {
+  local entry
+  local module
+  local source_file
+  local image
+  local rendered_file
+
+  for entry in "${APP_DEPLOYMENTS[@]}"; do
+    module="${entry%%:*}"
+    source_file="${entry#*:}"
+    image="$(resolve_app_image "$module")"
+    rendered_file="$(render_app_deployment "$source_file" "$image")"
+    RENDERED_FILES+=("$rendered_file")
+
+    echo "[info] ${module} deployment apply: image=${image}"
+    $K -n "$NS" apply -f "$rendered_file"
+  done
+}
+
+apply_static_manifests() {
+  while IFS= read -r manifest; do
+    $K -n "$NS" apply -f "$manifest"
+  done < <(
+    find k8s/semicolon/dependencies k8s/semicolon/services k8s/semicolon/monitoring \
+      -type f \
+      \( -name '*.yml' -o -name '*.yaml' \) \
+      ! -path 'k8s/semicolon/services/*/deploy.yml' \
+      ! -path 'k8s/semicolon/monitoring/log-consumer-deploy.yml' \
+      | sort
+  )
 }
 
 verify_ingress_exists() {
@@ -133,28 +212,14 @@ read_env_or_default() {
 
 trap cleanup_rendered_files EXIT
 
-apply_recursive() {
-  local target="$1"
-  if [ -d "$target" ]; then
-    # shellcheck disable=SC2086
-    $K -n "$NS" apply --recursive -f "$target"
-  fi
-}
-
-# shellcheck disable=SC2086
 $K apply -f k8s/semicolon/00-namespace.yml
 
 if [ "$ENABLE_CERT_MANAGER" = "true" ]; then
-  # shellcheck disable=SC2086
   $K apply -f k8s/semicolon/ingress/clusterissuer-letsencrypt-prod.yml
 fi
 
-apply_recursive k8s/semicolon/dependencies
-apply_recursive k8s/semicolon/services
-
-if [ "$ENABLE_MONITORING" = "true" ]; then
-  apply_recursive k8s/semicolon/monitoring
-fi
+apply_static_manifests
+apply_app_deployments
 
 export SHOWCASE_RESET_NAMESPACE="$NS"
 export SHOWCASE_RESET_CRON="$(read_env_or_default SHOWCASE_RESET_CRON '0 0 * * *')"
@@ -173,7 +238,6 @@ apply_rendered_template k8s/semicolon/templates/showcase-reset.yml.tpl
 case "$INGRESS_MODE" in
   local)
     echo "[info] local ingress 적용 시작: enable_monitoring=${ENABLE_MONITORING}"
-    # shellcheck disable=SC2086
     $K -n "$NS" apply -f k8s/semicolon/ingress/api-gateway-ingress.local.yml
 
     if [ "$ENABLE_MONITORING" = "true" ]; then
@@ -213,9 +277,6 @@ case "$INGRESS_MODE" in
     ;;
 esac
 
-# shellcheck disable=SC2086
 $K -n "$NS" get deploy -o wide
-# shellcheck disable=SC2086
 $K -n "$NS" get svc -o wide
-# shellcheck disable=SC2086
 $K -n "$NS" get ingress -o wide

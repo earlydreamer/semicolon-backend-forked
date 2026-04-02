@@ -48,6 +48,16 @@ resolve_kubectl() {
 
 K_BIN="$(resolve_kubectl)"
 
+if [ -n "$MODS" ]; then
+  : "${DOCKER_USERNAME:?DOCKER_USERNAME is required when rolling out images}"
+  : "${IMAGE_TAG:?IMAGE_TAG is required when rolling out images}"
+
+  for module in $MODS; do
+    image_env_key="$(printf '%s_IMAGE' "$(printf '%s' "$module" | tr '[:lower:]-' '[:upper:]_')")"
+    export "${image_env_key}=${DOCKER_USERNAME}/semicolon-${module}:${IMAGE_TAG}"
+  done
+fi
+
 ENV_FILE="${REMOTE_WORKSPACE}/semicolon.env" \
 K="$K_BIN" \
 NAMESPACE="$NS" \
