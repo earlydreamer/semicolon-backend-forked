@@ -41,6 +41,8 @@ out/
 !.env.example
 github-actions-secrets.env
 !github-actions-secrets.example.env
+github-actions-variables.env
+!github-actions-variables.example.env
 *.pem
 *.key
 *.crt
