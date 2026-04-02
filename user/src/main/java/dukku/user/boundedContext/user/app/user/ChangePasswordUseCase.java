@@ -2,6 +2,7 @@ package dukku.user.boundedContext.user.app.user;
 
 import dukku.common.global.UserUtil;
 import dukku.common.global.eventPublisher.EventPublisher;
+import dukku.common.shared.auth.out.AuthApiClient;
 import dukku.common.shared.user.dto.PasswordUpdateRequest;
 import dukku.common.shared.user.event.UserModifiedEvent;
 import dukku.common.shared.user.exception.UserNotFoundException;
@@ -22,6 +23,7 @@ public class ChangePasswordUseCase {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
+    private final AuthApiClient authApiClient;
 
     @Transactional
     public void execute(PasswordUpdateRequest request) {
@@ -37,5 +39,6 @@ public class ChangePasswordUseCase {
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
 
         eventPublisher.publish(new UserModifiedEvent(User.toUserDto(user)));
+        authApiClient.revokeAllSessions(currentUserId);
     }
 }

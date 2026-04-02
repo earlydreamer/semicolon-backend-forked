@@ -82,6 +82,10 @@ public class AuthService {
         return new TokenResponse(accessToken, newRefreshToken);
     }
 
+    public void revokeAllSessions(UUID userUuid) {
+        refreshTokenStoreService.delete(userUuid);
+    }
+
     public void logout(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return;
@@ -89,7 +93,7 @@ public class AuthService {
         try {
             Claims claims = authTokenIssuer.parseRefreshClaims(refreshToken);
             UUID userUuid = UUID.fromString(claims.getSubject());
-            refreshTokenStoreService.delete(userUuid);
+            revokeAllSessions(userUuid);
         } catch (UnauthorizedException ignored) {
         }
     }

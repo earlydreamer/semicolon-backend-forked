@@ -73,9 +73,12 @@ jwt:
   access:
     secret:
       key: ${JWT_ACCESS_SECRET}
+    ttl-millis: ${JWT_ACCESS_TTL_MILLIS:300000}
   refresh:
     secret:
       key: ${JWT_REFRESH_SECRET}
+    ttl-millis: ${JWT_REFRESH_TTL_MILLIS:604800000}
+    absolute-ttl-millis: ${JWT_REFRESH_ABSOLUTE_TTL_MILLIS:1209600000}
 
 crypto:
   key: ${CRYPTO_KEY}

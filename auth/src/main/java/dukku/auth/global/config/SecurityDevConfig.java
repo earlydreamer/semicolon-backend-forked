@@ -2,7 +2,9 @@ package dukku.auth.global.config;
 
 import dukku.auth.boundedContext.auth.infra.GoogleOAuth2FailureHandler;
 import dukku.auth.boundedContext.auth.infra.GoogleOAuth2SuccessHandler;
+import dukku.common.global.auth.internal.InternalServiceAuthenticationFilter;
 import dukku.common.global.auth.jwt.JwtAuthenticationFilter;
+import dukku.common.global.security.SecurityWhitelist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +32,7 @@ public class SecurityDevConfig {
     private String[] allowedOrigins;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final InternalServiceAuthenticationFilter internalServiceAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
     private final GoogleOAuth2FailureHandler googleOAuth2FailureHandler;
@@ -51,8 +54,9 @@ public class SecurityDevConfig {
                   그러므로 세션은 필요없음
                  */
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SecurityWhitelist.SYSTEM_INTERNAL).hasRole("SYSTEM")
                         .anyRequest().permitAll() // 개발 환경: 모든 요청 허용
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -72,6 +76,7 @@ public class SecurityDevConfig {
                 }))
                 .exceptionHandling(e -> e // 인증 실패시 예외 처리
                         .authenticationEntryPoint(authenticationEntryPoint))
+                .addFilterBefore(internalServiceAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -20,28 +20,37 @@ import java.util.UUID;
 @Component
 public class AuthTokenIssuer {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60L * 24; //TODO 5분으로 변경할 것
-    private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7L;
-    private static final long REFRESH_TOKEN_ABSOLUTE_VALIDITY = 1000 * 60 * 60 * 24 * 14L;
+    private static final long DEFAULT_ACCESS_TOKEN_VALIDITY_MILLIS = 300_000L;
+    private static final long DEFAULT_REFRESH_TOKEN_VALIDITY_MILLIS = 604_800_000L;
+    private static final long DEFAULT_REFRESH_TOKEN_ABSOLUTE_VALIDITY_MILLIS = 1_209_600_000L;
     private static final String CLAIM_ROLE = "ROLE";
     private static final String CLAIM_ABSOLUTE_EXP = "ABS_EXP";
 
     private final SecretKey accessKey;
     private final SecretKey refreshKey;
     private final JwtTokenUtil jwtValidator;
+    private final long accessTokenValidityMillis;
+    private final long refreshTokenValidityMillis;
+    private final long refreshTokenAbsoluteValidityMillis;
 
     public AuthTokenIssuer(
             @Value("${jwt.access.secret.key}") String accessSecret,
             @Value("${jwt.refresh.secret.key}") String refreshSecret,
-            JwtTokenUtil jwtValidator
+            JwtTokenUtil jwtValidator,
+            @Value("${jwt.access.ttl-millis:" + DEFAULT_ACCESS_TOKEN_VALIDITY_MILLIS + "}") long accessTokenValidityMillis,
+            @Value("${jwt.refresh.ttl-millis:" + DEFAULT_REFRESH_TOKEN_VALIDITY_MILLIS + "}") long refreshTokenValidityMillis,
+            @Value("${jwt.refresh.absolute-ttl-millis:" + DEFAULT_REFRESH_TOKEN_ABSOLUTE_VALIDITY_MILLIS + "}") long refreshTokenAbsoluteValidityMillis
     ) {
         this.accessKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessSecret));
         this.refreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshSecret));
         this.jwtValidator = jwtValidator;
+        this.accessTokenValidityMillis = accessTokenValidityMillis;
+        this.refreshTokenValidityMillis = refreshTokenValidityMillis;
+        this.refreshTokenAbsoluteValidityMillis = refreshTokenAbsoluteValidityMillis;
     }
 
     public String issue(UUID userUuid, Role role) {
-        return createToken(userUuid, role.name(), ACCESS_TOKEN_VALIDITY, accessKey);
+        return createToken(userUuid, role.name(), accessTokenValidityMillis, accessKey);
     }
 
     private String createToken(UUID userUuid, String role, long validity, SecretKey key) {
@@ -58,17 +67,17 @@ public class AuthTokenIssuer {
     }
 
     public String createAccessToken(UUID userUuid, String role) {
-        return createToken(userUuid, role, ACCESS_TOKEN_VALIDITY, accessKey);
+        return createToken(userUuid, role, accessTokenValidityMillis, accessKey);
     }
 
     public String createRefreshToken(UUID userUuid, String role) {
-        long absoluteExpiryMillis = System.currentTimeMillis() + REFRESH_TOKEN_ABSOLUTE_VALIDITY;
+        long absoluteExpiryMillis = System.currentTimeMillis() + refreshTokenAbsoluteValidityMillis;
         return createRefreshToken(userUuid, role, absoluteExpiryMillis);
     }
 
     public String createRefreshToken(UUID userUuid, String role, long absoluteExpiryMillis) {
         long nowMillis = System.currentTimeMillis();
-        long slidingExpiryMillis = nowMillis + REFRESH_TOKEN_VALIDITY;
+        long slidingExpiryMillis = nowMillis + refreshTokenValidityMillis;
         long refreshExpiryMillis = Math.min(slidingExpiryMillis, absoluteExpiryMillis);
 
         if (refreshExpiryMillis <= nowMillis) {
@@ -139,4 +148,3 @@ public class AuthTokenIssuer {
         return createAccessToken(userUuid, role);
     }
 }
-
