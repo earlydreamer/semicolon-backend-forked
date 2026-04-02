@@ -35,7 +35,7 @@ public class UserInitData {
     private void createFixedUsers() {
         List<User> users = new ArrayList<>();
 
-        addIfPresent(users, createUser("admin@semicolon.com", "Admin123!", "admin", Role.ADMIN, 0));
+        addIfPresent(users, createAdminUser());
 
         for (int i = 1; i <= 20; i++) {
             addIfPresent(users, createUser("u" + i + "@company.com", "TestUser123!", "u" + i, Role.USER, i));
@@ -48,6 +48,16 @@ public class UserInitData {
 
         userRepository.saveAll(users);
         log.info("고정 테스트 사용자 {}명 생성 완료", users.size());
+    }
+
+    private User createAdminUser() {
+        return createUser(
+                env.getRequiredProperty("INIT_ADMIN_EMAIL"),
+                env.getRequiredProperty("INIT_ADMIN_PASSWORD"),
+                "admin",
+                Role.ADMIN,
+                0
+        );
     }
 
     private void addIfPresent(List<User> users, User user) {
