@@ -13,16 +13,16 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
-  REMOTE_WORKSPACE: ${{ secrets.REMOTE_WORKSPACE }}
-  PUBLIC_WEB_HOST: ${{ secrets.PUBLIC_WEB_HOST }}
-  PUBLIC_API_HOST: ${{ secrets.PUBLIC_API_HOST }}
-  PUBLIC_GRAFANA_HOST: ${{ secrets.PUBLIC_GRAFANA_HOST }}
-  CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
-  DEPLOY_INGRESS_MODE: ${{ secrets.DEPLOY_INGRESS_MODE }}
-  DEPLOY_ENABLE_MONITORING: ${{ secrets.DEPLOY_ENABLE_MONITORING }}
-  DEPLOY_ENABLE_CERT_MANAGER: ${{ secrets.DEPLOY_ENABLE_CERT_MANAGER }}
+  DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
+  REMOTE_WORKSPACE: ${{ vars.REMOTE_WORKSPACE }}
+  PUBLIC_WEB_HOST: ${{ vars.PUBLIC_WEB_HOST }}
+  PUBLIC_API_HOST: ${{ vars.PUBLIC_API_HOST }}
+  PUBLIC_GRAFANA_HOST: ${{ vars.PUBLIC_GRAFANA_HOST }}
+  CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
+  DEPLOY_INGRESS_MODE: ${{ vars.DEPLOY_INGRESS_MODE }}
+  DEPLOY_ENABLE_MONITORING: ${{ vars.DEPLOY_ENABLE_MONITORING }}
+  DEPLOY_ENABLE_CERT_MANAGER: ${{ vars.DEPLOY_ENABLE_CERT_MANAGER }}
   CLOUDFLARED_VERSION: "2026.3.0"
 
 jobs:
@@ -164,7 +164,7 @@ jobs:
 
       - name: Prepare SSH materials
         env:
-          M1_DEPLOY_SSH_HOSTNAME: ${{ secrets.M1_DEPLOY_SSH_HOSTNAME }}
+          M1_DEPLOY_SSH_HOSTNAME: ${{ vars.M1_DEPLOY_SSH_HOSTNAME }}
           M1_DEPLOY_SSH_KEY: ${{ secrets.M1_DEPLOY_SSH_KEY }}
           M1_DEPLOY_KNOWN_HOSTS: ${{ secrets.M1_DEPLOY_KNOWN_HOSTS }}
         run: |
@@ -232,43 +232,61 @@ jobs:
           JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
           CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
           INTERNAL_SERVICE_TOKEN: ${{ secrets.INTERNAL_SERVICE_TOKEN }}
+          INIT_ADMIN_EMAIL: ${{ vars.INIT_ADMIN_EMAIL }}
+          INIT_ADMIN_PASSWORD: ${{ secrets.INIT_ADMIN_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
           TOSS_API_SECRET_KEY: ${{ secrets.TOSS_API_SECRET_KEY }}
           OBJECT_STORAGE_ACCESS_KEY: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY }}
           OBJECT_STORAGE_SECRET_KEY: ${{ secrets.OBJECT_STORAGE_SECRET_KEY }}
-          OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION }}
-          OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET }}
-          OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT }}
-          OBJECT_STORAGE_PATH_STYLE_ACCESS_ENABLED: ${{ secrets.OBJECT_STORAGE_PATH_STYLE_ACCESS_ENABLED }}
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          OBJECT_STORAGE_REGION: ${{ vars.OBJECT_STORAGE_REGION }}
+          OBJECT_STORAGE_BUCKET: ${{ vars.OBJECT_STORAGE_BUCKET }}
+          OBJECT_STORAGE_ENDPOINT: ${{ vars.OBJECT_STORAGE_ENDPOINT }}
+          OBJECT_STORAGE_PATH_STYLE_ACCESS_ENABLED: ${{ vars.OBJECT_STORAGE_PATH_STYLE_ACCESS_ENABLED }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ vars.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-          GRAFANA_ADMIN_USER: ${{ secrets.GRAFANA_ADMIN_USER }}
+          GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
           GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
           SLACK_WEBHOOK_URL_SETTLEMENT: ${{ secrets.SLACK_WEBHOOK_URL_SETTLEMENT }}
           SLACK_WEBHOOK_URL_GRAFANA: ${{ secrets.SLACK_WEBHOOK_URL_GRAFANA }}
-          MAIL_HOST: ${{ secrets.MAIL_HOST }}
-          MAIL_PORT: ${{ secrets.MAIL_PORT }}
-          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
-          required_vars=(
+          required_secret_vars=(
             DB_USERNAME DB_PASSWORD
             JWT_ACCESS_SECRET JWT_REFRESH_SECRET CRYPTO_KEY
-            INTERNAL_SERVICE_TOKEN
+            INTERNAL_SERVICE_TOKEN INIT_ADMIN_PASSWORD
             OPENAI_API_KEY
             SYSTEM_DEPOSIT_PASSWORD
             TOSS_API_SECRET_KEY
-            OBJECT_STORAGE_ACCESS_KEY OBJECT_STORAGE_SECRET_KEY OBJECT_STORAGE_REGION OBJECT_STORAGE_BUCKET OBJECT_STORAGE_ENDPOINT
-            GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET
-            GRAFANA_ADMIN_USER GRAFANA_ADMIN_PASSWORD
+            OBJECT_STORAGE_ACCESS_KEY OBJECT_STORAGE_SECRET_KEY
+            GOOGLE_OAUTH_CLIENT_SECRET
+            GRAFANA_ADMIN_PASSWORD
             SLACK_WEBHOOK_URL_SETTLEMENT SLACK_WEBHOOK_URL_GRAFANA
-            MAIL_HOST MAIL_PORT MAIL_USERNAME EMAIL_PASSWORD
+            EMAIL_PASSWORD
           )
 
-          for var_name in "${required_vars[@]}"; do
+          required_config_vars=(
+            INIT_ADMIN_EMAIL
+            OBJECT_STORAGE_REGION OBJECT_STORAGE_BUCKET OBJECT_STORAGE_ENDPOINT
+            GOOGLE_OAUTH_CLIENT_ID
+            GRAFANA_ADMIN_USER
+            MAIL_HOST MAIL_PORT MAIL_USERNAME
+            SLACK_WEBHOOK_URL_SETTLEMENT SLACK_WEBHOOK_URL_GRAFANA
+          )
+
+          for var_name in "${required_secret_vars[@]}"; do
             if [ -z "${!var_name:-}" ]; then
               echo "::error::Missing required secret ${var_name}"
+              exit 1
+            fi
+          done
+
+          for var_name in "${required_config_vars[@]}"; do
+            if [ -z "${!var_name:-}" ]; then
+              echo "::error::Missing required variable ${var_name}"
               exit 1
             fi
           done
@@ -313,6 +331,8 @@ jobs:
               f"JWT_REFRESH_SECRET={os.environ['JWT_REFRESH_SECRET']}",
               f"CRYPTO_KEY={os.environ['CRYPTO_KEY']}",
               f"INTERNAL_SERVICE_TOKEN={os.environ['INTERNAL_SERVICE_TOKEN']}",
+              f"INIT_ADMIN_EMAIL={os.environ['INIT_ADMIN_EMAIL']}",
+              f"INIT_ADMIN_PASSWORD={os.environ['INIT_ADMIN_PASSWORD']}",
               f"CORS_ALLOWED_ORIGINS={cors_allowed_origins}",
               "INTERNAL_BACK_URL=http://auth-service",
               f"FRONTEND_BASE_URL={frontend_base_url}",
@@ -385,7 +405,7 @@ jobs:
 
       - name: Start Cloudflare Tunnel TCP proxy
         env:
-          M1_DEPLOY_SSH_HOSTNAME: ${{ secrets.M1_DEPLOY_SSH_HOSTNAME }}
+          M1_DEPLOY_SSH_HOSTNAME: ${{ vars.M1_DEPLOY_SSH_HOSTNAME }}
           CF_ACCESS_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_SERVICE_TOKEN_ID }}
           CF_ACCESS_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_SERVICE_TOKEN_SECRET }}
         run: |
@@ -403,7 +423,7 @@ jobs:
 
       - name: Upload deployment assets
         env:
-          M1_DEPLOY_USER: ${{ secrets.M1_DEPLOY_USER }}
+          M1_DEPLOY_USER: ${{ vars.M1_DEPLOY_USER }}
         run: |
           REMOTE_PATH="${REMOTE_WORKSPACE:-deploy/semicolon-backend}"
           NS="${K8S_NAMESPACE:-semicolon}"
