@@ -103,6 +103,18 @@ apply_rendered_template() {
   $K -n "$NS" apply -f "$rendered_file"
 }
 
+verify_ingress_exists() {
+  local ingress_name="$1"
+  local host_name="$2"
+
+  if ! $K -n "$NS" get ingress "$ingress_name" >/dev/null 2>&1; then
+    echo "[fail] ${ingress_name} 가 존재하지 않습니다. host=${host_name}, ingress_mode=${INGRESS_MODE}, enable_monitoring=${ENABLE_MONITORING}" >&2
+    exit 1
+  fi
+
+  echo "[info] ${ingress_name} 확인 완료: host=${host_name}"
+}
+
 read_env_or_default() {
   local key="$1"
   local fallback="${2:-}"
@@ -160,6 +172,7 @@ apply_rendered_template k8s/semicolon/templates/showcase-reset.yml.tpl
 
 case "$INGRESS_MODE" in
   local)
+    echo "[info] local ingress 적용 시작: enable_monitoring=${ENABLE_MONITORING}"
     # shellcheck disable=SC2086
     $K -n "$NS" apply -f k8s/semicolon/ingress/api-gateway-ingress.local.yml
 
@@ -171,11 +184,16 @@ case "$INGRESS_MODE" in
 
       if [ -n "$local_grafana_host" ]; then
         export PUBLIC_GRAFANA_HOST="$local_grafana_host"
+        echo "[info] grafana ingress 적용: host=${PUBLIC_GRAFANA_HOST}"
         apply_rendered_template k8s/semicolon/ingress/grafana-ingress.local.yml
+        verify_ingress_exists "grafana-ingress" "$PUBLIC_GRAFANA_HOST"
+      else
+        echo "[warn] ENABLE_MONITORING=true 이지만 PUBLIC_GRAFANA_HOST가 비어 있어 grafana ingress를 건너뜁니다."
       fi
     fi
     ;;
   prod)
+    echo "[info] prod ingress 적용 시작: enable_monitoring=${ENABLE_MONITORING}"
     load_render_var "PUBLIC_API_HOST"
     load_render_var "PUBLIC_GRAFANA_HOST"
     load_render_var "PUBLIC_API_TLS_SECRET" "$(derive_tls_secret_name "$PUBLIC_API_HOST")"
@@ -184,7 +202,9 @@ case "$INGRESS_MODE" in
     apply_rendered_template k8s/semicolon/ingress/api-gateway-ingress.yml
 
     if [ "$ENABLE_MONITORING" = "true" ]; then
+      echo "[info] grafana ingress 적용: host=${PUBLIC_GRAFANA_HOST}"
       apply_rendered_template k8s/semicolon/ingress/grafana-ingress.yml
+      verify_ingress_exists "grafana-ingress" "$PUBLIC_GRAFANA_HOST"
     fi
     ;;
   *)
