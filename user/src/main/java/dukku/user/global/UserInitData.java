@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Configuration
@@ -67,12 +68,15 @@ public class UserInitData {
     }
 
     private User createUser(String email, String rawPassword, String nickname, Role role, int seed) {
+        UUID uuid = fixedUuid(seed);
+
         if (userRepository.findByEmail(email).isPresent()) {
             return null;
         }
 
-        String uuidStr = String.format("00000000-0000-0000-0000-%012d", seed);
-        java.util.UUID uuid = java.util.UUID.fromString(uuidStr);
+        if (userRepository.findByUuid(uuid).isPresent()) {
+            return null;
+        }
 
         return User.builder()
                 .uuid(uuid)
@@ -82,5 +86,10 @@ public class UserInitData {
                 .role(role)
                 .status(dukku.common.shared.user.type.UserStatus.ACTIVE)
                 .build();
+    }
+
+    private UUID fixedUuid(int seed) {
+        String uuidStr = String.format("00000000-0000-0000-0000-%012d", seed);
+        return UUID.fromString(uuidStr);
     }
 }
