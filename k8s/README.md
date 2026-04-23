@@ -14,6 +14,9 @@
 - 같은 runner가 `cloudflared access tcp`로 Cloudflare Access 보호 SSH hostname에 접속한다.
 - 접속 대상은 M1 맥북 host이며, `cloudflared`는 맥북 host 서비스로 실행한다.
 - 맥북 host는 `k3d` 클러스터에 `scripts/apply.sh`를 적용하고, 변경 Deployment만 `set image -> rollout` 한다.
+- `scripts/apply.sh`는 앱 Deployment를 정적 `:latest`로 다시 덮어쓰지 않는다. 변경 모듈은 `${GITHUB_SHA}` 기반 이미지로 렌더링하고, 미변경 모듈은 현재 클러스터에서 실행 중인 image reference를 유지한다.
+- 원격 배포에서는 앱 image reference가 `:latest`로 해석되면 실패시킨다. 이미 drift된 원격 Deployment는 `workflow_dispatch` + `rebuild_all_images=true`로 SHA 태그 기준선을 먼저 만든다.
+- 수동 `workflow_dispatch`는 기본적으로 설정/매니페스트만 다시 적용한다. 구버전 이미지 drift를 복구하려면 `rebuild_all_images=true`로 실행해 전체 앱 이미지를 현재 커밋 SHA로 다시 빌드/롤아웃한다.
 - 앱 공개 트래픽도 같은 Tunnel에서 `http://localhost:8080`으로 라우팅한다.
 
 ## Directory Layout
@@ -171,7 +174,9 @@ CronJob 동작:
 1. 앱 Deployment를 0 replica로 내림
 2. Postgres 내부 `reset-databases.sh` 실행으로 9개 서비스 DB 재생성
 3. Redis `FLUSHALL`
-4. 앱 Deployment를 다시 1 replica로 올려 각 서비스 InitData 재실행
+4. `product` 재기동 1회에만 `PRODUCT_INIT_CLEAR_ES_ON_STARTUP=true`를 주입해 검색/스토리지 초기화를 유도
+5. 앱 Deployment를 다시 1 replica로 올려 각 서비스 InitData 재실행
+6. 성공/실패와 무관하게 `PRODUCT_INIT_CLEAR_ES_ON_STARTUP` 임시 env를 제거하고 앱 replica 복구를 시도
 
 수동으로 즉시 한 번 실행하려면:
 
@@ -208,6 +213,8 @@ Cloudflare 측 수동 준비:
 
 - `push` on `dev`
 - `workflow_dispatch`
+  - 기본값: 설정/매니페스트 재적용
+  - `rebuild_all_images=true`: 전체 앱 이미지 빌드 후 `${GITHUB_SHA}` 태그로 롤아웃
 
 동작 요약:
 
@@ -216,7 +223,9 @@ Cloudflare 측 수동 준비:
 3. Tunnel SSH로 맥북에 배포 번들 업로드
 4. `create-secrets.sh` 실행
 5. `scripts/apply.sh` 실행
-6. 변경 Deployment만 `set image -> annotation patch -> rollout status`
+6. `scripts/apply.sh`는 변경 모듈에만 `${GITHUB_SHA}` 이미지를 주입하고, 미변경 모듈은 현재 running image를 유지
+7. 원격 배포 중 앱 image가 `:latest`로 해석되면 배포를 중단
+8. 변경 Deployment만 `set image -> annotation patch -> rollout status`
 
 배포 job 필수 GitHub Secrets:
 
