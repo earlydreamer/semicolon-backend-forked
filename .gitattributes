@@ -1,3 +1,11 @@
+.gitattributes text eol=lf
 /gradlew text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+scripts/** text eol=lf
+postgres/*.lib text eol=lf
+.github/workflows/** text eol=lf
+k8s/semicolon/** text eol=lf
 *.bat text eol=crlf
 *.jar binary
