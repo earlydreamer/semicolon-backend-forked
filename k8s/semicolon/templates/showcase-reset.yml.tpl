@@ -51,6 +51,7 @@ data:
     APPS="auth user product order payment coupon deposit settlement ai"
     TIMEOUT_SECONDS="${SHOWCASE_RESET_TIMEOUT_SECONDS}"
     APPS_SCALED_DOWN="false"
+    PRODUCT_CLEAR_FLAG_SET="false"
 
     log() {
       echo "[$(date -Iseconds)] $*"
@@ -61,6 +62,18 @@ data:
         log "Restoring app replicas to 1 after reset attempt"
         scale_apps 1 || true
       fi
+    }
+
+    restore_product_clear_flag() {
+      if [ "$PRODUCT_CLEAR_FLAG_SET" = "true" ] && deployment_exists product; then
+        log "Restoring product storage clear flag after reset attempt"
+        kubectl -n "$NS" set env deployment/product PRODUCT_INIT_CLEAR_ES_ON_STARTUP- || true
+      fi
+    }
+
+    cleanup_after_reset_attempt() {
+      restore_product_clear_flag
+      restore_apps
     }
 
     deployment_exists() {
@@ -94,7 +107,7 @@ data:
 
     get_first_pod() {
       selector="$1"
-      kubectl -n "$NS" get pods -l "$selector" -o jsonpath='{.items[0].metadata.name}'
+      kubectl -n "$NS" get pods -l "$selector" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true
     }
 
     scale_apps() {
@@ -124,7 +137,7 @@ data:
       '
     }
 
-    trap restore_apps EXIT
+    trap cleanup_after_reset_attempt EXIT
 
     log "Showcase reset started"
     scale_apps 0
@@ -150,7 +163,12 @@ data:
     flush_redis
 
     log "Enabling storage clear on product startup"
-    kubectl -n "$NS" set env deployment/product PRODUCT_INIT_CLEAR_ES_ON_STARTUP=true
+    if deployment_exists product; then
+      kubectl -n "$NS" set env deployment/product PRODUCT_INIT_CLEAR_ES_ON_STARTUP=true
+      PRODUCT_CLEAR_FLAG_SET="true"
+    else
+      log "Product deployment not found. Skipping product storage clear flag."
+    fi
 
     scale_apps 1
 
@@ -161,7 +179,8 @@ data:
     done
 
     log "Restoring product storage clear flag"
-    kubectl -n "$NS" set env deployment/product PRODUCT_INIT_CLEAR_ES_ON_STARTUP-
+    restore_product_clear_flag
+    PRODUCT_CLEAR_FLAG_SET="false"
 
     APPS_SCALED_DOWN="false"
     log "Showcase reset completed"
