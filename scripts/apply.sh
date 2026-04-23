@@ -10,6 +10,7 @@ INGRESS_MODE="${INGRESS_MODE:-local}"
 ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
+REJECT_APP_LATEST_IMAGE="${REJECT_APP_LATEST_IMAGE:-false}"
 declare -a RENDERED_FILES=()
 APP_DEPLOYMENTS=(
   "auth:k8s/semicolon/services/auth/deploy.yml"
@@ -114,15 +115,51 @@ apply_rendered_template() {
   $K -n "$NS" apply -f "$rendered_file"
 }
 
+validate_app_image() {
+  local module="$1"
+  local image="$2"
+  local source="$3"
+  local image_name
+
+  if [ "$REJECT_APP_LATEST_IMAGE" != "true" ]; then
+    return 0
+  fi
+
+  case "$image" in
+    *:latest)
+      echo "[fail] ${module} image가 mutable latest로 해석됐습니다. image=${image}, source=${source}" >&2
+      echo "[hint] remote 배포에서는 <MODULE>_IMAGE로 SHA 태그 이미지를 넘기거나 workflow_dispatch rebuild_all_images=true로 기준선을 다시 만드세요." >&2
+      exit 1
+      ;;
+    *@sha256:*)
+      return 0
+      ;;
+  esac
+
+  image_name="${image##*/}"
+  case "$image_name" in
+    *:*)
+      return 0
+      ;;
+    *)
+      echo "[fail] ${module} image에 명시 tag/digest가 없습니다. image=${image}, source=${source}" >&2
+      echo "[hint] Kubernetes는 tag 없는 image를 latest로 취급할 수 있으므로 remote 배포에서는 SHA 태그 또는 digest를 명시해야 합니다." >&2
+      exit 1
+      ;;
+  esac
+}
+
 resolve_app_image() {
   local module="$1"
   local env_key
   local value
   local current_image
+  local fallback_image
 
   env_key="$(printf '%s_IMAGE' "$(printf '%s' "$module" | tr '[:lower:]-' '[:upper:]_')")"
   value="${!env_key:-}"
   if [ -n "$value" ]; then
+    validate_app_image "$module" "$value" "$env_key"
     printf '%s\n' "$value"
     return 0
   fi
@@ -130,12 +167,15 @@ resolve_app_image() {
   if $K -n "$NS" get deploy/"$module" >/dev/null 2>&1; then
     current_image="$($K -n "$NS" get deploy/"$module" -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
     if [ -n "$current_image" ]; then
+      validate_app_image "$module" "$current_image" "current deployment"
       printf '%s\n' "$current_image"
       return 0
     fi
   fi
 
-  printf 'dukku/semicolon-%s:latest\n' "$module"
+  fallback_image="dukku/semicolon-${module}:latest"
+  validate_app_image "$module" "$fallback_image" "manifest fallback"
+  printf '%s\n' "$fallback_image"
 }
 
 render_app_deployment() {

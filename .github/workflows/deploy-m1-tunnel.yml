@@ -4,6 +4,12 @@ on:
   push:
     branches: ["dev"]
   workflow_dispatch:
+    inputs:
+      rebuild_all_images:
+        description: "Build and deploy all app images with the current commit SHA"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -67,8 +73,14 @@ jobs:
           MODS_TO_DEPLOY=""
           BUILD_NEEDED="false"
           DEPLOY_NEEDED="false"
+          FORCE_REBUILD_ALL="${{ github.event_name == 'workflow_dispatch' && inputs.rebuild_all_images == true }}"
 
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            if [[ "$FORCE_REBUILD_ALL" == "true" ]]; then
+              BUILD_MATRIX=$(printf '%s\n' "${ALL_MODULES[@]}" | jq -R . | jq -s -c .)
+              MODS_TO_DEPLOY="${ALL_MODULES[*]}"
+              BUILD_NEEDED="true"
+            fi
             DEPLOY_NEEDED="true"
           else
             MODS=()
