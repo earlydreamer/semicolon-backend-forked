@@ -11,7 +11,7 @@ ENABLE_MONITORING="${ENABLE_MONITORING:-true}"
 ENABLE_CERT_MANAGER="${ENABLE_CERT_MANAGER:-false}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 REJECT_APP_LATEST_IMAGE="${REJECT_APP_LATEST_IMAGE:-false}"
-declare -a RENDERED_FILES=()
+declare -a RENDERED_FILES=("")
 APP_DEPLOYMENTS=(
   "auth:k8s/semicolon/services/auth/deploy.yml"
   "user:k8s/semicolon/services/user/deploy.yml"
