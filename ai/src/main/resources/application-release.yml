@@ -14,7 +14,6 @@ spring:
       base-url: https://generativelanguage.googleapis.com/v1beta/openai/
       api-key: ${GEMINI_API_KEY}
       chat:
-      chat:
         model: ${CHAT_MODEL:gemini-3.5-flash-lite}
     chat:
       memory:
