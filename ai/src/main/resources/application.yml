@@ -31,13 +31,11 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY:sk-dummy}
       chat:
-        options:
-          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
-          temperature: 0.7
+        model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+        temperature: 0.7
       embedding:
-        options:
-          dimensions: 1536
-          model: text-embedding-3-small
+        dimensions: 1536
+        model: text-embedding-3-small
     chat:
       memory:
         repository:

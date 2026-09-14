@@ -3,6 +3,7 @@ package dukku.ai.global.config;
 import dukku.ai.app.service.UserMemoryReadService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
 import dukku.ai.app.service.ProductRetrievalService;
 import dukku.ai.global.advisor.ProductRetrievalAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -61,6 +62,7 @@ public class ChatClientConfig {
 
     @Bean
     ChatClient chatClient(ChatClient.Builder builder,
+                          ToolCallingAdvisor.Builder<?> toolCallingAdvisorBuilder,
                           ChatMemory chatMemory,
                           GuardAdvisor guardAdvisor,
                           LoggingAdvisor loggingAdvisor,
@@ -87,7 +89,9 @@ public class ChatClientConfig {
                         memoryRetrievalAdvisor,                                 // 3. 장기 기억 조회 (order=110)
                         toolAdvisor,                                            // 4. Tool 컨텍스트 (order=120)
                         productRetrievalAdvisor,                                // 5. 선택적 상품 검색 (order=130)
-                        loggingAdvisor                                          // 6. 로깅/관측 (order=200)
+                        loggingAdvisor,                                         // 로깅/관측
+                        // 도구 반복 실행을 메모리 안쪽에 배치해 최종 대화만 저장한다.
+                        toolCallingAdvisorBuilder.copy().advisorOrder(300).build()
                 )
                 .build();
     }
