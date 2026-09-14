@@ -246,7 +246,7 @@ jobs:
           INTERNAL_SERVICE_TOKEN: ${{ secrets.INTERNAL_SERVICE_TOKEN }}
           INIT_ADMIN_EMAIL: ${{ vars.INIT_ADMIN_EMAIL }}
           INIT_ADMIN_PASSWORD: ${{ secrets.INIT_ADMIN_PASSWORD }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SYSTEM_DEPOSIT_PASSWORD: ${{ secrets.SYSTEM_DEPOSIT_PASSWORD }}
           TOSS_API_SECRET_KEY: ${{ secrets.TOSS_API_SECRET_KEY }}
           OBJECT_STORAGE_ACCESS_KEY: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY }}
@@ -270,7 +270,7 @@ jobs:
             DB_USERNAME DB_PASSWORD
             JWT_ACCESS_SECRET JWT_REFRESH_SECRET CRYPTO_KEY
             INTERNAL_SERVICE_TOKEN INIT_ADMIN_PASSWORD
-            OPENAI_API_KEY
+            GEMINI_API_KEY
             SYSTEM_DEPOSIT_PASSWORD
             TOSS_API_SECRET_KEY
             OBJECT_STORAGE_ACCESS_KEY OBJECT_STORAGE_SECRET_KEY
@@ -348,8 +348,7 @@ jobs:
               f"CORS_ALLOWED_ORIGINS={cors_allowed_origins}",
               "INTERNAL_BACK_URL=http://auth-service",
               f"FRONTEND_BASE_URL={frontend_base_url}",
-              f"OPENAI_API_KEY={os.environ['OPENAI_API_KEY']}",
-              "OPENAI_CHAT_MODEL=gpt-4o-mini",
+              f"GEMINI_API_KEY={os.environ['GEMINI_API_KEY']}",
               "AI_INIT_ENABLED=true",
               f"SLACK_WEBHOOK_URL_SETTLEMENT={os.environ['SLACK_WEBHOOK_URL_SETTLEMENT']}",
               f"SLACK_WEBHOOK_URL_GRAFANA={os.environ['SLACK_WEBHOOK_URL_GRAFANA']}",

@@ -11,9 +11,10 @@ spring:
     password: ${DB_PASSWORD}
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+      api-key: ${GEMINI_API_KEY}
       chat:
-        model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+        model: ${CHAT_MODEL:gemini-2.5-flash-lite}
     chat:
       memory:
         repository:
