@@ -51,9 +51,15 @@ Spring AI BOM을 `2.0.0-M1`에서 `2.0.1`로 올렸다. Spring Boot `4.0.1`과 J
 - 2026-09-15 원격 적용 시점: `showcase-db-reset` 수동 실행으로 `ai_service`가
   리셋되어 `ai_user_memory` 임베딩은 NULL, `product_search`는 0행이라 재임베딩
   대상이 없었다. 이후 상품 sync가 gemini 임베딩으로 upsert한다.
-- 장기 DB를 보존한 채 전환해야 하는 경우: 모델 전환 전 `ai_user_memory.embedding`,
-  `product_search.embedding`을 NULL 처리하거나(차원이 같아도 반드시),
-  임베딩 모델 버전을 기준으로 전환 마이그레이션을 둔다.
+- **장기 DB를 보존한 채 전환해야 하는 경우 (일반 절차)**:
+  `ai_user_memory.embedding`, `product_search.embedding`을 NULL로 두면 해당 행은
+  벡터 조건(`embedding <=> ...`)에서 영구 제외되고, 저장소에 NULL 재생성 경로가
+  없으므로 장기 기억 기능이 사실상 꺼진다. NULL 처리는 데이터 버림을 의미하며
+  이 경우 행 자체를 DELETE하고 `initMemories()`가 다시 채우도록 명시하는 편이
+  안전하다. 데이터를 보존하려면 각 `content`를 새 모델로 백필 재임베딩하는
+  전용 스크립트를 제공한다.
+- NULL 처리와 DELETE와 함께라면 두 방법 모두 단발성 운영 스크립트로 작성하고,
+  임베딩 모델 버전을 기준으로 전환 마이그레이션을 두는 것이 권장된다.
 
 
 참고: [공식 업그레이드 가이드](https://docs.spring.io/spring-ai/reference/upgrade-notes.html),
