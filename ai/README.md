@@ -41,6 +41,21 @@ Spring AI BOM을 `2.0.0-M1`에서 `2.0.1`로 올렸다. Spring Boot `4.0.1`과 J
 테스트 프로필에 지정된 PostgreSQL 등 외부 서비스가 준비되어 있어야 한다.
 단위 테스트는 실제 PostgreSQL 마이그레이션이나 OpenAI 응답을 검증하지 않는다.
 
+## 임베딩 모델 전환 시 재임베딩 요건 (Codex PR 리뷰 P1)
+
+임베딩 모델을 `text-embedding-3-small` → `gemini-embedding-001`로 전환하면
+두 모델 모두 1536차원이라 `AiInitData.ensureVectorDimensions()`의 차원
+불일치 검사가 통과되어 옛 벡터 정리 로직이 실행되지 않는다.
+임베딩 공간이 다르므로 전환 시 기존 벡터 데이터를 재임베딩하거나 비워야 한다.
+
+- 2026-09-15 원격 적용 시점: `showcase-db-reset` 수동 실행으로 `ai_service`가
+  리셋되어 `ai_user_memory` 임베딩은 NULL, `product_search`는 0행이라 재임베딩
+  대상이 없었다. 이후 상품 sync가 gemini 임베딩으로 upsert한다.
+- 장기 DB를 보존한 채 전환해야 하는 경우: 모델 전환 전 `ai_user_memory.embedding`,
+  `product_search.embedding`을 NULL 처리하거나(차원이 같아도 반드시),
+  임베딩 모델 버전을 기준으로 전환 마이그레이션을 둔다.
+
+
 참고: [공식 업그레이드 가이드](https://docs.spring.io/spring-ai/reference/upgrade-notes.html),
 [Spring Boot 호환 범위](https://docs.spring.io/spring-ai/reference/getting-started.html).
 
