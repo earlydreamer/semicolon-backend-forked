@@ -1,4 +1,4 @@
-﻿apiVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: payment
@@ -41,13 +41,13 @@ spec:
           resources:
             limits:
               cpu: 600m
-              memory: 448Mi
+              memory: 640Mi
             requests:
               cpu: 50m
               memory: 256Mi
           env:
             - name: JAVA_TOOL_OPTIONS
-              value: "-Xmx256m"
+              value: "-Xmx384m"
           livenessProbe:
             httpGet:
               path: /actuator/health

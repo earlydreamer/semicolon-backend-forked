@@ -141,7 +141,7 @@ DDD 기반 개발 수업 내용을 반영한 **포트폴리오 프로젝트**
 | Auth | JWT (JJWT 0.12.6), OAuth2 Client | Spring Security |
 | ORM | JPA/Hibernate | QueryDSL 포함 |
 | API Docs | SpringDoc OpenAPI 3.0.1 | Swagger UI |
-| AI | Spring AI 2.0.0-M1 | `ai` 모듈 |
+| AI | Spring AI 2.0.1 | `ai` 모듈 |
 | Object Storage | AWS SDK S3-compatible | Cloudflare R2 / SeaweedFS |
 
 ### 현재 도입 인프라/운영 기능
