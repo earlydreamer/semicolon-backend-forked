@@ -49,7 +49,7 @@ java "-Dloader.main=dukku.ai.app.migration.GeminiEmbeddingMigrationCli" -cp $jar
 
 reset은 AI DB를 재생성해 `ai_user_memory`에 임베딩과 프로필이 없는 샘플 메모리 7건을 넣는다. 모든 서비스 rollout이 끝난 뒤 reset 스크립트가 현재 AI Deployment와 같은 이미지 reference를 쓰는 임시 Kubernetes Job을 실행해 위 `GeminiEmbeddingMigrationCli`를 `--apply --batch-size 7 --max-rows 7`로 호출한다. CLI의 테이블 처리 순서에서 `ai_user_memory`가 먼저이므로 이 제한은 reset 시드 메모리 7건에 적용되고 `product_search`는 처리하지 않는다.
 
-임시 Job은 기존 `semicolon-env`와 `ai-db` Secret을 환경으로 읽으며 AI 애플리케이션 Pod 안에 두 번째 JVM을 띄우지 않는다. Job은 service account token 자동 마운트를 끄고, CPU 500m·메모리 512Mi·실행 540초 상한을 사용한다. 키와 DB 인증정보는 Job args와 resetter 로그에 나오지 않는다. 종료 메시지와 resetter 로그에는 `ai_user_memory` 고정 aggregate 및 CLI의 허용된 고정 실패 문구나 단순 예외 타입만 남긴다.
+임시 Job은 `semicolon-env`에서 `GEMINI_API_KEY`, `EMBEDDING_MODEL` 및 DB 접속에 필요한 키만 명시적으로 주입하고 `ai-db`의 `DB_NAME`만 추가로 읽는다. 다른 서비스 자격증명은 Job 프로세스에 전달하지 않으며 AI 애플리케이션 Pod 안에 두 번째 JVM을 띄우지 않는다. Job은 service account token 자동 마운트를 끄고, CPU 500m·메모리 512Mi·실행 540초 상한을 사용한다. 키와 DB 인증정보는 Job args와 resetter 로그에 나오지 않는다. 종료 메시지와 resetter 로그에는 `ai_user_memory` 고정 aggregate 및 CLI의 허용된 고정 실패 문구나 단순 예외 타입만 남긴다.
 
 CLI 종료 코드가 0이고 요약이 `present=true`, `scanned=7`, `candidates=7`, `updated=7`, `conflicts=0`, `failures=0`을 모두 확인한 뒤에만 reset 완료를 기록한다. 성공 Job 삭제는 최선 노력으로 시도하며 삭제가 실패해도 경고만 남기고 reset 성공 여부에는 영향을 주지 않는다. Gemini API, Secret, DB, 스키마, 이미지 실행 또는 요약 검증이 실패하면 reset도 실패로 끝난다. 종료 메시지는 테이블 aggregate, CLI의 고정된 API 키/설정/스키마/인자 오류 문구, 또는 `Migration stopped before completion (<영숫자 예외 타입>).`만 허용한다. 임의 stdout/stderr와 메모리 본문은 resetter 로그로 보내지 않는다. 실패 Job과 삭제되지 않은 성공 Job은 TTL에 따라 최대 7일 뒤 정리된다. 실패 시 기존 EXIT trap이 앱과 product 초기화 flag 복구를 시도한다. 부모 `showcase-db-reset` CronJob의 기존 backoffLimit과 전체 reset 정책은 그대로 유지된다.
 

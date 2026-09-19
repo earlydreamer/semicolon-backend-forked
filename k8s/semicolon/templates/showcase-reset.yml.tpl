@@ -277,12 +277,53 @@ data:
                     printf 'ai_user_memory summary=missing cli_exit_code=%s\n' "\$cli_status" > /dev/termination-log
                   fi
                   exit "\$cli_status"
-              envFrom:
-                - secretRef:
-                    name: semicolon-env
-                - secretRef:
-                    name: ai-db
               env:
+                - name: GEMINI_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: GEMINI_API_KEY
+                - name: EMBEDDING_MODEL
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: EMBEDDING_MODEL
+                      optional: true
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: DB_HOST
+                      optional: true
+                - name: DB_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: DB_PORT
+                      optional: true
+                - name: DB_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: ai-db
+                      key: DB_NAME
+                - name: DB_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: DB_USERNAME
+                      optional: true
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: DB_PASSWORD
+                      optional: true
+                - name: DB_SSLMODE
+                  valueFrom:
+                    secretKeyRef:
+                      name: semicolon-env
+                      key: DB_SSLMODE
+                      optional: true
                 - name: JAVA_TOOL_OPTIONS
                   value: "-Xms64m -Xmx256m"
               resources:
