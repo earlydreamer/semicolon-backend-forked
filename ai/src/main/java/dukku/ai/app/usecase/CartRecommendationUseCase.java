@@ -3,7 +3,6 @@ package dukku.ai.app.usecase;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +11,7 @@ import dukku.ai.entity.AiUserMemory;
 import dukku.ai.global.policy.AiSimilarityPolicy;
 import dukku.ai.out.AiUserMemoryRepository;
 import dukku.ai.out.HybridSearchRepository;
+import dukku.ai.app.service.GeminiEmbeddingService;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,13 @@ public class CartRecommendationUseCase {
 
     private final HybridSearchRepository hybridSearchRepository;
     private final AiUserMemoryRepository aiUserMemoryRepository;
-    private final EmbeddingModel embeddingModel;
+    private final GeminiEmbeddingService embeddingService;
 
     @Async
     public void generateRecommendation(UUID userUuid, String productTitle) {
         try {
-            log.info("[CartRecommendation] 추천 생성 시작: userId={}, product={}", userUuid, productTitle);
+            log.info("[CartRecommendation] 추천 생성 시작: userId={}, productTitleLength={}",
+                    userUuid, productTitle != null ? productTitle.length() : 0);
 
             List<HybridSearchResult> results = hybridSearchRepository.search(
                     productTitle,
@@ -42,7 +43,8 @@ public class CartRecommendationUseCase {
                     AiSimilarityPolicy.RECOMMENDATION_SIMILARITY_THRESHOLD);
 
             if (results.isEmpty()) {
-                log.info("[CartRecommendation] 유사 상품 없음: userId={}, product={}", userUuid, productTitle);
+                log.info("[CartRecommendation] 유사 상품 없음: userId={}, productTitleLength={}",
+                        userUuid, productTitle != null ? productTitle.length() : 0);
                 return;
             }
 
@@ -53,7 +55,7 @@ public class CartRecommendationUseCase {
             // 추천 결과를 AiMemory에 저장
             String content = "장바구니 추가 기반 추천 (기준: %s): %s".formatted(
                     productTitle, String.join(", ", recommendedProducts));
-            float[] embedding = embeddingModel.embed(content);
+            float[] embedding = embeddingService.embedDocument(content);
 
             AiUserMemory memory = AiUserMemory.builder()
                     .userUuid(userUuid)
@@ -61,6 +63,7 @@ public class CartRecommendationUseCase {
                     .subType(MemorySubType.SHOPPING)
                     .content(content)
                     .embedding(embedding)
+                    .embeddingProfile(embeddingService.profile())
                     .importanceScore(0.7)
                     .build();
 
@@ -69,7 +72,8 @@ public class CartRecommendationUseCase {
             log.info("[CartRecommendation] 추천 {}건 저장 완료: userId={}", recommendedProducts.size(), userUuid);
 
         } catch (Exception e) {
-            log.error("[CartRecommendation] 추천 생성 실패: userId={}, error={}", userUuid, e.getMessage(), e);
+            log.error("[CartRecommendation] 추천 생성 실패: userId={}, errorType={}",
+                    userUuid, e.getClass().getSimpleName());
         }
     }
 }

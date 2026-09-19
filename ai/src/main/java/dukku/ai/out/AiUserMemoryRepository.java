@@ -13,7 +13,7 @@ public interface AiUserMemoryRepository extends JpaRepository<AiUserMemory, Inte
     boolean existsByUserUuidAndMemoryType(UUID userUuid, MemoryType memoryType);
 
     @Query(value = """
-            SELECT * FROM ai_memory
+            SELECT * FROM ai_user_memory
             WHERE user_uuid = :userUuid
               AND memory_type = :memoryType
             ORDER BY importance_score DESC
@@ -25,9 +25,11 @@ public interface AiUserMemoryRepository extends JpaRepository<AiUserMemory, Inte
             @Param("limit") int limit);
 
     @Query(value = """
-            SELECT * FROM ai_memory
+            SELECT * FROM ai_user_memory
             WHERE user_uuid = :userUuid
               AND memory_type != 'PROFILE'
+              AND embedding IS NOT NULL
+              AND embedding_profile = :embeddingProfile
               AND 1 - (embedding <=> cast(:embedding AS vector)) > :threshold
             ORDER BY 1 - (embedding <=> cast(:embedding AS vector)) DESC
             LIMIT :limit
@@ -35,12 +37,15 @@ public interface AiUserMemoryRepository extends JpaRepository<AiUserMemory, Inte
     List<AiUserMemory> findSimilarMemories(
             @Param("userUuid") UUID userUuid,
             @Param("embedding") String embedding,
+            @Param("embeddingProfile") String embeddingProfile,
             @Param("threshold") double threshold,
             @Param("limit") int limit);
 
     @Query(value = """
-            SELECT * FROM ai_memory
+            SELECT * FROM ai_user_memory
             WHERE user_uuid = :userUuid
+              AND embedding IS NOT NULL
+              AND embedding_profile = :embeddingProfile
               AND 1 - (embedding <=> cast(:embedding AS vector)) > :threshold
             ORDER BY 1 - (embedding <=> cast(:embedding AS vector)) DESC
             LIMIT 1
@@ -48,5 +53,6 @@ public interface AiUserMemoryRepository extends JpaRepository<AiUserMemory, Inte
     List<AiUserMemory> findDuplicateMemory(
             @Param("userUuid") UUID userUuid,
             @Param("embedding") String embedding,
+            @Param("embeddingProfile") String embeddingProfile,
             @Param("threshold") double threshold);
 }

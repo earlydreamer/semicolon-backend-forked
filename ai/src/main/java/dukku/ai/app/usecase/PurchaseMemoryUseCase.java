@@ -6,12 +6,12 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiUserMemory;
 import dukku.ai.out.AiUserMemoryRepository;
+import dukku.ai.app.service.GeminiEmbeddingService;
 import dukku.common.shared.ai.type.MemorySubType;
 import dukku.common.shared.ai.type.MemoryType;
 import dukku.common.shared.order.event.OrderPaidEvent;
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PurchaseMemoryUseCase {
 
     private final AiUserMemoryRepository aiUserMemoryRepository;
-    private final EmbeddingModel embeddingModel;
+    private final GeminiEmbeddingService embeddingService;
 
     @Async
     public void storePurchaseMemory(UUID userUuid, List<OrderPaidEvent.PaidItem> items) {
@@ -37,7 +37,7 @@ public class PurchaseMemoryUseCase {
                     .collect(Collectors.joining(", "));
 
             String content = "%s 구매".formatted(itemDescriptions);
-            float[] embedding = embeddingModel.embed(content);
+            float[] embedding = embeddingService.embedDocument(content);
 
             AiUserMemory memory = AiUserMemory.builder()
                     .userUuid(userUuid)
@@ -45,15 +45,17 @@ public class PurchaseMemoryUseCase {
                     .subType(MemorySubType.SHOPPING)
                     .content(content)
                     .embedding(embedding)
+                    .embeddingProfile(embeddingService.profile())
                     .importanceScore(0.8)
                     .build();
 
             aiUserMemoryRepository.save(memory);
 
-            log.info("[PurchaseMemory] 구매 기억 저장 완료: userUuid={}, content={}", userUuid, content);
+            log.info("[PurchaseMemory] 구매 기억 저장 완료: userUuid={}, contentLength={}", userUuid, content.length());
 
         } catch (Exception e) {
-            log.error("[PurchaseMemory] 구매 기억 저장 실패: userUuid={}, error={}", userUuid, e.getMessage(), e);
+            log.error("[PurchaseMemory] 구매 기억 저장 실패: userUuid={}, errorType={}",
+                    userUuid, e.getClass().getSimpleName());
         }
     }
 }

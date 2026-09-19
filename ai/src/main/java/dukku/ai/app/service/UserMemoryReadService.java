@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import dukku.ai.out.AiUserMemoryRepository;
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
 import dukku.ai.entity.AiUserMemory;
@@ -18,23 +17,24 @@ import dukku.common.shared.ai.type.MemoryType;
 public class UserMemoryReadService {
 
     private final AiUserMemoryRepository aiUserMemoryRepository;
-    private final EmbeddingModel embeddingModel;
+    private final GeminiEmbeddingService embeddingService;
 
     public UserMemoryReadService(AiUserMemoryRepository aiUserMemoryRepository,
-                                 EmbeddingModel embeddingModel) {
+                                 GeminiEmbeddingService embeddingService) {
         this.aiUserMemoryRepository = aiUserMemoryRepository;
-        this.embeddingModel = embeddingModel;
+        this.embeddingService = embeddingService;
     }
 
     public String retrieveMemoryContext(UUID userUuid, String userMessage) {
         List<AiUserMemory> profileMemories = aiUserMemoryRepository.findTopByUserIdAndMemoryType(
                 userUuid, MemoryType.PROFILE.name(), AiSimilarityPolicy.MEMORY_PROFILE_LIMIT);
 
-        float[] queryEmbedding = embeddingModel.embed(userMessage);
+        float[] queryEmbedding = embeddingService.embedQuery(userMessage);
         String embeddingStr = toVectorString(queryEmbedding);
 
         List<AiUserMemory> similarMemories = aiUserMemoryRepository.findSimilarMemories(
-                userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_SIMILARITY_THRESHOLD, AiSimilarityPolicy.MEMORY_SIMILAR_LIMIT);
+                userUuid, embeddingStr, embeddingService.profile(), AiSimilarityPolicy.MEMORY_SIMILARITY_THRESHOLD,
+                AiSimilarityPolicy.MEMORY_SIMILAR_LIMIT);
 
         similarMemories.forEach(AiUserMemory::incrementAccessCount);
         if (!similarMemories.isEmpty()) {
