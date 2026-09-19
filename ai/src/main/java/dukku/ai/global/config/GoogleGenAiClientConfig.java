@@ -2,7 +2,7 @@ package dukku.ai.global.config;
 
 import com.google.genai.Client;
 import com.google.genai.types.HttpOptions;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiConnectionProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -14,9 +14,9 @@ public class GoogleGenAiClientConfig {
 
     @Bean
     @Primary
-    Client googleGenAiClient(@Value("${spring.ai.google.genai.api-key}") String apiKey) {
+    Client googleGenAiClient(GoogleGenAiConnectionProperties properties) {
         return Client.builder()
-                .apiKey(apiKey)
+                .apiKey(properties.getApiKey())
                 .vertexAI(false)
                 .httpOptions(HttpOptions.builder()
                         .timeout(REQUEST_TIMEOUT_MILLIS)

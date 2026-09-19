@@ -143,7 +143,7 @@ jobs:
           --tests "dukku.ai.app.usecase.ChatUseCaseTest"
           --tests "dukku.ai.global.model.*Test"
           --tests "dukku.ai.out.*PostgresTest"
-          --tests "dukku.ai.global.config.ChatClientConfigTest"
+          --tests "dukku.ai.global.config.*Test"
           --tests "dukku.ai.app.migration.GeminiEmbeddingMigrationCliTest"
           --no-daemon
 
