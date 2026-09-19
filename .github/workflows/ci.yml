@@ -145,6 +145,7 @@ jobs:
           --tests "dukku.ai.out.*PostgresTest"
           --tests "dukku.ai.global.config.*Test"
           --tests "dukku.ai.app.migration.GeminiEmbeddingMigrationCliTest"
+          --tests "dukku.ai.in.*Test"
           --no-daemon
 
       - name: Print Container Logs on Failure

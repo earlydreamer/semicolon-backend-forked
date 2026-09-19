@@ -8,6 +8,8 @@ AI 모듈은 Java 25, Spring Boot 4.0.1, Spring AI 2.0.1을 유지하면서 Gemi
 
 대화 응답 경계는 thought 텍스트를 사용자 응답·장기 기억·JDBC 채팅 메모리에 노출하지 않는다. 함수 호출 메시지의 opaque `thoughtSignatures`는 해당 tool turn에서 보존해 후속 native 요청에 돌려보낸다. 도구 반복은 `ToolCallingAdvisor` order 300에서 실행되고, JDBC 대화 메모리는 최종 user/assistant 교환만 저장한다.
 
+채팅 HTTP 응답은 기존 문자열 SSE를 유지한다. Spring MVC의 `data:` 직렬화 뒤 표준 SSE 파서가 구분 공백 하나를 제거하는 규칙에 맞춰 controller에서 각 데이터 줄에 구분 공백을 명시한다. 따라서 chunk 시작 공백, 들여쓰기와 LF가 전송 중 사라지지 않으며 모델 출력과 JDBC 저장 문자열은 그대로 유지된다. 실제 MVC 응답을 표준 방식으로 파싱하는 회귀 테스트에 한글·공백만 있는 chunk·연속/마지막 LF를 포함한다.
+
 `ai_user_memory`와 `product_search`에는 nullable `embedding_profile`이 있다. 현재 프로필은 `{model}:1536:retrieval-document:normalization-v1` 형식이다. 검색과 중복 비교는 현재 프로필이 붙은 벡터만 사용한다. 알 수 없는 기존 프로필은 `NULL`로 남겨 두며, 새 프로필로 표시하기 전에 실제 콘텐츠를 재임베딩해야 한다. `pgvector`가 설치되어 있고 `PGroonga`가 없는 DB에서는 벡터 전용 상품 검색을 사용한다.
 
 ## 설정
