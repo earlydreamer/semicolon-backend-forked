@@ -135,6 +135,18 @@ jobs:
       - name: Build and Test (Application Startup Only)
         run: ./gradlew clean :${{ matrix.module }}:test --tests "${TEST_CLASS}" --no-daemon --info
 
+      - name: Run AI native Gemini contracts
+        if: matrix.module == 'ai'
+        run: >-
+          ./gradlew :ai:test
+          --tests "dukku.ai.app.service.*Test"
+          --tests "dukku.ai.app.usecase.ChatUseCaseTest"
+          --tests "dukku.ai.global.model.*Test"
+          --tests "dukku.ai.out.*PostgresTest"
+          --tests "dukku.ai.global.config.ChatClientConfigTest"
+          --tests "dukku.ai.app.migration.GeminiEmbeddingMigrationCliTest"
+          --no-daemon
+
       - name: Print Container Logs on Failure
         if: failure()
         run: docker compose -f docker-compose.ci.yml logs
