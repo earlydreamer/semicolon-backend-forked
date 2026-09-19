@@ -40,7 +40,7 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
             memoryContext = userMemoryReadService.retrieveMemoryContext(
                     userUuid, userMessage.getText());
         } catch (Exception e) {
-            log.warn("[장기 기억] 조회 실패 (embedding/DB 오류), 스킵: {}", e.getMessage());
+            log.warn("[장기 기억] 조회 실패 (embedding/DB 오류), 스킵: {}", e.getClass().getSimpleName());
             return request;
         }
 
@@ -49,7 +49,9 @@ public class MemoryRetrievalAdvisor implements BaseAdvisor {
             return request;
         }
 
-        log.info("[장기 기억] userUuid={}, 주입 내용:\n{}", userUuid, memoryContext);
+        long memoryCount = memoryContext.lines().filter(line -> line.startsWith("- [")).count();
+        log.info("[장기 기억] userUuid={}, 주입 기억 수={}, contextLength={}",
+                userUuid, memoryCount, memoryContext.length());
 
         Prompt augmented = request.prompt().augmentSystemMessage(memoryContext);
         return request.mutate().prompt(augmented).build();

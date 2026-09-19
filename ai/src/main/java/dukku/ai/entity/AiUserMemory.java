@@ -49,6 +49,9 @@ public class AiUserMemory extends BaseIdAndUUIDAndTime {
     @Array(length = 1536)
     private float[] embedding;
 
+    @Column(name = "embedding_profile", length = 160)
+    private String embeddingProfile;
+
     @Column(nullable = false)
     private Double importanceScore;
 

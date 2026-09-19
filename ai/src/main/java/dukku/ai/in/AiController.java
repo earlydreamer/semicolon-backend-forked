@@ -36,7 +36,12 @@ public class AiController {
     @AiApiDocs.Chat
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestBody ChatRequest request) {
-        return aiFacade.chat(request);
+        return aiFacade.chat(request).map(AiController::preserveSseWhitespace);
+    }
+
+    private static String preserveSseWhitespace(String content) {
+        // Spring MVC의 data: 뒤 공백은 SSE 파서가 하나 제거하므로 각 줄 앞에 보존용 공백을 더한다.
+        return " " + content.replace("\n", "\n ");
     }
 
     @AiApiDocs.FindAllMemories

@@ -31,8 +31,8 @@ public class RecommendationTool {
             @ToolParam(description = "최소 가격 (원). 가격 하한이 없으면 0", required = false) Long minPrice,
             @ToolParam(description = "최대 가격 (원). 가격 상한이 없으면 null", required = false) Long maxPrice) {
         String userId = context.getContext().get("userId").toString();
-        log.info("[Tool 호출] 상품 추천: userId={}, keyword={}, minPrice={}, maxPrice={}",
-                userId, searchKeyword, minPrice, maxPrice);
+        log.info("[Tool 호출] 상품 추천: userId={}, keywordLength={}, minPrice={}, maxPrice={}",
+                userId, searchKeyword != null ? searchKeyword.length() : 0, minPrice, maxPrice);
         try {
             UUID userUuid = UUID.fromString(userId);
 
@@ -56,7 +56,8 @@ public class RecommendationTool {
             log.warn("[RecommendationTool] 상품 추천 실패: userId={}, error=Invalid UUID string: {}", userId, userId);
             return List.of("ERROR: 올바른 사용자 UUID 형식이 아닙니다. 임의의 값을 지어내지 말고, 시스템 프롬프트에 제공된 '{user_uuid}' 값을 그대로 사용해 다시 호출하세요.");
         } catch (Exception e) {
-            log.warn("[RecommendationTool] 상품 추천 실패: userId={}, error={}", userId, e.getMessage());
+            log.warn("[RecommendationTool] 상품 추천 실패: userId={}, errorType={}",
+                    userId, e.getClass().getSimpleName());
             return List.of();
         }
     }

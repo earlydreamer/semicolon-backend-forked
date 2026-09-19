@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 @Configuration
-public class OpenAiClientConfig {
+public class AiHttpClientConfig {
 
     @Bean
     public RestClient.Builder restClientBuilder() {

@@ -64,6 +64,13 @@ public class AiInitData {
 
     private void ensureVectorDimensions() {
         int dim = AiSimilarityPolicy.EMBEDDING_DIMENSION;
+        try {
+            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
+        } catch (Exception e) {
+            log.warn("[AiInitData] pgvector를 사용할 수 없어 AI 벡터 스키마 보정을 건너뜁니다: {}", e.getMessage());
+            return;
+        }
+
         if (!isVectorTypeAvailable()) {
             log.warn("[AiInitData] vector 타입 미지원 DB 환경 - AI 벡터 스키마 보정을 건너뜁니다.");
             return;
@@ -79,13 +86,7 @@ public class AiInitData {
             log.warn("[AiInitData] PGroonga 확장 없음 — 키워드 검색 비활성 (벡터 검색만 동작): {}", e.getMessage());
         }
 
-        // vector 확장 (pgvector)
-        try {
-            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
-            log.info("[AiInitData] pgvector 확장 활성화 완료");
-        } catch (Exception e) {
-            log.warn("[AiInitData] pgvector 확장 활성화 실패: {}", e.getMessage());
-        }
+        log.info("[AiInitData] pgvector 확장 활성화 완료");
 
         // ai_user_memory: CREATE IF NOT EXISTS (비파괴적)
         jdbcTemplate.execute(String.format("""
@@ -97,15 +98,19 @@ public class AiInitData {
                     sub_type VARCHAR(50) NOT NULL,
                     content TEXT NOT NULL,
                     embedding vector(%d),
+                    embedding_profile VARCHAR(160),
                     importance_score DOUBLE PRECISION NOT NULL,
                     access_count INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMP NOT NULL,
                     updated_at TIMESTAMP
                 )""", dim));
+
+        jdbcTemplate.execute("ALTER TABLE ai_user_memory ADD COLUMN IF NOT EXISTS embedding_profile VARCHAR(160)");
         
         jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_ai_user_memory_user_uuid ON ai_user_memory(user_uuid)");
-        jdbcTemplate.execute(String.format(
-                "CREATE INDEX IF NOT EXISTS idx_ai_user_memory_embedding ON ai_user_memory USING HNSW (embedding vector_cosine_ops)"));
+        assertVectorDimension("ai_user_memory", dim);
+        jdbcTemplate.execute(
+                "CREATE INDEX IF NOT EXISTS idx_ai_user_memory_embedding ON ai_user_memory USING HNSW (embedding vector_cosine_ops)");
         log.info("[AiInitData] ai_user_memory 테이블 확인 완료 ({}차원)", dim);
 
         // product_search: CREATE IF NOT EXISTS (비파괴적)
@@ -114,8 +119,12 @@ public class AiInitData {
                     id UUID PRIMARY KEY,
                     content TEXT NOT NULL,
                     metadata JSONB,
-                    embedding vector(%d)
+                    embedding vector(%d),
+                    embedding_profile VARCHAR(160)
                 )""", dim));
+
+        jdbcTemplate.execute("ALTER TABLE product_search ADD COLUMN IF NOT EXISTS embedding_profile VARCHAR(160)");
+        assertVectorDimension("product_search", dim);
 
         if (pgroongaAvailable) {
             try {
@@ -138,23 +147,21 @@ public class AiInitData {
             // 이미 nullable이거나 컬럼이 없는 경우 무시
         }
 
-        // ai_user_memory: 차원 불일치 시에만 ALTER
-        try {
-            Integer currentDim = jdbcTemplate.queryForObject("""
-                    SELECT atttypmod FROM pg_attribute
-                    WHERE attrelid = 'ai_user_memory'::regclass
-                      AND attname = 'embedding'
-                    """, Integer.class);
-            if (currentDim != null && currentDim != dim) {
-                jdbcTemplate.execute("UPDATE ai_user_memory SET embedding = NULL WHERE embedding IS NOT NULL");
-                jdbcTemplate.execute(String.format(
-                        "ALTER TABLE ai_user_memory ALTER COLUMN embedding TYPE vector(%d)", dim));
-                log.info("[AiInitData] ai_user_memory.embedding 차원 변경: {} → {}", currentDim, dim);
-            } else {
-                log.info("[AiInitData] ai_user_memory.embedding 차원 정상 ({}차원)", dim);
-            }
-        } catch (Exception e) {
-            log.warn("[AiInitData] ai_user_memory.embedding 차원 확인 실패 (무시): {}", e.getMessage());
+        log.info("[AiInitData] 두 벡터 테이블의 차원이 {}로 확인됐어", dim);
+    }
+
+    private void assertVectorDimension(String tableName, int expectedDimension) {
+        Integer actualDimension = jdbcTemplate.queryForObject("""
+                SELECT atttypmod
+                FROM pg_attribute
+                WHERE attrelid = ?::regclass
+                  AND attname = 'embedding'
+                  AND NOT attisdropped
+                """, Integer.class, tableName);
+        if (actualDimension == null || actualDimension != expectedDimension) {
+            throw new IllegalStateException("AI vector dimension mismatch for " + tableName
+                    + ". Expected vector(" + expectedDimension + ") but found " + actualDimension
+                    + ". Existing embeddings were preserved; apply a reviewed manual migration before startup.");
         }
     }
 

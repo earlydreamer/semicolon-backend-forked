@@ -23,7 +23,7 @@ public class ProductVectorSyncUseCase {
         String content = buildContent(payload);
         Map<String, Object> metadata = buildMetadata(payload);
 
-        float[] embedding = hybridSearchRepository.embed(content);
+        float[] embedding = hybridSearchRepository.embedDocument(content);
         String metadataJson = toJsonString(metadata);
         hybridSearchRepository.upsert(payload.productUuid(), content, metadataJson, embedding);
 

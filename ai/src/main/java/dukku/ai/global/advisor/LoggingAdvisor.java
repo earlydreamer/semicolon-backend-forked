@@ -27,9 +27,10 @@ public class LoggingAdvisor implements BaseAdvisor {
         String conversationId = String.valueOf(
                 request.context().getOrDefault("chat_memory_conversation_id", "N/A"));
 
-        log.info("[AI 요청] conversationId={}, userText={}",
+        String userText = userMessage != null ? userMessage.getText() : null;
+        log.info("[AI 요청] conversationId={}, userTextLength={}",
                 conversationId,
-                userMessage != null ? userMessage.getText() : "N/A");
+                userText != null ? userText.length() : 0);
         return request;
     }
 
@@ -39,10 +40,7 @@ public class LoggingAdvisor implements BaseAdvisor {
         if (chatResponse != null && chatResponse.getResult() != null) {
             String content = chatResponse.getResult().getOutput().getText();
             if (content != null && !content.isEmpty()) {
-                log.info("[AI 응답] content={}",
-                        content.length() > 100
-                                ? content.substring(0, 100) + "..."
-                                : content);
+                log.info("[AI 응답] contentLength={}", content.length());
             } else {
                 log.info("[AI 응답 시작] (스트리밍 중이거나 텍스트 내용 없음)");
             }

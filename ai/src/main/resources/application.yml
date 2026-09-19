@@ -28,15 +28,18 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
   ai:
-    openai:
-      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
-      api-key: ${GEMINI_API_KEY:sk-dummy}
-      chat:
-        model: ${CHAT_MODEL:gemini-3.5-flash-lite}
-        temperature: 0.7
+    model:
+      chat: google-genai
+      # EmbeddingModel starter의 taskType 미전송 때문에 AI 모듈의 GeminiEmbeddingService를 사용한다.
       embedding:
-        dimensions: 1536
-        model: ${EMBEDDING_MODEL:gemini-embedding-001}
+        text: none
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:sk-dummy}
+        chat:
+          model: ${CHAT_MODEL:gemini-3.5-flash-lite}
+          temperature: 0.7
+          include-thoughts: true
     chat:
       memory:
         repository:
@@ -45,6 +48,9 @@ spring:
 ai:
   init:
     enabled: ${AI_INIT_ENABLED:true}
+  embedding:
+    model: ${EMBEDDING_MODEL:gemini-embedding-001}
+    dimensions: 1536
 
 management:
   endpoints:

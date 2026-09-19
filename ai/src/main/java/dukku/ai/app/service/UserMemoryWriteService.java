@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class UserMemoryWriteService {
 
     private final ChatModel chatModel;
-    private final EmbeddingModel embeddingModel;
+    private final GeminiEmbeddingService embeddingService;
     private final AiUserMemoryRepository aiUserMemoryRepository;
     private final ObjectMapper objectMapper;
 
@@ -37,12 +36,15 @@ public class UserMemoryWriteService {
     public void extractAndStoreMemories(UUID userUuid, String userMessage, String aiResponse) {
         try {
             String prompt = AiPromptPolicy.MEMORY_EXTRACTION_PROMPT.formatted(userMessage, aiResponse);
-            String result = chatModel.call(new Prompt(prompt))
-                    .getResult()
-                    .getOutput()
-                    .getText();
+            var chatResponse = chatModel.call(new Prompt(prompt));
+            String result = chatResponse.getResult() == null || chatResponse.getResult().getOutput() == null
+                    ? ""
+                    : chatResponse.getResult().getOutput().getText();
+            if (result == null) {
+                result = "";
+            }
 
-            log.info("[기억 추출] userUuid={}, AI 추출 결과: {}", userUuid, result);
+            log.info("[기억 추출] userUuid={}, 응답 길이={}", userUuid, result.length());
 
             List<MemoryExtraction> extractions = parseExtractions(result);
 
@@ -55,7 +57,7 @@ public class UserMemoryWriteService {
                 processExtraction(userUuid, extraction);
             }
         } catch (Exception e) {
-            log.warn("장기 기억 추출 실패: {}", e.getMessage(), e);
+            log.warn("장기 기억 추출 실패: {}", e.getClass().getSimpleName());
         }
     }
 
@@ -67,34 +69,38 @@ public class UserMemoryWriteService {
             }
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (Exception e) {
-            log.warn("기억 추출 JSON 파싱 실패: {}", e.getMessage());
+            log.warn("기억 추출 JSON 파싱 실패: {}", e.getClass().getSimpleName());
             return List.of();
         }
     }
 
     private void processExtraction(UUID userUuid, MemoryExtraction extraction) {
-        float[] embedding = embeddingModel.embed(extraction.content());
-        String embeddingStr = Arrays.toString(embedding);
+        // Duplicate comparison is document-to-document, so generate the document vector once
+        // and reuse it for persistence when this extraction is new.
+        float[] documentEmbedding = embeddingService.embedDocument(extraction.content());
+        String embeddingStr = Arrays.toString(documentEmbedding);
 
         List<AiUserMemory> duplicates = aiUserMemoryRepository.findDuplicateMemory(
-                userUuid, embeddingStr, AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
+                userUuid, embeddingStr, embeddingService.profile(), AiSimilarityPolicy.MEMORY_DUPLICATE_THRESHOLD);
 
         if (!duplicates.isEmpty()) {
             AiUserMemory existing = duplicates.getFirst();
             existing.updateImportanceScore(extraction.confidence());
             aiUserMemoryRepository.save(existing);
-            log.info("[기억 추출] 기존 기억 업데이트: id={}, content={}", existing.getId(), existing.getContent());
+            log.info("[기억 추출] 기존 기억 점수 갱신: id={}", existing.getId());
         } else {
             AiUserMemory newMemory = AiUserMemory.builder()
                     .userUuid(userUuid)
                     .memoryType(MemoryType.valueOf(extraction.memoryType()))
                     .subType(MemorySubType.valueOf(extraction.subType()))
                     .content(extraction.content())
-                    .embedding(embedding)
+                    .embedding(documentEmbedding)
+                    .embeddingProfile(embeddingService.profile())
                     .importanceScore(extraction.confidence())
                     .build();
             aiUserMemoryRepository.save(newMemory);
-            log.info("[기억 추출] 새 기억 저장: type={}/{}, content={}", extraction.memoryType(), extraction.subType(), extraction.content());
+            log.info("[기억 추출] 새 기억 저장: type={}/{}, contentLength={}",
+                    extraction.memoryType(), extraction.subType(), extraction.content().length());
         }
     }
 

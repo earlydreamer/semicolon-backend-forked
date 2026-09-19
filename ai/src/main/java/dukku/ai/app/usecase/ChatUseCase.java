@@ -7,6 +7,7 @@ import dukku.ai.global.policy.AiPromptPolicy;
 import dukku.common.shared.ai.exception.AiGuardException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -29,7 +30,7 @@ public class ChatUseCase {
                 .system(AiPromptPolicy.SYSTEM_PROMPT)
                 .user(userMessage)
                 .advisors(a -> {
-                    a.param("chat_memory_conversation_id", conversationId);
+                    a.param(ChatMemory.CONVERSATION_ID, conversationId);
                     if (userUuid != null) {
                         a.param("user_id", userUuid);
                     }
@@ -46,7 +47,8 @@ public class ChatUseCase {
                     }
                     String content = response.getResult().getOutput().getText();
                     return content != null ? content : "";
-                });
+                })
+                .filter(content -> !content.isEmpty());
 
         if (!shouldExtractMemory) {
             return responseFlux
@@ -56,7 +58,7 @@ public class ChatUseCase {
                         return Flux.just(guard.getDetails());
                     })
                     .onErrorResume(e -> {
-                        log.error("[ChatUseCase] AI 응답 생성 실패: {}", e.getMessage(), e);
+                        log.error("[ChatUseCase] AI 응답 생성 실패: {}", e.getClass().getSimpleName());
                         return Flux.just("죄송합니다. 현재 AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해 주세요.");
                     });
         }
@@ -74,7 +76,7 @@ public class ChatUseCase {
                     })
                     .doOnError(e -> {
                         if (extractGuardException(e) == null) {
-                            log.warn("스트리밍 오류로 장기 기억 추출 건너뜀: {}", e.getMessage());
+                            log.warn("스트리밍 오류로 장기 기억 추출 건너뜀: {}", e.getClass().getSimpleName());
                         }
                     })
                     .onErrorResume(e -> extractGuardException(e) != null, e -> {
@@ -83,7 +85,7 @@ public class ChatUseCase {
                         return Flux.just(guard.getDetails());
                     })
                     .onErrorResume(e -> {
-                        log.error("[ChatUseCase] AI 응답 생성 실패: {}", e.getMessage(), e);
+                        log.error("[ChatUseCase] AI 응답 생성 실패: {}", e.getClass().getSimpleName());
                         return Flux.just("죄송합니다. 현재 AI 서비스가 일시적으로 불안정합니다. 잠시 후 다시 시도해 주세요.");
                     });
         });

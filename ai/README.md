@@ -1,81 +1,60 @@
-# Spring AI 2.0.1 업그레이드
+# AI 서비스
 
-Spring AI BOM을 `2.0.0-M1`에서 `2.0.1`로 올렸다. Spring Boot `4.0.1`과 Java 25는 유지한다.
+## 현재 코드 기준 (2026-09-19)
 
-## 기존 DB 배포 순서
+AI 모듈은 Java 25, Spring Boot 4.0.1, Spring AI 2.0.1을 유지하면서 Gemini Developer API의 native 경로를 사용한다. 채팅은 `spring-ai-starter-model-google-genai`의 `GoogleGenAiChatModel`과 기존 `GEMINI_API_KEY`를 사용하고, 기본 모델은 `gemini-3.5-flash-lite`다. `CHAT_MODEL` 환경변수로 모델을 바꿀 수 있다.
 
-기존 `SPRING_AI_CHAT_MEMORY`에는 새 필수 컬럼 `sequence_id`가 없다.
-`initialize-schema: always`는 기존 테이블에 컬럼을 추가하지 않으므로,
-새 애플리케이션을 기동하기 전에 다음 작업이 필요하다.
+임베딩은 `GeminiEmbeddingService`가 공식 Google GenAI SDK의 `Client.models.embedContent`를 직접 호출한다. Spring AI 2.0.1의 Google 임베딩 구현은 요청의 `taskType`을 전송하지 않아 이 경계에서는 `RETRIEVAL_QUERY`와 `RETRIEVAL_DOCUMENT`, `outputDimensionality=1536`을 명시한다. 검색 질의에는 query task type을, 기억과 상품의 저장·백필에는 document task type을 사용한다. 벡터는 1536차원·유한값·0이 아닌 norm을 확인하고 L2 정규화한 뒤 저장한다.
 
-1. 기존 AI 인스턴스를 중지하고 DB를 백업한다.
-2. AI 서비스의 PostgreSQL DB에 `src/main/resources/sql/manual/20260912_spring_ai_chat_memory_sequence.sql`을 실행한다.
-3. Spring AI 2.0.1 애플리케이션을 기동한다.
-4. 이전 대화 조회와 도구를 사용하는 채팅 응답을 확인한다.
+대화 응답 경계는 thought 텍스트를 사용자 응답·장기 기억·JDBC 채팅 메모리에 노출하지 않는다. 함수 호출 메시지의 opaque `thoughtSignatures`는 해당 tool turn에서 보존해 후속 native 요청에 돌려보낸다. 도구 반복은 `ToolCallingAdvisor` order 300에서 실행되고, JDBC 대화 메모리는 최종 user/assistant 교환만 저장한다.
 
-스크립트는 기존 대화와 timestamp를 보존하고 대화별 순서를 채운다.
-같은 timestamp를 가진 과거 메시지의 원래 순서는 복원할 수 없다.
-재실행할 수 있으며, 테이블이 없는 신규 DB에서는 아무 작업도 하지 않는다.
-신규 테이블은 Spring AI의 자동 초기화가 생성한다.
-자동 마이그레이션 도구에 등록된 파일이 아니므로 기존 DB에는 직접 실행해야 한다.
+채팅 HTTP 응답은 기존 문자열 SSE를 유지한다. Spring MVC의 `data:` 직렬화 뒤 표준 SSE 파서가 구분 공백 하나를 제거하는 규칙에 맞춰 controller에서 각 데이터 줄에 구분 공백을 명시한다. 따라서 chunk 시작 공백, 들여쓰기와 LF가 전송 중 사라지지 않으며 모델 출력과 JDBC 저장 문자열은 그대로 유지된다. 실제 MVC 응답을 표준 방식으로 파싱하는 회귀 테스트에 한글·공백만 있는 chunk·연속/마지막 LF를 포함한다.
 
-`sequence_id`에는 PostgreSQL 시퀀스 기본값을 함께 설정한다.
-현재 배포된 `2.0.0-M1`은 이 컬럼 없이 INSERT하므로 기본값으로 순번을 할당한다.
-`2.0.1`은 대화별 순번을 직접 지정하므로 기본값을 사용하지 않는다.
-따라서 DB를 먼저 올린 뒤 기존 앱을 재기동하거나 앱 버전을 롤백해도 저장할 수 있다.
-기본값은 새 버전 전환 후에도 유지할 수 있으며, 두 버전의 동시 쓰기 충돌을 방지하려면
-앱 교체 시 기존 인스턴스 종료를 확인한다.
+`ai_user_memory`와 `product_search`에는 nullable `embedding_profile`이 있다. 현재 프로필은 `{model}:1536:retrieval-document:normalization-v1` 형식이다. 검색과 중복 비교는 현재 프로필이 붙은 벡터만 사용한다. 알 수 없는 기존 프로필은 `NULL`로 남겨 두며, 새 프로필로 표시하기 전에 실제 콘텐츠를 재임베딩해야 한다. `pgvector`가 설치되어 있고 `PGroonga`가 없는 DB에서는 벡터 전용 상품 검색을 사용한다.
 
-## 호환성 변경과 검증
+## 설정
 
-- 모델 설정의 deprecated `options` 중첩을 제거했다. 모델명, temperature, 임베딩 차원은 유지한다.
-- `ToolCallingAdvisor`를 order 300으로 등록했다. 입력 검증, 메모리, 검색은 도구 반복 실행 바깥에서 처리되어 JDBC 메모리에 최종 대화만 저장된다.
-- `ChatClientConfigTest`는 모델 응답을 모의 처리하고 임시 H2 DB의 실제 JDBC 메모리 저장소로 동기/스트리밍 도구 실행, 이전 대화 유지, 최종 대화 저장, 입력 차단을 검증한다. 외부 API와 DB 서버는 필요 없다.
+- `GEMINI_API_KEY`: 기존 Gemini 키. release에서 필수이며 애플리케이션 프로세스 환경으로만 전달한다.
+- `CHAT_MODEL`: 기본값 `gemini-3.5-flash-lite`.
+- `EMBEDDING_MODEL`: 기본값 `gemini-embedding-001`.
+- `ai.embedding.dimensions`: DB의 `vector(1536)`과 맞춰 1536으로 유지한다. 다른 값은 애플리케이션 시작 시 거부된다.
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_SSLMODE`: AI PostgreSQL 연결 설정.
+
+Google SDK 요청 제한 시간은 60초다. 일반 `RestClient.Builder`와 `WebClient.Builder`의 기존 timeout 설정은 `AiHttpClientConfig`에서 유지한다. Gemini 경로에는 Vertex AI 프로젝트/인증을 사용하지 않는다.
+
+## 기존 벡터를 보존하는 프로필 마이그레이션
+
+### JDBC 채팅 메모리 선행 조건
+
+기존 `SPRING_AI_CHAT_MEMORY` 테이블에 `sequence_id`가 없다면 새 앱을 기동하기 전에 백업하고 `src/main/resources/sql/manual/20260912_spring_ai_chat_memory_sequence.sql`을 실행해야 한다. 이 SQL은 Spring AI 2.0.1 JDBC 메모리 저장소가 요구하는 컬럼을 추가하는 기존 선행 마이그레이션이며, 대상 DB에 이미 `sequence_id`가 있는지는 각 환경에서 확인한다.
+
+2026-09-19에 확인한 원격 기준선에는 `ai_user_memory` 7행이 있었고, 모두 `content`는 보존됐지만 `embedding`은 `NULL`이었다. 당시 `embedding_profile` 컬럼은 아직 없었고 `product_search`는 0행이었다. 이 기준선은 당시의 읽기 결과이며, 실제 변경·백필 뒤 상태를 뜻하지 않는다.
+
+프로필 컬럼 추가 SQL은 `src/main/resources/sql/manual/20260919_gemini_embedding_profile.sql`이다. 앱 초기화도 두 테이블에 컬럼이 없으면 추가한다. 벡터 차원이 다르면 기존 행을 비우거나 컬럼 타입을 바꾸지 않고 오류를 내므로, 사전 검토한 별도 마이그레이션이 필요하다.
+
+백필 CLI는 서버, Kafka listener, 샘플 초기화를 시작하지 않는다. `--dry-run`은 기본값이며 DB의 대상 건수만 확인하고 Gemini 키를 읽지 않는다. 실제 native 임베딩 요청은 `--apply`를 명시할 때만 한다. 옵션으로 `--batch-size`와 `--max-rows`를 제한할 수 있다.
+
+패키징 앱의 기본 진입점은 `dukku.ai.AiApplication`로 유지한다. CLI는 `PropertiesLauncher`로 호출한다.
 
 ```powershell
-.\gradlew.bat :ai:test --tests dukku.ai.global.config.ChatClientConfigTest
-.\gradlew.bat :ai:build
+$jar = 'ai/build/libs/ai-0.0.1-SNAPSHOT.jar'
+if (-not (Test-Path -LiteralPath $jar)) { throw "bootJar 파일을 찾을 수 없어: $jar" }
+java "-Dloader.main=dukku.ai.app.migration.GeminiEmbeddingMigrationCli" -cp $jar org.springframework.boot.loader.launch.PropertiesLauncher --dry-run
+java "-Dloader.main=dukku.ai.app.migration.GeminiEmbeddingMigrationCli" -cp $jar org.springframework.boot.loader.launch.PropertiesLauncher --apply --batch-size 100 --max-rows 1000
 ```
 
-명령은 저장소 루트에서 실행한다. 전체 `:ai:build`의 기존 `ApplicationTests`는
-테스트 프로필에 지정된 PostgreSQL 등 외부 서비스가 준비되어 있어야 한다.
-단위 테스트는 실제 PostgreSQL 마이그레이션이나 OpenAI 응답을 검증하지 않는다.
+운영 순서는 백업 확인 → AI writer 중지와 reset 일정 확인 → additive SQL → `--dry-run` 대상 확인 → 제한된 `--apply` → 행 수·content 보존·차원·프로필·오류 건수 확인 → 새 앱 검증 → writer 복구다. 실패한 행의 `content`, 기존 벡터, 프로필은 성공한 재생성이 끝날 때까지 유지해야 한다. 키 값이나 사용자 기억 원문을 채팅·명령 인자·로그에 넣지 않는다.
 
-## 임베딩 모델 전환 시 재임베딩 요건 (Codex PR 리뷰 P1)
+## `showcase-db-reset` 이후 처리
 
-임베딩 모델을 `text-embedding-3-small` → `gemini-embedding-001`로 전환하면
-두 모델 모두 1536차원이라 `AiInitData.ensureVectorDimensions()`의 차원
-불일치 검사가 통과되어 옛 벡터 정리 로직이 실행되지 않는다.
-임베딩 공간이 다르므로 전환 시 기존 벡터 데이터를 재임베딩하거나 비워야 한다.
+현재 reset 동작은 이번 변경 범위에서 수정하지 않는다. reset이 DB를 다시 만들면 샘플 초기화가 `ai_user_memory`에 content를 가진 7개 메모리를 넣고, 샘플 데이터는 임베딩을 생성하지 않아 벡터와 프로필이 `NULL`로 남는다. reset을 수행한 뒤 메모리 의미 검색을 쓰려면 위 CLI를 다시 실행해 해당 행을 document 임베딩해야 한다. 상품 검색 테이블은 상품 서비스의 동기화가 실행되기 전까지 비어 있을 수 있다.
 
-- 2026-09-15 원격 적용 시점: `showcase-db-reset` 수동 실행으로 `ai_service`가
-  리셋되어 `ai_user_memory` 임베딩은 NULL, `product_search`는 0행이라 재임베딩
-  대상이 없었다. 이후 상품 sync가 gemini 임베딩으로 upsert한다.
-- **장기 DB를 보존한 채 전환해야 하는 경우 (일반 절차)**:
-  `ai_user_memory.embedding`, `product_search.embedding`을 NULL로 두면 해당 행은
-  벡터 조건(`embedding <=> ...`)에서 영구 제외되고, 저장소에 NULL 재생성 경로가
-  없으므로 장기 기억 기능이 사실상 꺼진다. NULL 처리는 데이터 버림을 의미하며
-  이 경우 행 자체를 DELETE하고 `initMemories()`가 다시 채우도록 명시하는 편이
-  안전하다. 데이터를 보존하려면 각 `content`를 새 모델로 백필 재임베딩하는
-  전용 스크립트를 제공한다.
-- NULL 처리와 DELETE와 함께라면 두 방법 모두 단발성 운영 스크립트로 작성하고,
-  임베딩 모델 버전을 기준으로 전환 마이그레이션을 두는 것이 권장된다.
+## 과거 기록과 현재 상태 구분
 
+2026-09-15의 DB 변경 기록은 `sequence_id` 선행 마이그레이션 당시의 사실이다. 그 기록에서 “원격 앱은 Spring AI 2.0.0-M1”이라고 적힌 부분은 그 날짜의 실행 이미지에만 해당하며, 현재 코드의 Spring AI 2.0.1 상태나 이후 배포 상태를 뜻하지 않는다. 모델 설정이 2.0.1로 변경된 사실만으로 원격 앱이 배포됐다고 판정하지 말고, 이미지 digest와 실행 버전을 별도로 확인한다.
 
-참고: [공식 업그레이드 가이드](https://docs.spring.io/spring-ai/reference/upgrade-notes.html),
-[Spring Boot 호환 범위](https://docs.spring.io/spring-ai/reference/getting-started.html).
+이전 문서의 “NULL 또는 DELETE 처리” 권고는 더 이상 전환 절차로 사용하지 않는다. NULL은 검색에서 제외될 뿐이고 DELETE는 기억 content를 지운다. 현재 절차는 기존 content를 보존하고 명시적 backfill CLI로 벡터와 profile을 갱신하는 방식이다.
 
-## 2026-09-15 원격 DB 적용 기록
+## 검증
 
-- 대상: SSH `macbookair`, Docker의 `k3d-semicolon-local-server-0`, namespace `semicolon`, PostgreSQL `ai_service`.
-- 맥북의 DB 백업: `/Users/earlydreamer/semicolon-migration-20260915/ai_service-before.dump` (권한 600, `pg_restore --list` 검증).
-- AI 인스턴스 1 → 0으로 중지한 뒤 SQL 적용, 성공 후 1로 복구했다.
-- `sequence_id BIGINT NOT NULL`, 구버전용 시퀀스 기본값, 복합 인덱스 생성 확인. 대화 메모리 행 수는 0 → 0.
-- 실제 PostgreSQL에서 구버전의 컬럼 생략 INSERT와 새 버전의 명시적 순번 INSERT가 통과했다. 검증 행은 ROLLBACK했다.
-- 별도 임시 스키마에서 과거 메시지 순번 채우기와 SQL 2회 실행을 검증한 뒤 ROLLBACK했다.
-- AI Pod Ready 및 서비스 프록시 `/actuator/health`의 `status: UP`을 확인했다.
-- 현재 원격 앱 JAR은 여전히 Spring AI `2.0.0-M1`이다. 이번 작업은 DB 선행 마이그레이션이며 앱 이미지는 교체하지 않았다.
-- 기존 `showcase-db-reset` CronJob은 매일 한국 시간 00:00에 `ai_service`를 포함한 DB를 DROP/재생성한다. 앱이 M1인 동안 리셋되면 이전 스키마가 다시 생성되므로, 새 앱 배포 직전에 마이그레이션을 재확인하고 필요하면 재실행해야 한다. CronJob 설정은 변경하지 않았다.
-- 최초 점검에서 저장소에 남은 옛 주소 `api.dukku.shop`을 사용했다. 해당 주소의 시간 초과는 현재 서비스 장애의 근거가 아니다.
-- 맥북의 `cloudflared`가 2026-09-15 01:15:16 KST에 Cloudflare에서 받아 적용한 설정을 확인했다. 현재 API 주소는 `https://api-dukku.earlydreamer.dev`, origin은 `http://localhost:8080`이다.
-- 실제 Ingress의 `/api/v1/ai` → `ai-service:80` 경로를 확인했다. 공개 주소의 `/api/v1/ai/chat`에 인증 없이 GET 요청하여 Cloudflare를 거친 애플리케이션의 JSON `401 Unauthorized` 응답을 확인했다. 인증된 채팅 생성 및 모델 호출까지 검증한 것은 아니다.
+로컬 검증은 Gemini native HTTP fake를 사용해 실제 SDK의 채팅·스트리밍·함수 호출·signature 재전송과 임베딩 task type·차원을 검사한다. JDBC 채팅 메모리 테스트는 H2를 사용한다. 실제 PostgreSQL/pgvector 및 PGroonga 미설치 검색 경로의 결과와 원격 backfill·앱 배포는 별도 연동 검증으로 기록한다.
