@@ -177,6 +177,19 @@ CronJob 동작:
 4. `product` 재기동 1회에만 `PRODUCT_INIT_CLEAR_ES_ON_STARTUP=true`를 주입해 검색/스토리지 초기화를 유도
 5. 앱 Deployment를 다시 1 replica로 올려 각 서비스 InitData 재실행
 6. 성공/실패와 무관하게 `PRODUCT_INIT_CLEAR_ES_ON_STARTUP` 임시 env를 제거하고 앱 replica 복구를 시도
+7. 모든 앱 rollout이 끝나면 현재 AI Deployment의 image reference를 사용하는 임시 Job에서 `GeminiEmbeddingMigrationCli --apply --batch-size 7 --max-rows 7` 실행
+8. CLI exit code가 0이고 `ai_user_memory` aggregate가 `scanned=7`, `candidates=7`, `updated=7`, `conflicts=0`, `failures=0`일 때만 reset 완료 로그를 남긴다. 성공 Job 삭제는 최선 노력으로 시도하며 실패해도 경고만 남기고 reset 성공 여부에는 영향을 주지 않는다.
+
+AI backfill Job은 기존 `semicolon-env`, `ai-db` Secret을 참조하고 service account token을 마운트하지 않는다. 리소스 상한은 CPU 500m·메모리 512Mi, 실행 제한은 540초다. CLI stdout/stderr 전체를 resetter 로그로 전달하지 않고 `ai_user_memory` aggregate와 CLI의 고정 설정/스키마 오류 문구 또는 영숫자 예외 타입만 termination message로 보낸다. Gemini API, credential, DB, 이미지 또는 aggregate 검증이 실패하면 reset 스크립트도 실패하고 기존 EXIT trap이 product flag와 앱 replica 복구를 시도한다. 실패한 AI backfill Job은 원인 확인을 위해 최대 7일 보존되며 그 뒤 TTL controller가 정리한다. 성공 Job의 삭제에 실패한 경우도 reset은 성공할 수 있고, 남은 Job은 같은 TTL controller가 최대 7일 뒤 정리한다. 부모 CronJob의 `backoffLimit: 1`은 기존과 같아서 실패한 reset attempt가 전체 reset을 다시 수행할 수 있다.
+
+실패 요약은 CronJob Pod 로그에서 확인하고, 남아 있는 보조 Job과 Pod 상태/종료 메시지는 아래처럼 확인한다. `SHOWCASE_RESET_JOB_NAME`에는 `get jobs` 결과의 부모 reset Job 이름을 넣는다.
+
+```bash
+reset_job="$(kubectl -n semicolon get jobs --sort-by=.metadata.creationTimestamp -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep '^showcase-db-reset-' | tail -n 1)"
+kubectl -n semicolon logs "job/$reset_job" -c showcase-reset
+kubectl -n semicolon get jobs,pods -l app.kubernetes.io/name=showcase-ai-memory-backfill
+kubectl -n semicolon get pods -l app.kubernetes.io/name=showcase-ai-memory-backfill -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.phase}{" "}{.status.containerStatuses[0].state.terminated.message}{"\n"}{end}'
+```
 
 수동으로 즉시 한 번 실행하려면:
 
