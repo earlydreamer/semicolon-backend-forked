@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 # [Stage 1] 빌드 단계
-FROM public.ecr.aws/docker/library/eclipse-temurin:25-jdk AS builder
+# 베이스 이미지는 Docker Hub 공식 이미지의 Google 미러(mirror.gcr.io)에서 받는다.
+# ECR Public 익명 pull은 GitHub 러너 공유 IP의 데이터 한도(429 Data limit exceeded)에 걸린다. digest는 Docker Hub·ECR과 동일
+FROM mirror.gcr.io/library/eclipse-temurin:25-jdk AS builder
 
 WORKDIR /app
 
@@ -32,7 +34,7 @@ RUN ./gradlew :${MODULE_NAME}:bootJar -x test --no-daemon
 RUN find . -path "*/build/libs/*.jar" ! -name "*-plain.jar" -exec cp {} /app/app.jar \;
 
 # [Stage 2] 실행 단계
-FROM public.ecr.aws/docker/library/eclipse-temurin:25-jre
+FROM mirror.gcr.io/library/eclipse-temurin:25-jre
 
 WORKDIR /app
 

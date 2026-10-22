@@ -10,6 +10,7 @@
 
 ### 빌드 환경 안정화
 - **베이스 이미지 레지스트리 교체**: Docker Hub의 전송 제한(429) 및 GHCR의 인증 에러(403)를 해결하기 위해 모든 Dockerfile의 베이스 이미지를 **Amazon ECR Public(public.ecr.aws)**으로 전면 교체했습니다.
+  - 2026-10-22: ECR Public 익명 pull도 GitHub 러너 공유 IP의 데이터 한도(`429 toomanyrequests: Data limit exceeded`)에 걸려 배포가 실패했습니다. Docker Hub 공식 이미지의 Google 미러 **`mirror.gcr.io/library/eclipse-temurin`**으로 다시 교체했습니다(세 레지스트리의 digest 동일 확인, 인증 불필요).
 - **캐싱 최적화**: GitHub Actions의 `type=gha` 캐싱 설정을 강화하여 빌드 속도를 개선했습니다.
 
 ### 배포 워크플로우 (deploy.yml) 고도화
