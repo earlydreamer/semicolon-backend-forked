@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -54,14 +56,23 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             return;
         }
 
+        // 토큰은 쿼리스트링이 아닌 fragment로 전달한다.
+        // fragment는 서버 요청·프록시 로그·Referer에 실리지 않고, 프런트가 읽은 직후 주소창에서 지운다.
         String redirectUrl = UriComponentsBuilder.fromUriString(successRedirectUrl)
-                .queryParam("accessToken", tokenResponse.accessToken())
-                .queryParam("refreshToken", tokenResponse.refreshToken())
-                .build(true)
+                .fragment(buildTokenFragment(tokenResponse))
+                .build()
                 .toUriString();
 
         clearAuthenticationAttributes(request);
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+    }
+
+    private String buildTokenFragment(TokenResponse tokenResponse) {
+        String fragment = "accessToken=" + URLEncoder.encode(tokenResponse.accessToken(), StandardCharsets.UTF_8);
+        if (tokenResponse.refreshToken() != null) {
+            fragment += "&refreshToken=" + URLEncoder.encode(tokenResponse.refreshToken(), StandardCharsets.UTF_8);
+        }
+        return fragment;
     }
 
     private String buildFailureRedirect(String reason) {
